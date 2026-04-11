@@ -603,7 +603,13 @@ NB_MODULE(_task_interface, m) {
                const ChipCallConfig &config) {
                 self.run(callable.buffer_.data(), &args, config);
             },
-            nb::arg("callable"), nb::arg("args"), nb::arg("config")
+            nb::arg("callable"), nb::arg("args"), nb::arg("config"),
+            // Release the GIL while the runtime runs on its dedicated
+            // device thread (see src/{arch}/platform/sim/host/pto_runtime_c_api.cpp).
+            // This lets other Python threads — including other ChipWorkers
+            // running on other sim devices — execute in parallel instead
+            // of serializing on the GIL.
+            nb::call_guard<nb::gil_scoped_release>()
         )
         .def(
             "run_raw",
@@ -616,7 +622,8 @@ NB_MODULE(_task_interface, m) {
                 self.run(reinterpret_cast<const void *>(callable), reinterpret_cast<const void *>(args), config);
             },
             nb::arg("callable"), nb::arg("args"), nb::arg("block_dim") = 1, nb::arg("aicpu_thread_num") = 3,
-            nb::arg("enable_profiling") = false, "Run with raw pointer arguments (used from forked chip process)."
+            nb::arg("enable_profiling") = false, nb::call_guard<nb::gil_scoped_release>(),
+            "Run with raw pointer arguments (used from forked chip process)."
         )
         .def_prop_ro("device_id", &ChipWorker::device_id)
         .def_prop_ro("initialized", &ChipWorker::initialized)
