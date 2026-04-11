@@ -22,6 +22,7 @@
 
 #include <new>
 #include <pthread.h>
+#include <thread>
 #include <vector>
 
 #include "common/unified_log.h"
@@ -128,62 +129,78 @@ int run_runtime(
 ) {
     if (ctx == NULL || runtime == NULL) return -1;
 
-    pthread_once(&g_runner_key_once, create_runner_key);
-    pthread_setspecific(g_runner_key, ctx);
     DeviceRunner *runner = static_cast<DeviceRunner *>(ctx);
 
-    try {
-        // Phase 1: placement new + build graph
-        Runtime *r = new (runtime) Runtime();
-        r->host_api.device_malloc = device_malloc;
-        r->host_api.device_free = device_free;
-        r->host_api.copy_to_device = copy_to_device;
-        r->host_api.copy_from_device = copy_from_device;
-        r->host_api.upload_kernel_binary = upload_kernel_binary_wrapper;
-        r->host_api.remove_kernel_binary = remove_kernel_binary_wrapper;
+    // Run the entire runtime lifecycle on a dedicated device-bound thread.
+    //
+    // Why a dedicated thread:
+    //   - DeviceRunner::create_thread() calls pto_cpu_sim_bind_device() on
+    //     entry and unbinds on exit, so the device binding is scoped to
+    //     the runtime call and never leaks back to the Python caller.
+    //   - g_runner_key (pthread TSD) is set on this thread and auto-clears
+    //     when the thread exits, so we never need manual cleanup in the
+    //     exception paths.
+    //   - The top-level runtime code now runs on the same kind of
+    //     device-bound thread as the AICPU/AICore workers that run() will
+    //     spawn, keeping the thread model uniform.
+    //
+    // Thread joins before run_runtime returns, so the Runtime buffer and
+    // all captured references are valid for the entire thread lifetime.
+    int rc = -1;
+    std::thread t = runner->create_thread([&]() {
+        pthread_once(&g_runner_key_once, create_runner_key);
+        pthread_setspecific(g_runner_key, ctx);
 
-        int rc = init_runtime_impl(
-            r, reinterpret_cast<const ChipCallable *>(callable), reinterpret_cast<const ChipStorageTaskArgs *>(args)
-        );
-        if (rc != 0) {
-            r->set_pto2_gm_sm_ptr(nullptr);
-            validate_runtime_impl(r);
+        try {
+            // Phase 1: placement new + build graph
+            Runtime *r = new (runtime) Runtime();
+            r->host_api.device_malloc = device_malloc;
+            r->host_api.device_free = device_free;
+            r->host_api.copy_to_device = copy_to_device;
+            r->host_api.copy_from_device = copy_from_device;
+            r->host_api.upload_kernel_binary = upload_kernel_binary_wrapper;
+            r->host_api.remove_kernel_binary = remove_kernel_binary_wrapper;
+
+            rc = init_runtime_impl(
+                r, reinterpret_cast<const ChipCallable *>(callable), reinterpret_cast<const ChipStorageTaskArgs *>(args)
+            );
+            if (rc != 0) {
+                r->set_pto2_gm_sm_ptr(nullptr);
+                validate_runtime_impl(r);
+                r->~Runtime();
+                return;
+            }
+
+            // Phase 2: profiling
+            if (enable_profiling) {
+                r->enable_profiling = true;
+            }
+
+            // Phase 3: launch
+            std::vector<uint8_t> aicpu_vec;
+            std::vector<uint8_t> aicore_vec;
+            if (aicpu_binary != NULL && aicpu_size > 0) {
+                aicpu_vec.assign(aicpu_binary, aicpu_binary + aicpu_size);
+            }
+            if (aicore_binary != NULL && aicore_size > 0) {
+                aicore_vec.assign(aicore_binary, aicore_binary + aicore_size);
+            }
+            rc = runner->run(*r, block_dim, device_id, aicpu_vec, aicore_vec, aicpu_thread_num);
+            if (rc != 0) {
+                validate_runtime_impl(r);
+                r->~Runtime();
+                return;
+            }
+
+            // Phase 4: finalize (copy results back)
+            rc = validate_runtime_impl(r);
             r->~Runtime();
-            pthread_setspecific(g_runner_key, nullptr);
-            return rc;
+        } catch (...) {
+            rc = -1;
         }
-
-        // Phase 2: profiling
-        if (enable_profiling) {
-            r->enable_profiling = true;
-        }
-
-        // Phase 3: launch
-        std::vector<uint8_t> aicpu_vec;
-        std::vector<uint8_t> aicore_vec;
-        if (aicpu_binary != NULL && aicpu_size > 0) {
-            aicpu_vec.assign(aicpu_binary, aicpu_binary + aicpu_size);
-        }
-        if (aicore_binary != NULL && aicore_size > 0) {
-            aicore_vec.assign(aicore_binary, aicore_binary + aicore_size);
-        }
-        rc = runner->run(*r, block_dim, device_id, aicpu_vec, aicore_vec, aicpu_thread_num);
-        if (rc != 0) {
-            validate_runtime_impl(r);
-            r->~Runtime();
-            pthread_setspecific(g_runner_key, nullptr);
-            return rc;
-        }
-
-        // Phase 4: finalize (copy results back)
-        rc = validate_runtime_impl(r);
-        r->~Runtime();
-        pthread_setspecific(g_runner_key, nullptr);
-        return rc;
-    } catch (...) {
-        pthread_setspecific(g_runner_key, nullptr);
-        return -1;
-    }
+    });
+    t.join();
+    return rc;
 }
 
 int finalize_device(DeviceContextHandle ctx) {
