@@ -243,21 +243,89 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(session, config, items):  # noqa: PLR0912
-    """Skip ST tests based on --platform, --runtime, --level filters; order L3 before L2."""
+    """Filter ST tests by --platform / --runtime / --level; order L3 before L2.
+
+    Static filter mismatches (wrong level, wrong runtime, wrong platform)
+    are **deselected** rather than marked ``pytest.skip`` so they don't
+    inflate the "N skipped" count in each subprocess's terminal summary —
+    the L2 subprocess alone re-collects ~50 items per runtime, and the
+    skipped variant produced one SKIPPED line per item under ``-v``.
+    Deselection goes through ``config.hook.pytest_deselected`` (the same
+    path pytest's ``-k`` / ``-m`` use), which reports "M deselected"
+    instead of per-item output.
+
+    User-actionable problems (``--platform required``) stay as real skips
+    so the reason still surfaces in the default pytest summary.
+    """
     platform = config.getoption("--platform")
     runtime_filter = config.getoption("--runtime")
     level_filter = config.getoption("--level")
 
-    # When --level is active, only SceneTestCase items with a matching
-    # _st_level should run. Skip every non-SceneTestCase item — resource
-    # tests run in their own Resource phase, and other standalone tests
-    # (e.g. test_hello_worker) must not leak into level-filtered runs.
-    if level_filter is not None:
-        for item in items:
-            if any(m.name == "skip" for m in item.iter_markers()):
+    keep: list = []
+    deselected: list = []
+
+    for item in items:
+        # Pre-existing skip markers (e.g. explicit ``@pytest.mark.skip``)
+        # stay put — the user asked for a visible skip, not a silent drop.
+        if any(m.name == "skip" for m in item.iter_markers()):
+            keep.append(item)
+            continue
+
+        cls = getattr(item, "cls", None)
+
+        # Under --level, non-SceneTestCase items don't participate in
+        # level-based dispatch at all. Resource phase collects them
+        # separately in the parent; in a level-filtered child they're
+        # simply not this phase's concern.
+        if level_filter is not None and cls is None:
+            deselected.append(item)
+            continue
+
+        if cls is not None and hasattr(cls, "CASES") and isinstance(cls.CASES, list):
+            # SceneTestCase class item.
+            if not platform:
+                # User error: surface it as a real skip so the reason is visible.
+                item.add_marker(pytest.mark.skip(reason="--platform required"))
+                keep.append(item)
                 continue
-            if getattr(item, "cls", None) is None:
-                item.add_marker(pytest.mark.skip(reason=f"standalone test, not level {level_filter}"))
+            if not any(platform in c.get("platforms", []) for c in cls.CASES):
+                deselected.append(item)
+                continue
+            if runtime_filter and getattr(cls, "_st_runtime", None) != runtime_filter:
+                deselected.append(item)
+                continue
+            if level_filter is not None and getattr(cls, "_st_level", None) != level_filter:
+                deselected.append(item)
+                continue
+            keep.append(item)
+            continue
+
+        # Non-class pytest function (standalone resource tests and such).
+        platforms_marker = item.get_closest_marker("platforms")
+        if platforms_marker:
+            if not platform:
+                item.add_marker(pytest.mark.skip(reason="--platform required"))
+                keep.append(item)
+                continue
+            if platform not in platforms_marker.args[0]:
+                deselected.append(item)
+                continue
+
+        # runtime-isolation filter for non-@scene_test tests: if the item
+        # declares ``@pytest.mark.runtime("X")`` and a --runtime filter is
+        # active, deselect when they don't match. Prevents
+        # test_explicit_fatal_reports and friends from running under every
+        # runtime's subprocess.
+        runtime_marker = item.get_closest_marker("runtime")
+        if runtime_marker and runtime_marker.args and runtime_filter and runtime_marker.args[0] != runtime_filter:
+            deselected.append(item)
+            continue
+
+        keep.append(item)
+
+    if deselected:
+        items[:] = keep
+        config.hook.pytest_deselected(items=deselected)
 
     # Sort: L3 tests first (they fork child processes that inherit main process CANN state,
     # so they must run before L2 tests pollute the CANN context).
@@ -267,35 +335,6 @@ def pytest_collection_modifyitems(session, config, items):  # noqa: PLR0912
         return (0 if level >= 3 else 1, item.nodeid)
 
     items.sort(key=sort_key)
-
-    for item in items:
-        cls = getattr(item, "cls", None)
-        if cls and hasattr(cls, "CASES") and isinstance(cls.CASES, list):
-            if not platform:
-                item.add_marker(pytest.mark.skip(reason="--platform required"))
-            elif not any(platform in c.get("platforms", []) for c in cls.CASES):
-                item.add_marker(pytest.mark.skip(reason=f"No cases for {platform}"))
-            elif runtime_filter and getattr(cls, "_st_runtime", None) != runtime_filter:
-                item.add_marker(
-                    pytest.mark.skip(reason=f"Runtime {getattr(cls, '_st_runtime', '?')} != {runtime_filter}")
-                )
-            elif level_filter is not None and getattr(cls, "_st_level", None) != level_filter:
-                item.add_marker(pytest.mark.skip(reason=f"Level {getattr(cls, '_st_level', '?')} != {level_filter}"))
-            continue
-        platforms_marker = item.get_closest_marker("platforms")
-        if platforms_marker:
-            if not platform:
-                item.add_marker(pytest.mark.skip(reason="--platform required"))
-            elif platform not in platforms_marker.args[0]:
-                item.add_marker(pytest.mark.skip(reason=f"Not supported on {platform}"))
-
-        # runtime-isolation filter for non-@scene_test tests: if the item declares
-        # `@pytest.mark.runtime("X")` and a --runtime filter is active, skip when
-        # they don't match. Prevents test_explicit_fatal_reports and friends from
-        # running under every runtime's subprocess.
-        runtime_marker = item.get_closest_marker("runtime")
-        if runtime_marker and runtime_marker.args and runtime_filter and runtime_marker.args[0] != runtime_filter:
-            item.add_marker(pytest.mark.skip(reason=f"Runtime {runtime_marker.args[0]} != {runtime_filter}"))
 
     # L3 profiling is not supported yet: a single L3 case forks N chip-processes
     # that all write perf_swimlane_<ts>.json to the same directory with
