@@ -489,12 +489,12 @@ def _project_root() -> Path:
 def _outputs_dir() -> Path:
     """Return the directory where l2_perf_records_*.json lands.
 
-    Honors ``SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR`` so the parallel test dispatcher can give each
+    Honors ``SIMPLER_OUTPUT_DIR`` so the parallel test dispatcher can give each
     subprocess its own isolated output directory. Absolute paths pass through;
     relative paths are interpreted against the project root. Empty/unset env
     var falls back to ``<project>/outputs`` (the historical default).
     """
-    env = os.environ.get("SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR")
+    env = os.environ.get("SIMPLER_OUTPUT_DIR")
     if env:
         p = Path(env)
         return p if p.is_absolute() else _project_root() / p
@@ -1253,7 +1253,7 @@ class SceneTestCase:
                 sys.exit(2)
         # Note: profiling + parallelism used to be blocked here because perf
         # files shared a process-global directory. The test dispatcher now scopes
-        # each subprocess to its own SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR so the combination
+        # each subprocess to its own SIMPLER_OUTPUT_DIR so the combination
         # is safe.
 
         module = sys.modules[module_name]
@@ -1436,9 +1436,7 @@ def _dispatch_test_phases_standalone(module_name, selected_by_cls, args):  # noq
         # own CWD) and Python post-processing agree on the location.
         child_env = {
             **os.environ,
-            "SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR": str(
-                _project_root() / "outputs" / f"l2_perf_records_l3_{cls.__name__}"
-            ),
+            "SIMPLER_OUTPUT_DIR": str(_project_root() / "outputs" / f"l2_perf_records_l3_{cls.__name__}"),
         }
         l3_jobs.append(Job(label=label, device_count=class_dev_count, build_cmd=_build, env=child_env))
 
@@ -1541,9 +1539,7 @@ def _dispatch_test_phases_standalone(module_name, selected_by_cls, args):  # noq
             # Python post-processing agree on the filesystem location.
             child_env = {
                 **os.environ,
-                "SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR": str(
-                    _project_root() / "outputs" / f"l2_perf_records_l2_{rt}_dev{dev}"
-                ),
+                "SIMPLER_OUTPUT_DIR": str(_project_root() / "outputs" / f"l2_perf_records_l2_{rt}_dev{dev}"),
             }
             l2_jobs.append(Job(label=label, device_count=1, build_cmd=_build, env=child_env))
 

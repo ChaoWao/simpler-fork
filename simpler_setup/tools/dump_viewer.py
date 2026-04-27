@@ -44,6 +44,8 @@ import struct
 import sys
 from pathlib import Path
 
+from . import get_outputs_dir
+
 DTYPE_INFO = {
     "float32": ("f", 4),
     "float16": ("e", 2),
@@ -197,9 +199,10 @@ def list_tensors(tensors: list):
 def _resolve_dump_dir(dump_dir_arg: str | None) -> Path:
     if dump_dir_arg is not None:
         return Path(dump_dir_arg)
-    candidates = sorted(Path("outputs").glob("tensor_dump_*"), key=lambda p: p.name)
+    outputs_dir = get_outputs_dir()
+    candidates = sorted(outputs_dir.glob("tensor_dump_*"), key=lambda p: p.name)
     if not candidates:
-        print("Error: no tensor_dump_* directory found in outputs/", file=sys.stderr)
+        print(f"Error: no tensor_dump_* directory found in {outputs_dir}", file=sys.stderr)
         sys.exit(1)
     print(f"Using latest dump directory: {candidates[-1]}")
     return candidates[-1]

@@ -320,12 +320,12 @@ int L2PerfCollector::collect_all() {
 }
 
 int L2PerfCollector::export_swimlane_json(const std::string &output_path_arg) {
-    // Step 0: Resolve effective output directory. SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR (when set)
+    // Step 0: Resolve effective output directory. SIMPLER_OUTPUT_DIR (when set)
     // overrides the caller-supplied path so the parallel test orchestrator can
     // give each subprocess its own directory — avoids filename collisions when
     // two concurrent runs produce a l2_perf_records_*.json with the same
     // second-precision timestamp. Empty env var is treated as unset.
-    const char *env_dir = std::getenv("SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR");
+    const char *env_dir = std::getenv("SIMPLER_OUTPUT_DIR");
     const std::string output_path = (env_dir != nullptr && env_dir[0] != '\0') ? std::string(env_dir) : output_path_arg;
 
     // Step 1: Validate collected data

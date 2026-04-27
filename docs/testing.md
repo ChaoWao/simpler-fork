@@ -240,7 +240,7 @@ A single file can declare both L2 and L3 classes; they're grouped by `(runtime, 
 
 ### Profiling under parallelism
 
-`--enable-l2-swimlane` writes `outputs/l2_perf_records_*.json`; the runtime's filename has second-precision timestamps, so two subprocesses producing perf files in the same second would collide on one path. The dispatcher sidesteps this by giving each subprocess its own directory via the `SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR` env var:
+`--enable-l2-swimlane` writes `outputs/l2_perf_records_*.json`; the runtime's filename has second-precision timestamps, so two subprocesses producing perf files in the same second would collide on one path. The dispatcher sidesteps this by giving each subprocess its own directory via the `SIMPLER_OUTPUT_DIR` env var:
 
 | Subprocess | Scoped directory |
 | ---------- | ---------------- |
@@ -251,7 +251,7 @@ A single file can declare both L2 and L3 classes; they're grouped by `(runtime, 
 
 After all phases drain, `flatten_l2_perf_records_subdirs()` moves the contents of every `outputs/l2_perf_records_*/` subdir back to `outputs/` so downstream tools (`swimlane_converter.py`, CI artifact upload) still find everything in one place. Name collisions on the destination keep the first writer and suffix the loser with the subdir tag (e.g. `l2_perf_records_…__gw1.json`) so nothing is silently overwritten.
 
-The C++ runtime honors `SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR` at `L2PerfCollector::export_swimlane_json` — empty/unset falls through to the caller-supplied path (historical `outputs/` default), so standalone invocations that don't set the env var behave exactly as before.
+The C++ runtime honors `SIMPLER_OUTPUT_DIR` at `L2PerfCollector::export_swimlane_json` — empty/unset falls through to the caller-supplied path (historical `outputs/` default), so standalone invocations that don't set the env var behave exactly as before.
 
 ### Dispatcher skip conditions (normal pytest runs)
 

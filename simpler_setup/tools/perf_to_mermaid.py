@@ -29,6 +29,8 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+from . import get_outputs_dir
+
 
 def read_perf_data(filepath):
     """Read performance data from JSON file.
@@ -273,7 +275,7 @@ def _resolve_input_path(args):
             return None
         return input_path
 
-    outputs_dir = Path.cwd() / "outputs"
+    outputs_dir = get_outputs_dir()
     json_files = list(outputs_dir.glob("l2_perf_records_*.json"))
     if not json_files:
         print(f"Error: no l2_perf_records_*.json under {outputs_dir}", file=sys.stderr)
@@ -297,7 +299,7 @@ def _resolve_output_path(args, input_path):
     else:
         suffix_part = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    outputs_dir = Path.cwd() / "outputs"
+    outputs_dir = get_outputs_dir()
     outputs_dir.mkdir(exist_ok=True)
     return outputs_dir / f"mermaid_diagram_{suffix_part}.md"
 

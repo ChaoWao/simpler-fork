@@ -244,16 +244,14 @@ def pytest_configure(config):
         # Python post-processing always point at the same filesystem location
         # regardless of where pytest was invoked. Only set if the parent
         # hasn't already scoped us into a subprocess dir.
-        if "SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR" not in os.environ:
-            os.environ["SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR"] = str(
-                config.rootpath / "outputs" / f"l2_perf_records_{worker_id}"
-            )
+        if "SIMPLER_OUTPUT_DIR" not in os.environ:
+            os.environ["SIMPLER_OUTPUT_DIR"] = str(config.rootpath / "outputs" / f"l2_perf_records_{worker_id}")
         # else: more xdist workers than devices — fall through with original range;
         # DevicePool will fail clearly if the test tries to allocate.
 
     # Note: profiling + parallelism used to be blocked here because perf files
     # shared a process-global directory. The test dispatcher now scopes each
-    # subprocess to its own SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR (see _dispatch_test_phases and
+    # subprocess to its own SIMPLER_OUTPUT_DIR (see _dispatch_test_phases and
     # the xdist slicing above) and flatten_l2_perf_records_subdirs reassembles outputs/
     # at the end, so the combination is now safe.
 
@@ -387,7 +385,7 @@ class _ResourceJob(typing.NamedTuple):
     """One device-allocating subprocess job fed into Resource phase.
 
     ``kind`` drives only two things: the ``--level 3`` filter added to the
-    child command (for L3 classes) and the ``SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR``
+    child command (for L3 classes) and the ``SIMPLER_OUTPUT_DIR``
     prefix. The dispatch itself (bin-pack over ``--device`` pool,
     ``run_jobs`` scheduling, fail-fast semantics) is identical.
     """
@@ -583,14 +581,12 @@ def _dispatch_test_phases(session, resource_specs):  # noqa: PLR0912
                     cmd.extend(["--platform", platform])
                 return cmd
 
-            # SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR scopes this job's perf files to its own
+            # SIMPLER_OUTPUT_DIR scopes this job's perf files to its own
             # subdir so concurrent jobs can't collide on filename.
             safe_nodeid = spec.nodeid.replace("/", "_").replace(":", "_").replace(".", "_")
             child_env = {
                 **os.environ,
-                "SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR": str(
-                    cfg.rootpath / "outputs" / f"l2_perf_records_{spec.kind}_{safe_nodeid}"
-                ),
+                "SIMPLER_OUTPUT_DIR": str(cfg.rootpath / "outputs" / f"l2_perf_records_{spec.kind}_{safe_nodeid}"),
             }
             jobs.append(
                 _ps.Job(

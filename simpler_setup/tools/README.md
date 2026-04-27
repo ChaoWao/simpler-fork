@@ -16,8 +16,9 @@ no repo checkout required.
 - **[device_log_resolver](#device_log_resolver)** — shared device-log path resolver library
 
 Auto-detection paths (`outputs/l2_perf_records_*.json`, `outputs/tensor_dump_*/`)
-are resolved relative to the **current working directory** — run these from the
-directory that holds your `outputs/`.
+are resolved against `$SIMPLER_OUTPUT_DIR` when set (the same env var the
+runtime and parallel test dispatcher use), otherwise `./outputs` under the
+current working directory.
 
 ---
 

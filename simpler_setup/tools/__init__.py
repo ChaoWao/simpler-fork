@@ -16,3 +16,19 @@ Invoke via ``python -m simpler_setup.tools.<name>``:
 - ``dump_viewer``           : inspect tensor dumps
 - ``device_log_resolver``   : shared library used by the converters
 """
+
+import os
+from pathlib import Path
+
+
+def get_outputs_dir() -> Path:
+    """Directory where the runtime writes ``l2_perf_records_*.json`` etc.
+
+    Honors ``SIMPLER_OUTPUT_DIR`` — the same env var the C++ runtime and the
+    parallel test dispatcher use to scope each subprocess to its own directory.
+    Empty/unset falls back to ``./outputs`` under CWD.
+    """
+    env = os.environ.get("SIMPLER_OUTPUT_DIR")
+    if env:
+        return Path(env)
+    return Path.cwd() / "outputs"

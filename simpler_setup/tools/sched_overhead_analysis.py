@@ -28,12 +28,13 @@ import re
 import sys
 from pathlib import Path
 
+from . import get_outputs_dir
 from .device_log_resolver import infer_device_id_from_log_path, resolve_device_log_path
 
 
 def auto_select_l2_perf_records_json():
-    """Find the latest l2_perf_records_*.json under ./outputs/."""
-    outputs_dir = Path.cwd() / "outputs"
+    """Find the latest l2_perf_records_*.json under the outputs directory."""
+    outputs_dir = get_outputs_dir()
     files = sorted(outputs_dir.glob("l2_perf_records_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
     if not files:
         raise FileNotFoundError(f"No l2_perf_records_*.json files found in {outputs_dir}")

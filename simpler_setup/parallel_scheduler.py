@@ -380,7 +380,7 @@ def format_device_range(ids: list[int]) -> str:
 def flatten_l2_perf_records_subdirs(outputs_dir: str | os.PathLike = "outputs") -> int:
     """Move files from ``outputs/l2_perf_records_*`` subdirs back up to ``outputs/``.
 
-    The test dispatcher scopes each subprocess's ``SIMPLER_L2_PERF_RECORDS_OUTPUT_DIR`` to a
+    The test dispatcher scopes each subprocess's ``SIMPLER_OUTPUT_DIR`` to a
     distinct ``outputs/l2_perf_records_<tag>/`` subdir so concurrent perf file writes
     can't collide on second-precision filenames. After all phases drain,
     call this to flatten the subdirs back to the historical ``outputs/``

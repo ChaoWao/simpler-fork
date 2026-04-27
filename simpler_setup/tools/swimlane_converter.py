@@ -31,6 +31,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from . import get_outputs_dir
 from .device_log_resolver import infer_device_id_from_log_path, resolve_device_log_path
 from .sched_overhead_analysis import parse_scheduler_threads
 from .sched_overhead_analysis import run_analysis as run_sched_overhead_analysis
@@ -1145,7 +1146,7 @@ def _resolve_input_path(args):
             return None
         return input_path
 
-    outputs_dir = Path.cwd() / "outputs"
+    outputs_dir = get_outputs_dir()
     json_files = list(outputs_dir.glob("l2_perf_records_*.json"))
     if not json_files:
         print(f"Error: No l2_perf_records_*.json files found in {outputs_dir}", file=sys.stderr)
@@ -1169,7 +1170,7 @@ def _resolve_output_path(args, input_path):
     else:
         suffix_part = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    outputs_dir = Path.cwd() / "outputs"
+    outputs_dir = get_outputs_dir()
     outputs_dir.mkdir(exist_ok=True)
     return outputs_dir / f"merged_swimlane_{suffix_part}.json"
 
