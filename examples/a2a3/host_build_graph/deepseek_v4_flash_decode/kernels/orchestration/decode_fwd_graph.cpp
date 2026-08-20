@@ -48,169 +48,57 @@ namespace {
 //
 // Boundary order is positional: args.tensor(i) here and the i-th add_* call
 // at the submit site are the same slot, so the two lists must stay in step.
-void csa_hca_layer(const GraphTaskArgs &args) {
+void csa_attn_block(const GraphTaskArgs &args) {
     const ChipTensor &hc_attn_fn_csa_inline700 = args.tensor(0).ref();
-    const ChipTensor &hc_attn_scale_csa_inline626 = args.tensor(1).ref();
-    const ChipTensor &hc_attn_base_csa_inline593 = args.tensor(2).ref();
-    const ChipTensor &attn_norm_w_csa_inline610 = args.tensor(3).ref();
-    const ChipTensor &wq_a_csa_inline682 = args.tensor(4).ref();
-    const ChipTensor &wq_b_csa_inline582 = args.tensor(5).ref();
-    const ChipTensor &wq_b_scale_csa_inline640 = args.tensor(6).ref();
-    const ChipTensor &wkv_csa_inline696 = args.tensor(7).ref();
-    const ChipTensor &gamma_cq_csa_inline565 = args.tensor(8).ref();
-    const ChipTensor &gamma_ckv_csa_inline728 = args.tensor(9).ref();
-    const ChipTensor &kv_cache_csa_inline730 = args.tensor(10).ref();
-    const ChipTensor &attn_sink_csa_inline727 = args.tensor(11).ref();
-    const ChipTensor &wo_a_csa_inline672 = args.tensor(12).ref();
-    const ChipTensor &wo_b_csa_inline732 = args.tensor(13).ref();
-    const ChipTensor &wo_b_scale_csa_inline733 = args.tensor(14).ref();
-    const ChipTensor &csa_cmp_wkv_csa_inline701 = args.tensor(15).ref();
-    const ChipTensor &csa_cmp_wgate_csa_inline737 = args.tensor(16).ref();
-    const ChipTensor &csa_cmp_ape_csa_inline734 = args.tensor(17).ref();
-    const ChipTensor &csa_cmp_norm_w_csa_inline738 = args.tensor(18).ref();
-    const ChipTensor &csa_compress_state_csa_inline557 = args.tensor(19).ref();
-    const ChipTensor &csa_idx_wq_b_csa_inline556 = args.tensor(20).ref();
-    const ChipTensor &csa_idx_wq_b_scale_csa_inline561 = args.tensor(21).ref();
-    const ChipTensor &csa_weights_proj_csa_inline553 = args.tensor(22).ref();
-    const ChipTensor &csa_hadamard_idx_csa_inline572 = args.tensor(23).ref();
-    const ChipTensor &csa_inner_wkv_csa_inline552 = args.tensor(24).ref();
-    const ChipTensor &csa_inner_wgate_csa_inline588 = args.tensor(25).ref();
-    const ChipTensor &csa_inner_ape_csa_inline622 = args.tensor(26).ref();
-    const ChipTensor &csa_inner_norm_w_csa_inline551 = args.tensor(27).ref();
-    const ChipTensor &csa_inner_compress_state_csa_inline550 = args.tensor(28).ref();
-    const ChipTensor &cmp_kv_csa_inline638 = args.tensor(29).ref();
-    const ChipTensor &idx_kv_cache_csa_inline548 = args.tensor(30).ref();
-    const ChipTensor &idx_kv_scale_csa_inline618 = args.tensor(31).ref();
-    const ChipTensor &hc_ffn_fn_csa_inline547 = args.tensor(32).ref();
-    const ChipTensor &hc_ffn_scale_csa_inline543 = args.tensor(33).ref();
-    const ChipTensor &hc_ffn_base_csa_inline542 = args.tensor(34).ref();
-    const ChipTensor &norm_w_csa_inline656 = args.tensor(35).ref();
-    const ChipTensor &gate_w_csa_inline540 = args.tensor(36).ref();
-    const ChipTensor &gate_bias_csa_inline538 = args.tensor(37).ref();
-    const ChipTensor &tid2eid_csa_inline537 = args.tensor(38).ref();
-    const ChipTensor &routed_w1_csa_inline536 = args.tensor(39).ref();
-    const ChipTensor &routed_w1_scale_csa_inline535 = args.tensor(40).ref();
-    const ChipTensor &routed_w3_csa_inline534 = args.tensor(41).ref();
-    const ChipTensor &routed_w3_scale_csa_inline713 = args.tensor(42).ref();
-    const ChipTensor &routed_w2_csa_inline533 = args.tensor(43).ref();
-    const ChipTensor &routed_w2_scale_csa_inline722 = args.tensor(44).ref();
-    const ChipTensor &shared_w1_csa_inline532 = args.tensor(45).ref();
-    const ChipTensor &shared_w1_scale_csa_inline531 = args.tensor(46).ref();
-    const ChipTensor &shared_w3_csa_inline530 = args.tensor(47).ref();
-    const ChipTensor &shared_w3_scale_csa_inline578 = args.tensor(48).ref();
-    const ChipTensor &shared_w2_csa_inline571 = args.tensor(49).ref();
-    const ChipTensor &shared_w2_scale_csa_inline708 = args.tensor(50).ref();
-    const ChipTensor &hc_attn_fn_hca_inline594 = args.tensor(51).ref();
-    const ChipTensor &hc_attn_scale_hca_inline587 = args.tensor(52).ref();
-    const ChipTensor &hc_attn_base_hca_inline567 = args.tensor(53).ref();
-    const ChipTensor &attn_norm_w_hca_inline529 = args.tensor(54).ref();
-    const ChipTensor &wq_a_hca_inline528 = args.tensor(55).ref();
-    const ChipTensor &wq_b_hca_inline526 = args.tensor(56).ref();
-    const ChipTensor &wq_b_scale_hca_inline525 = args.tensor(57).ref();
-    const ChipTensor &wkv_hca_inline527 = args.tensor(58).ref();
-    const ChipTensor &gamma_cq_hca_inline599 = args.tensor(59).ref();
-    const ChipTensor &gamma_ckv_hca_inline524 = args.tensor(60).ref();
-    const ChipTensor &kv_cache_hca_inline625 = args.tensor(61).ref();
-    const ChipTensor &attn_sink_hca_inline717 = args.tensor(62).ref();
-    const ChipTensor &wo_a_hca_inline522 = args.tensor(63).ref();
-    const ChipTensor &wo_b_hca_inline521 = args.tensor(64).ref();
-    const ChipTensor &wo_b_scale_hca_inline546 = args.tensor(65).ref();
-    const ChipTensor &hca_cmp_wkv_hca_inline584 = args.tensor(66).ref();
-    const ChipTensor &hca_cmp_wgate_hca_inline630 = args.tensor(67).ref();
-    const ChipTensor &hca_cmp_ape_hca_inline577 = args.tensor(68).ref();
-    const ChipTensor &hca_cmp_norm_w_hca_inline520 = args.tensor(69).ref();
-    const ChipTensor &hca_compress_state_hca_inline575 = args.tensor(70).ref();
-    const ChipTensor &cmp_kv_hca_inline598 = args.tensor(71).ref();
-    const ChipTensor &hc_ffn_fn_hca_inline519 = args.tensor(72).ref();
-    const ChipTensor &hc_ffn_scale_hca_inline517 = args.tensor(73).ref();
-    const ChipTensor &hc_ffn_base_hca_inline541 = args.tensor(74).ref();
-    const ChipTensor &norm_w_hca_inline516 = args.tensor(75).ref();
-    const ChipTensor &gate_w_hca_inline680 = args.tensor(76).ref();
-    const ChipTensor &gate_bias_hca_inline699 = args.tensor(77).ref();
-    const ChipTensor &tid2eid_hca_inline515 = args.tensor(78).ref();
-    const ChipTensor &routed_w1_hca_inline615 = args.tensor(79).ref();
-    const ChipTensor &routed_w1_scale_hca_inline687 = args.tensor(80).ref();
-    const ChipTensor &routed_w3_hca_inline590 = args.tensor(81).ref();
-    const ChipTensor &routed_w3_scale_hca_inline513 = args.tensor(82).ref();
-    const ChipTensor &routed_w2_hca_inline597 = args.tensor(83).ref();
-    const ChipTensor &routed_w2_scale_hca_inline514 = args.tensor(84).ref();
-    const ChipTensor &shared_w1_hca_inline512 = args.tensor(85).ref();
-    const ChipTensor &shared_w1_scale_hca_inline651 = args.tensor(86).ref();
-    const ChipTensor &shared_w3_hca_inline735 = args.tensor(87).ref();
-    const ChipTensor &shared_w3_scale_hca_inline596 = args.tensor(88).ref();
-    const ChipTensor &shared_w2_hca_inline611 = args.tensor(89).ref();
-    const ChipTensor &shared_w2_scale_hca_inline523 = args.tensor(90).ref();
-    const ChipTensor &compressed_freqs_cos_inline559 = args.tensor(91).ref();
-    const ChipTensor &compressed_freqs_sin_inline692 = args.tensor(92).ref();
-    const ChipTensor &csa_cmp_slot_mapping_inline719 = args.tensor(93).ref();
-    const ChipTensor &csa_idx_slot_mapping_inline600 = args.tensor(94).ref();
-    const ChipTensor &csa_inner_state_slot_mapping_inline609 = args.tensor(95).ref();
-    const ChipTensor &csa_state_slot_mapping_inline645 = args.tensor(96).ref();
-    const ChipTensor &ext_arrived = args.tensor(97).ref();
-    const ChipTensor &ext_cmp_block_table = args.tensor(98).ref();
-    const ChipTensor &ext_combine_arrived = args.tensor(99).ref();
-    const ChipTensor &ext_csa_compress_state_block_table = args.tensor(100).ref();
-    const ChipTensor &ext_csa_inner_compress_state_block_table = args.tensor(101).ref();
-    const ChipTensor &ext_data_arrived = args.tensor(102).ref();
-    const ChipTensor &ext_hca_compress_state_block_table = args.tensor(103).ref();
-    const ChipTensor &ext_idx_block_table = args.tensor(104).ref();
-    const ChipTensor &ext_input_ids = args.tensor(105).ref();
-    const ChipTensor &ext_kv_seq_lens = args.tensor(106).ref();
-    const ChipTensor &ext_position_ids = args.tensor(107).ref();
-    const ChipTensor &ext_recv_aux = args.tensor(108).ref();
-    const ChipTensor &ext_recv_meta = args.tensor(109).ref();
-    const ChipTensor &ext_recv_route = args.tensor(110).ref();
-    const ChipTensor &ext_recv_x = args.tensor(111).ref();
-    const ChipTensor &ext_routed_y_buf = args.tensor(112).ref();
-    const ChipTensor &hca_cmp_slot_mapping_inline617 = args.tensor(113).ref();
-    const ChipTensor &hca_state_slot_mapping_inline710 = args.tensor(114).ref();
-    const ChipTensor &hidden_inline709 = args.tensor(115).ref();
-    const ChipTensor &ori_slot_mapping_inline614 = args.tensor(116).ref();
-    const ChipTensor &swa_indices_inline636 = args.tensor(117).ref();
-
-    int32_t csa_layer_inline714 = static_cast<int32_t>(args.scalar(0));
-    int32_t hca_layer_inline704 = static_cast<int32_t>(args.scalar(1));
-    int32_t csa_moe_epoch_inline715 = static_cast<int32_t>(args.scalar(2));
-    int32_t hca_moe_epoch_inline716 = static_cast<int32_t>(args.scalar(3));
-    float scale0_inline14524 = from_u64<float>(args.scalar(4));
-    float scale1_inline14544 = from_u64<float>(args.scalar(5));
-    float scale2_inline14510 = from_u64<float>(args.scalar(6));
-    float scale0_inline14771 = from_u64<float>(args.scalar(7));
-    float scale1_inline14791 = from_u64<float>(args.scalar(8));
-    float scale2_inline14757 = from_u64<float>(args.scalar(9));
-    float scale0_inline14898 = from_u64<float>(args.scalar(10));
-    float scale1_inline14918 = from_u64<float>(args.scalar(11));
-    float scale2_inline14884 = from_u64<float>(args.scalar(12));
-    float scale0_inline15025 = from_u64<float>(args.scalar(13));
-    float scale1_inline15045 = from_u64<float>(args.scalar(14));
-    float scale2_inline15011 = from_u64<float>(args.scalar(15));
-    int32_t arrived_ctx = static_cast<int32_t>(args.scalar(16));
-    int32_t cmp_block_num_inline602 = static_cast<int32_t>(args.scalar(17));
-    int32_t combine_arrived_ctx = static_cast<int32_t>(args.scalar(18));
-    int32_t csa_state_block_num_inline604 = static_cast<int32_t>(args.scalar(19));
-    int32_t data_arrived_ctx = static_cast<int32_t>(args.scalar(20));
-    int32_t hca_state_block_num_inline608 = static_cast<int32_t>(args.scalar(21));
-    int32_t idx_block_num_inline601 = static_cast<int32_t>(args.scalar(22));
-    int32_t inner_state_block_num_inline613 = static_cast<int32_t>(args.scalar(23));
-    int64_t my_rank = static_cast<int64_t>(args.scalar(24));
-    int64_t nt_inline677__rv_v2 = static_cast<int64_t>(args.scalar(25));
-    int32_t recv_meta_ctx = static_cast<int32_t>(args.scalar(26));
-    int32_t recv_x_ctx = static_cast<int32_t>(args.scalar(27));
-    int32_t recv_aux_ctx = static_cast<int32_t>(args.scalar(28));
-    int32_t recv_route_ctx = static_cast<int32_t>(args.scalar(29));
-    int32_t routed_y_buf_ctx = static_cast<int32_t>(args.scalar(30));
-
-    uint32_t x_attn_csa_inline721_ci_shapes[3] = {8, 4, 4096};
-    TensorCreateInfo x_attn_csa_inline721_ci(x_attn_csa_inline721_ci_shapes, 3, DataType::FLOAT32);
-    uint32_t x_attn_hca_inline723_ci_shapes[3] = {8, 4, 4096};
-    TensorCreateInfo x_attn_hca_inline723_ci(x_attn_hca_inline723_ci_shapes, 3, DataType::FLOAT32);
-    uint32_t hidden_mid_inline726_ci_shapes[3] = {8, 4, 4096};
-    TensorCreateInfo hidden_mid_inline726_ci(hidden_mid_inline726_ci_shapes, 3, DataType::FLOAT32);
-    TaskOutputTensors alloc_55 =
-        alloc_tensors(x_attn_csa_inline721_ci, x_attn_hca_inline723_ci, hidden_mid_inline726_ci);
-    const ChipTensor &x_attn_csa_inline721 = alloc_55.get_ref(0);
-    const ChipTensor &x_attn_hca_inline723 = alloc_55.get_ref(1);
-    const ChipTensor &hidden_mid_inline726 = alloc_55.get_ref(2);
+    const ChipTensor &hc_attn_base_csa_inline593 = args.tensor(1).ref();
+    const ChipTensor &attn_norm_w_csa_inline610 = args.tensor(2).ref();
+    const ChipTensor &wq_a_csa_inline682 = args.tensor(3).ref();
+    const ChipTensor &wq_b_csa_inline582 = args.tensor(4).ref();
+    const ChipTensor &wq_b_scale_csa_inline640 = args.tensor(5).ref();
+    const ChipTensor &wkv_csa_inline696 = args.tensor(6).ref();
+    const ChipTensor &gamma_cq_csa_inline565 = args.tensor(7).ref();
+    const ChipTensor &gamma_ckv_csa_inline728 = args.tensor(8).ref();
+    const ChipTensor &kv_cache_csa_inline730 = args.tensor(9).ref();
+    const ChipTensor &attn_sink_csa_inline727 = args.tensor(10).ref();
+    const ChipTensor &wo_a_csa_inline672 = args.tensor(11).ref();
+    const ChipTensor &wo_b_csa_inline732 = args.tensor(12).ref();
+    const ChipTensor &wo_b_scale_csa_inline733 = args.tensor(13).ref();
+    const ChipTensor &csa_cmp_wkv_csa_inline701 = args.tensor(14).ref();
+    const ChipTensor &csa_cmp_wgate_csa_inline737 = args.tensor(15).ref();
+    const ChipTensor &csa_cmp_ape_csa_inline734 = args.tensor(16).ref();
+    const ChipTensor &csa_cmp_norm_w_csa_inline738 = args.tensor(17).ref();
+    const ChipTensor &csa_compress_state_csa_inline557 = args.tensor(18).ref();
+    const ChipTensor &csa_idx_wq_b_csa_inline556 = args.tensor(19).ref();
+    const ChipTensor &csa_idx_wq_b_scale_csa_inline561 = args.tensor(20).ref();
+    const ChipTensor &csa_weights_proj_csa_inline553 = args.tensor(21).ref();
+    const ChipTensor &csa_hadamard_idx_csa_inline572 = args.tensor(22).ref();
+    const ChipTensor &csa_inner_wkv_csa_inline552 = args.tensor(23).ref();
+    const ChipTensor &csa_inner_wgate_csa_inline588 = args.tensor(24).ref();
+    const ChipTensor &csa_inner_ape_csa_inline622 = args.tensor(25).ref();
+    const ChipTensor &csa_inner_norm_w_csa_inline551 = args.tensor(26).ref();
+    const ChipTensor &csa_inner_compress_state_csa_inline550 = args.tensor(27).ref();
+    const ChipTensor &cmp_kv_csa_inline638 = args.tensor(28).ref();
+    const ChipTensor &idx_kv_cache_csa_inline548 = args.tensor(29).ref();
+    const ChipTensor &idx_kv_scale_csa_inline618 = args.tensor(30).ref();
+    const ChipTensor &compressed_freqs_cos_inline559 = args.tensor(31).ref();
+    const ChipTensor &compressed_freqs_sin_inline692 = args.tensor(32).ref();
+    const ChipTensor &csa_cmp_slot_mapping_inline719 = args.tensor(33).ref();
+    const ChipTensor &csa_idx_slot_mapping_inline600 = args.tensor(34).ref();
+    const ChipTensor &csa_inner_state_slot_mapping_inline609 = args.tensor(35).ref();
+    const ChipTensor &csa_state_slot_mapping_inline645 = args.tensor(36).ref();
+    const ChipTensor &ext_cmp_block_table = args.tensor(37).ref();
+    const ChipTensor &ext_csa_compress_state_block_table = args.tensor(38).ref();
+    const ChipTensor &ext_csa_inner_compress_state_block_table = args.tensor(39).ref();
+    const ChipTensor &ext_idx_block_table = args.tensor(40).ref();
+    const ChipTensor &ext_kv_seq_lens = args.tensor(41).ref();
+    const ChipTensor &ext_position_ids = args.tensor(42).ref();
+    const ChipTensor &hidden_inline709 = args.tensor(43).ref();
+    const ChipTensor &ori_slot_mapping_inline614 = args.tensor(44).ref();
+    const ChipTensor &swa_indices_inline636 = args.tensor(45).ref();
+    const ChipTensor &x_attn_csa_inline721 = args.tensor(46).ref();
+    float scale0_inline14524 = from_u64<float>(args.scalar(0));
+    float scale1_inline14544 = from_u64<float>(args.scalar(1));
+    float scale2_inline14510 = from_u64<float>(args.scalar(2));
     PTO2_SCOPE() {
         uint32_t x_mixed_inline10524_ci_shapes[2] = {8, 4096};
         TensorCreateInfo x_mixed_inline10524_ci(x_mixed_inline10524_ci_shapes, 2, DataType::BFLOAT16);
@@ -1335,6 +1223,53 @@ void csa_hca_layer(const GraphTaskArgs &args) {
         params_t166.launch_spec.set_block_num(((t_dim_inline2270_inline10388 / 4) * 4));
         rt_submit_aiv_task(172, params_t166);
     }
+}
+
+void csa_moe_block(const GraphTaskArgs &args) {
+    const ChipTensor &hc_ffn_fn_csa_inline547 = args.tensor(0).ref();
+    const ChipTensor &hc_ffn_base_csa_inline542 = args.tensor(1).ref();
+    const ChipTensor &norm_w_csa_inline656 = args.tensor(2).ref();
+    const ChipTensor &gate_w_csa_inline540 = args.tensor(3).ref();
+    const ChipTensor &gate_bias_csa_inline538 = args.tensor(4).ref();
+    const ChipTensor &tid2eid_csa_inline537 = args.tensor(5).ref();
+    const ChipTensor &routed_w1_csa_inline536 = args.tensor(6).ref();
+    const ChipTensor &routed_w1_scale_csa_inline535 = args.tensor(7).ref();
+    const ChipTensor &routed_w3_csa_inline534 = args.tensor(8).ref();
+    const ChipTensor &routed_w3_scale_csa_inline713 = args.tensor(9).ref();
+    const ChipTensor &routed_w2_csa_inline533 = args.tensor(10).ref();
+    const ChipTensor &routed_w2_scale_csa_inline722 = args.tensor(11).ref();
+    const ChipTensor &shared_w1_csa_inline532 = args.tensor(12).ref();
+    const ChipTensor &shared_w1_scale_csa_inline531 = args.tensor(13).ref();
+    const ChipTensor &shared_w3_csa_inline530 = args.tensor(14).ref();
+    const ChipTensor &shared_w3_scale_csa_inline578 = args.tensor(15).ref();
+    const ChipTensor &shared_w2_csa_inline571 = args.tensor(16).ref();
+    const ChipTensor &shared_w2_scale_csa_inline708 = args.tensor(17).ref();
+    const ChipTensor &ext_arrived = args.tensor(18).ref();
+    const ChipTensor &ext_combine_arrived = args.tensor(19).ref();
+    const ChipTensor &ext_data_arrived = args.tensor(20).ref();
+    const ChipTensor &ext_input_ids = args.tensor(21).ref();
+    const ChipTensor &ext_recv_aux = args.tensor(22).ref();
+    const ChipTensor &ext_recv_meta = args.tensor(23).ref();
+    const ChipTensor &ext_recv_route = args.tensor(24).ref();
+    const ChipTensor &ext_recv_x = args.tensor(25).ref();
+    const ChipTensor &ext_routed_y_buf = args.tensor(26).ref();
+    const ChipTensor &x_attn_csa_inline721 = args.tensor(27).ref();
+    const ChipTensor &hidden_mid_inline726 = args.tensor(28).ref();
+    int32_t csa_layer_inline714 = static_cast<int32_t>(args.scalar(0));
+    int32_t csa_moe_epoch_inline715 = static_cast<int32_t>(args.scalar(1));
+    float scale0_inline14771 = from_u64<float>(args.scalar(2));
+    float scale1_inline14791 = from_u64<float>(args.scalar(3));
+    float scale2_inline14757 = from_u64<float>(args.scalar(4));
+    int32_t arrived_ctx = static_cast<int32_t>(args.scalar(5));
+    int32_t combine_arrived_ctx = static_cast<int32_t>(args.scalar(6));
+    int32_t data_arrived_ctx = static_cast<int32_t>(args.scalar(7));
+    int64_t my_rank = static_cast<int64_t>(args.scalar(8));
+    int64_t nt_inline677__rv_v2 = static_cast<int64_t>(args.scalar(9));
+    int32_t recv_meta_ctx = static_cast<int32_t>(args.scalar(10));
+    int32_t recv_x_ctx = static_cast<int32_t>(args.scalar(11));
+    int32_t recv_aux_ctx = static_cast<int32_t>(args.scalar(12));
+    int32_t recv_route_ctx = static_cast<int32_t>(args.scalar(13));
+    int32_t routed_y_buf_ctx = static_cast<int32_t>(args.scalar(14));
     PTO2_SCOPE() {
         uint32_t x_mixed_inline11049_ci_shapes[2] = {8, 4096};
         TensorCreateInfo x_mixed_inline11049_ci(x_mixed_inline11049_ci_shapes, 2, DataType::BFLOAT16);
@@ -2137,6 +2072,44 @@ void csa_hca_layer(const GraphTaskArgs &args) {
             rt_submit_aiv_task(204, params_t197);
         }
     }
+}
+
+void hca_attn_block(const GraphTaskArgs &args) {
+    const ChipTensor &hc_attn_fn_hca_inline594 = args.tensor(0).ref();
+    const ChipTensor &hc_attn_base_hca_inline567 = args.tensor(1).ref();
+    const ChipTensor &attn_norm_w_hca_inline529 = args.tensor(2).ref();
+    const ChipTensor &wq_a_hca_inline528 = args.tensor(3).ref();
+    const ChipTensor &wq_b_hca_inline526 = args.tensor(4).ref();
+    const ChipTensor &wq_b_scale_hca_inline525 = args.tensor(5).ref();
+    const ChipTensor &wkv_hca_inline527 = args.tensor(6).ref();
+    const ChipTensor &gamma_cq_hca_inline599 = args.tensor(7).ref();
+    const ChipTensor &gamma_ckv_hca_inline524 = args.tensor(8).ref();
+    const ChipTensor &kv_cache_hca_inline625 = args.tensor(9).ref();
+    const ChipTensor &attn_sink_hca_inline717 = args.tensor(10).ref();
+    const ChipTensor &wo_a_hca_inline522 = args.tensor(11).ref();
+    const ChipTensor &wo_b_hca_inline521 = args.tensor(12).ref();
+    const ChipTensor &wo_b_scale_hca_inline546 = args.tensor(13).ref();
+    const ChipTensor &hca_cmp_wkv_hca_inline584 = args.tensor(14).ref();
+    const ChipTensor &hca_cmp_wgate_hca_inline630 = args.tensor(15).ref();
+    const ChipTensor &hca_cmp_ape_hca_inline577 = args.tensor(16).ref();
+    const ChipTensor &hca_cmp_norm_w_hca_inline520 = args.tensor(17).ref();
+    const ChipTensor &hca_compress_state_hca_inline575 = args.tensor(18).ref();
+    const ChipTensor &cmp_kv_hca_inline598 = args.tensor(19).ref();
+    const ChipTensor &compressed_freqs_cos_inline559 = args.tensor(20).ref();
+    const ChipTensor &compressed_freqs_sin_inline692 = args.tensor(21).ref();
+    const ChipTensor &ext_cmp_block_table = args.tensor(22).ref();
+    const ChipTensor &ext_hca_compress_state_block_table = args.tensor(23).ref();
+    const ChipTensor &ext_kv_seq_lens = args.tensor(24).ref();
+    const ChipTensor &ext_position_ids = args.tensor(25).ref();
+    const ChipTensor &hca_cmp_slot_mapping_inline617 = args.tensor(26).ref();
+    const ChipTensor &hca_state_slot_mapping_inline710 = args.tensor(27).ref();
+    const ChipTensor &ori_slot_mapping_inline614 = args.tensor(28).ref();
+    const ChipTensor &swa_indices_inline636 = args.tensor(29).ref();
+    const ChipTensor &x_attn_hca_inline723 = args.tensor(30).ref();
+    const ChipTensor &hidden_mid_inline726 = args.tensor(31).ref();
+    float scale0_inline14898 = from_u64<float>(args.scalar(0));
+    float scale1_inline14918 = from_u64<float>(args.scalar(1));
+    float scale2_inline14884 = from_u64<float>(args.scalar(2));
     PTO2_SCOPE() {
         uint32_t x_mixed_inline11578_ci_shapes[2] = {8, 4096};
         TensorCreateInfo x_mixed_inline11578_ci(x_mixed_inline11578_ci_shapes, 2, DataType::BFLOAT16);
@@ -2944,6 +2917,50 @@ void csa_hca_layer(const GraphTaskArgs &args) {
         params_t231.launch_spec.set_block_num(((t_dim_inline1623_inline11547 / 4) * 4));
         rt_submit_aiv_task(239, params_t231);
     }
+}
+
+void hca_moe_block(const GraphTaskArgs &args) {
+    const ChipTensor &hc_ffn_fn_hca_inline519 = args.tensor(0).ref();
+    const ChipTensor &hc_ffn_base_hca_inline541 = args.tensor(1).ref();
+    const ChipTensor &norm_w_hca_inline516 = args.tensor(2).ref();
+    const ChipTensor &gate_w_hca_inline680 = args.tensor(3).ref();
+    const ChipTensor &gate_bias_hca_inline699 = args.tensor(4).ref();
+    const ChipTensor &routed_w1_hca_inline615 = args.tensor(5).ref();
+    const ChipTensor &routed_w1_scale_hca_inline687 = args.tensor(6).ref();
+    const ChipTensor &routed_w3_hca_inline590 = args.tensor(7).ref();
+    const ChipTensor &routed_w3_scale_hca_inline513 = args.tensor(8).ref();
+    const ChipTensor &routed_w2_hca_inline597 = args.tensor(9).ref();
+    const ChipTensor &routed_w2_scale_hca_inline514 = args.tensor(10).ref();
+    const ChipTensor &shared_w1_hca_inline512 = args.tensor(11).ref();
+    const ChipTensor &shared_w1_scale_hca_inline651 = args.tensor(12).ref();
+    const ChipTensor &shared_w3_hca_inline735 = args.tensor(13).ref();
+    const ChipTensor &shared_w3_scale_hca_inline596 = args.tensor(14).ref();
+    const ChipTensor &shared_w2_hca_inline611 = args.tensor(15).ref();
+    const ChipTensor &shared_w2_scale_hca_inline523 = args.tensor(16).ref();
+    const ChipTensor &ext_arrived = args.tensor(17).ref();
+    const ChipTensor &ext_combine_arrived = args.tensor(18).ref();
+    const ChipTensor &ext_data_arrived = args.tensor(19).ref();
+    const ChipTensor &ext_recv_aux = args.tensor(20).ref();
+    const ChipTensor &ext_recv_meta = args.tensor(21).ref();
+    const ChipTensor &ext_recv_route = args.tensor(22).ref();
+    const ChipTensor &ext_recv_x = args.tensor(23).ref();
+    const ChipTensor &ext_routed_y_buf = args.tensor(24).ref();
+    const ChipTensor &hidden_inline709 = args.tensor(25).ref();
+    const ChipTensor &x_attn_hca_inline723 = args.tensor(26).ref();
+    int32_t hca_moe_epoch_inline716 = static_cast<int32_t>(args.scalar(0));
+    float scale0_inline15025 = from_u64<float>(args.scalar(1));
+    float scale1_inline15045 = from_u64<float>(args.scalar(2));
+    float scale2_inline15011 = from_u64<float>(args.scalar(3));
+    int32_t arrived_ctx = static_cast<int32_t>(args.scalar(4));
+    int32_t combine_arrived_ctx = static_cast<int32_t>(args.scalar(5));
+    int32_t data_arrived_ctx = static_cast<int32_t>(args.scalar(6));
+    int64_t my_rank = static_cast<int64_t>(args.scalar(7));
+    int64_t nt_inline677__rv_v2 = static_cast<int64_t>(args.scalar(8));
+    int32_t recv_meta_ctx = static_cast<int32_t>(args.scalar(9));
+    int32_t recv_x_ctx = static_cast<int32_t>(args.scalar(10));
+    int32_t recv_aux_ctx = static_cast<int32_t>(args.scalar(11));
+    int32_t recv_route_ctx = static_cast<int32_t>(args.scalar(12));
+    int32_t routed_y_buf_ctx = static_cast<int32_t>(args.scalar(13));
     PTO2_SCOPE() {
         uint32_t x_mixed_inline11928_ci_shapes[2] = {8, 4096};
         TensorCreateInfo x_mixed_inline11928_ci(x_mixed_inline11928_ci_shapes, 2, DataType::BFLOAT16);
@@ -7614,11 +7631,8 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
             rt_submit_aiv_task(121, params_t117);
         }
     }
-    for (int64_t loop_i_inline712 = 0; loop_i_inline712 < 20; loop_i_inline712 += 1) {
-        int32_t csa_layer_inline714 = static_cast<int32_t>(((loop_i_inline712 * 2) + 2));
-        int32_t hca_layer_inline704 = static_cast<int32_t>(((loop_i_inline712 * 2) + 3));
-        int32_t csa_moe_epoch_inline715 = static_cast<int32_t>(((loop_i_inline712 * 2) + 3));
-        int32_t hca_moe_epoch_inline716 = static_cast<int32_t>(((loop_i_inline712 * 2) + 4));
+    auto submit_csa_attn_block = [&](int32_t csa_layer_inline714, int64_t loop_i_inline712,
+                                     const ChipTensor &x_attn_csa_inline721, const ChipTensor &hidden_inline709) {
         uint32_t hc_attn_fn_csa_inline700_offsets[2] = {
             static_cast<uint32_t>((static_cast<int64_t>(csa_layer_inline714) * 24)), 0
         };
@@ -8032,6 +8046,65 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
         };
         ChipTensor idx_kv_scale_csa_inline618 =
             ext_idx_kv_scale.view(idx_kv_scale_csa_inline618_shapes, idx_kv_scale_csa_inline618_offsets);
+        uint32_t indices_scale0_inline14524[1] = {0};
+        float scale0_inline14524 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale0_inline14524);
+        uint32_t indices_scale1_inline14544[1] = {1};
+        float scale1_inline14544 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale1_inline14544);
+        uint32_t indices_scale2_inline14510[1] = {2};
+        float scale2_inline14510 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale2_inline14510);
+        GraphTaskArgs csa_attn_block_args;
+        csa_attn_block_args.add_input(hc_attn_fn_csa_inline700);
+        csa_attn_block_args.add_input(hc_attn_base_csa_inline593);
+        csa_attn_block_args.add_input(attn_norm_w_csa_inline610);
+        csa_attn_block_args.add_input(wq_a_csa_inline682);
+        csa_attn_block_args.add_input(wq_b_csa_inline582);
+        csa_attn_block_args.add_input(wq_b_scale_csa_inline640);
+        csa_attn_block_args.add_input(wkv_csa_inline696);
+        csa_attn_block_args.add_input(gamma_cq_csa_inline565);
+        csa_attn_block_args.add_input(gamma_ckv_csa_inline728);
+        csa_attn_block_args.add_inout(kv_cache_csa_inline730);
+        csa_attn_block_args.add_input(attn_sink_csa_inline727);
+        csa_attn_block_args.add_input(wo_a_csa_inline672);
+        csa_attn_block_args.add_input(wo_b_csa_inline732);
+        csa_attn_block_args.add_input(wo_b_scale_csa_inline733);
+        csa_attn_block_args.add_input(csa_cmp_wkv_csa_inline701);
+        csa_attn_block_args.add_input(csa_cmp_wgate_csa_inline737);
+        csa_attn_block_args.add_input(csa_cmp_ape_csa_inline734);
+        csa_attn_block_args.add_input(csa_cmp_norm_w_csa_inline738);
+        csa_attn_block_args.add_inout(csa_compress_state_csa_inline557);
+        csa_attn_block_args.add_input(csa_idx_wq_b_csa_inline556);
+        csa_attn_block_args.add_input(csa_idx_wq_b_scale_csa_inline561);
+        csa_attn_block_args.add_input(csa_weights_proj_csa_inline553);
+        csa_attn_block_args.add_input(csa_hadamard_idx_csa_inline572);
+        csa_attn_block_args.add_input(csa_inner_wkv_csa_inline552);
+        csa_attn_block_args.add_input(csa_inner_wgate_csa_inline588);
+        csa_attn_block_args.add_input(csa_inner_ape_csa_inline622);
+        csa_attn_block_args.add_input(csa_inner_norm_w_csa_inline551);
+        csa_attn_block_args.add_inout(csa_inner_compress_state_csa_inline550);
+        csa_attn_block_args.add_inout(cmp_kv_csa_inline638);
+        csa_attn_block_args.add_inout(idx_kv_cache_csa_inline548);
+        csa_attn_block_args.add_inout(idx_kv_scale_csa_inline618);
+        csa_attn_block_args.add_input(compressed_freqs_cos_inline559);
+        csa_attn_block_args.add_input(compressed_freqs_sin_inline692);
+        csa_attn_block_args.add_input(csa_cmp_slot_mapping_inline719);
+        csa_attn_block_args.add_input(csa_idx_slot_mapping_inline600);
+        csa_attn_block_args.add_input(csa_inner_state_slot_mapping_inline609);
+        csa_attn_block_args.add_input(csa_state_slot_mapping_inline645);
+        csa_attn_block_args.add_input(ext_cmp_block_table);
+        csa_attn_block_args.add_input(ext_csa_compress_state_block_table);
+        csa_attn_block_args.add_input(ext_csa_inner_compress_state_block_table);
+        csa_attn_block_args.add_input(ext_idx_block_table);
+        csa_attn_block_args.add_input(ext_kv_seq_lens);
+        csa_attn_block_args.add_input(ext_position_ids);
+        csa_attn_block_args.add_input(hidden_inline709);
+        csa_attn_block_args.add_input(ori_slot_mapping_inline614);
+        csa_attn_block_args.add_input(swa_indices_inline636);
+        csa_attn_block_args.add_inout(x_attn_csa_inline721);
+        csa_attn_block_args.add_scalar(scale0_inline14524, scale1_inline14544, scale2_inline14510);
+        rt_submit_graph(&csa_attn_block, csa_attn_block_args);
+    };
+    auto submit_csa_moe_block = [&](int32_t csa_layer_inline714, int32_t csa_moe_epoch_inline715,
+                                    const ChipTensor &x_attn_csa_inline721, const ChipTensor &hidden_mid_inline726) {
         uint32_t hc_ffn_fn_csa_inline547_offsets[2] = {
             static_cast<uint32_t>((static_cast<int64_t>(csa_layer_inline714) * 24)), 0
         };
@@ -8265,18 +8338,52 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
         };
         ChipTensor shared_w2_scale_csa_inline708 =
             ext_shared_w2_scale.view(shared_w2_scale_csa_inline708_shapes, shared_w2_scale_csa_inline708_offsets);
-        uint32_t indices_scale0_inline14524[1] = {0};
-        float scale0_inline14524 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale0_inline14524);
-        uint32_t indices_scale1_inline14544[1] = {1};
-        float scale1_inline14544 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale1_inline14544);
-        uint32_t indices_scale2_inline14510[1] = {2};
-        float scale2_inline14510 = get_tensor_data<float>(hc_attn_scale_csa_inline626, 1, indices_scale2_inline14510);
         uint32_t indices_scale0_inline14771[1] = {0};
         float scale0_inline14771 = get_tensor_data<float>(hc_ffn_scale_csa_inline543, 1, indices_scale0_inline14771);
         uint32_t indices_scale1_inline14791[1] = {1};
         float scale1_inline14791 = get_tensor_data<float>(hc_ffn_scale_csa_inline543, 1, indices_scale1_inline14791);
         uint32_t indices_scale2_inline14757[1] = {2};
         float scale2_inline14757 = get_tensor_data<float>(hc_ffn_scale_csa_inline543, 1, indices_scale2_inline14757);
+        GraphTaskArgs csa_moe_block_args;
+        csa_moe_block_args.add_input(hc_ffn_fn_csa_inline547);
+        csa_moe_block_args.add_input(hc_ffn_base_csa_inline542);
+        csa_moe_block_args.add_input(norm_w_csa_inline656);
+        csa_moe_block_args.add_input(gate_w_csa_inline540);
+        csa_moe_block_args.add_input(gate_bias_csa_inline538);
+        csa_moe_block_args.add_input(tid2eid_csa_inline537);
+        csa_moe_block_args.add_input(routed_w1_csa_inline536);
+        csa_moe_block_args.add_input(routed_w1_scale_csa_inline535);
+        csa_moe_block_args.add_input(routed_w3_csa_inline534);
+        csa_moe_block_args.add_input(routed_w3_scale_csa_inline713);
+        csa_moe_block_args.add_input(routed_w2_csa_inline533);
+        csa_moe_block_args.add_input(routed_w2_scale_csa_inline722);
+        csa_moe_block_args.add_input(shared_w1_csa_inline532);
+        csa_moe_block_args.add_input(shared_w1_scale_csa_inline531);
+        csa_moe_block_args.add_input(shared_w3_csa_inline530);
+        csa_moe_block_args.add_input(shared_w3_scale_csa_inline578);
+        csa_moe_block_args.add_input(shared_w2_csa_inline571);
+        csa_moe_block_args.add_input(shared_w2_scale_csa_inline708);
+        csa_moe_block_args.add_input(ext_arrived);
+        csa_moe_block_args.add_input(ext_combine_arrived);
+        csa_moe_block_args.add_input(ext_data_arrived);
+        csa_moe_block_args.add_input(ext_input_ids);
+        csa_moe_block_args.add_inout(ext_recv_aux);
+        csa_moe_block_args.add_inout(ext_recv_meta);
+        csa_moe_block_args.add_inout(ext_recv_route);
+        csa_moe_block_args.add_inout(ext_recv_x);
+        csa_moe_block_args.add_inout(ext_routed_y_buf);
+        csa_moe_block_args.add_inout(x_attn_csa_inline721);
+        csa_moe_block_args.add_inout(hidden_mid_inline726);
+        csa_moe_block_args.add_scalar(
+            csa_layer_inline714, csa_moe_epoch_inline715, scale0_inline14771, scale1_inline14791
+        );
+        csa_moe_block_args.add_scalar(scale2_inline14757, arrived_ctx, combine_arrived_ctx, data_arrived_ctx);
+        csa_moe_block_args.add_scalar(my_rank, nt_inline677__rv_v2, recv_meta_ctx, recv_x_ctx);
+        csa_moe_block_args.add_scalar(recv_aux_ctx, recv_route_ctx, routed_y_buf_ctx);
+        rt_submit_graph(&csa_moe_block, csa_moe_block_args);
+    };
+    auto submit_hca_attn_block = [&](int32_t hca_layer_inline704, int64_t loop_i_inline712,
+                                     const ChipTensor &x_attn_hca_inline723, const ChipTensor &hidden_mid_inline726) {
         uint32_t hc_attn_fn_hca_inline594_offsets[2] = {
             static_cast<uint32_t>((static_cast<int64_t>(hca_layer_inline704) * 24)), 0
         };
@@ -8539,6 +8646,50 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
                  std::min<uint32_t>(512, ext_cmp_kv.shapes[3] - cmp_kv_hca_inline598_offsets[3]))
         };
         ChipTensor cmp_kv_hca_inline598 = ext_cmp_kv.view(cmp_kv_hca_inline598_shapes, cmp_kv_hca_inline598_offsets);
+        uint32_t indices_scale0_inline14898[1] = {0};
+        float scale0_inline14898 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale0_inline14898);
+        uint32_t indices_scale1_inline14918[1] = {1};
+        float scale1_inline14918 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale1_inline14918);
+        uint32_t indices_scale2_inline14884[1] = {2};
+        float scale2_inline14884 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale2_inline14884);
+        GraphTaskArgs hca_attn_block_args;
+        hca_attn_block_args.add_input(hc_attn_fn_hca_inline594);
+        hca_attn_block_args.add_input(hc_attn_base_hca_inline567);
+        hca_attn_block_args.add_input(attn_norm_w_hca_inline529);
+        hca_attn_block_args.add_input(wq_a_hca_inline528);
+        hca_attn_block_args.add_input(wq_b_hca_inline526);
+        hca_attn_block_args.add_input(wq_b_scale_hca_inline525);
+        hca_attn_block_args.add_input(wkv_hca_inline527);
+        hca_attn_block_args.add_input(gamma_cq_hca_inline599);
+        hca_attn_block_args.add_input(gamma_ckv_hca_inline524);
+        hca_attn_block_args.add_inout(kv_cache_hca_inline625);
+        hca_attn_block_args.add_input(attn_sink_hca_inline717);
+        hca_attn_block_args.add_input(wo_a_hca_inline522);
+        hca_attn_block_args.add_input(wo_b_hca_inline521);
+        hca_attn_block_args.add_input(wo_b_scale_hca_inline546);
+        hca_attn_block_args.add_input(hca_cmp_wkv_hca_inline584);
+        hca_attn_block_args.add_input(hca_cmp_wgate_hca_inline630);
+        hca_attn_block_args.add_input(hca_cmp_ape_hca_inline577);
+        hca_attn_block_args.add_input(hca_cmp_norm_w_hca_inline520);
+        hca_attn_block_args.add_inout(hca_compress_state_hca_inline575);
+        hca_attn_block_args.add_inout(cmp_kv_hca_inline598);
+        hca_attn_block_args.add_input(compressed_freqs_cos_inline559);
+        hca_attn_block_args.add_input(compressed_freqs_sin_inline692);
+        hca_attn_block_args.add_input(ext_cmp_block_table);
+        hca_attn_block_args.add_input(ext_hca_compress_state_block_table);
+        hca_attn_block_args.add_input(ext_kv_seq_lens);
+        hca_attn_block_args.add_input(ext_position_ids);
+        hca_attn_block_args.add_input(hca_cmp_slot_mapping_inline617);
+        hca_attn_block_args.add_input(hca_state_slot_mapping_inline710);
+        hca_attn_block_args.add_input(ori_slot_mapping_inline614);
+        hca_attn_block_args.add_input(swa_indices_inline636);
+        hca_attn_block_args.add_inout(x_attn_hca_inline723);
+        hca_attn_block_args.add_inout(hidden_mid_inline726);
+        hca_attn_block_args.add_scalar(scale0_inline14898, scale1_inline14918, scale2_inline14884);
+        rt_submit_graph(&hca_attn_block, hca_attn_block_args);
+    };
+    auto submit_hca_moe_block = [&](int32_t hca_layer_inline704, int32_t hca_moe_epoch_inline716,
+                                    const ChipTensor &x_attn_hca_inline723, const ChipTensor &hidden_inline709) {
         uint32_t hc_ffn_fn_hca_inline519_offsets[2] = {
             static_cast<uint32_t>((static_cast<int64_t>(hca_layer_inline704) * 24)), 0
         };
@@ -8603,19 +8754,6 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
         };
         ChipTensor gate_bias_hca_inline699 =
             ext_gate_bias.view(gate_bias_hca_inline699_shapes, gate_bias_hca_inline699_offsets);
-        uint32_t tid2eid_hca_inline515_offsets[2] = {
-            static_cast<uint32_t>((static_cast<int64_t>(hca_layer_inline704) * 129280)), 0
-        };
-        uint32_t tid2eid_hca_inline515_shapes[2] = {
-            (tid2eid_hca_inline515_offsets[0] >= ext_tid2eid.shapes[0] ?
-                 0u :
-                 std::min<uint32_t>(129280, ext_tid2eid.shapes[0] - tid2eid_hca_inline515_offsets[0])),
-            (tid2eid_hca_inline515_offsets[1] >= ext_tid2eid.shapes[1] ?
-                 0u :
-                 std::min<uint32_t>(6, ext_tid2eid.shapes[1] - tid2eid_hca_inline515_offsets[1]))
-        };
-        ChipTensor tid2eid_hca_inline515 =
-            ext_tid2eid.view(tid2eid_hca_inline515_shapes, tid2eid_hca_inline515_offsets);
         uint32_t routed_w1_hca_inline615_offsets[3] = {
             static_cast<uint32_t>((static_cast<int64_t>(hca_layer_inline704) * 32)), 0, 0
         };
@@ -8772,2711 +8910,83 @@ __attribute__((visibility("default"))) void aicpu_orchestration_entry(const Chip
         };
         ChipTensor shared_w2_scale_hca_inline523 =
             ext_shared_w2_scale.view(shared_w2_scale_hca_inline523_shapes, shared_w2_scale_hca_inline523_offsets);
-        uint32_t indices_scale0_inline14898[1] = {0};
-        float scale0_inline14898 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale0_inline14898);
-        uint32_t indices_scale1_inline14918[1] = {1};
-        float scale1_inline14918 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale1_inline14918);
-        uint32_t indices_scale2_inline14884[1] = {2};
-        float scale2_inline14884 = get_tensor_data<float>(hc_attn_scale_hca_inline587, 1, indices_scale2_inline14884);
         uint32_t indices_scale0_inline15025[1] = {0};
         float scale0_inline15025 = get_tensor_data<float>(hc_ffn_scale_hca_inline517, 1, indices_scale0_inline15025);
         uint32_t indices_scale1_inline15045[1] = {1};
         float scale1_inline15045 = get_tensor_data<float>(hc_ffn_scale_hca_inline517, 1, indices_scale1_inline15045);
         uint32_t indices_scale2_inline15011[1] = {2};
         float scale2_inline15011 = get_tensor_data<float>(hc_ffn_scale_hca_inline517, 1, indices_scale2_inline15011);
-
-        GraphTaskArgs layer_args;
-        layer_args.add_input(hc_attn_fn_csa_inline700);
-        layer_args.add_input(hc_attn_scale_csa_inline626);
-        layer_args.add_input(hc_attn_base_csa_inline593);
-        layer_args.add_input(attn_norm_w_csa_inline610);
-        layer_args.add_input(wq_a_csa_inline682);
-        layer_args.add_input(wq_b_csa_inline582);
-        layer_args.add_input(wq_b_scale_csa_inline640);
-        layer_args.add_input(wkv_csa_inline696);
-        layer_args.add_input(gamma_cq_csa_inline565);
-        layer_args.add_input(gamma_ckv_csa_inline728);
-        layer_args.add_input(kv_cache_csa_inline730);
-        layer_args.add_input(attn_sink_csa_inline727);
-        layer_args.add_input(wo_a_csa_inline672);
-        layer_args.add_input(wo_b_csa_inline732);
-        layer_args.add_input(wo_b_scale_csa_inline733);
-        layer_args.add_input(csa_cmp_wkv_csa_inline701);
-        layer_args.add_input(csa_cmp_wgate_csa_inline737);
-        layer_args.add_input(csa_cmp_ape_csa_inline734);
-        layer_args.add_input(csa_cmp_norm_w_csa_inline738);
-        layer_args.add_input(csa_compress_state_csa_inline557);
-        layer_args.add_input(csa_idx_wq_b_csa_inline556);
-        layer_args.add_input(csa_idx_wq_b_scale_csa_inline561);
-        layer_args.add_input(csa_weights_proj_csa_inline553);
-        layer_args.add_input(csa_hadamard_idx_csa_inline572);
-        layer_args.add_input(csa_inner_wkv_csa_inline552);
-        layer_args.add_input(csa_inner_wgate_csa_inline588);
-        layer_args.add_input(csa_inner_ape_csa_inline622);
-        layer_args.add_input(csa_inner_norm_w_csa_inline551);
-        layer_args.add_input(csa_inner_compress_state_csa_inline550);
-        layer_args.add_input(cmp_kv_csa_inline638);
-        layer_args.add_input(idx_kv_cache_csa_inline548);
-        layer_args.add_input(idx_kv_scale_csa_inline618);
-        layer_args.add_input(hc_ffn_fn_csa_inline547);
-        layer_args.add_input(hc_ffn_scale_csa_inline543);
-        layer_args.add_input(hc_ffn_base_csa_inline542);
-        layer_args.add_input(norm_w_csa_inline656);
-        layer_args.add_input(gate_w_csa_inline540);
-        layer_args.add_input(gate_bias_csa_inline538);
-        layer_args.add_input(tid2eid_csa_inline537);
-        layer_args.add_input(routed_w1_csa_inline536);
-        layer_args.add_input(routed_w1_scale_csa_inline535);
-        layer_args.add_input(routed_w3_csa_inline534);
-        layer_args.add_input(routed_w3_scale_csa_inline713);
-        layer_args.add_input(routed_w2_csa_inline533);
-        layer_args.add_input(routed_w2_scale_csa_inline722);
-        layer_args.add_input(shared_w1_csa_inline532);
-        layer_args.add_input(shared_w1_scale_csa_inline531);
-        layer_args.add_input(shared_w3_csa_inline530);
-        layer_args.add_input(shared_w3_scale_csa_inline578);
-        layer_args.add_input(shared_w2_csa_inline571);
-        layer_args.add_input(shared_w2_scale_csa_inline708);
-        layer_args.add_input(hc_attn_fn_hca_inline594);
-        layer_args.add_input(hc_attn_scale_hca_inline587);
-        layer_args.add_input(hc_attn_base_hca_inline567);
-        layer_args.add_input(attn_norm_w_hca_inline529);
-        layer_args.add_input(wq_a_hca_inline528);
-        layer_args.add_input(wq_b_hca_inline526);
-        layer_args.add_input(wq_b_scale_hca_inline525);
-        layer_args.add_input(wkv_hca_inline527);
-        layer_args.add_input(gamma_cq_hca_inline599);
-        layer_args.add_input(gamma_ckv_hca_inline524);
-        layer_args.add_input(kv_cache_hca_inline625);
-        layer_args.add_input(attn_sink_hca_inline717);
-        layer_args.add_input(wo_a_hca_inline522);
-        layer_args.add_input(wo_b_hca_inline521);
-        layer_args.add_input(wo_b_scale_hca_inline546);
-        layer_args.add_input(hca_cmp_wkv_hca_inline584);
-        layer_args.add_input(hca_cmp_wgate_hca_inline630);
-        layer_args.add_input(hca_cmp_ape_hca_inline577);
-        layer_args.add_input(hca_cmp_norm_w_hca_inline520);
-        layer_args.add_input(hca_compress_state_hca_inline575);
-        layer_args.add_input(cmp_kv_hca_inline598);
-        layer_args.add_input(hc_ffn_fn_hca_inline519);
-        layer_args.add_input(hc_ffn_scale_hca_inline517);
-        layer_args.add_input(hc_ffn_base_hca_inline541);
-        layer_args.add_input(norm_w_hca_inline516);
-        layer_args.add_input(gate_w_hca_inline680);
-        layer_args.add_input(gate_bias_hca_inline699);
-        layer_args.add_input(tid2eid_hca_inline515);
-        layer_args.add_input(routed_w1_hca_inline615);
-        layer_args.add_input(routed_w1_scale_hca_inline687);
-        layer_args.add_input(routed_w3_hca_inline590);
-        layer_args.add_input(routed_w3_scale_hca_inline513);
-        layer_args.add_input(routed_w2_hca_inline597);
-        layer_args.add_input(routed_w2_scale_hca_inline514);
-        layer_args.add_input(shared_w1_hca_inline512);
-        layer_args.add_input(shared_w1_scale_hca_inline651);
-        layer_args.add_input(shared_w3_hca_inline735);
-        layer_args.add_input(shared_w3_scale_hca_inline596);
-        layer_args.add_input(shared_w2_hca_inline611);
-        layer_args.add_input(shared_w2_scale_hca_inline523);
-        layer_args.add_input(compressed_freqs_cos_inline559);
-        layer_args.add_input(compressed_freqs_sin_inline692);
-        layer_args.add_input(csa_cmp_slot_mapping_inline719);
-        layer_args.add_input(csa_idx_slot_mapping_inline600);
-        layer_args.add_input(csa_inner_state_slot_mapping_inline609);
-        layer_args.add_input(csa_state_slot_mapping_inline645);
-        layer_args.add_input(ext_arrived);
-        layer_args.add_input(ext_cmp_block_table);
-        layer_args.add_input(ext_combine_arrived);
-        layer_args.add_input(ext_csa_compress_state_block_table);
-        layer_args.add_input(ext_csa_inner_compress_state_block_table);
-        layer_args.add_input(ext_data_arrived);
-        layer_args.add_input(ext_hca_compress_state_block_table);
-        layer_args.add_input(ext_idx_block_table);
-        layer_args.add_input(ext_input_ids);
-        layer_args.add_input(ext_kv_seq_lens);
-        layer_args.add_input(ext_position_ids);
-        layer_args.add_inout(ext_recv_aux);
-        layer_args.add_inout(ext_recv_meta);
-        layer_args.add_inout(ext_recv_route);
-        layer_args.add_inout(ext_recv_x);
-        layer_args.add_inout(ext_routed_y_buf);
-        layer_args.add_input(hca_cmp_slot_mapping_inline617);
-        layer_args.add_input(hca_state_slot_mapping_inline710);
-        layer_args.add_input(hidden_inline709);
-        layer_args.add_input(ori_slot_mapping_inline614);
-        layer_args.add_input(swa_indices_inline636);
-        layer_args.add_scalar(
-            csa_layer_inline714, hca_layer_inline704, csa_moe_epoch_inline715, hca_moe_epoch_inline716
+        GraphTaskArgs hca_moe_block_args;
+        hca_moe_block_args.add_input(hc_ffn_fn_hca_inline519);
+        hca_moe_block_args.add_input(hc_ffn_base_hca_inline541);
+        hca_moe_block_args.add_input(norm_w_hca_inline516);
+        hca_moe_block_args.add_input(gate_w_hca_inline680);
+        hca_moe_block_args.add_input(gate_bias_hca_inline699);
+        hca_moe_block_args.add_input(routed_w1_hca_inline615);
+        hca_moe_block_args.add_input(routed_w1_scale_hca_inline687);
+        hca_moe_block_args.add_input(routed_w3_hca_inline590);
+        hca_moe_block_args.add_input(routed_w3_scale_hca_inline513);
+        hca_moe_block_args.add_input(routed_w2_hca_inline597);
+        hca_moe_block_args.add_input(routed_w2_scale_hca_inline514);
+        hca_moe_block_args.add_input(shared_w1_hca_inline512);
+        hca_moe_block_args.add_input(shared_w1_scale_hca_inline651);
+        hca_moe_block_args.add_input(shared_w3_hca_inline735);
+        hca_moe_block_args.add_input(shared_w3_scale_hca_inline596);
+        hca_moe_block_args.add_input(shared_w2_hca_inline611);
+        hca_moe_block_args.add_input(shared_w2_scale_hca_inline523);
+        hca_moe_block_args.add_input(ext_arrived);
+        hca_moe_block_args.add_input(ext_combine_arrived);
+        hca_moe_block_args.add_input(ext_data_arrived);
+        hca_moe_block_args.add_inout(ext_recv_aux);
+        hca_moe_block_args.add_inout(ext_recv_meta);
+        hca_moe_block_args.add_inout(ext_recv_route);
+        hca_moe_block_args.add_inout(ext_recv_x);
+        hca_moe_block_args.add_inout(ext_routed_y_buf);
+        hca_moe_block_args.add_inout(hidden_inline709);
+        hca_moe_block_args.add_inout(x_attn_hca_inline723);
+        hca_moe_block_args.add_scalar(
+            hca_moe_epoch_inline716, scale0_inline15025, scale1_inline15045, scale2_inline15011
         );
-        layer_args.add_scalar(scale0_inline14524, scale1_inline14544, scale2_inline14510, scale0_inline14771);
-        layer_args.add_scalar(scale1_inline14791, scale2_inline14757, scale0_inline14898, scale1_inline14918);
-        layer_args.add_scalar(scale2_inline14884, scale0_inline15025, scale1_inline15045, scale2_inline15011);
-        layer_args.add_scalar(arrived_ctx, cmp_block_num_inline602, combine_arrived_ctx, csa_state_block_num_inline604);
-        layer_args.add_scalar(
-            data_arrived_ctx, hca_state_block_num_inline608, idx_block_num_inline601, inner_state_block_num_inline613
-        );
-        layer_args.add_scalar(my_rank, nt_inline677__rv_v2, recv_meta_ctx, recv_x_ctx);
-        layer_args.add_scalar(recv_aux_ctx, recv_route_ctx, routed_y_buf_ctx);
-        rt_submit_graph(&csa_hca_layer, layer_args);
+        hca_moe_block_args.add_scalar(arrived_ctx, combine_arrived_ctx, data_arrived_ctx, my_rank);
+        hca_moe_block_args.add_scalar(nt_inline677__rv_v2, recv_meta_ctx, recv_x_ctx, recv_aux_ctx);
+        hca_moe_block_args.add_scalar(recv_route_ctx, routed_y_buf_ctx);
+        rt_submit_graph(&hca_moe_block, hca_moe_block_args);
+    };
+    for (int64_t loop_i_inline712 = 0; loop_i_inline712 < 20; loop_i_inline712 += 1) {
+        int32_t csa_layer_inline714 = static_cast<int32_t>(((loop_i_inline712 * 2) + 2));
+        int32_t hca_layer_inline704 = static_cast<int32_t>(((loop_i_inline712 * 2) + 3));
+        int32_t csa_moe_epoch_inline715 = static_cast<int32_t>(((loop_i_inline712 * 2) + 3));
+        int32_t hca_moe_epoch_inline716 = static_cast<int32_t>(((loop_i_inline712 * 2) + 4));
+        uint32_t x_attn_csa_inline721_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo x_attn_csa_inline721_ci(x_attn_csa_inline721_ci_shapes, 3, DataType::FLOAT32);
+        uint32_t x_attn_hca_inline723_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo x_attn_hca_inline723_ci(x_attn_hca_inline723_ci_shapes, 3, DataType::FLOAT32);
+        uint32_t hidden_mid_inline726_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo hidden_mid_inline726_ci(hidden_mid_inline726_ci_shapes, 3, DataType::FLOAT32);
+        TaskOutputTensors alloc_55 =
+            alloc_tensors(x_attn_csa_inline721_ci, x_attn_hca_inline723_ci, hidden_mid_inline726_ci);
+        const ChipTensor &x_attn_csa_inline721 = alloc_55.get_ref(0);
+        const ChipTensor &x_attn_hca_inline723 = alloc_55.get_ref(1);
+        const ChipTensor &hidden_mid_inline726 = alloc_55.get_ref(2);
+        submit_csa_attn_block(csa_layer_inline714, loop_i_inline712, x_attn_csa_inline721, hidden_inline709);
+        submit_csa_moe_block(csa_layer_inline714, csa_moe_epoch_inline715, x_attn_csa_inline721, hidden_mid_inline726);
+        submit_hca_attn_block(hca_layer_inline704, loop_i_inline712, x_attn_hca_inline723, hidden_mid_inline726);
+        submit_hca_moe_block(hca_layer_inline704, hca_moe_epoch_inline716, x_attn_hca_inline723, hidden_inline709);
     }
-    int32_t csa_layer_last_inline510 = static_cast<int32_t>(42);
-    int32_t last_moe_epoch_inline624 = static_cast<int32_t>(43);
-    uint32_t hc_attn_fn_last_inline634_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 24)), 0
-    };
-    uint32_t hc_attn_fn_last_inline634_shapes[2] = {
-        (hc_attn_fn_last_inline634_offsets[0] >= ext_hc_attn_fn.shapes[0] ?
-             0u :
-             std::min<uint32_t>(24, ext_hc_attn_fn.shapes[0] - hc_attn_fn_last_inline634_offsets[0])),
-        (hc_attn_fn_last_inline634_offsets[1] >= ext_hc_attn_fn.shapes[1] ?
-             0u :
-             std::min<uint32_t>(16384, ext_hc_attn_fn.shapes[1] - hc_attn_fn_last_inline634_offsets[1]))
-    };
-    ChipTensor hc_attn_fn_last_inline634 =
-        ext_hc_attn_fn.view(hc_attn_fn_last_inline634_shapes, hc_attn_fn_last_inline634_offsets);
-    uint32_t hc_attn_scale_last_inline641_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 3))
-    };
-    uint32_t hc_attn_scale_last_inline641_shapes[1] = {
-        (hc_attn_scale_last_inline641_offsets[0] >= ext_hc_attn_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(3, ext_hc_attn_scale.shapes[0] - hc_attn_scale_last_inline641_offsets[0]))
-    };
-    ChipTensor hc_attn_scale_last_inline641 =
-        ext_hc_attn_scale.view(hc_attn_scale_last_inline641_shapes, hc_attn_scale_last_inline641_offsets);
-    uint32_t hc_attn_base_last_inline509_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 24))
-    };
-    uint32_t hc_attn_base_last_inline509_shapes[1] = {
-        (hc_attn_base_last_inline509_offsets[0] >= ext_hc_attn_base.shapes[0] ?
-             0u :
-             std::min<uint32_t>(24, ext_hc_attn_base.shapes[0] - hc_attn_base_last_inline509_offsets[0]))
-    };
-    ChipTensor hc_attn_base_last_inline509 =
-        ext_hc_attn_base.view(hc_attn_base_last_inline509_shapes, hc_attn_base_last_inline509_offsets);
-    uint32_t attn_norm_w_last_inline570_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096))
-    };
-    uint32_t attn_norm_w_last_inline570_shapes[1] = {
-        (attn_norm_w_last_inline570_offsets[0] >= ext_attn_norm_w.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_attn_norm_w.shapes[0] - attn_norm_w_last_inline570_offsets[0]))
-    };
-    ChipTensor attn_norm_w_last_inline570 =
-        ext_attn_norm_w.view(attn_norm_w_last_inline570_shapes, attn_norm_w_last_inline570_offsets);
-    uint32_t wq_a_last_inline507_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096)), 0
-    };
-    uint32_t wq_a_last_inline507_shapes[2] = {
-        (wq_a_last_inline507_offsets[0] >= ext_wq_a.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_wq_a.shapes[0] - wq_a_last_inline507_offsets[0])),
-        (wq_a_last_inline507_offsets[1] >= ext_wq_a.shapes[1] ?
-             0u :
-             std::min<uint32_t>(1024, ext_wq_a.shapes[1] - wq_a_last_inline507_offsets[1]))
-    };
-    ChipTensor wq_a_last_inline507 = ext_wq_a.view(wq_a_last_inline507_shapes, wq_a_last_inline507_offsets);
-    uint32_t wq_b_last_inline703_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 1024)), 0
-    };
-    uint32_t wq_b_last_inline703_shapes[2] = {
-        (wq_b_last_inline703_offsets[0] >= ext_wq_b.shapes[0] ?
-             0u :
-             std::min<uint32_t>(1024, ext_wq_b.shapes[0] - wq_b_last_inline703_offsets[0])),
-        (wq_b_last_inline703_offsets[1] >= ext_wq_b.shapes[1] ?
-             0u :
-             std::min<uint32_t>(32768, ext_wq_b.shapes[1] - wq_b_last_inline703_offsets[1]))
-    };
-    ChipTensor wq_b_last_inline703 = ext_wq_b.view(wq_b_last_inline703_shapes, wq_b_last_inline703_offsets);
-    uint32_t wq_b_scale_last_inline574_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32768))
-    };
-    uint32_t wq_b_scale_last_inline574_shapes[1] = {
-        (wq_b_scale_last_inline574_offsets[0] >= ext_wq_b_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32768, ext_wq_b_scale.shapes[0] - wq_b_scale_last_inline574_offsets[0]))
-    };
-    ChipTensor wq_b_scale_last_inline574 =
-        ext_wq_b_scale.view(wq_b_scale_last_inline574_shapes, wq_b_scale_last_inline574_offsets);
-    uint32_t wkv_last_inline729_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096)), 0
-    };
-    uint32_t wkv_last_inline729_shapes[2] = {
-        (wkv_last_inline729_offsets[0] >= ext_wkv.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_wkv.shapes[0] - wkv_last_inline729_offsets[0])),
-        (wkv_last_inline729_offsets[1] >= ext_wkv.shapes[1] ?
-             0u :
-             std::min<uint32_t>(512, ext_wkv.shapes[1] - wkv_last_inline729_offsets[1]))
-    };
-    ChipTensor wkv_last_inline729 = ext_wkv.view(wkv_last_inline729_shapes, wkv_last_inline729_offsets);
-    uint32_t gamma_cq_last_inline664_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 1024))
-    };
-    uint32_t gamma_cq_last_inline664_shapes[1] = {
-        (gamma_cq_last_inline664_offsets[0] >= ext_gamma_cq.shapes[0] ?
-             0u :
-             std::min<uint32_t>(1024, ext_gamma_cq.shapes[0] - gamma_cq_last_inline664_offsets[0]))
-    };
-    ChipTensor gamma_cq_last_inline664 =
-        ext_gamma_cq.view(gamma_cq_last_inline664_shapes, gamma_cq_last_inline664_offsets);
-    uint32_t gamma_ckv_last_inline506_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 512))
-    };
-    uint32_t gamma_ckv_last_inline506_shapes[1] = {
-        (gamma_ckv_last_inline506_offsets[0] >= ext_gamma_ckv.shapes[0] ?
-             0u :
-             std::min<uint32_t>(512, ext_gamma_ckv.shapes[0] - gamma_ckv_last_inline506_offsets[0]))
-    };
-    ChipTensor gamma_ckv_last_inline506 =
-        ext_gamma_ckv.view(gamma_ckv_last_inline506_shapes, gamma_ckv_last_inline506_offsets);
-    uint32_t kv_cache_last_inline663_offsets[4] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * ori_block_num_inline631)), 0, 0, 0
-    };
-    uint32_t kv_cache_last_inline663_shapes[4] = {
-        (kv_cache_last_inline663_offsets[0] >= ext_kv_cache.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(ori_block_num_inline631),
-                 ext_kv_cache.shapes[0] - kv_cache_last_inline663_offsets[0]
-             )),
-        (kv_cache_last_inline663_offsets[1] >= ext_kv_cache.shapes[1] ?
-             0u :
-             std::min<uint32_t>(128, ext_kv_cache.shapes[1] - kv_cache_last_inline663_offsets[1])),
-        (kv_cache_last_inline663_offsets[2] >= ext_kv_cache.shapes[2] ?
-             0u :
-             std::min<uint32_t>(1, ext_kv_cache.shapes[2] - kv_cache_last_inline663_offsets[2])),
-        (kv_cache_last_inline663_offsets[3] >= ext_kv_cache.shapes[3] ?
-             0u :
-             std::min<uint32_t>(512, ext_kv_cache.shapes[3] - kv_cache_last_inline663_offsets[3]))
-    };
-    ChipTensor kv_cache_last_inline663 =
-        ext_kv_cache.view(kv_cache_last_inline663_shapes, kv_cache_last_inline663_offsets);
-    uint32_t attn_sink_last_inline504_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 64))
-    };
-    uint32_t attn_sink_last_inline504_shapes[1] = {
-        (attn_sink_last_inline504_offsets[0] >= ext_attn_sink.shapes[0] ?
-             0u :
-             std::min<uint32_t>(64, ext_attn_sink.shapes[0] - attn_sink_last_inline504_offsets[0]))
-    };
-    ChipTensor attn_sink_last_inline504 =
-        ext_attn_sink.view(attn_sink_last_inline504_shapes, attn_sink_last_inline504_offsets);
-    uint32_t wo_a_last_inline503_offsets[3] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 8)), 0, 0
-    };
-    uint32_t wo_a_last_inline503_shapes[3] = {
-        (wo_a_last_inline503_offsets[0] >= ext_wo_a.shapes[0] ?
-             0u :
-             std::min<uint32_t>(8, ext_wo_a.shapes[0] - wo_a_last_inline503_offsets[0])),
-        (wo_a_last_inline503_offsets[1] >= ext_wo_a.shapes[1] ?
-             0u :
-             std::min<uint32_t>(1024, ext_wo_a.shapes[1] - wo_a_last_inline503_offsets[1])),
-        (wo_a_last_inline503_offsets[2] >= ext_wo_a.shapes[2] ?
-             0u :
-             std::min<uint32_t>(4096, ext_wo_a.shapes[2] - wo_a_last_inline503_offsets[2]))
-    };
-    ChipTensor wo_a_last_inline503 = ext_wo_a.view(wo_a_last_inline503_shapes, wo_a_last_inline503_offsets);
-    uint32_t wo_b_last_inline545_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096)), 0
-    };
-    uint32_t wo_b_last_inline545_shapes[2] = {
-        (wo_b_last_inline545_offsets[0] >= ext_wo_b.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_wo_b.shapes[0] - wo_b_last_inline545_offsets[0])),
-        (wo_b_last_inline545_offsets[1] >= ext_wo_b.shapes[1] ?
-             0u :
-             std::min<uint32_t>(8192, ext_wo_b.shapes[1] - wo_b_last_inline545_offsets[1]))
-    };
-    ChipTensor wo_b_last_inline545 = ext_wo_b.view(wo_b_last_inline545_shapes, wo_b_last_inline545_offsets);
-    uint32_t wo_b_scale_last_inline502_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096))
-    };
-    uint32_t wo_b_scale_last_inline502_shapes[1] = {
-        (wo_b_scale_last_inline502_offsets[0] >= ext_wo_b_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_wo_b_scale.shapes[0] - wo_b_scale_last_inline502_offsets[0]))
-    };
-    ChipTensor wo_b_scale_last_inline502 =
-        ext_wo_b_scale.view(wo_b_scale_last_inline502_shapes, wo_b_scale_last_inline502_offsets);
-    uint32_t csa_cmp_wkv_last_inline501_offsets[2] = {20480, 0};
-    uint32_t csa_cmp_wkv_last_inline501_shapes[2] = {
-        (csa_cmp_wkv_last_inline501_offsets[0] >= ext_csa_cmp_wkv.shapes[0] ?
-             0u :
-             std::min<uint32_t>(1024, ext_csa_cmp_wkv.shapes[0] - csa_cmp_wkv_last_inline501_offsets[0])),
-        (csa_cmp_wkv_last_inline501_offsets[1] >= ext_csa_cmp_wkv.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_csa_cmp_wkv.shapes[1] - csa_cmp_wkv_last_inline501_offsets[1]))
-    };
-    ChipTensor csa_cmp_wkv_last_inline501 =
-        ext_csa_cmp_wkv.view(csa_cmp_wkv_last_inline501_shapes, csa_cmp_wkv_last_inline501_offsets);
-    uint32_t csa_cmp_wgate_last_inline500_offsets[2] = {20480, 0};
-    uint32_t csa_cmp_wgate_last_inline500_shapes[2] = {
-        (csa_cmp_wgate_last_inline500_offsets[0] >= ext_csa_cmp_wgate.shapes[0] ?
-             0u :
-             std::min<uint32_t>(1024, ext_csa_cmp_wgate.shapes[0] - csa_cmp_wgate_last_inline500_offsets[0])),
-        (csa_cmp_wgate_last_inline500_offsets[1] >= ext_csa_cmp_wgate.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_csa_cmp_wgate.shapes[1] - csa_cmp_wgate_last_inline500_offsets[1]))
-    };
-    ChipTensor csa_cmp_wgate_last_inline500 =
-        ext_csa_cmp_wgate.view(csa_cmp_wgate_last_inline500_shapes, csa_cmp_wgate_last_inline500_offsets);
-    uint32_t csa_cmp_ape_last_inline679_offsets[2] = {80, 0};
-    uint32_t csa_cmp_ape_last_inline679_shapes[2] = {
-        (csa_cmp_ape_last_inline679_offsets[0] >= ext_csa_cmp_ape.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4, ext_csa_cmp_ape.shapes[0] - csa_cmp_ape_last_inline679_offsets[0])),
-        (csa_cmp_ape_last_inline679_offsets[1] >= ext_csa_cmp_ape.shapes[1] ?
-             0u :
-             std::min<uint32_t>(1024, ext_csa_cmp_ape.shapes[1] - csa_cmp_ape_last_inline679_offsets[1]))
-    };
-    ChipTensor csa_cmp_ape_last_inline679 =
-        ext_csa_cmp_ape.view(csa_cmp_ape_last_inline679_shapes, csa_cmp_ape_last_inline679_offsets);
-    uint32_t csa_cmp_norm_w_last_inline731_offsets[1] = {10240};
-    uint32_t csa_cmp_norm_w_last_inline731_shapes[1] = {
-        (csa_cmp_norm_w_last_inline731_offsets[0] >= ext_csa_cmp_norm_w.shapes[0] ?
-             0u :
-             std::min<uint32_t>(512, ext_csa_cmp_norm_w.shapes[0] - csa_cmp_norm_w_last_inline731_offsets[0]))
-    };
-    ChipTensor csa_cmp_norm_w_last_inline731 =
-        ext_csa_cmp_norm_w.view(csa_cmp_norm_w_last_inline731_shapes, csa_cmp_norm_w_last_inline731_offsets);
-    uint32_t csa_compress_state_last_inline724_offsets[3] = {
-        static_cast<uint32_t>((csa_state_block_num_inline604 * 20)), 0, 0
-    };
-    uint32_t csa_compress_state_last_inline724_shapes[3] = {
-        (csa_compress_state_last_inline724_offsets[0] >= ext_csa_compress_state.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(csa_state_block_num_inline604),
-                 ext_csa_compress_state.shapes[0] - csa_compress_state_last_inline724_offsets[0]
-             )),
-        (csa_compress_state_last_inline724_offsets[1] >= ext_csa_compress_state.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4, ext_csa_compress_state.shapes[1] - csa_compress_state_last_inline724_offsets[1])),
-        (csa_compress_state_last_inline724_offsets[2] >= ext_csa_compress_state.shapes[2] ?
-             0u :
-             std::min<uint32_t>(2048, ext_csa_compress_state.shapes[2] - csa_compress_state_last_inline724_offsets[2]))
-    };
-    ChipTensor csa_compress_state_last_inline724 = ext_csa_compress_state.view(
-        csa_compress_state_last_inline724_shapes, csa_compress_state_last_inline724_offsets
-    );
-    uint32_t csa_idx_wq_b_last_inline605_offsets[2] = {20480, 0};
-    uint32_t csa_idx_wq_b_last_inline605_shapes[2] = {
-        (csa_idx_wq_b_last_inline605_offsets[0] >= ext_csa_idx_wq_b.shapes[0] ?
-             0u :
-             std::min<uint32_t>(1024, ext_csa_idx_wq_b.shapes[0] - csa_idx_wq_b_last_inline605_offsets[0])),
-        (csa_idx_wq_b_last_inline605_offsets[1] >= ext_csa_idx_wq_b.shapes[1] ?
-             0u :
-             std::min<uint32_t>(8192, ext_csa_idx_wq_b.shapes[1] - csa_idx_wq_b_last_inline605_offsets[1]))
-    };
-    ChipTensor csa_idx_wq_b_last_inline605 =
-        ext_csa_idx_wq_b.view(csa_idx_wq_b_last_inline605_shapes, csa_idx_wq_b_last_inline605_offsets);
-    uint32_t csa_idx_wq_b_scale_last_inline518_offsets[1] = {163840};
-    uint32_t csa_idx_wq_b_scale_last_inline518_shapes[1] = {
-        (csa_idx_wq_b_scale_last_inline518_offsets[0] >= ext_csa_idx_wq_b_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(8192, ext_csa_idx_wq_b_scale.shapes[0] - csa_idx_wq_b_scale_last_inline518_offsets[0]))
-    };
-    ChipTensor csa_idx_wq_b_scale_last_inline518 = ext_csa_idx_wq_b_scale.view(
-        csa_idx_wq_b_scale_last_inline518_shapes, csa_idx_wq_b_scale_last_inline518_offsets
-    );
-    uint32_t csa_weights_proj_last_inline671_offsets[2] = {81920, 0};
-    uint32_t csa_weights_proj_last_inline671_shapes[2] = {
-        (csa_weights_proj_last_inline671_offsets[0] >= ext_csa_weights_proj.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_csa_weights_proj.shapes[0] - csa_weights_proj_last_inline671_offsets[0])),
-        (csa_weights_proj_last_inline671_offsets[1] >= ext_csa_weights_proj.shapes[1] ?
-             0u :
-             std::min<uint32_t>(64, ext_csa_weights_proj.shapes[1] - csa_weights_proj_last_inline671_offsets[1]))
-    };
-    ChipTensor csa_weights_proj_last_inline671 =
-        ext_csa_weights_proj.view(csa_weights_proj_last_inline671_shapes, csa_weights_proj_last_inline671_offsets);
-    uint32_t csa_hadamard_idx_last_inline669_offsets[2] = {2560, 0};
-    uint32_t csa_hadamard_idx_last_inline669_shapes[2] = {
-        (csa_hadamard_idx_last_inline669_offsets[0] >= ext_csa_hadamard_idx.shapes[0] ?
-             0u :
-             std::min<uint32_t>(128, ext_csa_hadamard_idx.shapes[0] - csa_hadamard_idx_last_inline669_offsets[0])),
-        (csa_hadamard_idx_last_inline669_offsets[1] >= ext_csa_hadamard_idx.shapes[1] ?
-             0u :
-             std::min<uint32_t>(128, ext_csa_hadamard_idx.shapes[1] - csa_hadamard_idx_last_inline669_offsets[1]))
-    };
-    ChipTensor csa_hadamard_idx_last_inline669 =
-        ext_csa_hadamard_idx.view(csa_hadamard_idx_last_inline669_shapes, csa_hadamard_idx_last_inline669_offsets);
-    uint32_t csa_inner_wkv_last_inline580_offsets[2] = {5120, 0};
-    uint32_t csa_inner_wkv_last_inline580_shapes[2] = {
-        (csa_inner_wkv_last_inline580_offsets[0] >= ext_csa_inner_wkv.shapes[0] ?
-             0u :
-             std::min<uint32_t>(256, ext_csa_inner_wkv.shapes[0] - csa_inner_wkv_last_inline580_offsets[0])),
-        (csa_inner_wkv_last_inline580_offsets[1] >= ext_csa_inner_wkv.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_csa_inner_wkv.shapes[1] - csa_inner_wkv_last_inline580_offsets[1]))
-    };
-    ChipTensor csa_inner_wkv_last_inline580 =
-        ext_csa_inner_wkv.view(csa_inner_wkv_last_inline580_shapes, csa_inner_wkv_last_inline580_offsets);
-    uint32_t csa_inner_wgate_last_inline511_offsets[2] = {5120, 0};
-    uint32_t csa_inner_wgate_last_inline511_shapes[2] = {
-        (csa_inner_wgate_last_inline511_offsets[0] >= ext_csa_inner_wgate.shapes[0] ?
-             0u :
-             std::min<uint32_t>(256, ext_csa_inner_wgate.shapes[0] - csa_inner_wgate_last_inline511_offsets[0])),
-        (csa_inner_wgate_last_inline511_offsets[1] >= ext_csa_inner_wgate.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_csa_inner_wgate.shapes[1] - csa_inner_wgate_last_inline511_offsets[1]))
-    };
-    ChipTensor csa_inner_wgate_last_inline511 =
-        ext_csa_inner_wgate.view(csa_inner_wgate_last_inline511_shapes, csa_inner_wgate_last_inline511_offsets);
-    uint32_t csa_inner_ape_last_inline499_offsets[2] = {80, 0};
-    uint32_t csa_inner_ape_last_inline499_shapes[2] = {
-        (csa_inner_ape_last_inline499_offsets[0] >= ext_csa_inner_ape.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4, ext_csa_inner_ape.shapes[0] - csa_inner_ape_last_inline499_offsets[0])),
-        (csa_inner_ape_last_inline499_offsets[1] >= ext_csa_inner_ape.shapes[1] ?
-             0u :
-             std::min<uint32_t>(256, ext_csa_inner_ape.shapes[1] - csa_inner_ape_last_inline499_offsets[1]))
-    };
-    ChipTensor csa_inner_ape_last_inline499 =
-        ext_csa_inner_ape.view(csa_inner_ape_last_inline499_shapes, csa_inner_ape_last_inline499_offsets);
-    uint32_t csa_inner_norm_w_last_inline498_offsets[1] = {2560};
-    uint32_t csa_inner_norm_w_last_inline498_shapes[1] = {
-        (csa_inner_norm_w_last_inline498_offsets[0] >= ext_csa_inner_norm_w.shapes[0] ?
-             0u :
-             std::min<uint32_t>(128, ext_csa_inner_norm_w.shapes[0] - csa_inner_norm_w_last_inline498_offsets[0]))
-    };
-    ChipTensor csa_inner_norm_w_last_inline498 =
-        ext_csa_inner_norm_w.view(csa_inner_norm_w_last_inline498_shapes, csa_inner_norm_w_last_inline498_offsets);
-    uint32_t csa_inner_compress_state_last_inline497_offsets[3] = {
-        static_cast<uint32_t>((inner_state_block_num_inline613 * 20)), 0, 0
-    };
-    uint32_t csa_inner_compress_state_last_inline497_shapes[3] = {
-        (csa_inner_compress_state_last_inline497_offsets[0] >= ext_csa_inner_compress_state.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(inner_state_block_num_inline613),
-                 ext_csa_inner_compress_state.shapes[0] - csa_inner_compress_state_last_inline497_offsets[0]
-             )),
-        (csa_inner_compress_state_last_inline497_offsets[1] >= ext_csa_inner_compress_state.shapes[1] ?
-             0u :
-             std::min<uint32_t>(
-                 4, ext_csa_inner_compress_state.shapes[1] - csa_inner_compress_state_last_inline497_offsets[1]
-             )),
-        (csa_inner_compress_state_last_inline497_offsets[2] >= ext_csa_inner_compress_state.shapes[2] ?
-             0u :
-             std::min<uint32_t>(
-                 512, ext_csa_inner_compress_state.shapes[2] - csa_inner_compress_state_last_inline497_offsets[2]
-             ))
-    };
-    ChipTensor csa_inner_compress_state_last_inline497 = ext_csa_inner_compress_state.view(
-        csa_inner_compress_state_last_inline497_shapes, csa_inner_compress_state_last_inline497_offsets
-    );
-    uint32_t cmp_kv_last_inline555_offsets[4] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * cmp_block_num_inline602)), 0, 0, 0
-    };
-    uint32_t cmp_kv_last_inline555_shapes[4] = {
-        (cmp_kv_last_inline555_offsets[0] >= ext_cmp_kv.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(cmp_block_num_inline602), ext_cmp_kv.shapes[0] - cmp_kv_last_inline555_offsets[0]
-             )),
-        (cmp_kv_last_inline555_offsets[1] >= ext_cmp_kv.shapes[1] ?
-             0u :
-             std::min<uint32_t>(128, ext_cmp_kv.shapes[1] - cmp_kv_last_inline555_offsets[1])),
-        (cmp_kv_last_inline555_offsets[2] >= ext_cmp_kv.shapes[2] ?
-             0u :
-             std::min<uint32_t>(1, ext_cmp_kv.shapes[2] - cmp_kv_last_inline555_offsets[2])),
-        (cmp_kv_last_inline555_offsets[3] >= ext_cmp_kv.shapes[3] ?
-             0u :
-             std::min<uint32_t>(512, ext_cmp_kv.shapes[3] - cmp_kv_last_inline555_offsets[3]))
-    };
-    ChipTensor cmp_kv_last_inline555 = ext_cmp_kv.view(cmp_kv_last_inline555_shapes, cmp_kv_last_inline555_offsets);
-    uint32_t idx_kv_cache_last_inline554_offsets[4] = {static_cast<uint32_t>((idx_block_num_inline601 * 20)), 0, 0, 0};
-    uint32_t idx_kv_cache_last_inline554_shapes[4] = {
-        (idx_kv_cache_last_inline554_offsets[0] >= ext_idx_kv_cache.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(idx_block_num_inline601),
-                 ext_idx_kv_cache.shapes[0] - idx_kv_cache_last_inline554_offsets[0]
-             )),
-        (idx_kv_cache_last_inline554_offsets[1] >= ext_idx_kv_cache.shapes[1] ?
-             0u :
-             std::min<uint32_t>(128, ext_idx_kv_cache.shapes[1] - idx_kv_cache_last_inline554_offsets[1])),
-        (idx_kv_cache_last_inline554_offsets[2] >= ext_idx_kv_cache.shapes[2] ?
-             0u :
-             std::min<uint32_t>(1, ext_idx_kv_cache.shapes[2] - idx_kv_cache_last_inline554_offsets[2])),
-        (idx_kv_cache_last_inline554_offsets[3] >= ext_idx_kv_cache.shapes[3] ?
-             0u :
-             std::min<uint32_t>(128, ext_idx_kv_cache.shapes[3] - idx_kv_cache_last_inline554_offsets[3]))
-    };
-    ChipTensor idx_kv_cache_last_inline554 =
-        ext_idx_kv_cache.view(idx_kv_cache_last_inline554_shapes, idx_kv_cache_last_inline554_offsets);
-    uint32_t idx_kv_scale_last_inline544_offsets[4] = {static_cast<uint32_t>((idx_block_num_inline601 * 20)), 0, 0, 0};
-    uint32_t idx_kv_scale_last_inline544_shapes[4] = {
-        (idx_kv_scale_last_inline544_offsets[0] >= ext_idx_kv_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(
-                 static_cast<uint32_t>(idx_block_num_inline601),
-                 ext_idx_kv_scale.shapes[0] - idx_kv_scale_last_inline544_offsets[0]
-             )),
-        (idx_kv_scale_last_inline544_offsets[1] >= ext_idx_kv_scale.shapes[1] ?
-             0u :
-             std::min<uint32_t>(128, ext_idx_kv_scale.shapes[1] - idx_kv_scale_last_inline544_offsets[1])),
-        (idx_kv_scale_last_inline544_offsets[2] >= ext_idx_kv_scale.shapes[2] ?
-             0u :
-             std::min<uint32_t>(1, ext_idx_kv_scale.shapes[2] - idx_kv_scale_last_inline544_offsets[2])),
-        (idx_kv_scale_last_inline544_offsets[3] >= ext_idx_kv_scale.shapes[3] ?
-             0u :
-             std::min<uint32_t>(1, ext_idx_kv_scale.shapes[3] - idx_kv_scale_last_inline544_offsets[3]))
-    };
-    ChipTensor idx_kv_scale_last_inline544 =
-        ext_idx_kv_scale.view(idx_kv_scale_last_inline544_shapes, idx_kv_scale_last_inline544_offsets);
-    uint32_t hc_ffn_fn_last_inline685_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 24)), 0
-    };
-    uint32_t hc_ffn_fn_last_inline685_shapes[2] = {
-        (hc_ffn_fn_last_inline685_offsets[0] >= ext_hc_ffn_fn.shapes[0] ?
-             0u :
-             std::min<uint32_t>(24, ext_hc_ffn_fn.shapes[0] - hc_ffn_fn_last_inline685_offsets[0])),
-        (hc_ffn_fn_last_inline685_offsets[1] >= ext_hc_ffn_fn.shapes[1] ?
-             0u :
-             std::min<uint32_t>(16384, ext_hc_ffn_fn.shapes[1] - hc_ffn_fn_last_inline685_offsets[1]))
-    };
-    ChipTensor hc_ffn_fn_last_inline685 =
-        ext_hc_ffn_fn.view(hc_ffn_fn_last_inline685_shapes, hc_ffn_fn_last_inline685_offsets);
-    uint32_t hc_ffn_scale_last_inline496_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 3))
-    };
-    uint32_t hc_ffn_scale_last_inline496_shapes[1] = {
-        (hc_ffn_scale_last_inline496_offsets[0] >= ext_hc_ffn_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(3, ext_hc_ffn_scale.shapes[0] - hc_ffn_scale_last_inline496_offsets[0]))
-    };
-    ChipTensor hc_ffn_scale_last_inline496 =
-        ext_hc_ffn_scale.view(hc_ffn_scale_last_inline496_shapes, hc_ffn_scale_last_inline496_offsets);
-    uint32_t hc_ffn_base_last_inline495_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 24))
-    };
-    uint32_t hc_ffn_base_last_inline495_shapes[1] = {
-        (hc_ffn_base_last_inline495_offsets[0] >= ext_hc_ffn_base.shapes[0] ?
-             0u :
-             std::min<uint32_t>(24, ext_hc_ffn_base.shapes[0] - hc_ffn_base_last_inline495_offsets[0]))
-    };
-    ChipTensor hc_ffn_base_last_inline495 =
-        ext_hc_ffn_base.view(hc_ffn_base_last_inline495_shapes, hc_ffn_base_last_inline495_offsets);
-    uint32_t norm_w_last_inline494_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096))
-    };
-    uint32_t norm_w_last_inline494_shapes[1] = {
-        (norm_w_last_inline494_offsets[0] >= ext_norm_w.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_norm_w.shapes[0] - norm_w_last_inline494_offsets[0]))
-    };
-    ChipTensor norm_w_last_inline494 = ext_norm_w.view(norm_w_last_inline494_shapes, norm_w_last_inline494_offsets);
-    uint32_t gate_w_last_inline493_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 64)), 0
-    };
-    uint32_t gate_w_last_inline493_shapes[2] = {
-        (gate_w_last_inline493_offsets[0] >= ext_gate_w.shapes[0] ?
-             0u :
-             std::min<uint32_t>(64, ext_gate_w.shapes[0] - gate_w_last_inline493_offsets[0])),
-        (gate_w_last_inline493_offsets[1] >= ext_gate_w.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_gate_w.shapes[1] - gate_w_last_inline493_offsets[1]))
-    };
-    ChipTensor gate_w_last_inline493 = ext_gate_w.view(gate_w_last_inline493_shapes, gate_w_last_inline493_offsets);
-    uint32_t gate_bias_last_inline492_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 64))
-    };
-    uint32_t gate_bias_last_inline492_shapes[1] = {
-        (gate_bias_last_inline492_offsets[0] >= ext_gate_bias.shapes[0] ?
-             0u :
-             std::min<uint32_t>(64, ext_gate_bias.shapes[0] - gate_bias_last_inline492_offsets[0]))
-    };
-    ChipTensor gate_bias_last_inline492 =
-        ext_gate_bias.view(gate_bias_last_inline492_shapes, gate_bias_last_inline492_offsets);
-    uint32_t tid2eid_last_inline627_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 129280)), 0
-    };
-    uint32_t tid2eid_last_inline627_shapes[2] = {
-        (tid2eid_last_inline627_offsets[0] >= ext_tid2eid.shapes[0] ?
-             0u :
-             std::min<uint32_t>(129280, ext_tid2eid.shapes[0] - tid2eid_last_inline627_offsets[0])),
-        (tid2eid_last_inline627_offsets[1] >= ext_tid2eid.shapes[1] ?
-             0u :
-             std::min<uint32_t>(6, ext_tid2eid.shapes[1] - tid2eid_last_inline627_offsets[1]))
-    };
-    ChipTensor tid2eid_last_inline627 = ext_tid2eid.view(tid2eid_last_inline627_shapes, tid2eid_last_inline627_offsets);
-    uint32_t routed_w1_last_inline491_offsets[3] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0, 0
-    };
-    uint32_t routed_w1_last_inline491_shapes[3] = {
-        (routed_w1_last_inline491_offsets[0] >= ext_routed_w1.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w1.shapes[0] - routed_w1_last_inline491_offsets[0])),
-        (routed_w1_last_inline491_offsets[1] >= ext_routed_w1.shapes[1] ?
-             0u :
-             std::min<uint32_t>(2048, ext_routed_w1.shapes[1] - routed_w1_last_inline491_offsets[1])),
-        (routed_w1_last_inline491_offsets[2] >= ext_routed_w1.shapes[2] ?
-             0u :
-             std::min<uint32_t>(4096, ext_routed_w1.shapes[2] - routed_w1_last_inline491_offsets[2]))
-    };
-    ChipTensor routed_w1_last_inline491 =
-        ext_routed_w1.view(routed_w1_last_inline491_shapes, routed_w1_last_inline491_offsets);
-    uint32_t routed_w1_scale_last_inline490_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0
-    };
-    uint32_t routed_w1_scale_last_inline490_shapes[2] = {
-        (routed_w1_scale_last_inline490_offsets[0] >= ext_routed_w1_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w1_scale.shapes[0] - routed_w1_scale_last_inline490_offsets[0])),
-        (routed_w1_scale_last_inline490_offsets[1] >= ext_routed_w1_scale.shapes[1] ?
-             0u :
-             std::min<uint32_t>(2048, ext_routed_w1_scale.shapes[1] - routed_w1_scale_last_inline490_offsets[1]))
-    };
-    ChipTensor routed_w1_scale_last_inline490 =
-        ext_routed_w1_scale.view(routed_w1_scale_last_inline490_shapes, routed_w1_scale_last_inline490_offsets);
-    uint32_t routed_w3_last_inline707_offsets[3] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0, 0
-    };
-    uint32_t routed_w3_last_inline707_shapes[3] = {
-        (routed_w3_last_inline707_offsets[0] >= ext_routed_w3.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w3.shapes[0] - routed_w3_last_inline707_offsets[0])),
-        (routed_w3_last_inline707_offsets[1] >= ext_routed_w3.shapes[1] ?
-             0u :
-             std::min<uint32_t>(2048, ext_routed_w3.shapes[1] - routed_w3_last_inline707_offsets[1])),
-        (routed_w3_last_inline707_offsets[2] >= ext_routed_w3.shapes[2] ?
-             0u :
-             std::min<uint32_t>(4096, ext_routed_w3.shapes[2] - routed_w3_last_inline707_offsets[2]))
-    };
-    ChipTensor routed_w3_last_inline707 =
-        ext_routed_w3.view(routed_w3_last_inline707_shapes, routed_w3_last_inline707_offsets);
-    uint32_t routed_w3_scale_last_inline673_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0
-    };
-    uint32_t routed_w3_scale_last_inline673_shapes[2] = {
-        (routed_w3_scale_last_inline673_offsets[0] >= ext_routed_w3_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w3_scale.shapes[0] - routed_w3_scale_last_inline673_offsets[0])),
-        (routed_w3_scale_last_inline673_offsets[1] >= ext_routed_w3_scale.shapes[1] ?
-             0u :
-             std::min<uint32_t>(2048, ext_routed_w3_scale.shapes[1] - routed_w3_scale_last_inline673_offsets[1]))
-    };
-    ChipTensor routed_w3_scale_last_inline673 =
-        ext_routed_w3_scale.view(routed_w3_scale_last_inline673_shapes, routed_w3_scale_last_inline673_offsets);
-    uint32_t routed_w2_last_inline489_offsets[3] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0, 0
-    };
-    uint32_t routed_w2_last_inline489_shapes[3] = {
-        (routed_w2_last_inline489_offsets[0] >= ext_routed_w2.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w2.shapes[0] - routed_w2_last_inline489_offsets[0])),
-        (routed_w2_last_inline489_offsets[1] >= ext_routed_w2.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_routed_w2.shapes[1] - routed_w2_last_inline489_offsets[1])),
-        (routed_w2_last_inline489_offsets[2] >= ext_routed_w2.shapes[2] ?
-             0u :
-             std::min<uint32_t>(2048, ext_routed_w2.shapes[2] - routed_w2_last_inline489_offsets[2]))
-    };
-    ChipTensor routed_w2_last_inline489 =
-        ext_routed_w2.view(routed_w2_last_inline489_shapes, routed_w2_last_inline489_offsets);
-    uint32_t routed_w2_scale_last_inline488_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 32)), 0
-    };
-    uint32_t routed_w2_scale_last_inline488_shapes[2] = {
-        (routed_w2_scale_last_inline488_offsets[0] >= ext_routed_w2_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(32, ext_routed_w2_scale.shapes[0] - routed_w2_scale_last_inline488_offsets[0])),
-        (routed_w2_scale_last_inline488_offsets[1] >= ext_routed_w2_scale.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_routed_w2_scale.shapes[1] - routed_w2_scale_last_inline488_offsets[1]))
-    };
-    ChipTensor routed_w2_scale_last_inline488 =
-        ext_routed_w2_scale.view(routed_w2_scale_last_inline488_shapes, routed_w2_scale_last_inline488_offsets);
-    uint32_t shared_w1_last_inline560_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 2048)), 0
-    };
-    uint32_t shared_w1_last_inline560_shapes[2] = {
-        (shared_w1_last_inline560_offsets[0] >= ext_shared_w1.shapes[0] ?
-             0u :
-             std::min<uint32_t>(2048, ext_shared_w1.shapes[0] - shared_w1_last_inline560_offsets[0])),
-        (shared_w1_last_inline560_offsets[1] >= ext_shared_w1.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_shared_w1.shapes[1] - shared_w1_last_inline560_offsets[1]))
-    };
-    ChipTensor shared_w1_last_inline560 =
-        ext_shared_w1.view(shared_w1_last_inline560_shapes, shared_w1_last_inline560_offsets);
-    uint32_t shared_w1_scale_last_inline505_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 2048))
-    };
-    uint32_t shared_w1_scale_last_inline505_shapes[1] = {
-        (shared_w1_scale_last_inline505_offsets[0] >= ext_shared_w1_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(2048, ext_shared_w1_scale.shapes[0] - shared_w1_scale_last_inline505_offsets[0]))
-    };
-    ChipTensor shared_w1_scale_last_inline505 =
-        ext_shared_w1_scale.view(shared_w1_scale_last_inline505_shapes, shared_w1_scale_last_inline505_offsets);
-    uint32_t shared_w3_last_inline508_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 2048)), 0
-    };
-    uint32_t shared_w3_last_inline508_shapes[2] = {
-        (shared_w3_last_inline508_offsets[0] >= ext_shared_w3.shapes[0] ?
-             0u :
-             std::min<uint32_t>(2048, ext_shared_w3.shapes[0] - shared_w3_last_inline508_offsets[0])),
-        (shared_w3_last_inline508_offsets[1] >= ext_shared_w3.shapes[1] ?
-             0u :
-             std::min<uint32_t>(4096, ext_shared_w3.shapes[1] - shared_w3_last_inline508_offsets[1]))
-    };
-    ChipTensor shared_w3_last_inline508 =
-        ext_shared_w3.view(shared_w3_last_inline508_shapes, shared_w3_last_inline508_offsets);
-    uint32_t shared_w3_scale_last_inline487_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 2048))
-    };
-    uint32_t shared_w3_scale_last_inline487_shapes[1] = {
-        (shared_w3_scale_last_inline487_offsets[0] >= ext_shared_w3_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(2048, ext_shared_w3_scale.shapes[0] - shared_w3_scale_last_inline487_offsets[0]))
-    };
-    ChipTensor shared_w3_scale_last_inline487 =
-        ext_shared_w3_scale.view(shared_w3_scale_last_inline487_shapes, shared_w3_scale_last_inline487_offsets);
-    uint32_t shared_w2_last_inline486_offsets[2] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096)), 0
-    };
-    uint32_t shared_w2_last_inline486_shapes[2] = {
-        (shared_w2_last_inline486_offsets[0] >= ext_shared_w2.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_shared_w2.shapes[0] - shared_w2_last_inline486_offsets[0])),
-        (shared_w2_last_inline486_offsets[1] >= ext_shared_w2.shapes[1] ?
-             0u :
-             std::min<uint32_t>(2048, ext_shared_w2.shapes[1] - shared_w2_last_inline486_offsets[1]))
-    };
-    ChipTensor shared_w2_last_inline486 =
-        ext_shared_w2.view(shared_w2_last_inline486_shapes, shared_w2_last_inline486_offsets);
-    uint32_t shared_w2_scale_last_inline549_offsets[1] = {
-        static_cast<uint32_t>((static_cast<int64_t>(csa_layer_last_inline510) * 4096))
-    };
-    uint32_t shared_w2_scale_last_inline549_shapes[1] = {
-        (shared_w2_scale_last_inline549_offsets[0] >= ext_shared_w2_scale.shapes[0] ?
-             0u :
-             std::min<uint32_t>(4096, ext_shared_w2_scale.shapes[0] - shared_w2_scale_last_inline549_offsets[0]))
-    };
-    ChipTensor shared_w2_scale_last_inline549 =
-        ext_shared_w2_scale.view(shared_w2_scale_last_inline549_shapes, shared_w2_scale_last_inline549_offsets);
-    PTO2_SCOPE() {
-        uint32_t x_mixed_inline12448_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo x_mixed_inline12448_ci(x_mixed_inline12448_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t post_t_inline12482_ci_shapes[2] = {8, 4};
-        TensorCreateInfo post_t_inline12482_ci(post_t_inline12482_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t comb_t_inline12239_ci_shapes[2] = {8, 16};
-        TensorCreateInfo comb_t_inline12239_ci(comb_t_inline12239_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t rope_cos_t_inline12435_ci_shapes[2] = {8, 64};
-        TensorCreateInfo rope_cos_t_inline12435_ci(rope_cos_t_inline12435_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t rope_sin_t_inline12737_ci_shapes[2] = {8, 64};
-        TensorCreateInfo rope_sin_t_inline12737_ci(rope_sin_t_inline12737_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t step_cos_inline12428_ci_shapes[2] = {4, 32};
-        TensorCreateInfo step_cos_inline12428_ci(step_cos_inline12428_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t step_sin_inline12412_ci_shapes[2] = {4, 32};
-        TensorCreateInfo step_sin_inline12412_ci(step_sin_inline12412_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t step_cos_il_inline12430_ci_shapes[2] = {4, 64};
-        TensorCreateInfo step_cos_il_inline12430_ci(step_cos_il_inline12430_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t step_sin_signed_inline12365_ci_shapes[2] = {4, 64};
-        TensorCreateInfo step_sin_signed_inline12365_ci(step_sin_signed_inline12365_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t cmp_cos_inline12490_ci_shapes[2] = {4, 32};
-        TensorCreateInfo cmp_cos_inline12490_ci(cmp_cos_inline12490_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t cmp_sin_inline12261_ci_shapes[2] = {4, 32};
-        TensorCreateInfo cmp_sin_inline12261_ci(cmp_sin_inline12261_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t cmp_cos_il_inline12470_ci_shapes[2] = {4, 64};
-        TensorCreateInfo cmp_cos_il_inline12470_ci(cmp_cos_il_inline12470_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t cmp_sin_signed_inline12417_ci_shapes[2] = {4, 64};
-        TensorCreateInfo cmp_sin_signed_inline12417_ci(cmp_sin_signed_inline12417_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t x_normed_t_inline12472_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo x_normed_t_inline12472_ci(x_normed_t_inline12472_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t q_inline12461_ci_shapes[3] = {8, 64, 512};
-        TensorCreateInfo q_inline12461_ci(q_inline12461_ci_shapes, 3, DataType::BFLOAT16);
-        uint32_t kv_inline12362_ci_shapes[2] = {8, 512};
-        TensorCreateInfo kv_inline12362_ci(kv_inline12362_ci_shapes, 2, DataType::BFLOAT16);
-        TaskOutputTensors alloc_113 = alloc_tensors(
-            x_mixed_inline12448_ci, post_t_inline12482_ci, comb_t_inline12239_ci, rope_cos_t_inline12435_ci,
-            rope_sin_t_inline12737_ci, step_cos_inline12428_ci, step_sin_inline12412_ci, step_cos_il_inline12430_ci,
-            step_sin_signed_inline12365_ci, cmp_cos_inline12490_ci, cmp_sin_inline12261_ci, cmp_cos_il_inline12470_ci,
-            cmp_sin_signed_inline12417_ci, x_normed_t_inline12472_ci, q_inline12461_ci, kv_inline12362_ci
-        );
-        const ChipTensor &x_mixed_inline12448 = alloc_113.get_ref(0);
-        const ChipTensor &post_t_inline12482 = alloc_113.get_ref(1);
-        const ChipTensor &comb_t_inline12239 = alloc_113.get_ref(2);
-        const ChipTensor &rope_cos_t_inline12435 = alloc_113.get_ref(3);
-        const ChipTensor &rope_sin_t_inline12737 = alloc_113.get_ref(4);
-        const ChipTensor &step_cos_inline12428 = alloc_113.get_ref(5);
-        const ChipTensor &step_sin_inline12412 = alloc_113.get_ref(6);
-        const ChipTensor &step_cos_il_inline12430 = alloc_113.get_ref(7);
-        const ChipTensor &step_sin_signed_inline12365 = alloc_113.get_ref(8);
-        const ChipTensor &cmp_cos_inline12490 = alloc_113.get_ref(9);
-        const ChipTensor &cmp_sin_inline12261 = alloc_113.get_ref(10);
-        const ChipTensor &cmp_cos_il_inline12470 = alloc_113.get_ref(11);
-        const ChipTensor &cmp_sin_signed_inline12417 = alloc_113.get_ref(12);
-        const ChipTensor &x_normed_t_inline12472 = alloc_113.get_ref(13);
-        const ChipTensor &q_inline12461 = alloc_113.get_ref(14);
-        const ChipTensor &kv_inline12362 = alloc_113.get_ref(15);
-        uint32_t qr_inline12486_ci_shapes[2] = {8, 1024};
-        TensorCreateInfo qr_inline12486_ci(qr_inline12486_ci_shapes, 2, DataType::INT8);
-        uint32_t qr_scale_inline12682_ci_shapes[2] = {8, 1};
-        TensorCreateInfo qr_scale_inline12682_ci(qr_scale_inline12682_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t cmp_out_inline12715_ci_shapes[3] = {4, 2, 512};
-        TensorCreateInfo cmp_out_inline12715_ci(cmp_out_inline12715_ci_shapes, 3, DataType::FLOAT32);
-        uint32_t cmp4_kv_proj_pad_inline1900_inline12391_ci_shapes[2] = {16, 1024};
-        TensorCreateInfo cmp4_kv_proj_pad_inline1900_inline12391_ci(
-            cmp4_kv_proj_pad_inline1900_inline12391_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t cmp4_score_proj_pad_inline1878_inline12521_ci_shapes[2] = {16, 1024};
-        TensorCreateInfo cmp4_score_proj_pad_inline1878_inline12521_ci(
-            cmp4_score_proj_pad_inline1878_inline12521_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t pooled_kv_inline1855_inline12392_ci_shapes[2] = {16, 512};
-        TensorCreateInfo pooled_kv_inline1855_inline12392_ci(
-            pooled_kv_inline1855_inline12392_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t normed_kv_inline1835_inline12626_ci_shapes[2] = {16, 512};
-        TensorCreateInfo normed_kv_inline1835_inline12626_ci(
-            normed_kv_inline1835_inline12626_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t idx_kv_unused_inline12793_ci_shapes[3] = {4, 2, 128};
-        TensorCreateInfo idx_kv_unused_inline12793_ci(idx_kv_unused_inline12793_ci_shapes, 3, DataType::FLOAT32);
-        uint32_t idx_score_unused_inline12691_ci_shapes[3] = {4, 2, 4096};
-        TensorCreateInfo idx_score_unused_inline12691_ci(idx_score_unused_inline12691_ci_shapes, 3, DataType::FLOAT32);
-        uint32_t idx_topk_full_inline12693_ci_shapes[3] = {4, 2, 4096};
-        TensorCreateInfo idx_topk_full_inline12693_ci(idx_topk_full_inline12693_ci_shapes, 3, DataType::INT32);
-        uint32_t qr_acc_pad_inline2023_inline12697_ci_shapes[2] = {16, 8192};
-        TensorCreateInfo qr_acc_pad_inline2023_inline12697_ci(
-            qr_acc_pad_inline2023_inline12697_ci_shapes, 2, DataType::INT32
-        );
-        uint32_t qr_proj_inline2001_inline12361_ci_shapes[2] = {8, 8192};
-        TensorCreateInfo qr_proj_inline2001_inline12361_ci(
-            qr_proj_inline2001_inline12361_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t qr_bf16_inline1969_inline12702_ci_shapes[2] = {512, 128};
-        TensorCreateInfo qr_bf16_inline1969_inline12702_ci(
-            qr_bf16_inline1969_inline12702_ci_shapes, 2, DataType::BFLOAT16
-        );
-        uint32_t rope_swap_idx_t_inline1970_inline12704_ci_shapes[2] = {32, 64};
-        TensorCreateInfo rope_swap_idx_t_inline1970_inline12704_ci(
-            rope_swap_idx_t_inline1970_inline12704_ci_shapes, 2, DataType::INT32
-        );
-        uint32_t qh_acc_gm_inline2006_inline12354_ci_shapes[2] = {512, 128};
-        TensorCreateInfo qh_acc_gm_inline2006_inline12354_ci(
-            qh_acc_gm_inline2006_inline12354_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t qr_hadamard_i8_inline2038_inline12719_ci_shapes[2] = {512, 128};
-        TensorCreateInfo qr_hadamard_i8_inline2038_inline12719_ci(
-            qr_hadamard_i8_inline2038_inline12719_ci_shapes, 2, DataType::INT8
-        );
-        TaskOutputTensors alloc_114 = alloc_tensors(
-            qr_inline12486_ci, qr_scale_inline12682_ci, cmp_out_inline12715_ci,
-            cmp4_kv_proj_pad_inline1900_inline12391_ci, cmp4_score_proj_pad_inline1878_inline12521_ci,
-            pooled_kv_inline1855_inline12392_ci, normed_kv_inline1835_inline12626_ci, idx_kv_unused_inline12793_ci,
-            idx_score_unused_inline12691_ci, idx_topk_full_inline12693_ci, qr_acc_pad_inline2023_inline12697_ci,
-            qr_proj_inline2001_inline12361_ci, qr_bf16_inline1969_inline12702_ci,
-            rope_swap_idx_t_inline1970_inline12704_ci, qh_acc_gm_inline2006_inline12354_ci,
-            qr_hadamard_i8_inline2038_inline12719_ci
-        );
-        const ChipTensor &qr_inline12486 = alloc_114.get_ref(0);
-        const ChipTensor &qr_scale_inline12682 = alloc_114.get_ref(1);
-        const ChipTensor &cmp_out_inline12715 = alloc_114.get_ref(2);
-        const ChipTensor &cmp4_kv_proj_pad_inline1900_inline12391 = alloc_114.get_ref(3);
-        const ChipTensor &cmp4_score_proj_pad_inline1878_inline12521 = alloc_114.get_ref(4);
-        const ChipTensor &pooled_kv_inline1855_inline12392 = alloc_114.get_ref(5);
-        const ChipTensor &normed_kv_inline1835_inline12626 = alloc_114.get_ref(6);
-        const ChipTensor &idx_kv_unused_inline12793 = alloc_114.get_ref(7);
-        const ChipTensor &idx_score_unused_inline12691 = alloc_114.get_ref(8);
-        const ChipTensor &idx_topk_full_inline12693 = alloc_114.get_ref(9);
-        const ChipTensor &qr_acc_pad_inline2023_inline12697 = alloc_114.get_ref(10);
-        const ChipTensor &qr_proj_inline2001_inline12361 = alloc_114.get_ref(11);
-        const ChipTensor &qr_bf16_inline1969_inline12702 = alloc_114.get_ref(12);
-        const ChipTensor &rope_swap_idx_t_inline1970_inline12704 = alloc_114.get_ref(13);
-        const ChipTensor &qh_acc_gm_inline2006_inline12354 = alloc_114.get_ref(14);
-        const ChipTensor &qr_hadamard_i8_inline2038_inline12719 = alloc_114.get_ref(15);
-        uint32_t qr_hadamard_scale_dq_inline2018_inline12242_ci_shapes[2] = {512, 1};
-        TensorCreateInfo qr_hadamard_scale_dq_inline2018_inline12242_ci(
-            qr_hadamard_scale_dq_inline2018_inline12242_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t weights_inline2015_inline12545_ci_shapes[2] = {16, 64};
-        TensorCreateInfo weights_inline2015_inline12545_ci(
-            weights_inline2015_inline12545_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t weights_partial_inline2014_inline12590_ci_shapes[2] = {64, 64};
-        TensorCreateInfo weights_partial_inline2014_inline12590_ci(
-            weights_partial_inline2014_inline12590_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t kv_proj_pad_inline15316_ci_shapes[2] = {16, 256};
-        TensorCreateInfo kv_proj_pad_inline15316_ci(kv_proj_pad_inline15316_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t score_proj_pad_inline15304_ci_shapes[2] = {16, 256};
-        TensorCreateInfo score_proj_pad_inline15304_ci(score_proj_pad_inline15304_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t pooled_kv_inline15274_ci_shapes[2] = {16, 128};
-        TensorCreateInfo pooled_kv_inline15274_ci(pooled_kv_inline15274_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t normed_kv_inline15296_ci_shapes[2] = {16, 128};
-        TensorCreateInfo normed_kv_inline15296_ci(normed_kv_inline15296_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t kv_final_inline15242_ci_shapes[2] = {16, 128};
-        TensorCreateInfo kv_final_inline15242_ci(kv_final_inline15242_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t gm_pipe_buffer_9_ci_shapes[1] = {static_cast<uint32_t>((16384) * (16))};
-        TensorCreateInfo gm_pipe_buffer_9_ci(gm_pipe_buffer_9_ci_shapes, 1, DataType::FLOAT32, /*manual_dep=*/true);
-        uint32_t attn_out_inline12760_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo attn_out_inline12760_ci(attn_out_inline12760_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t sparse_bias_inline2117_inline12782_ci_shapes[2] = {8, 640};
-        TensorCreateInfo sparse_bias_inline2117_inline12782_ci(
-            sparse_bias_inline2117_inline12782_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t cmp_sparse_indices_inline2144_inline12783_ci_shapes[2] = {8, 512};
-        TensorCreateInfo cmp_sparse_indices_inline2144_inline12783_ci(
-            cmp_sparse_indices_inline2144_inline12783_ci_shapes, 2, DataType::INT32
-        );
-        uint32_t valid_block_mask_inline2160_inline12736_ci_shapes[2] = {8, 5};
-        TensorCreateInfo valid_block_mask_inline2160_inline12736_ci(
-            valid_block_mask_inline2160_inline12736_ci_shapes, 2, DataType::INT32
-        );
-        uint32_t qk_order_inline2147_inline12785_ci_shapes[1] = {40};
-        TensorCreateInfo qk_order_inline2147_inline12785_ci(
-            qk_order_inline2147_inline12785_ci_shapes, 1, DataType::INT32
-        );
-        uint32_t qk_wcur_inline2138_inline12272_ci_shapes[1] = {1};
-        TensorCreateInfo qk_wcur_inline2138_inline12272_ci(
-            qk_wcur_inline2138_inline12272_ci_shapes, 1, DataType::INT32
-        );
-        uint32_t sparse_blk_mi_inline2120_inline12729_ci_shapes[2] = {2560, 1};
-        TensorCreateInfo sparse_blk_mi_inline2120_inline12729_ci(
-            sparse_blk_mi_inline2120_inline12729_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_115 = alloc_tensors(
-            qr_hadamard_scale_dq_inline2018_inline12242_ci, weights_inline2015_inline12545_ci,
-            weights_partial_inline2014_inline12590_ci, kv_proj_pad_inline15316_ci, score_proj_pad_inline15304_ci,
-            pooled_kv_inline15274_ci, normed_kv_inline15296_ci, kv_final_inline15242_ci, gm_pipe_buffer_9_ci,
-            attn_out_inline12760_ci, sparse_bias_inline2117_inline12782_ci,
-            cmp_sparse_indices_inline2144_inline12783_ci, valid_block_mask_inline2160_inline12736_ci,
-            qk_order_inline2147_inline12785_ci, qk_wcur_inline2138_inline12272_ci,
-            sparse_blk_mi_inline2120_inline12729_ci
-        );
-        const ChipTensor &qr_hadamard_scale_dq_inline2018_inline12242 = alloc_115.get_ref(0);
-        const ChipTensor &weights_inline2015_inline12545 = alloc_115.get_ref(1);
-        const ChipTensor &weights_partial_inline2014_inline12590 = alloc_115.get_ref(2);
-        const ChipTensor &kv_proj_pad_inline15316 = alloc_115.get_ref(3);
-        const ChipTensor &score_proj_pad_inline15304 = alloc_115.get_ref(4);
-        const ChipTensor &pooled_kv_inline15274 = alloc_115.get_ref(5);
-        const ChipTensor &normed_kv_inline15296 = alloc_115.get_ref(6);
-        const ChipTensor &kv_final_inline15242 = alloc_115.get_ref(7);
-        const ChipTensor &gm_pipe_buffer_9 = alloc_115.get_ref(8);
-        const ChipTensor &attn_out_inline12760 = alloc_115.get_ref(9);
-        const ChipTensor &sparse_bias_inline2117_inline12782 = alloc_115.get_ref(10);
-        const ChipTensor &cmp_sparse_indices_inline2144_inline12783 = alloc_115.get_ref(11);
-        const ChipTensor &valid_block_mask_inline2160_inline12736 = alloc_115.get_ref(12);
-        const ChipTensor &qk_order_inline2147_inline12785 = alloc_115.get_ref(13);
-        const ChipTensor &qk_wcur_inline2138_inline12272 = alloc_115.get_ref(14);
-        const ChipTensor &sparse_blk_mi_inline2120_inline12729 = alloc_115.get_ref(15);
-        uint32_t sparse_blk_li_inline2118_inline12815_ci_shapes[2] = {2560, 1};
-        TensorCreateInfo sparse_blk_li_inline2118_inline12815_ci(
-            sparse_blk_li_inline2118_inline12815_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t sparse_blk_oi_inline2116_inline12816_ci_shapes[2] = {2560, 512};
-        TensorCreateInfo sparse_blk_oi_inline2116_inline12816_ci(
-            sparse_blk_oi_inline2116_inline12816_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t gm_pipe_buffer_10_ci_shapes[1] = {static_cast<uint32_t>((32768) * (24))};
-        TensorCreateInfo gm_pipe_buffer_10_ci(gm_pipe_buffer_10_ci_shapes, 1, DataType::FLOAT32, /*manual_dep=*/true);
-        uint32_t rope_cos_il_inline2100_inline12543_ci_shapes[2] = {8, 64};
-        TensorCreateInfo rope_cos_il_inline2100_inline12543_ci(
-            rope_cos_il_inline2100_inline12543_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t rope_sin_signed_inline2192_inline12320_ci_shapes[2] = {8, 64};
-        TensorCreateInfo rope_sin_signed_inline2192_inline12320_ci(
-            rope_sin_signed_inline2192_inline12320_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t rope_swap_idx_inline2169_inline12752_ci_shapes[2] = {16, 64};
-        TensorCreateInfo rope_swap_idx_inline2169_inline12752_ci(
-            rope_swap_idx_inline2169_inline12752_ci_shapes, 2, DataType::INT32
-        );
-        uint32_t o_packed_inline2242_inline12218_ci_shapes[2] = {64, 4096};
-        TensorCreateInfo o_packed_inline2242_inline12218_ci(
-            o_packed_inline2242_inline12218_ci_shapes, 2, DataType::BFLOAT16
-        );
-        uint32_t o_r_pad_inline2225_inline12756_ci_shapes[2] = {16, 8192};
-        TensorCreateInfo o_r_pad_inline2225_inline12756_ci(
-            o_r_pad_inline2225_inline12756_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t o_r_i8_pad_inline2082_inline12196_ci_shapes[2] = {16, 8192};
-        TensorCreateInfo o_r_i8_pad_inline2082_inline12196_ci(
-            o_r_i8_pad_inline2082_inline12196_ci_shapes, 2, DataType::INT8
-        );
-        uint32_t act_scale_dq_inline2081_inline12776_ci_shapes[2] = {8, 8};
-        TensorCreateInfo act_scale_dq_inline2081_inline12776_ci(
-            act_scale_dq_inline2081_inline12776_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t partials_inline2126_inline12241_ci_shapes[2] = {16, 32768};
-        TensorCreateInfo partials_inline2126_inline12241_ci(
-            partials_inline2126_inline12241_ci_shapes, 2, DataType::INT32
-        );
-        TaskOutputTensors alloc_116 = alloc_tensors(
-            sparse_blk_li_inline2118_inline12815_ci, sparse_blk_oi_inline2116_inline12816_ci, gm_pipe_buffer_10_ci,
-            rope_cos_il_inline2100_inline12543_ci, rope_sin_signed_inline2192_inline12320_ci,
-            rope_swap_idx_inline2169_inline12752_ci, o_packed_inline2242_inline12218_ci,
-            o_r_pad_inline2225_inline12756_ci, o_r_i8_pad_inline2082_inline12196_ci,
-            act_scale_dq_inline2081_inline12776_ci, partials_inline2126_inline12241_ci
-        );
-        const ChipTensor &sparse_blk_li_inline2118_inline12815 = alloc_116.get_ref(0);
-        const ChipTensor &sparse_blk_oi_inline2116_inline12816 = alloc_116.get_ref(1);
-        const ChipTensor &gm_pipe_buffer_10 = alloc_116.get_ref(2);
-        const ChipTensor &rope_cos_il_inline2100_inline12543 = alloc_116.get_ref(3);
-        const ChipTensor &rope_sin_signed_inline2192_inline12320 = alloc_116.get_ref(4);
-        const ChipTensor &rope_swap_idx_inline2169_inline12752 = alloc_116.get_ref(5);
-        const ChipTensor &o_packed_inline2242_inline12218 = alloc_116.get_ref(6);
-        const ChipTensor &o_r_pad_inline2225_inline12756 = alloc_116.get_ref(7);
-        const ChipTensor &o_r_i8_pad_inline2082_inline12196 = alloc_116.get_ref(8);
-        const ChipTensor &act_scale_dq_inline2081_inline12776 = alloc_116.get_ref(9);
-        const ChipTensor &partials_inline2126_inline12241 = alloc_116.get_ref(10);
-        int64_t t_dim_inline15145 = 8;
-        int64_t t_linear_inline15163 = (((t_dim_inline15145 + 15) / 16) * 16);
-        uint32_t x_flat_inline15158_shapes[2] = {static_cast<uint32_t>(t_dim_inline15145), 16384};
-        ChipTensor x_flat_inline15158 = hidden_inline709.reshape(x_flat_inline15158_shapes, 2);
-        uint32_t indices_scale0_inline15152[1] = {0};
-        float scale0_inline15152 = get_tensor_data<float>(hc_attn_scale_last_inline641, 1, indices_scale0_inline15152);
-        uint32_t indices_scale1_inline15172[1] = {1};
-        float scale1_inline15172 = get_tensor_data<float>(hc_attn_scale_last_inline641, 1, indices_scale1_inline15172);
-        uint32_t indices_scale2_inline15138[1] = {2};
-        float scale2_inline15138 = get_tensor_data<float>(hc_attn_scale_last_inline641, 1, indices_scale2_inline15138);
-        uint32_t hc_base_2d_inline15173_shapes[2] = {1, 24};
-        ChipTensor hc_base_2d_inline15173 = hc_attn_base_last_inline509.reshape(hc_base_2d_inline15173_shapes, 2);
-        uint32_t inv_rms_inline15113_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15163), 1};
-        TensorCreateInfo inv_rms_inline15113_ci(inv_rms_inline15113_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_117 = alloc_tensors(inv_rms_inline15113_ci);
-        const ChipTensor &inv_rms_inline15113 = alloc_117.get_ref(0);
-        uint32_t mixes_raw_inline15136_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15163), 32};
-        TensorCreateInfo mixes_raw_inline15136_ci(mixes_raw_inline15136_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_118 = alloc_tensors(mixes_raw_inline15136_ci);
-        const ChipTensor &mixes_raw_inline15136 = alloc_118.get_ref(0);
-        int64_t linear_partial_rows_inline15111 = (t_linear_inline15163 * 4);
-        uint32_t mixes_partials_inline15135_ci_shapes[2] = {static_cast<uint32_t>(linear_partial_rows_inline15111), 32};
-        TensorCreateInfo mixes_partials_inline15135_ci(mixes_partials_inline15135_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_119 = alloc_tensors(mixes_partials_inline15135_ci);
-        const ChipTensor &mixes_partials_inline15135 = alloc_119.get_ref(0);
-
-        // Spmd hc_pre_rms_spmd_7: hc_pre_rms_7
-        CoreTaskArgs params_t262;
-        params_t262.add_input(x_flat_inline15158);
-        params_t262.add_inout(inv_rms_inline15113);
-        params_t262.launch_spec.set_block_num((t_dim_inline15145 / 8));
-        params_t262.set_allow_early_resolve(true);
-        TaskOutputTensors task_262_outs = rt_submit_aiv_task(271, params_t262);
-
-        // Spmd hc_pre_linear_spmd_7: hc_pre_linear_7
-        CoreTaskArgs params_t263;
-        params_t263.add_input(x_flat_inline15158);
-        params_t263.add_input(hc_attn_fn_last_inline634);
-        params_t263.add_inout(mixes_partials_inline15135);
-        params_t263.add_scalar(t_dim_inline15145);
-        params_t263.add_scalar(t_linear_inline15163);
-        params_t263.launch_spec.set_block_num(((t_linear_inline15163 / 16) * 4));
-        params_t263.set_allow_early_resolve(true);
-        TaskOutputTensors task_263_outs = rt_submit_aic_task(272, params_t263);
-
-        // Spmd hc_pre_linear_reduce_spmd_7: hc_pre_linear_reduce_7
-        CoreTaskArgs params_t264;
-        params_t264.add_input(mixes_partials_inline15135);
-        params_t264.add_inout(mixes_raw_inline15136);
-        params_t264.add_scalar(t_linear_inline15163);
-        params_t264.launch_spec.set_block_num((t_linear_inline15163 / 16));
-        params_t264.set_allow_early_resolve(true);
-        TaskOutputTensors task_264_outs = rt_submit_aiv_task(273, params_t264);
-        uint32_t pre_val_store_inline15141_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15163), 8};
-        TensorCreateInfo pre_val_store_inline15141_ci(pre_val_store_inline15141_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_120 = alloc_tensors(pre_val_store_inline15141_ci);
-        const ChipTensor &pre_val_store_inline15141 = alloc_120.get_ref(0);
-
-        // Spmd split_pre_post_spmd_7: split_pre_post_7
-        CoreTaskArgs params_t265;
-        params_t265.add_input(inv_rms_inline15113);
-        params_t265.add_input(hc_attn_base_last_inline509);
-        params_t265.add_input(mixes_raw_inline15136);
-        params_t265.add_inout(pre_val_store_inline15141);
-        params_t265.add_inout(post_t_inline12482);
-        params_t265.add_scalar(to_u64(scale0_inline15152));
-        params_t265.add_scalar(to_u64(scale1_inline15172));
-        params_t265.launch_spec.set_block_num((t_dim_inline15145 / 8));
-        params_t265.set_allow_early_resolve(true);
-        TaskOutputTensors task_265_outs = rt_submit_aiv_task(274, params_t265);
-
-        // Spmd comb_sinkhorn_spmd_7: comb_sinkhorn_7
-        CoreTaskArgs params_t266;
-        params_t266.add_input(inv_rms_inline15113);
-        params_t266.add_input(mixes_raw_inline15136);
-        params_t266.add_input(hc_base_2d_inline15173);
-        params_t266.add_inout(comb_t_inline12239);
-        params_t266.add_scalar(to_u64(scale2_inline15138));
-        params_t266.launch_spec.set_block_num((t_dim_inline15145 / 8));
-        params_t266.set_allow_early_resolve(true);
-        TaskOutputTensors task_266_outs = rt_submit_aiv_task(275, params_t266);
-
-        // Spmd mix_x_spmd_7: mix_x_7
-        CoreTaskArgs params_t267;
-        params_t267.add_input(pre_val_store_inline15141);
-        params_t267.add_output(x_mixed_inline12448);
-        params_t267.add_input(x_flat_inline15158);
-        params_t267.launch_spec.set_block_num(((t_dim_inline15145 / 8) * 4));
-        params_t267.set_allow_early_resolve(true);
-        TaskOutputTensors task_267_outs = rt_submit_aiv_task(276, params_t267);
-
-        // Task 268: csa_rope_step_0
-        CoreTaskArgs params_t268;
-        params_t268.add_output(rope_cos_t_inline12435);
-        params_t268.add_output(rope_sin_t_inline12737);
-        params_t268.add_output(step_cos_inline12428);
-        params_t268.add_output(step_sin_inline12412);
-        params_t268.add_input(ext_position_ids);
-        params_t268.add_input(compressed_freqs_cos_inline559);
-        params_t268.add_input(compressed_freqs_sin_inline692);
-        rt_submit_aiv_task(277, params_t268);
-
-        // Task 269: rope_interleave_2
-        CoreTaskArgs params_t269;
-        params_t269.add_input(step_cos_inline12428);
-        params_t269.add_inout(step_cos_il_inline12430);
-        params_t269.add_input(step_sin_inline12412);
-        params_t269.add_inout(step_sin_signed_inline12365);
-        params_t269.set_allow_early_resolve(true);
-        TaskOutputTensors task_269_outs = rt_submit_aiv_task(278, params_t269);
-
-        // Task 270: csa_cmp_rope_0
-        CoreTaskArgs params_t270;
-        params_t270.add_output(cmp_cos_inline12490);
-        params_t270.add_output(cmp_sin_inline12261);
-        params_t270.add_input(ext_position_ids);
-        params_t270.add_input(compressed_freqs_cos_inline559);
-        params_t270.add_input(compressed_freqs_sin_inline692);
-        rt_submit_aiv_task(279, params_t270);
-
-        // Task 271: rope_interleave_3
-        CoreTaskArgs params_t271;
-        params_t271.add_input(cmp_cos_inline12490);
-        params_t271.add_inout(cmp_cos_il_inline12470);
-        params_t271.add_input(cmp_sin_inline12261);
-        params_t271.add_inout(cmp_sin_signed_inline12417);
-        params_t271.set_allow_early_resolve(true);
-        TaskOutputTensors task_271_outs = rt_submit_aiv_task(280, params_t271);
-        int64_t t_dim_inline1640_inline12397 = 8;
-
-        // Spmd rms_norm_spmd_3: rms_norm_3
-        CoreTaskArgs params_t272;
-        params_t272.add_input(x_mixed_inline12448);
-        params_t272.add_output(x_normed_t_inline12472);
-        params_t272.add_input(attn_norm_w_last_inline570);
-        params_t272.launch_spec.set_block_num((t_dim_inline1640_inline12397 / 8));
-        params_t272.set_allow_early_resolve(true);
-        TaskOutputTensors task_272_outs = rt_submit_aiv_task(281, params_t272);
-        PTO2TaskId rms_tid_inline1641_inline12576 = task_272_outs.task_id();
-        PTO2TaskId rms_tid_inline12740 = rms_tid_inline1641_inline12576;
-
-        // Phase-fence barrier 8: dependency-only dummy task
-        CoreTaskArgs params_phase_fence_barrier_8;
-        PTO2TaskId params_phase_fence_barrier_8_deps[1];
-        uint32_t params_phase_fence_barrier_8_deps_count = 0;
-        params_phase_fence_barrier_8_deps[params_phase_fence_barrier_8_deps_count++] = rms_tid_inline1641_inline12576;
-        params_phase_fence_barrier_8.set_dependencies(
-            params_phase_fence_barrier_8_deps, params_phase_fence_barrier_8_deps_count
-        );
-        PTO2TaskId late_dep_inline12569 = PTO2TaskId::invalid();
-        if (params_phase_fence_barrier_8_deps_count > 0) {
-            TaskOutputTensors phase_fence_barrier_8_outs = rt_submit_dummy_task(params_phase_fence_barrier_8);
-            late_dep_inline12569 = phase_fence_barrier_8_outs.task_id();
-        }
-        int64_t t_dim_inline1772_inline12422 = 8;
-        uint32_t x_view_inline1710_inline12436_shapes[2] = {static_cast<uint32_t>(t_dim_inline1772_inline12422), 4096};
-        ChipTensor x_view_inline1710_inline12436 =
-            x_normed_t_inline12472.reshape(x_view_inline1710_inline12436_shapes, 2);
-        uint32_t rope_cos_view_inline1708_inline12500_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 64
-        };
-        ChipTensor rope_cos_view_inline1708_inline12500 =
-            rope_cos_t_inline12435.reshape(rope_cos_view_inline1708_inline12500_shapes, 2);
-        uint32_t rope_sin_view_inline1696_inline12465_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 64
-        };
-        ChipTensor rope_sin_view_inline1696_inline12465 =
-            rope_sin_t_inline12737.reshape(rope_sin_view_inline1696_inline12465_shapes, 2);
-        uint32_t kv_view_inline1746_inline12562_shapes[2] = {static_cast<uint32_t>(t_dim_inline1772_inline12422), 512};
-        ChipTensor kv_view_inline1746_inline12562 = kv_inline12362.reshape(kv_view_inline1746_inline12562_shapes, 2);
-        uint32_t qr_view_inline1716_inline12505_shapes[2] = {static_cast<uint32_t>(t_dim_inline1772_inline12422), 1024};
-        ChipTensor qr_view_inline1716_inline12505 = qr_inline12486.reshape(qr_view_inline1716_inline12505_shapes, 2);
-        uint32_t qr_scale_view_inline1722_inline12507_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 1
-        };
-        ChipTensor qr_scale_view_inline1722_inline12507 =
-            qr_scale_inline12682.reshape(qr_scale_view_inline1722_inline12507_shapes, 2);
-        int64_t t_matmul_inline1739_inline12394 = std::max<int64_t>(t_dim_inline1772_inline12422, 16);
-        uint32_t q_rope_cos_il_inline1745_inline12266_ci_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 64
-        };
-        TensorCreateInfo q_rope_cos_il_inline1745_inline12266_ci(
-            q_rope_cos_il_inline1745_inline12266_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_121 = alloc_tensors(q_rope_cos_il_inline1745_inline12266_ci);
-        const ChipTensor &q_rope_cos_il_inline1745_inline12266 = alloc_121.get_ref(0);
-        uint32_t q_rope_sin_signed_inline1781_inline12527_ci_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 64
-        };
-        TensorCreateInfo q_rope_sin_signed_inline1781_inline12527_ci(
-            q_rope_sin_signed_inline1781_inline12527_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_122 = alloc_tensors(q_rope_sin_signed_inline1781_inline12527_ci);
-        const ChipTensor &q_rope_sin_signed_inline1781_inline12527 = alloc_122.get_ref(0);
-        uint32_t q_rope_swap_idx_inline1747_inline12787_ci_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline1772_inline12422), 64
-        };
-        TensorCreateInfo q_rope_swap_idx_inline1747_inline12787_ci(
-            q_rope_swap_idx_inline1747_inline12787_ci_shapes, 2, DataType::INT32
-        );
-        TaskOutputTensors alloc_123 = alloc_tensors(q_rope_swap_idx_inline1747_inline12787_ci);
-        const ChipTensor &q_rope_swap_idx_inline1747_inline12787 = alloc_123.get_ref(0);
-
-        // Spmd q_rope_prepare_spmd_3: q_rope_prepare_3
-        CoreTaskArgs params_t273;
-        params_t273.add_input(rope_cos_view_inline1708_inline12500);
-        params_t273.add_input(rope_sin_view_inline1696_inline12465);
-        params_t273.add_inout(q_rope_cos_il_inline1745_inline12266);
-        params_t273.add_inout(q_rope_sin_signed_inline1781_inline12527);
-        params_t273.add_inout(q_rope_swap_idx_inline1747_inline12787);
-        params_t273.launch_spec.set_block_num((t_dim_inline1772_inline12422 / 8));
-        params_t273.set_allow_early_resolve(true);
-        TaskOutputTensors task_273_outs = rt_submit_aiv_task(282, params_t273);
-        uint32_t qr_fp32_inline1689_inline12571_ci_shapes[2] = {
-            static_cast<uint32_t>(t_matmul_inline1739_inline12394), 1024
-        };
-        TensorCreateInfo qr_fp32_inline1689_inline12571_ci(
-            qr_fp32_inline1689_inline12571_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_124 = alloc_tensors(qr_fp32_inline1689_inline12571_ci);
-        const ChipTensor &qr_fp32_inline1689_inline12571 = alloc_124.get_ref(0);
-        int64_t qr_partial_rows_inline1729_inline12458 = (t_matmul_inline1739_inline12394 * 2);
-        uint32_t qr_partials_inline1686_inline12530_ci_shapes[2] = {
-            static_cast<uint32_t>(qr_partial_rows_inline1729_inline12458), 1024
-        };
-        TensorCreateInfo qr_partials_inline1686_inline12530_ci(
-            qr_partials_inline1686_inline12530_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_125 = alloc_tensors(qr_partials_inline1686_inline12530_ci);
-        const ChipTensor &qr_partials_inline1686_inline12530 = alloc_125.get_ref(0);
-        uint32_t qr_i8_matmul_inline1775_inline12282_ci_shapes[2] = {
-            static_cast<uint32_t>(t_matmul_inline1739_inline12394), 1024
-        };
-        TensorCreateInfo qr_i8_matmul_inline1775_inline12282_ci(
-            qr_i8_matmul_inline1775_inline12282_ci_shapes, 2, DataType::INT8
-        );
-        TaskOutputTensors alloc_126 = alloc_tensors(qr_i8_matmul_inline1775_inline12282_ci);
-        const ChipTensor &qr_i8_matmul_inline1775_inline12282 = alloc_126.get_ref(0);
-
-        // Spmd qr_proj_matmul_spmd_3: qr_proj_matmul_3
-        CoreTaskArgs params_t274;
-        params_t274.add_output(qr_partials_inline1686_inline12530);
-        params_t274.add_input(x_view_inline1710_inline12436);
-        params_t274.add_input(wq_a_last_inline507);
-        params_t274.add_scalar(t_matmul_inline1739_inline12394);
-        params_t274.add_scalar(t_dim_inline1772_inline12422);
-        params_t274.launch_spec.set_block_num(16);
-        params_t274.set_allow_early_resolve(true);
-        TaskOutputTensors task_274_outs = rt_submit_aic_task(283, params_t274);
-
-        // Spmd qr_proj_reduce_spmd_3: qr_proj_reduce_3
-        CoreTaskArgs params_t275;
-        params_t275.add_input(qr_partials_inline1686_inline12530);
-        params_t275.add_inout(qr_fp32_inline1689_inline12571);
-        params_t275.add_scalar(t_matmul_inline1739_inline12394);
-        params_t275.launch_spec.set_block_num(((t_matmul_inline1739_inline12394 / 16) * 8));
-        params_t275.set_allow_early_resolve(true);
-        TaskOutputTensors task_275_outs = rt_submit_aiv_task(284, params_t275);
-
-        // Spmd qr_rms_norm_quant_spmd_3: qr_rms_norm_quant_3
-        CoreTaskArgs params_t276;
-        params_t276.add_input(qr_fp32_inline1689_inline12571);
-        params_t276.add_input(gamma_cq_last_inline664);
-        params_t276.add_inout(qr_scale_view_inline1722_inline12507);
-        params_t276.add_output(qr_i8_matmul_inline1775_inline12282);
-        params_t276.add_output(qr_view_inline1716_inline12505);
-        params_t276.launch_spec.set_block_num((t_dim_inline1772_inline12422 / 8));
-        params_t276.set_allow_early_resolve(true);
-        TaskOutputTensors task_276_outs = rt_submit_aiv_task(285, params_t276);
-        int64_t tg_inline1711_inline12594 = 0;
-        uint32_t q_proj_i32_inline1756_inline12345_ci_shapes[2] = {
-            static_cast<uint32_t>(t_matmul_inline1739_inline12394), 32768
-        };
-        TensorCreateInfo q_proj_i32_inline1756_inline12345_ci(
-            q_proj_i32_inline1756_inline12345_ci_shapes, 2, DataType::INT32
-        );
-        TaskOutputTensors alloc_127 = alloc_tensors(q_proj_i32_inline1756_inline12345_ci);
-        const ChipTensor &q_proj_i32_inline1756_inline12345 = alloc_127.get_ref(0);
-
-        // Spmd qproj_matmul_spmd_3: qproj_matmul_3
-        CoreTaskArgs params_t277;
-        params_t277.add_output(q_proj_i32_inline1756_inline12345);
-        params_t277.add_input(qr_i8_matmul_inline1775_inline12282);
-        params_t277.add_input(wq_b_last_inline703);
-        params_t277.add_scalar(t_matmul_inline1739_inline12394);
-        params_t277.launch_spec.set_block_num(64);
-        rt_submit_aic_task(286, params_t277);
-        uint32_t q_flat_inline1694_inline12396_shapes[2] = {static_cast<uint32_t>(t_dim_inline1772_inline12422), 32768};
-        ChipTensor q_flat_inline1694_inline12396 = q_inline12461.reshape(q_flat_inline1694_inline12396_shapes, 2);
-
-        // Spmd qproj_dequant_rms_nope_rope_spmd_3: qproj_dequant_rms_nope_rope_3
-        CoreTaskArgs params_t278;
-        params_t278.add_output(q_flat_inline1694_inline12396);
-        params_t278.add_input(qr_scale_view_inline1722_inline12507);
-        params_t278.add_input(q_rope_cos_il_inline1745_inline12266);
-        params_t278.add_input(q_rope_sin_signed_inline1781_inline12527);
-        params_t278.add_input(q_rope_swap_idx_inline1747_inline12787);
-        params_t278.add_input(q_proj_i32_inline1756_inline12345);
-        params_t278.add_input(wq_b_scale_last_inline574);
-        params_t278.add_scalar(tg_inline1711_inline12594);
-        params_t278.add_scalar(t_dim_inline1772_inline12422);
-        params_t278.launch_spec.set_block_num(16);
-        params_t278.set_allow_early_resolve(true);
-        TaskOutputTensors task_278_outs = rt_submit_aiv_task(287, params_t278);
-        uint32_t kv_fp32_inline1727_inline12307_ci_shapes[2] = {
-            static_cast<uint32_t>(t_matmul_inline1739_inline12394), 512
-        };
-        TensorCreateInfo kv_fp32_inline1727_inline12307_ci(
-            kv_fp32_inline1727_inline12307_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_128 = alloc_tensors(kv_fp32_inline1727_inline12307_ci);
-        const ChipTensor &kv_fp32_inline1727_inline12307 = alloc_128.get_ref(0);
-        int64_t kv_partial_rows_inline1818_inline12303 = (t_matmul_inline1739_inline12394 * 4);
-        uint32_t kv_partials_inline1803_inline12301_ci_shapes[2] = {
-            static_cast<uint32_t>(kv_partial_rows_inline1818_inline12303), 512
-        };
-        TensorCreateInfo kv_partials_inline1803_inline12301_ci(
-            kv_partials_inline1803_inline12301_ci_shapes, 2, DataType::FLOAT32
-        );
-        TaskOutputTensors alloc_129 = alloc_tensors(kv_partials_inline1803_inline12301_ci);
-        const ChipTensor &kv_partials_inline1803_inline12301 = alloc_129.get_ref(0);
-
-        // Spmd kv_proj_matmul_spmd_3: kv_proj_matmul_3
-        CoreTaskArgs params_t279;
-        params_t279.add_output(kv_partials_inline1803_inline12301);
-        params_t279.add_input(x_view_inline1710_inline12436);
-        params_t279.add_input(wkv_last_inline729);
-        params_t279.add_scalar(t_matmul_inline1739_inline12394);
-        params_t279.add_scalar(t_dim_inline1772_inline12422);
-        params_t279.launch_spec.set_block_num(16);
-        PTO2TaskId params_t279_deps[1];
-        uint32_t params_t279_deps_count = 0;
-        if (late_dep_inline12569.is_valid()) params_t279_deps[params_t279_deps_count++] = late_dep_inline12569;
-        params_t279.set_dependencies(params_t279_deps, params_t279_deps_count);
-        TaskOutputTensors task_279_outs = rt_submit_aic_task(288, params_t279);
-
-        // Spmd kv_proj_reduce_spmd_3: kv_proj_reduce_3
-        CoreTaskArgs params_t280;
-        params_t280.add_input(kv_partials_inline1803_inline12301);
-        params_t280.add_inout(kv_fp32_inline1727_inline12307);
-        params_t280.add_scalar(t_matmul_inline1739_inline12394);
-        params_t280.launch_spec.set_block_num(((t_matmul_inline1739_inline12394 / 16) * 4));
-        params_t280.set_allow_early_resolve(true);
-        TaskOutputTensors task_280_outs = rt_submit_aiv_task(289, params_t280);
-
-        // Spmd kv_rms_norm_rope_spmd_3: kv_rms_norm_rope_3
-        CoreTaskArgs params_t281;
-        params_t281.add_input(kv_fp32_inline1727_inline12307);
-        params_t281.add_output(kv_view_inline1746_inline12562);
-        params_t281.add_input(gamma_ckv_last_inline506);
-        params_t281.add_input(q_rope_cos_il_inline1745_inline12266);
-        params_t281.add_input(q_rope_sin_signed_inline1781_inline12527);
-        params_t281.add_input(q_rope_swap_idx_inline1747_inline12787);
-        params_t281.launch_spec.set_block_num((t_dim_inline1772_inline12422 / 8));
-        rt_submit_aiv_task(290, params_t281);
-        int64_t ori_block_num_inline12410 = (int64_t)kv_cache_last_inline663.shapes[0];
-        uint32_t kv_cache_flat_inline12429_shapes[2] = {static_cast<uint32_t>((ori_block_num_inline12410 * 128)), 512};
-        ChipTensor kv_cache_flat_inline12429 = kv_cache_last_inline663.reshape(kv_cache_flat_inline12429_shapes, 2);
-
-        // Spmd csa_cache_writeback_spmd_0: csa_cache_writeback_0
-        CoreTaskArgs params_t282;
-        params_t282.add_output(kv_cache_flat_inline12429);
-        params_t282.add_input(ori_slot_mapping_inline614);
-        params_t282.add_input(kv_inline12362);
-        params_t282.launch_spec.set_block_num(1);
-        rt_submit_aiv_task(291, params_t282);
-        uint32_t x_normed_inline12371_shapes[3] = {4, 2, 4096};
-        ChipTensor x_normed_inline12371 = x_normed_t_inline12472.reshape(x_normed_inline12371_shapes, 3);
-        uint32_t position_ids_bsd_inline12252_shapes[2] = {4, 2};
-        ChipTensor position_ids_bsd_inline12252 = ext_position_ids.reshape(position_ids_bsd_inline12252_shapes, 2);
-        uint32_t cmp_slot_mapping_bsd_inline12251_shapes[2] = {4, 2};
-        ChipTensor cmp_slot_mapping_bsd_inline12251 =
-            csa_cmp_slot_mapping_inline719.reshape(cmp_slot_mapping_bsd_inline12251_shapes, 2);
-        uint32_t idx_slot_mapping_bsd_inline12777_shapes[2] = {4, 2};
-        ChipTensor idx_slot_mapping_bsd_inline12777 =
-            csa_idx_slot_mapping_inline600.reshape(idx_slot_mapping_bsd_inline12777_shapes, 2);
-        uint32_t state_slot_mapping_bsd_inline12635_shapes[2] = {4, 2};
-        ChipTensor state_slot_mapping_bsd_inline12635 =
-            csa_state_slot_mapping_inline645.reshape(state_slot_mapping_bsd_inline12635_shapes, 2);
-        uint32_t inner_state_slot_mapping_bsd_inline12535_shapes[2] = {4, 2};
-        ChipTensor inner_state_slot_mapping_bsd_inline12535 =
-            csa_inner_state_slot_mapping_inline609.reshape(inner_state_slot_mapping_bsd_inline12535_shapes, 2);
-        uint32_t x_flat_inline1868_inline12665_shapes[2] = {8, 4096};
-        ChipTensor x_flat_inline1868_inline12665 =
-            x_normed_inline12371.reshape(x_flat_inline1868_inline12665_shapes, 2);
-        int64_t compress_state_block_num_inline1857_inline12519 = (int64_t)csa_compress_state_last_inline724.shapes[0];
-        int64_t cmp_block_num_inline1877_inline12248 = (int64_t)cmp_kv_last_inline555.shapes[0];
-        uint32_t compress_state_flat_inline1881_inline12478_shapes[2] = {
-            static_cast<uint32_t>((compress_state_block_num_inline1857_inline12519 * 4)), 2048
-        };
-        ChipTensor compress_state_flat_inline1881_inline12478 =
-            csa_compress_state_last_inline724.reshape(compress_state_flat_inline1881_inline12478_shapes, 2);
-        uint32_t kv_flat_inline1901_inline12341_shapes[2] = {8, 512};
-        ChipTensor kv_flat_inline1901_inline12341 =
-            cmp_out_inline12715.reshape(kv_flat_inline1901_inline12341_shapes, 2);
-        uint32_t cmp_kv_cache_flat_inline1870_inline12447_shapes[2] = {
-            static_cast<uint32_t>((cmp_block_num_inline1877_inline12248 * 128)), 512
-        };
-        ChipTensor cmp_kv_cache_flat_inline1870_inline12447 =
-            cmp_kv_last_inline555.reshape(cmp_kv_cache_flat_inline1870_inline12447_shapes, 2);
-
-        // Spmd kv_score_proj_spmd_2: kv_score_proj_2
-        CoreTaskArgs params_t283;
-        params_t283.add_input(x_flat_inline1868_inline12665);
-        params_t283.add_input(csa_cmp_wkv_last_inline501);
-        params_t283.add_input(csa_cmp_wgate_last_inline500);
-        params_t283.add_inout(cmp4_kv_proj_pad_inline1900_inline12391);
-        params_t283.add_inout(cmp4_score_proj_pad_inline1878_inline12521);
-        params_t283.launch_spec.set_block_num(16);
-        PTO2TaskId params_t283_deps[1];
-        uint32_t params_t283_deps_count = 0;
-        if (late_dep_inline12569.is_valid()) params_t283_deps[params_t283_deps_count++] = late_dep_inline12569;
-        params_t283.set_dependencies(params_t283_deps, params_t283_deps_count);
-        TaskOutputTensors task_283_outs = rt_submit_aic_task(292, params_t283);
-
-        // Task 284: scatter_softmax_pool_2
-        CoreTaskArgs params_t284;
-        params_t284.add_inout(compress_state_flat_inline1881_inline12478);
-        params_t284.add_output(pooled_kv_inline1855_inline12392);
-        params_t284.add_input(position_ids_bsd_inline12252);
-        params_t284.add_input(state_slot_mapping_bsd_inline12635);
-        params_t284.add_input(cmp4_kv_proj_pad_inline1900_inline12391);
-        params_t284.add_input(cmp4_score_proj_pad_inline1878_inline12521);
-        params_t284.add_input(csa_cmp_ape_last_inline679);
-        params_t284.add_input(ext_csa_compress_state_block_table);
-        rt_submit_aiv_task(293, params_t284);
-        uint32_t norm_w_2d_inline1842_inline12329_shapes[2] = {1, 512};
-        ChipTensor norm_w_2d_inline1842_inline12329 =
-            csa_cmp_norm_w_last_inline731.reshape(norm_w_2d_inline1842_inline12329_shapes, 2);
-
-        // Task 285: rmsnorm_rope_cache_write_1
-        CoreTaskArgs params_t285;
-        params_t285.add_input(cmp_cos_il_inline12470);
-        params_t285.add_input(cmp_sin_signed_inline12417);
-        params_t285.add_input(pooled_kv_inline1855_inline12392);
-        params_t285.add_inout(normed_kv_inline1835_inline12626);
-        params_t285.add_input(norm_w_2d_inline1842_inline12329);
-        params_t285.add_output(cmp_kv_cache_flat_inline1870_inline12447);
-        params_t285.add_output(kv_flat_inline1901_inline12341);
-        params_t285.add_input(position_ids_bsd_inline12252);
-        params_t285.add_input(cmp_slot_mapping_bsd_inline12251);
-        params_t285.set_allow_early_resolve(true);
-        TaskOutputTensors task_285_outs = rt_submit_aiv_task(294, params_t285);
-
-        // Spmd idx_qr_proj_matmul_spmd_0: idx_qr_proj_matmul_0
-        CoreTaskArgs params_t286;
-        params_t286.add_output(qr_acc_pad_inline2023_inline12697);
-        params_t286.add_input(qr_inline12486);
-        params_t286.add_input(csa_idx_wq_b_last_inline605);
-        params_t286.launch_spec.set_block_num(8);
-        params_t286.set_allow_early_resolve(true);
-        TaskOutputTensors task_286_outs = rt_submit_aic_task(295, params_t286);
-
-        // Spmd idx_qr_proj_dequant_spmd_0: idx_qr_proj_dequant_0
-        CoreTaskArgs params_t287;
-        params_t287.add_input(csa_idx_wq_b_scale_last_inline518);
-        params_t287.add_input(qr_acc_pad_inline2023_inline12697);
-        params_t287.add_input(qr_scale_inline12682);
-        params_t287.add_inout(qr_proj_inline2001_inline12361);
-        params_t287.launch_spec.set_block_num(8);
-        params_t287.set_allow_early_resolve(true);
-        TaskOutputTensors task_287_outs = rt_submit_aiv_task(296, params_t287);
-        uint32_t qr_proj_flat_inline1973_inline12473_shapes[2] = {512, 128};
-        ChipTensor qr_proj_flat_inline1973_inline12473 =
-            qr_proj_inline2001_inline12361.reshape(qr_proj_flat_inline1973_inline12473_shapes, 2);
-
-        // Task 288: qr_rope_swap_idx_0
-        CoreTaskArgs params_t288;
-        params_t288.add_inout(rope_swap_idx_t_inline1970_inline12704);
-        params_t288.set_allow_early_resolve(true);
-        TaskOutputTensors task_288_outs = rt_submit_aiv_task(297, params_t288);
-
-        // Spmd qr_rope_spmd_0: qr_rope_0
-        CoreTaskArgs params_t289;
-        params_t289.add_input(rope_swap_idx_t_inline1970_inline12704);
-        params_t289.add_input(step_cos_il_inline12430);
-        params_t289.add_input(step_sin_signed_inline12365);
-        params_t289.add_input(qr_proj_flat_inline1973_inline12473);
-        params_t289.add_inout(qr_bf16_inline1969_inline12702);
-        params_t289.launch_spec.set_block_num(16);
-        params_t289.set_allow_early_resolve(true);
-        TaskOutputTensors task_289_outs = rt_submit_aiv_task(298, params_t289);
-
-        // Spmd qr_hadamard_matmul_spmd_0: qr_hadamard_matmul_0
-        CoreTaskArgs params_t290;
-        params_t290.add_input(qr_bf16_inline1969_inline12702);
-        params_t290.add_input(csa_hadamard_idx_last_inline669);
-        params_t290.add_inout(qh_acc_gm_inline2006_inline12354);
-        params_t290.launch_spec.set_block_num(8);
-        params_t290.set_allow_early_resolve(true);
-        TaskOutputTensors task_290_outs = rt_submit_aic_task(299, params_t290);
-
-        // Spmd qr_hadamard_quant_spmd_0: qr_hadamard_quant_0
-        CoreTaskArgs params_t291;
-        params_t291.add_input(qh_acc_gm_inline2006_inline12354);
-        params_t291.add_inout(qr_hadamard_scale_dq_inline2018_inline12242);
-        params_t291.add_output(qr_hadamard_i8_inline2038_inline12719);
-        params_t291.launch_spec.set_block_num(8);
-        params_t291.set_allow_early_resolve(true);
-        TaskOutputTensors task_291_outs = rt_submit_aiv_task(300, params_t291);
-        uint32_t x_flat_inline1958_inline12732_shapes[2] = {8, 4096};
-        ChipTensor x_flat_inline1958_inline12732 =
-            x_normed_inline12371.reshape(x_flat_inline1958_inline12732_shapes, 2);
-
-        // Spmd weights_proj_spmd_0: weights_proj_0
-        CoreTaskArgs params_t292;
-        params_t292.add_input(x_flat_inline1958_inline12732);
-        params_t292.add_input(csa_weights_proj_last_inline671);
-        params_t292.add_inout(weights_partial_inline2014_inline12590);
-        params_t292.launch_spec.set_block_num(4);
-        PTO2TaskId params_t292_deps[1];
-        uint32_t params_t292_deps_count = 0;
-        if (late_dep_inline12569.is_valid()) params_t292_deps[params_t292_deps_count++] = late_dep_inline12569;
-        params_t292.set_dependencies(params_t292_deps, params_t292_deps_count);
-        TaskOutputTensors task_292_outs = rt_submit_aic_task(301, params_t292);
-
-        // Task 293: weights_proj_reduce_0
-        CoreTaskArgs params_t293;
-        params_t293.add_input(weights_partial_inline2014_inline12590);
-        params_t293.add_inout(weights_inline2015_inline12545);
-        params_t293.set_allow_early_resolve(true);
-        TaskOutputTensors task_293_outs = rt_submit_aiv_task(302, params_t293);
-        uint32_t x_flat_inline15306_shapes[2] = {8, 4096};
-        ChipTensor x_flat_inline15306 = x_normed_inline12371.reshape(x_flat_inline15306_shapes, 2);
-        int64_t compress_state_block_num_inline15310 = (int64_t)csa_inner_compress_state_last_inline497.shapes[0];
-        int64_t idx_block_num_inline15303 = (int64_t)idx_kv_cache_last_inline554.shapes[0];
-        uint32_t compress_state_flat_inline15312_shapes[2] = {
-            static_cast<uint32_t>((compress_state_block_num_inline15310 * 4)), 512
-        };
-        ChipTensor compress_state_flat_inline15312 =
-            csa_inner_compress_state_last_inline497.reshape(compress_state_flat_inline15312_shapes, 2);
-        uint32_t kv_flat_inline15314_shapes[2] = {8, 128};
-        ChipTensor kv_flat_inline15314 = idx_kv_unused_inline12793.reshape(kv_flat_inline15314_shapes, 2);
-        uint32_t idx_kv_cache_flat_inline15300_shapes[2] = {
-            static_cast<uint32_t>((idx_block_num_inline15303 * 128)), 128
-        };
-        ChipTensor idx_kv_cache_flat_inline15300 =
-            idx_kv_cache_last_inline554.reshape(idx_kv_cache_flat_inline15300_shapes, 2);
-        uint32_t idx_kv_scale_flat_inline15317_shapes[2] = {
-            static_cast<uint32_t>((idx_block_num_inline15303 * 128)), 1
-        };
-        ChipTensor idx_kv_scale_flat_inline15317 =
-            idx_kv_scale_last_inline544.reshape(idx_kv_scale_flat_inline15317_shapes, 2);
-
-        // Spmd kv_score_proj_spmd_3: kv_score_proj_3
-        CoreTaskArgs params_t294;
-        params_t294.add_input(x_flat_inline15306);
-        params_t294.add_input(csa_inner_wkv_last_inline580);
-        params_t294.add_input(csa_inner_wgate_last_inline511);
-        params_t294.add_inout(kv_proj_pad_inline15316);
-        params_t294.add_inout(score_proj_pad_inline15304);
-        params_t294.launch_spec.set_block_num(8);
-        PTO2TaskId params_t294_deps[1];
-        uint32_t params_t294_deps_count = 0;
-        if (late_dep_inline12569.is_valid()) params_t294_deps[params_t294_deps_count++] = late_dep_inline12569;
-        params_t294.set_dependencies(params_t294_deps, params_t294_deps_count);
-        TaskOutputTensors task_294_outs = rt_submit_aic_task(303, params_t294);
-
-        // Task 295: scatter_softmax_pool_3
-        CoreTaskArgs params_t295;
-        params_t295.add_inout(compress_state_flat_inline15312);
-        params_t295.add_output(pooled_kv_inline15274);
-        params_t295.add_input(position_ids_bsd_inline12252);
-        params_t295.add_input(inner_state_slot_mapping_bsd_inline12535);
-        params_t295.add_input(kv_proj_pad_inline15316);
-        params_t295.add_input(score_proj_pad_inline15304);
-        params_t295.add_input(csa_inner_ape_last_inline499);
-        params_t295.add_input(ext_csa_inner_compress_state_block_table);
-        params_t295.set_allow_early_resolve(true);
-        TaskOutputTensors task_295_outs = rt_submit_aiv_task(304, params_t295);
-        uint32_t norm_w_2d_inline15258_shapes[2] = {1, 128};
-        ChipTensor norm_w_2d_inline15258 = csa_inner_norm_w_last_inline498.reshape(norm_w_2d_inline15258_shapes, 2);
-
-        // Task 296: rmsnorm_rope_0
-        CoreTaskArgs params_t296;
-        params_t296.add_input(step_cos_il_inline12430);
-        params_t296.add_input(step_sin_signed_inline12365);
-        params_t296.add_input(pooled_kv_inline15274);
-        params_t296.add_output(normed_kv_inline15296);
-        params_t296.add_input(norm_w_2d_inline15258);
-        rt_submit_aiv_task(305, params_t296);
-
-        // Task 297: kv_hadamard_0
-        CoreTaskArgs params_t297;
-        params_t297.add_input(normed_kv_inline15296);
-        params_t297.add_output(kv_final_inline15242);
-        params_t297.add_input(csa_hadamard_idx_last_inline669);
-        rt_submit_aic_task(306, params_t297);
-
-        // Task 298: kv_and_cache_write_0
-        CoreTaskArgs params_t298;
-        params_t298.add_input(kv_final_inline15242);
-        params_t298.add_output(idx_kv_cache_flat_inline15300);
-        params_t298.add_output(kv_flat_inline15314);
-        params_t298.add_input(position_ids_bsd_inline12252);
-        params_t298.add_input(idx_slot_mapping_bsd_inline12777);
-        params_t298.add_output(idx_kv_scale_flat_inline15317);
-        params_t298.set_allow_early_resolve(true);
-        TaskOutputTensors task_298_outs = rt_submit_aiv_task(307, params_t298);
-        int64_t idx_block_num_inline1950_inline12633 = (int64_t)idx_kv_cache_last_inline554.shapes[0];
-        uint32_t kv_cache_i8_flat_inline1968_inline12747_shapes[2] = {
-            static_cast<uint32_t>((idx_block_num_inline1950_inline12633 * 128)), 128
-        };
-        ChipTensor kv_cache_i8_flat_inline1968_inline12747 =
-            idx_kv_cache_last_inline554.reshape(kv_cache_i8_flat_inline1968_inline12747_shapes, 2);
-        uint32_t kv_scale_flat_inline1955_inline12748_shapes[2] = {
-            static_cast<uint32_t>((idx_block_num_inline1950_inline12633 * 128)), 1
-        };
-        ChipTensor kv_scale_flat_inline1955_inline12748 =
-            idx_kv_scale_last_inline544.reshape(kv_scale_flat_inline1955_inline12748_shapes, 2);
-        uint32_t idx_block_table_flat_inline1949_inline12516_shapes[1] = {256};
-        ChipTensor idx_block_table_flat_inline1949_inline12516 =
-            ext_idx_block_table.reshape(idx_block_table_flat_inline1949_inline12516_shapes, 1);
-        uint32_t score_flat_inline1948_inline12292_shapes[2] = {8, 4096};
-        ChipTensor score_flat_inline1948_inline12292 =
-            idx_score_unused_inline12691.reshape(score_flat_inline1948_inline12292_shapes, 2);
-
-        // Group score_0: MixedKernels (AIC + AIV lanes)
-        CoreTaskArgs params_t299;
-        params_t299.add_input(ext_kv_seq_lens);
-        params_t299.add_input(position_ids_bsd_inline12252);
-        params_t299.add_input(qr_hadamard_i8_inline2038_inline12719);
-        params_t299.add_input(qr_hadamard_scale_dq_inline2018_inline12242);
-        params_t299.add_input(weights_inline2015_inline12545);
-        params_t299.add_output(score_flat_inline1948_inline12292);
-        params_t299.add_input(idx_block_table_flat_inline1949_inline12516);
-        params_t299.add_input(kv_cache_i8_flat_inline1968_inline12747);
-        params_t299.add_input(kv_scale_flat_inline1955_inline12748);
-        params_t299.add_output(gm_pipe_buffer_9);
-        MixedKernels mixed_299 = {308, 309, 309};
-        params_t299.launch_spec.set_block_num(16);
-        params_t299.set_allow_early_resolve(true);
-        TaskOutputTensors task_299_outs = rt_submit_task(mixed_299, params_t299);
-        uint32_t topk_idxs_flat_inline1930_inline12661_shapes[2] = {8, 4096};
-        ChipTensor topk_idxs_flat_inline1930_inline12661 =
-            idx_topk_full_inline12693.reshape(topk_idxs_flat_inline1930_inline12661_shapes, 2);
-
-        // Spmd topk_spmd_0: topk_0
-        CoreTaskArgs params_t300;
-        params_t300.add_inout(topk_idxs_flat_inline1930_inline12661);
-        params_t300.add_input(ext_kv_seq_lens);
-        params_t300.add_input(position_ids_bsd_inline12252);
-        params_t300.add_input(score_flat_inline1948_inline12292);
-        params_t300.launch_spec.set_block_num(8);
-        params_t300.set_allow_early_resolve(true);
-        TaskOutputTensors task_300_outs = rt_submit_aiv_task(310, params_t300);
-        uint32_t idx_topk_flat_inline12548_shapes[2] = {8, 4096};
-        ChipTensor idx_topk_flat_inline12548 = idx_topk_full_inline12693.reshape(idx_topk_flat_inline12548_shapes, 2);
-        uint32_t position_ids_t1_inline12360_shapes[2] = {8, 1};
-        ChipTensor position_ids_t1_inline12360 = ext_position_ids.reshape(position_ids_t1_inline12360_shapes, 2);
-        int64_t ori_block_num_inline2165_inline12779 = (int64_t)kv_cache_last_inline663.shapes[0];
-        uint32_t ori_kv_flat_inline2164_inline12781_shapes[2] = {
-            static_cast<uint32_t>((ori_block_num_inline2165_inline12779 * 128)), 512
-        };
-        ChipTensor ori_kv_flat_inline2164_inline12781 =
-            kv_cache_last_inline663.reshape(ori_kv_flat_inline2164_inline12781_shapes, 2);
-
-        // Task 301: kv_touch_0
-        CoreTaskArgs params_t301;
-        params_t301.add_inout(ori_kv_flat_inline2164_inline12781);
-        params_t301.set_allow_early_resolve(true);
-        TaskOutputTensors task_301_outs = rt_submit_aiv_task(311, params_t301);
-
-        // Task 302: csa_slots_build_valid_qk_plan_0
-        CoreTaskArgs params_t302;
-        params_t302.add_input(idx_topk_flat_inline12548);
-        params_t302.add_input(position_ids_t1_inline12360);
-        params_t302.add_inout(cmp_sparse_indices_inline2144_inline12783);
-        params_t302.add_inout(valid_block_mask_inline2160_inline12736);
-        params_t302.add_input(swa_indices_inline636);
-        params_t302.add_inout(sparse_bias_inline2117_inline12782);
-        params_t302.add_inout(qk_wcur_inline2138_inline12272);
-        params_t302.add_output(qk_order_inline2147_inline12785);
-        params_t302.set_allow_early_resolve(true);
-        TaskOutputTensors task_302_outs = rt_submit_aiv_task(312, params_t302);
-        PTO2TaskId qk_plan_tid_inline2134_inline12788 = task_302_outs.task_id();
-        int64_t cmp_block_num_inline2124_inline12330 = (int64_t)cmp_kv_last_inline555.shapes[0];
-        uint32_t cmp_kv_flat_inline2128_inline12513_shapes[2] = {
-            static_cast<uint32_t>((cmp_block_num_inline2124_inline12330 * 128)), 512
-        };
-        ChipTensor cmp_kv_flat_inline2128_inline12513 =
-            cmp_kv_last_inline555.reshape(cmp_kv_flat_inline2128_inline12513_shapes, 2);
-        uint32_t q_flat_inline2122_inline12813_shapes[2] = {512, 512};
-        ChipTensor q_flat_inline2122_inline12813 = q_inline12461.reshape(q_flat_inline2122_inline12813_shapes, 2);
-
-        // Group qk_pv_3: MixedKernels (AIC + AIV lanes)
-        CoreTaskArgs params_t303;
-        params_t303.add_output(sparse_blk_li_inline2118_inline12815);
-        params_t303.add_output(sparse_blk_mi_inline2120_inline12729);
-        params_t303.add_output(sparse_blk_oi_inline2116_inline12816);
-        params_t303.add_input(qk_order_inline2147_inline12785);
-        params_t303.add_input(sparse_bias_inline2117_inline12782);
-        params_t303.add_input(valid_block_mask_inline2160_inline12736);
-        params_t303.add_input(position_ids_t1_inline12360);
-        params_t303.add_input(swa_indices_inline636);
-        params_t303.add_input(ori_kv_flat_inline2164_inline12781);
-        params_t303.add_input(cmp_sparse_indices_inline2144_inline12783);
-        params_t303.add_input(ext_cmp_block_table);
-        params_t303.add_input(cmp_kv_flat_inline2128_inline12513);
-        params_t303.add_input(q_flat_inline2122_inline12813);
-        params_t303.add_output(gm_pipe_buffer_10);
-        MixedKernels mixed_303 = {313, 314, 314};
-        params_t303.launch_spec.set_block_num(24);
-        params_t303.set_allow_early_resolve(true);
-        PTO2TaskId params_t303_deps[1];
-        uint32_t params_t303_deps_count = 0;
-        params_t303_deps[params_t303_deps_count++] = qk_plan_tid_inline2134_inline12788;
-        params_t303.set_dependencies(params_t303_deps, params_t303_deps_count);
-        TaskOutputTensors task_303_outs = rt_submit_task(mixed_303, params_t303);
-
-        // Task 304: rope_cs_3
-        CoreTaskArgs params_t304;
-        params_t304.add_inout(rope_swap_idx_inline2169_inline12752);
-        params_t304.add_input(rope_cos_t_inline12435);
-        params_t304.add_input(rope_sin_t_inline12737);
-        params_t304.add_inout(rope_cos_il_inline2100_inline12543);
-        params_t304.add_inout(rope_sin_signed_inline2192_inline12320);
-        params_t304.set_allow_early_resolve(true);
-        TaskOutputTensors task_304_outs = rt_submit_aiv_task(315, params_t304);
-
-        // Spmd merge_norm_spmd_3: merge_norm_3
-        CoreTaskArgs params_t305;
-        params_t305.add_input(sparse_blk_mi_inline2120_inline12729);
-        params_t305.add_input(sparse_blk_li_inline2118_inline12815);
-        params_t305.add_input(sparse_blk_oi_inline2116_inline12816);
-        params_t305.add_input(attn_sink_last_inline504);
-        params_t305.add_input(rope_cos_il_inline2100_inline12543);
-        params_t305.add_input(rope_sin_signed_inline2192_inline12320);
-        params_t305.add_input(rope_swap_idx_inline2169_inline12752);
-        params_t305.add_inout(o_packed_inline2242_inline12218);
-        params_t305.launch_spec.set_block_num(32);
-        TaskOutputTensors task_305_outs = rt_submit_aiv_task(316, params_t305);
-        PTO2TaskId merge_tid_inline2186_inline12537 = task_305_outs.task_id();
-        PTO2TaskId proj_b_tids_inline2079_inline12533[8];
-        for (int64_t __init_i = 0; __init_i < 8; ++__init_i)
-            proj_b_tids_inline2079_inline12533[__init_i] = PTO2TaskId::invalid();
-        ChipTensor o_r_pad_inline2225_inline12756__rv_v2 = o_r_pad_inline2225_inline12756;
-        PTO2_SCOPE(PTO2ScopeMode::MANUAL) {
-            for (int64_t g_inline2162_inline12195 = 0; g_inline2162_inline12195 < 8; g_inline2162_inline12195 += 1) {
-                int64_t row_base_o_inline2078_inline12669 = (g_inline2162_inline12195 * 8);
-                int64_t out_col_g_inline2181_inline12363 = (g_inline2162_inline12195 * 1024);
-
-                // Spmd proj_a_mm_spmd_3: proj_a_mm_3
-                CoreTaskArgs params_t306;
-                params_t306.add_input(o_packed_inline2242_inline12218);
-                params_t306.add_input(wo_a_last_inline503);
-                params_t306.add_output(o_r_pad_inline2225_inline12756__rv_v2);
-                params_t306.add_scalar(row_base_o_inline2078_inline12669);
-                params_t306.add_scalar(g_inline2162_inline12195);
-                params_t306.add_scalar(out_col_g_inline2181_inline12363);
-                params_t306.launch_spec.set_block_num(8);
-                params_t306.set_allow_early_resolve(true);
-                PTO2TaskId params_t306_deps[1];
-                uint32_t params_t306_deps_count = 0;
-                params_t306_deps[params_t306_deps_count++] = merge_tid_inline2186_inline12537;
-                params_t306.set_dependencies(params_t306_deps, params_t306_deps_count);
-                TaskOutputTensors task_306_outs = rt_submit_aic_task(317, params_t306);
-                int64_t n0_inline2077_inline12193 = 0;
-                PTO2TaskId pa_tid_inline2168_inline12194 = task_306_outs.task_id();
-                int64_t col_g_inline2196_inline12308 = (g_inline2162_inline12195 * 1024);
-
-                // Task 307: quant_3
-                CoreTaskArgs params_t307;
-                params_t307.add_output(act_scale_dq_inline2081_inline12776);
-                params_t307.add_output(o_r_i8_pad_inline2082_inline12196);
-                params_t307.add_input(o_r_pad_inline2225_inline12756__rv_v2);
-                params_t307.add_scalar(col_g_inline2196_inline12308);
-                params_t307.add_scalar(g_inline2162_inline12195);
-                PTO2TaskId params_t307_deps[1];
-                uint32_t params_t307_deps_count = 0;
-                params_t307_deps[params_t307_deps_count++] = pa_tid_inline2168_inline12194;
-                params_t307.set_dependencies(params_t307_deps, params_t307_deps_count);
-                params_t307.set_allow_early_resolve(true);
-                TaskOutputTensors task_307_outs = rt_submit_aiv_task(318, params_t307);
-                PTO2TaskId q_tid_inline2071_inline12201 = task_307_outs.task_id();
-
-                // Spmd proj_b_mm_spmd_3: proj_b_mm_3
-                CoreTaskArgs params_t308;
-                params_t308.add_output(partials_inline2126_inline12241);
-                params_t308.add_input(o_r_i8_pad_inline2082_inline12196);
-                params_t308.add_input(wo_b_last_inline545);
-                params_t308.add_scalar(n0_inline2077_inline12193);
-                params_t308.add_scalar(col_g_inline2196_inline12308);
-                params_t308.add_scalar(g_inline2162_inline12195);
-                params_t308.launch_spec.set_block_num(8);
-                params_t308.set_allow_early_resolve(true);
-                PTO2TaskId params_t308_deps[1];
-                uint32_t params_t308_deps_count = 0;
-                params_t308_deps[params_t308_deps_count++] = q_tid_inline2071_inline12201;
-                params_t308.set_dependencies(params_t308_deps, params_t308_deps_count);
-                TaskOutputTensors task_308_outs = rt_submit_aic_task(319, params_t308);
-                PTO2TaskId pb_tid_inline2057_inline12703 = task_308_outs.task_id();
-                proj_b_tids_inline2079_inline12533[g_inline2162_inline12195] = pb_tid_inline2057_inline12703;
-            }
-        }
-        PTO2TaskId _submit_deps_buf_inline2166_inline12172[8];
-        for (int64_t __init_i = 0; __init_i < 8; ++__init_i)
-            _submit_deps_buf_inline2166_inline12172[__init_i] = PTO2TaskId::invalid();
-        PTO2TaskId t__tmp_v1986 = proj_b_tids_inline2079_inline12533[0];
-        _submit_deps_buf_inline2166_inline12172[0] = t__tmp_v1986;
-        PTO2TaskId t__tmp_v1987 = proj_b_tids_inline2079_inline12533[1];
-        _submit_deps_buf_inline2166_inline12172[1] = t__tmp_v1987;
-        PTO2TaskId t__tmp_v1988 = proj_b_tids_inline2079_inline12533[2];
-        _submit_deps_buf_inline2166_inline12172[2] = t__tmp_v1988;
-        PTO2TaskId t__tmp_v1989 = proj_b_tids_inline2079_inline12533[3];
-        _submit_deps_buf_inline2166_inline12172[3] = t__tmp_v1989;
-        PTO2TaskId t__tmp_v1990 = proj_b_tids_inline2079_inline12533[4];
-        _submit_deps_buf_inline2166_inline12172[4] = t__tmp_v1990;
-        PTO2TaskId t__tmp_v1991 = proj_b_tids_inline2079_inline12533[5];
-        _submit_deps_buf_inline2166_inline12172[5] = t__tmp_v1991;
-        PTO2TaskId t__tmp_v1992 = proj_b_tids_inline2079_inline12533[6];
-        _submit_deps_buf_inline2166_inline12172[6] = t__tmp_v1992;
-        PTO2TaskId t__tmp_v1993 = proj_b_tids_inline2079_inline12533[7];
-        _submit_deps_buf_inline2166_inline12172[7] = t__tmp_v1993;
-
-        // Spmd proj_b_act_spmd_3: proj_b_act_3
-        CoreTaskArgs params_t309;
-        params_t309.add_input(wo_b_scale_last_inline502);
-        params_t309.add_input(partials_inline2126_inline12241);
-        params_t309.add_input(act_scale_dq_inline2081_inline12776);
-        params_t309.add_inout(attn_out_inline12760);
-        params_t309.launch_spec.set_block_num(8);
-        params_t309.set_allow_early_resolve(true);
-        PTO2TaskId params_t309_deps[8];
-        uint32_t params_t309_deps_count = 0;
-        if (_submit_deps_buf_inline2166_inline12172[0].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[0];
-        if (_submit_deps_buf_inline2166_inline12172[1].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[1];
-        if (_submit_deps_buf_inline2166_inline12172[2].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[2];
-        if (_submit_deps_buf_inline2166_inline12172[3].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[3];
-        if (_submit_deps_buf_inline2166_inline12172[4].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[4];
-        if (_submit_deps_buf_inline2166_inline12172[5].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[5];
-        if (_submit_deps_buf_inline2166_inline12172[6].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[6];
-        if (_submit_deps_buf_inline2166_inline12172[7].is_valid())
-            params_t309_deps[params_t309_deps_count++] = _submit_deps_buf_inline2166_inline12172[7];
-        params_t309.set_dependencies(params_t309_deps, params_t309_deps_count);
-        TaskOutputTensors task_309_outs = rt_submit_aiv_task(320, params_t309);
-        int64_t t_dim_inline2270_inline12312 = 8;
-        uint32_t residual_flat_inline2261_inline12157_shapes[2] = {
-            static_cast<uint32_t>(t_dim_inline2270_inline12312), 16384
-        };
-        ChipTensor residual_flat_inline2261_inline12157 =
-            hidden_inline709.reshape(residual_flat_inline2261_inline12157_shapes, 2);
-        uint32_t y_flat_inline2262_inline12840_shapes[2] = {static_cast<uint32_t>(t_dim_inline2270_inline12312), 16384};
-        ChipTensor y_flat_inline2262_inline12840 =
-            x_attn_last_inline539.reshape(y_flat_inline2262_inline12840_shapes, 2);
-
-        // Spmd hc_post_spmd_7: hc_post_7
-        CoreTaskArgs params_t310;
-        params_t310.add_output(y_flat_inline2262_inline12840);
-        params_t310.add_input(post_t_inline12482);
-        params_t310.add_input(attn_out_inline12760);
-        params_t310.add_input(comb_t_inline12239);
-        params_t310.add_input(residual_flat_inline2261_inline12157);
-        params_t310.launch_spec.set_block_num(((t_dim_inline2270_inline12312 / 4) * 4));
-        rt_submit_aiv_task(321, params_t310);
-    }
-    PTO2_SCOPE() {
-        uint32_t x_mixed_inline12973_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo x_mixed_inline12973_ci(x_mixed_inline12973_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t post_ffn_inline12972_ci_shapes[2] = {8, 4};
-        TensorCreateInfo post_ffn_inline12972_ci(
-            post_ffn_inline12972_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-        );
-        uint32_t comb_ffn_inline13000_ci_shapes[2] = {8, 16};
-        TensorCreateInfo comb_ffn_inline13000_ci(comb_ffn_inline13000_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t x_norm_i8_inline12996_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo x_norm_i8_inline12996_ci(x_norm_i8_inline12996_ci_shapes, 2, DataType::INT8);
-        uint32_t x_norm_scale_inline12976_ci_shapes[2] = {8, 1};
-        TensorCreateInfo x_norm_scale_inline12976_ci(
-            x_norm_scale_inline12976_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-        );
-        uint32_t indices_inline13017_ci_shapes[2] = {8, 6};
-        TensorCreateInfo indices_inline13017_ci(indices_inline13017_ci_shapes, 2, DataType::INT32);
-        uint32_t weights_inline13007_ci_shapes[2] = {8, 6};
-        TensorCreateInfo weights_inline13007_ci(weights_inline13007_ci_shapes, 2, DataType::FLOAT32);
-        uint32_t xg_buf_inline2582_inline13127_ci_shapes[2] = {16, 4096};
-        TensorCreateInfo xg_buf_inline2582_inline13127_ci(
-            xg_buf_inline2582_inline13127_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t inv_rms_buf_inline2585_inline13013_ci_shapes[2] = {16, 1};
-        TensorCreateInfo inv_rms_buf_inline2585_inline13013_ci(
-            inv_rms_buf_inline2585_inline13013_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t xn_scale_buf_inline2572_inline13089_ci_shapes[2] = {16, 1};
-        TensorCreateInfo xn_scale_buf_inline2572_inline13089_ci(
-            xn_scale_buf_inline2572_inline13089_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t route_scores_buf_inline2607_inline13004_ci_shapes[2] = {16, 256};
-        TensorCreateInfo route_scores_buf_inline2607_inline13004_ci(
-            route_scores_buf_inline2607_inline13004_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t biased_scores_buf_inline2564_inline13093_ci_shapes[2] = {16, 256};
-        TensorCreateInfo biased_scores_buf_inline2564_inline13093_ci(
-            biased_scores_buf_inline2564_inline13093_ci_shapes, 2, DataType::FLOAT32
-        );
-        uint32_t sh_inline13063_ci_shapes[2] = {8, 4096};
-        TensorCreateInfo sh_inline13063_ci(sh_inline13063_ci_shapes, 2, DataType::BFLOAT16);
-        uint32_t recv_x_out_inline12967_ci_shapes[3] = {32, 16, 4096};
-        TensorCreateInfo recv_x_out_inline12967_ci(recv_x_out_inline12967_ci_shapes, 3, DataType::INT8);
-        uint32_t recv_scale_out_inline12903_ci_shapes[2] = {32, 16};
-        TensorCreateInfo recv_scale_out_inline12903_ci(
-            recv_scale_out_inline12903_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-        );
-        uint32_t recv_w_out_inline13091_ci_shapes[2] = {32, 16};
-        TensorCreateInfo recv_w_out_inline13091_ci(
-            recv_w_out_inline13091_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-        );
-        TaskOutputTensors alloc_130 = alloc_tensors(
-            x_mixed_inline12973_ci, post_ffn_inline12972_ci, comb_ffn_inline13000_ci, x_norm_i8_inline12996_ci,
-            x_norm_scale_inline12976_ci, indices_inline13017_ci, weights_inline13007_ci,
-            xg_buf_inline2582_inline13127_ci, inv_rms_buf_inline2585_inline13013_ci,
-            xn_scale_buf_inline2572_inline13089_ci, route_scores_buf_inline2607_inline13004_ci,
-            biased_scores_buf_inline2564_inline13093_ci, sh_inline13063_ci, recv_x_out_inline12967_ci,
-            recv_scale_out_inline12903_ci, recv_w_out_inline13091_ci
-        );
-        const ChipTensor &x_mixed_inline12973 = alloc_130.get_ref(0);
-        const ChipTensor &post_ffn_inline12972 = alloc_130.get_ref(1);
-        const ChipTensor &comb_ffn_inline13000 = alloc_130.get_ref(2);
-        const ChipTensor &x_norm_i8_inline12996 = alloc_130.get_ref(3);
-        const ChipTensor &x_norm_scale_inline12976 = alloc_130.get_ref(4);
-        const ChipTensor &indices_inline13017 = alloc_130.get_ref(5);
-        const ChipTensor &weights_inline13007 = alloc_130.get_ref(6);
-        const ChipTensor &xg_buf_inline2582_inline13127 = alloc_130.get_ref(7);
-        const ChipTensor &inv_rms_buf_inline2585_inline13013 = alloc_130.get_ref(8);
-        const ChipTensor &xn_scale_buf_inline2572_inline13089 = alloc_130.get_ref(9);
-        const ChipTensor &route_scores_buf_inline2607_inline13004 = alloc_130.get_ref(10);
-        const ChipTensor &biased_scores_buf_inline2564_inline13093 = alloc_130.get_ref(11);
-        const ChipTensor &sh_inline13063 = alloc_130.get_ref(12);
-        const ChipTensor &recv_x_out_inline12967 = alloc_130.get_ref(13);
-        const ChipTensor &recv_scale_out_inline12903 = alloc_130.get_ref(14);
-        const ChipTensor &recv_w_out_inline13091 = alloc_130.get_ref(15);
-        uint32_t recv_r_route_out_inline13100_ci_shapes[2] = {32, 16};
-        TensorCreateInfo recv_r_route_out_inline13100_ci(
-            recv_r_route_out_inline13100_ci_shapes, 2, DataType::INT32, /*manual_dep=*/true
-        );
-        uint32_t recv_count_out_inline13069_ci_shapes[2] = {32, 1};
-        TensorCreateInfo recv_count_out_inline13069_ci(recv_count_out_inline13069_ci_shapes, 2, DataType::INT32);
-        uint32_t recv_meta_local_inline13136_ci_shapes[2] = {2, 32};
-        TensorCreateInfo recv_meta_local_inline13136_ci(
-            recv_meta_local_inline13136_ci_shapes, 2, DataType::INT32, /*manual_dep=*/true
-        );
-        TaskOutputTensors alloc_131 = alloc_tensors(
-            recv_r_route_out_inline13100_ci, recv_count_out_inline13069_ci, recv_meta_local_inline13136_ci
-        );
-        const ChipTensor &recv_r_route_out_inline13100 = alloc_131.get_ref(0);
-        const ChipTensor &recv_count_out_inline13069 = alloc_131.get_ref(1);
-        const ChipTensor &recv_meta_local_inline13136 = alloc_131.get_ref(2);
-        int64_t t_dim_inline15392 = 8;
-        int64_t t_linear_inline15410 = (((t_dim_inline15392 + 15) / 16) * 16);
-        uint32_t x_flat_inline15405_shapes[2] = {static_cast<uint32_t>(t_dim_inline15392), 16384};
-        ChipTensor x_flat_inline15405 = x_attn_last_inline539.reshape(x_flat_inline15405_shapes, 2);
-        uint32_t indices_scale0_inline15399[1] = {0};
-        float scale0_inline15399 = get_tensor_data<float>(hc_ffn_scale_last_inline496, 1, indices_scale0_inline15399);
-        uint32_t indices_scale1_inline15419[1] = {1};
-        float scale1_inline15419 = get_tensor_data<float>(hc_ffn_scale_last_inline496, 1, indices_scale1_inline15419);
-        uint32_t indices_scale2_inline15385[1] = {2};
-        float scale2_inline15385 = get_tensor_data<float>(hc_ffn_scale_last_inline496, 1, indices_scale2_inline15385);
-        uint32_t hc_base_2d_inline15420_shapes[2] = {1, 24};
-        ChipTensor hc_base_2d_inline15420 = hc_ffn_base_last_inline495.reshape(hc_base_2d_inline15420_shapes, 2);
-        uint32_t inv_rms_inline15360_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15410), 1};
-        TensorCreateInfo inv_rms_inline15360_ci(inv_rms_inline15360_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_132 = alloc_tensors(inv_rms_inline15360_ci);
-        const ChipTensor &inv_rms_inline15360 = alloc_132.get_ref(0);
-        uint32_t mixes_raw_inline15383_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15410), 32};
-        TensorCreateInfo mixes_raw_inline15383_ci(mixes_raw_inline15383_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_133 = alloc_tensors(mixes_raw_inline15383_ci);
-        const ChipTensor &mixes_raw_inline15383 = alloc_133.get_ref(0);
-        int64_t linear_partial_rows_inline15358 = (t_linear_inline15410 * 4);
-        uint32_t mixes_partials_inline15382_ci_shapes[2] = {static_cast<uint32_t>(linear_partial_rows_inline15358), 32};
-        TensorCreateInfo mixes_partials_inline15382_ci(mixes_partials_inline15382_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_134 = alloc_tensors(mixes_partials_inline15382_ci);
-        const ChipTensor &mixes_partials_inline15382 = alloc_134.get_ref(0);
-
-        // Spmd hc_pre_rms_spmd_8: hc_pre_rms_8
-        CoreTaskArgs params_t311;
-        params_t311.add_input(x_flat_inline15405);
-        params_t311.add_inout(inv_rms_inline15360);
-        params_t311.launch_spec.set_block_num((t_dim_inline15392 / 8));
-        params_t311.set_allow_early_resolve(true);
-        TaskOutputTensors task_311_outs = rt_submit_aiv_task(322, params_t311);
-
-        // Spmd hc_pre_linear_spmd_8: hc_pre_linear_8
-        CoreTaskArgs params_t312;
-        params_t312.add_input(x_flat_inline15405);
-        params_t312.add_input(hc_ffn_fn_last_inline685);
-        params_t312.add_inout(mixes_partials_inline15382);
-        params_t312.add_scalar(t_dim_inline15392);
-        params_t312.add_scalar(t_linear_inline15410);
-        params_t312.launch_spec.set_block_num(((t_linear_inline15410 / 16) * 4));
-        params_t312.set_allow_early_resolve(true);
-        TaskOutputTensors task_312_outs = rt_submit_aic_task(323, params_t312);
-
-        // Spmd hc_pre_linear_reduce_spmd_8: hc_pre_linear_reduce_8
-        CoreTaskArgs params_t313;
-        params_t313.add_input(mixes_partials_inline15382);
-        params_t313.add_inout(mixes_raw_inline15383);
-        params_t313.add_scalar(t_linear_inline15410);
-        params_t313.launch_spec.set_block_num((t_linear_inline15410 / 16));
-        params_t313.set_allow_early_resolve(true);
-        TaskOutputTensors task_313_outs = rt_submit_aiv_task(324, params_t313);
-        uint32_t pre_val_store_inline15388_ci_shapes[2] = {static_cast<uint32_t>(t_linear_inline15410), 8};
-        TensorCreateInfo pre_val_store_inline15388_ci(pre_val_store_inline15388_ci_shapes, 2, DataType::FLOAT32);
-        TaskOutputTensors alloc_135 = alloc_tensors(pre_val_store_inline15388_ci);
-        const ChipTensor &pre_val_store_inline15388 = alloc_135.get_ref(0);
-
-        // Spmd split_pre_post_spmd_8: split_pre_post_8
-        CoreTaskArgs params_t314;
-        params_t314.add_input(inv_rms_inline15360);
-        params_t314.add_input(hc_ffn_base_last_inline495);
-        params_t314.add_input(mixes_raw_inline15383);
-        params_t314.add_inout(pre_val_store_inline15388);
-        params_t314.add_inout(post_ffn_inline12972);
-        params_t314.add_scalar(to_u64(scale0_inline15399));
-        params_t314.add_scalar(to_u64(scale1_inline15419));
-        params_t314.launch_spec.set_block_num((t_dim_inline15392 / 8));
-        params_t314.set_allow_early_resolve(true);
-        TaskOutputTensors task_314_outs = rt_submit_aiv_task(325, params_t314);
-
-        // Spmd comb_sinkhorn_spmd_8: comb_sinkhorn_8
-        CoreTaskArgs params_t315;
-        params_t315.add_input(inv_rms_inline15360);
-        params_t315.add_input(mixes_raw_inline15383);
-        params_t315.add_input(hc_base_2d_inline15420);
-        params_t315.add_inout(comb_ffn_inline13000);
-        params_t315.add_scalar(to_u64(scale2_inline15385));
-        params_t315.launch_spec.set_block_num((t_dim_inline15392 / 8));
-        params_t315.set_allow_early_resolve(true);
-        TaskOutputTensors task_315_outs = rt_submit_aiv_task(326, params_t315);
-
-        // Spmd mix_x_spmd_8: mix_x_8
-        CoreTaskArgs params_t316;
-        params_t316.add_input(pre_val_store_inline15388);
-        params_t316.add_output(x_mixed_inline12973);
-        params_t316.add_input(x_flat_inline15405);
-        params_t316.launch_spec.set_block_num(((t_dim_inline15392 / 8) * 4));
-        params_t316.set_allow_early_resolve(true);
-        TaskOutputTensors task_316_outs = rt_submit_aiv_task(327, params_t316);
-        int64_t active_tokens_inline2578_inline12966 = static_cast<int64_t>(nt_inline677__rv_v2);
-        int64_t active_tokens_inline2578_inline12966__phi_v4;
-        if ((8 < active_tokens_inline2578_inline12966)) {
-            int64_t active_tokens_inline2578_inline12966__ssa_v3 = static_cast<int64_t>(8);
-            active_tokens_inline2578_inline12966__phi_v4 = active_tokens_inline2578_inline12966__ssa_v3;
-        } else {
-            active_tokens_inline2578_inline12966__phi_v4 = active_tokens_inline2578_inline12966;
-        }
-        int64_t active_gate_tiles_inline2584_inline13079 = ((active_tokens_inline2578_inline12966__phi_v4 + 15) / 16);
-        int64_t active_gate_tokens_inline2604_inline13044 = (active_gate_tiles_inline2584_inline13079 * 16);
-        int64_t active_gate_tokens_inline2604_inline13044__phi_v2;
-        if ((8 < active_gate_tokens_inline2604_inline13044)) {
-            int64_t active_gate_tokens_inline2604_inline13044__ssa_v1 = static_cast<int64_t>(8);
-            active_gate_tokens_inline2604_inline13044__phi_v2 = active_gate_tokens_inline2604_inline13044__ssa_v1;
-        } else {
-            active_gate_tokens_inline2604_inline13044__phi_v2 = active_gate_tokens_inline2604_inline13044;
-        }
-        uint32_t norm_w_2d_inline2589_inline13140_shapes[2] = {1, 4096};
-        ChipTensor norm_w_2d_inline2589_inline13140 =
-            norm_w_last_inline494.reshape(norm_w_2d_inline2589_inline13140_shapes, 2);
-
-        // Spmd ffn_norm_spmd_3: ffn_norm_3
-        CoreTaskArgs params_t317;
-        params_t317.add_input(x_mixed_inline12973);
-        params_t317.add_input(norm_w_2d_inline2589_inline13140);
-        params_t317.add_inout(xg_buf_inline2582_inline13127);
-        params_t317.add_inout(inv_rms_buf_inline2585_inline13013);
-        params_t317.add_inout(x_norm_scale_inline12976);
-        params_t317.add_inout(xn_scale_buf_inline2572_inline13089);
-        params_t317.launch_spec.set_block_num(active_gate_tokens_inline2604_inline13044__phi_v2);
-        params_t317.set_allow_early_resolve(true);
-        TaskOutputTensors task_317_outs = rt_submit_aiv_task(328, params_t317);
-
-        // Phase-fence barrier 9: dependency-only dummy task
-        CoreTaskArgs params_phase_fence_barrier_9;
-        TaskOutputTensors phase_fence_barrier_9_outs = rt_submit_dummy_task(params_phase_fence_barrier_9);
-        PTO2TaskId seed_dummy_inline2602_inline13052 = phase_fence_barrier_9_outs.task_id();
-        for (int64_t t0_inline2605_inline12987 = 0;
-             t0_inline2605_inline12987 < active_gate_tokens_inline2604_inline13044__phi_v2;
-             t0_inline2605_inline12987 += 8) {
-            // Task 318: x_norm_quant_3
-            CoreTaskArgs params_t318;
-            params_t318.add_input(xn_scale_buf_inline2572_inline13089);
-            params_t318.add_output(x_norm_i8_inline12996);
-            params_t318.add_input(xg_buf_inline2582_inline13127);
-            params_t318.add_scalar(t0_inline2605_inline12987);
-            PTO2TaskId params_t318_deps[1];
-            uint32_t params_t318_deps_count = 0;
-            if (seed_dummy_inline2602_inline13052.is_valid())
-                params_t318_deps[params_t318_deps_count++] = seed_dummy_inline2602_inline13052;
-            params_t318.set_dependencies(params_t318_deps, params_t318_deps_count);
-            params_t318.set_allow_early_resolve(true);
-            TaskOutputTensors task_318_outs = rt_submit_aiv_task(329, params_t318);
-        }
-
-        // Task 319: gate_pre_route_3
-        CoreTaskArgs params_t319;
-        params_t319.add_inout(x_norm_scale_inline12976);
-        params_t319.add_output(indices_inline13017);
-        params_t319.add_output(weights_inline13007);
-        params_t319.add_inout(biased_scores_buf_inline2564_inline13093);
-        params_t319.add_scalar(active_tokens_inline2578_inline12966__phi_v4);
-        rt_submit_aiv_task(330, params_t319);
-        uint32_t gm_pipe_buffer_11_ci_shapes[1] = {
-            static_cast<uint32_t>((2048) * ((active_gate_tiles_inline2584_inline13079 * 4)))
-        };
-        TensorCreateInfo gm_pipe_buffer_11_ci(gm_pipe_buffer_11_ci_shapes, 1, DataType::FLOAT32, /*manual_dep=*/true);
-        TaskOutputTensors alloc_136 = alloc_tensors(gm_pipe_buffer_11_ci);
-        const ChipTensor &gm_pipe_buffer_11 = alloc_136.get_ref(0);
-
-        // Group gate_3: MixedKernels (AIC + AIV lanes)
-        CoreTaskArgs params_t320;
-        params_t320.add_input(gate_bias_last_inline492);
-        params_t320.add_input(xg_buf_inline2582_inline13127);
-        params_t320.add_input(gate_w_last_inline493);
-        params_t320.add_input(inv_rms_buf_inline2585_inline13013);
-        params_t320.add_inout(route_scores_buf_inline2607_inline13004);
-        params_t320.add_inout(biased_scores_buf_inline2564_inline13093);
-        params_t320.add_output(gm_pipe_buffer_11);
-        MixedKernels mixed_320 = {331, 332, 332};
-        params_t320.launch_spec.set_block_num((active_gate_tiles_inline2584_inline13079 * 4));
-        params_t320.set_allow_early_resolve(true);
-        TaskOutputTensors task_320_outs = rt_submit_task(mixed_320, params_t320);
-        int64_t active_route_tiles_inline2579_inline12988 = ((active_tokens_inline2578_inline12966__phi_v4 + 7) / 8);
-
-        // Spmd route_sort_spmd_1: route_sort_1
-        CoreTaskArgs params_t321;
-        params_t321.add_input(biased_scores_buf_inline2564_inline13093);
-        params_t321.add_input(route_scores_buf_inline2607_inline13004);
-        params_t321.add_inout(indices_inline13017);
-        params_t321.add_inout(weights_inline13007);
-        params_t321.add_scalar(active_tokens_inline2578_inline12966__phi_v4);
-        params_t321.launch_spec.set_block_num(active_route_tiles_inline2579_inline12988);
-        params_t321.set_allow_early_resolve(true);
-        TaskOutputTensors task_321_outs = rt_submit_aiv_task(333, params_t321);
-        for (int64_t mt_inline2667_inline12912 = 0; mt_inline2667_inline12912 < 1; mt_inline2667_inline12912 += 1) {
-            uint32_t gate_i32_inline2662_inline13008_ci_shapes[2] = {16, 2048};
-            TensorCreateInfo gate_i32_inline2662_inline13008_ci(
-                gate_i32_inline2662_inline13008_ci_shapes, 2, DataType::INT32
-            );
-            uint32_t up_i32_inline2654_inline12999_ci_shapes[2] = {16, 2048};
-            TensorCreateInfo up_i32_inline2654_inline12999_ci(
-                up_i32_inline2654_inline12999_ci_shapes, 2, DataType::INT32
-            );
-            uint32_t h_tile_fp32_inline2660_inline12945_ci_shapes[2] = {16, 2048};
-            TensorCreateInfo h_tile_fp32_inline2660_inline12945_ci(
-                h_tile_fp32_inline2660_inline12945_ci_shapes, 2, DataType::FLOAT32
-            );
-            uint32_t h_tile_i8_inline2663_inline12904_ci_shapes[2] = {16, 2048};
-            TensorCreateInfo h_tile_i8_inline2663_inline12904_ci(
-                h_tile_i8_inline2663_inline12904_ci_shapes, 2, DataType::INT8
-            );
-            uint32_t h_tile_scale_dq_inline2676_inline12974_ci_shapes[2] = {16, 8};
-            TensorCreateInfo h_tile_scale_dq_inline2676_inline12974_ci(
-                h_tile_scale_dq_inline2676_inline12974_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-            );
-            uint32_t y_i32_inline2673_inline13116_ci_shapes[2] = {16, 4096};
-            TensorCreateInfo y_i32_inline2673_inline13116_ci(
-                y_i32_inline2673_inline13116_ci_shapes, 2, DataType::INT32
-            );
-            TaskOutputTensors alloc_137 = alloc_tensors(
-                gate_i32_inline2662_inline13008_ci, up_i32_inline2654_inline12999_ci,
-                h_tile_fp32_inline2660_inline12945_ci, h_tile_i8_inline2663_inline12904_ci,
-                h_tile_scale_dq_inline2676_inline12974_ci, y_i32_inline2673_inline13116_ci
-            );
-            const ChipTensor &gate_i32_inline2662_inline13008 = alloc_137.get_ref(0);
-            const ChipTensor &up_i32_inline2654_inline12999 = alloc_137.get_ref(1);
-            const ChipTensor &h_tile_fp32_inline2660_inline12945 = alloc_137.get_ref(2);
-            const ChipTensor &h_tile_i8_inline2663_inline12904 = alloc_137.get_ref(3);
-            const ChipTensor &h_tile_scale_dq_inline2676_inline12974 = alloc_137.get_ref(4);
-            const ChipTensor &y_i32_inline2673_inline13116 = alloc_137.get_ref(5);
-            int64_t ts0_inline2658_inline12957 = 0;
-
-            // Spmd sh_gate_mm_spmd_3: sh_gate_mm_3
-            CoreTaskArgs params_t322;
-            params_t322.add_input(x_norm_i8_inline12996);
-            params_t322.add_input(shared_w1_last_inline560);
-            params_t322.add_inout(gate_i32_inline2662_inline13008);
-            params_t322.add_scalar(ts0_inline2658_inline12957);
-            params_t322.launch_spec.set_block_num(8);
-            params_t322.set_allow_early_resolve(true);
-            TaskOutputTensors task_322_outs = rt_submit_aic_task(334, params_t322);
-
-            // Spmd sh_up_mm_spmd_3: sh_up_mm_3
-            CoreTaskArgs params_t323;
-            params_t323.add_input(x_norm_i8_inline12996);
-            params_t323.add_input(shared_w3_last_inline508);
-            params_t323.add_inout(up_i32_inline2654_inline12999);
-            params_t323.add_scalar(ts0_inline2658_inline12957);
-            params_t323.launch_spec.set_block_num(8);
-            params_t323.set_allow_early_resolve(true);
-            TaskOutputTensors task_323_outs = rt_submit_aic_task(335, params_t323);
-            int64_t n0_inline2655_inline12935 = 0;
-
-            // Spmd sh_gate_up_act_q_spmd_3: sh_gate_up_act_q_3
-            CoreTaskArgs params_t324;
-            params_t324.add_input(x_norm_scale_inline12976);
-            params_t324.add_inout(h_tile_fp32_inline2660_inline12945);
-            params_t324.add_input(gate_i32_inline2662_inline13008);
-            params_t324.add_input(up_i32_inline2654_inline12999);
-            params_t324.add_input(shared_w1_scale_last_inline505);
-            params_t324.add_input(shared_w3_scale_last_inline487);
-            params_t324.add_inout(h_tile_scale_dq_inline2676_inline12974);
-            params_t324.add_output(h_tile_i8_inline2663_inline12904);
-            params_t324.add_scalar(ts0_inline2658_inline12957);
-            params_t324.add_scalar(n0_inline2655_inline12935);
-            params_t324.launch_spec.set_block_num(4);
-            rt_submit_aiv_task(336, params_t324);
-
-            // Spmd sh_w2_mm_spmd_3: sh_w2_mm_3
-            CoreTaskArgs params_t325;
-            params_t325.add_input(h_tile_i8_inline2663_inline12904);
-            params_t325.add_input(shared_w2_last_inline486);
-            params_t325.add_inout(y_i32_inline2673_inline13116);
-            params_t325.launch_spec.set_block_num(16);
-            rt_submit_aic_task(337, params_t325);
-            int64_t d0_inline2657_inline13122 = 0;
-
-            // Spmd sh_w2_act_spmd_3: sh_w2_act_3
-            CoreTaskArgs params_t326;
-            params_t326.add_input(h_tile_scale_dq_inline2676_inline12974);
-            params_t326.add_output(sh_inline13063);
-            params_t326.add_input(y_i32_inline2673_inline13116);
-            params_t326.add_input(shared_w2_scale_last_inline549);
-            params_t326.add_scalar(d0_inline2657_inline13122);
-            params_t326.add_scalar(ts0_inline2658_inline12957);
-            params_t326.launch_spec.set_block_num(1);
-            params_t326.set_allow_early_resolve(true);
-            TaskOutputTensors task_326_outs = rt_submit_aiv_task(338, params_t326);
-        }
-        uint32_t recv_x_out_flat_inline2699_inline13055_shapes[2] = {512, 4096};
-        ChipTensor recv_x_out_flat_inline2699_inline13055 =
-            recv_x_out_inline12967.reshape(recv_x_out_flat_inline2699_inline13055_shapes, 2);
-
-        // Task 327: dispatch_meta_3
-        CoreTaskArgs params_t327;
-        params_t327.add_input(indices_inline13017);
-        params_t327.add_inout(ext_recv_meta);
-        params_t327.add_input(ext_arrived);
-        params_t327.add_output(recv_meta_local_inline13136);
-        params_t327.add_output(recv_count_out_inline13069);
-        params_t327.add_scalar(nt_inline677__rv_v2);
-        params_t327.add_scalar(my_rank);
-        params_t327.add_scalar(last_moe_epoch_inline624);
-        params_t327.add_scalar(recv_meta_ctx);
-        params_t327.add_scalar(arrived_ctx);
-        params_t327.set_allow_early_resolve(true);
-        TaskOutputTensors task_327_outs = rt_submit_aiv_task(339, params_t327);
-        PTO2TaskId _meta_tid_inline2705_inline13137 = task_327_outs.task_id();
-
-        // Spmd dispatch_push_spmd_3: dispatch_push_3
-        CoreTaskArgs params_t328;
-        params_t328.add_input(indices_inline13017);
-        params_t328.add_inout(ext_recv_x);
-        params_t328.add_input(x_norm_i8_inline12996);
-        params_t328.add_input(x_norm_scale_inline12976);
-        params_t328.add_input(weights_inline13007);
-        params_t328.add_inout(ext_recv_aux);
-        params_t328.add_inout(ext_recv_route);
-        params_t328.add_input(ext_data_arrived);
-        params_t328.add_scalar(nt_inline677__rv_v2);
-        params_t328.add_scalar(my_rank);
-        params_t328.add_scalar(recv_x_ctx);
-        params_t328.add_scalar(recv_aux_ctx);
-        params_t328.add_scalar(recv_route_ctx);
-        params_t328.add_scalar(data_arrived_ctx);
-        params_t328.launch_spec.set_block_num(32);
-        params_t328.set_allow_early_resolve(true);
-        TaskOutputTensors task_328_outs = rt_submit_aiv_task(340, params_t328);
-        PTO2TaskId _push_tid_inline2710_inline13009 = task_328_outs.task_id();
-
-        // Task 329: dispatch_wait_3
-        CoreTaskArgs params_t329;
-        params_t329.add_input(indices_inline13017);
-        params_t329.add_input(ext_data_arrived);
-        params_t329.add_scalar(my_rank);
-        params_t329.add_scalar(last_moe_epoch_inline624);
-        params_t329.add_scalar(data_arrived_ctx);
-        PTO2TaskId params_t329_deps[1];
-        uint32_t params_t329_deps_count = 0;
-        params_t329_deps[params_t329_deps_count++] = _push_tid_inline2710_inline13009;
-        params_t329.set_dependencies(params_t329_deps, params_t329_deps_count);
-        params_t329.set_allow_early_resolve(true);
-        TaskOutputTensors task_329_outs = rt_submit_aiv_task(341, params_t329);
-        PTO2TaskId _wait_tid_inline2685_inline12992 = task_329_outs.task_id();
-
-        // Spmd dispatch_gather_spmd_3: dispatch_gather_3
-        CoreTaskArgs params_t330;
-        params_t330.add_output(recv_x_out_flat_inline2699_inline13055);
-        params_t330.add_input(recv_meta_local_inline13136);
-        params_t330.add_input(ext_recv_x);
-        params_t330.add_input(ext_recv_aux);
-        params_t330.add_output(recv_scale_out_inline12903);
-        params_t330.add_output(recv_w_out_inline13091);
-        params_t330.add_input(ext_recv_route);
-        params_t330.add_output(recv_r_route_out_inline13100);
-        params_t330.add_scalar(recv_x_ctx);
-        params_t330.add_scalar(recv_aux_ctx);
-        params_t330.add_scalar(recv_route_ctx);
-        params_t330.launch_spec.set_block_num(32);
-        PTO2TaskId params_t330_deps[2];
-        uint32_t params_t330_deps_count = 0;
-        params_t330_deps[params_t330_deps_count++] = _wait_tid_inline2685_inline12992;
-        params_t330_deps[params_t330_deps_count++] = _meta_tid_inline2705_inline13137;
-        params_t330.set_dependencies(params_t330_deps, params_t330_deps_count);
-        TaskOutputTensors task_330_outs = rt_submit_aiv_task(342, params_t330);
-        PTO2TaskId dispatch_push_tid_inline13169 = _push_tid_inline2710_inline13009;
-        PTO2_SCOPE() {
-            uint32_t recv_y_inline12940_ci_shapes[3] = {32, 16, 4096};
-            TensorCreateInfo recv_y_inline12940_ci(recv_y_inline12940_ci_shapes, 3, DataType::BFLOAT16);
-            uint32_t ffn_out_inline12872_ci_shapes[2] = {8, 4096};
-            TensorCreateInfo ffn_out_inline12872_ci(ffn_out_inline12872_ci_shapes, 2, DataType::BFLOAT16);
-            TaskOutputTensors alloc_138 = alloc_tensors(recv_y_inline12940_ci, ffn_out_inline12872_ci);
-            const ChipTensor &recv_y_inline12940 = alloc_138.get_ref(0);
-            const ChipTensor &ffn_out_inline12872 = alloc_138.get_ref(1);
-            uint32_t recv_y_flat_inline2783_inline12910_shapes[2] = {512, 4096};
-            ChipTensor recv_y_flat_inline2783_inline12910 =
-                recv_y_inline12940.reshape(recv_y_flat_inline2783_inline12910_shapes, 2);
-            uint32_t recv_x_flat_inline2781_inline13129_shapes[2] = {512, 4096};
-            ChipTensor recv_x_flat_inline2781_inline13129 =
-                recv_x_out_inline12967.reshape(recv_x_flat_inline2781_inline13129_shapes, 2);
-            PTO2_SCOPE() {
-                uint32_t h_i8_inline2773_inline13065_ci_shapes[2] = {512, 2048};
-                TensorCreateInfo h_i8_inline2773_inline13065_ci(
-                    h_i8_inline2773_inline13065_ci_shapes, 2, DataType::INT8
-                );
-                uint32_t h_scale_dq_inline2766_inline13156_ci_shapes[2] = {512, 1};
-                TensorCreateInfo h_scale_dq_inline2766_inline13156_ci(
-                    h_scale_dq_inline2766_inline13156_ci_shapes, 2, DataType::FLOAT32, /*manual_dep=*/true
-                );
-                TaskOutputTensors alloc_139 =
-                    alloc_tensors(h_i8_inline2773_inline13065_ci, h_scale_dq_inline2766_inline13156_ci);
-                const ChipTensor &h_i8_inline2773_inline13065 = alloc_139.get_ref(0);
-                const ChipTensor &h_scale_dq_inline2766_inline13156 = alloc_139.get_ref(1);
-                for (int64_t local_i_inline2779_inline12914 = 0; local_i_inline2779_inline12914 < 32;
-                     local_i_inline2779_inline12914 += 1) {
-                    int64_t flat_base_inline2774_inline12951 = (local_i_inline2779_inline12914 * 16);
-                    uint32_t indices_n_rows_inline2782_inline13173[2] = {
-                        static_cast<uint32_t>(local_i_inline2779_inline12914), 0
-                    };
-                    int32_t n_rows_inline2782_inline13173 = HBG_RECV_ROWS_PER_EXPERT;
-                    int64_t n_tiles_inline2780_inline13146 =
-                        ((static_cast<int64_t>(n_rows_inline2782_inline13173) + 15) / 16);
-                    for (int64_t t_inline2778_inline13174 = 0;
-                         t_inline2778_inline13174 < n_tiles_inline2780_inline13146; t_inline2778_inline13174 += 1) {
-                        int64_t t0_inline2784_inline13175 = (t_inline2778_inline13174 * 16);
-                        int64_t flat_t0_inline2786_inline13139 =
-                            (flat_base_inline2774_inline12951 + t0_inline2784_inline13175);
-                        int64_t valid_rows_inline2759_inline13177 = std::min<int64_t>(
-                            (static_cast<int64_t>(n_rows_inline2782_inline13173) - t0_inline2784_inline13175), 16
-                        );
-                        PTO2_SCOPE() {
-                            uint32_t gate_tile_i32_inline2749_inline13026_ci_shapes[2] = {16, 2048};
-                            TensorCreateInfo gate_tile_i32_inline2749_inline13026_ci(
-                                gate_tile_i32_inline2749_inline13026_ci_shapes, 2, DataType::INT32
-                            );
-                            uint32_t up_tile_i32_inline2764_inline13106_ci_shapes[2] = {16, 2048};
-                            TensorCreateInfo up_tile_i32_inline2764_inline13106_ci(
-                                up_tile_i32_inline2764_inline13106_ci_shapes, 2, DataType::INT32
-                            );
-                            uint32_t h_tile_fp32_inline2744_inline13154_ci_shapes[2] = {16, 2048};
-                            TensorCreateInfo h_tile_fp32_inline2744_inline13154_ci(
-                                h_tile_fp32_inline2744_inline13154_ci_shapes, 2, DataType::FLOAT32
-                            );
-                            TaskOutputTensors alloc_140 = alloc_tensors(
-                                gate_tile_i32_inline2749_inline13026_ci, up_tile_i32_inline2764_inline13106_ci,
-                                h_tile_fp32_inline2744_inline13154_ci
-                            );
-                            const ChipTensor &gate_tile_i32_inline2749_inline13026 = alloc_140.get_ref(0);
-                            const ChipTensor &up_tile_i32_inline2764_inline13106 = alloc_140.get_ref(1);
-                            const ChipTensor &h_tile_fp32_inline2744_inline13154 = alloc_140.get_ref(2);
-
-                            // Spmd exp_gate_mm_spmd_3: exp_gate_mm_3
-                            CoreTaskArgs params_t331;
-                            params_t331.add_output(gate_tile_i32_inline2749_inline13026);
-                            params_t331.add_input(recv_x_flat_inline2781_inline13129);
-                            params_t331.add_input(routed_w1_last_inline491);
-                            params_t331.add_scalar(flat_t0_inline2786_inline13139);
-                            params_t331.add_scalar(local_i_inline2779_inline12914);
-                            params_t331.launch_spec.set_block_num(2);
-                            rt_submit_aic_task(343, params_t331);
-
-                            // Spmd exp_up_mm_spmd_3: exp_up_mm_3
-                            CoreTaskArgs params_t332;
-                            params_t332.add_output(up_tile_i32_inline2764_inline13106);
-                            params_t332.add_input(recv_x_flat_inline2781_inline13129);
-                            params_t332.add_input(routed_w3_last_inline707);
-                            params_t332.add_scalar(flat_t0_inline2786_inline13139);
-                            params_t332.add_scalar(local_i_inline2779_inline12914);
-                            params_t332.launch_spec.set_block_num(2);
-                            rt_submit_aic_task(344, params_t332);
-
-                            // Spmd exp_gate_up_act_spmd_3: exp_gate_up_act_3
-                            CoreTaskArgs params_t333;
-                            params_t333.add_output(h_tile_fp32_inline2744_inline13154);
-                            params_t333.add_input(gate_tile_i32_inline2749_inline13026);
-                            params_t333.add_input(up_tile_i32_inline2764_inline13106);
-                            params_t333.add_input(recv_scale_out_inline12903);
-                            params_t333.add_input(routed_w1_scale_last_inline490);
-                            params_t333.add_input(routed_w3_scale_last_inline673);
-                            params_t333.add_scalar(local_i_inline2779_inline12914);
-                            params_t333.add_scalar(t0_inline2784_inline13175);
-                            params_t333.add_scalar(valid_rows_inline2759_inline13177);
-                            params_t333.launch_spec.set_block_num(4);
-                            rt_submit_aiv_task(345, params_t333);
-                            uint32_t h_tile_i8_inline2806_inline13011_offsets[2] = {
-                                static_cast<uint32_t>(flat_t0_inline2786_inline13139), 0
-                            };
-                            uint32_t h_tile_i8_inline2806_inline13011_shapes[2] = {
-                                (h_tile_i8_inline2806_inline13011_offsets[0] >= h_i8_inline2773_inline13065.shapes[0] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         16, h_i8_inline2773_inline13065.shapes[0] -
-                                                 h_tile_i8_inline2806_inline13011_offsets[0]
-                                     )),
-                                (h_tile_i8_inline2806_inline13011_offsets[1] >= h_i8_inline2773_inline13065.shapes[1] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         2048, h_i8_inline2773_inline13065.shapes[1] -
-                                                   h_tile_i8_inline2806_inline13011_offsets[1]
-                                     ))
-                            };
-                            ChipTensor h_tile_i8_inline2806_inline13011 = h_i8_inline2773_inline13065.view(
-                                h_tile_i8_inline2806_inline13011_shapes, h_tile_i8_inline2806_inline13011_offsets
-                            );
-                            uint32_t h_tile_scale_dq_inline2808_inline12892_offsets[2] = {
-                                static_cast<uint32_t>(flat_t0_inline2786_inline13139), 0
-                            };
-                            uint32_t h_tile_scale_dq_inline2808_inline12892_shapes[2] = {
-                                (h_tile_scale_dq_inline2808_inline12892_offsets[0] >=
-                                         h_scale_dq_inline2766_inline13156.shapes[0] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         16, h_scale_dq_inline2766_inline13156.shapes[0] -
-                                                 h_tile_scale_dq_inline2808_inline12892_offsets[0]
-                                     )),
-                                (h_tile_scale_dq_inline2808_inline12892_offsets[1] >=
-                                         h_scale_dq_inline2766_inline13156.shapes[1] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         1, h_scale_dq_inline2766_inline13156.shapes[1] -
-                                                h_tile_scale_dq_inline2808_inline12892_offsets[1]
-                                     ))
-                            };
-                            ChipTensor h_tile_scale_dq_inline2808_inline12892 = h_scale_dq_inline2766_inline13156.view(
-                                h_tile_scale_dq_inline2808_inline12892_shapes,
-                                h_tile_scale_dq_inline2808_inline12892_offsets
-                            );
-
-                            // Task 334: exp_h_q_3
-                            CoreTaskArgs params_t334;
-                            params_t334.add_input(h_tile_fp32_inline2744_inline13154);
-                            params_t334.add_inout(h_tile_scale_dq_inline2808_inline12892);
-                            params_t334.add_output(h_tile_i8_inline2806_inline13011);
-                            rt_submit_aiv_task(346, params_t334);
-                        }
-                    }
-                }
-                PTO2_SCOPE() {
-                    for (int64_t local_e_inline2742_inline13113 = 0; local_e_inline2742_inline13113 < 32;
-                         local_e_inline2742_inline13113 += 1) {
-                        int64_t e_flat_base_inline2746_inline12991 = (local_e_inline2742_inline13113 * 16);
-                        uint32_t indices_e_rows_inline2760_inline12886[2] = {
-                            static_cast<uint32_t>(local_e_inline2742_inline13113), 0
-                        };
-                        int32_t e_rows_inline2760_inline12886 = HBG_RECV_ROWS_PER_EXPERT;
-                        int64_t e_tiles_inline2741_inline13115 =
-                            ((static_cast<int64_t>(e_rows_inline2760_inline12886) + 15) / 16);
-                        for (int64_t tt_inline2776_inline12885 = 0;
-                             tt_inline2776_inline12885 < e_tiles_inline2741_inline13115;
-                             tt_inline2776_inline12885 += 1) {
-                            uint32_t y_i32_inline2737_inline13010_ci_shapes[2] = {16, 4096};
-                            TensorCreateInfo y_i32_inline2737_inline13010_ci(
-                                y_i32_inline2737_inline13010_ci_shapes, 2, DataType::INT32
-                            );
-                            TaskOutputTensors alloc_141 = alloc_tensors(y_i32_inline2737_inline13010_ci);
-                            const ChipTensor &y_i32_inline2737_inline13010 = alloc_141.get_ref(0);
-                            int64_t tt0_inline2740_inline12884 = (tt_inline2776_inline12885 * 16);
-                            int64_t flat_tt0_inline2738_inline13081 =
-                                (e_flat_base_inline2746_inline12991 + tt0_inline2740_inline12884);
-                            uint32_t h_tile_i8_inline2806_inline13011__ssa_v4_offsets[2] = {
-                                static_cast<uint32_t>(flat_tt0_inline2738_inline13081), 0
-                            };
-                            uint32_t h_tile_i8_inline2806_inline13011__ssa_v4_shapes[2] = {
-                                (h_tile_i8_inline2806_inline13011__ssa_v4_offsets[0] >=
-                                         h_i8_inline2773_inline13065.shapes[0] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         16, h_i8_inline2773_inline13065.shapes[0] -
-                                                 h_tile_i8_inline2806_inline13011__ssa_v4_offsets[0]
-                                     )),
-                                (h_tile_i8_inline2806_inline13011__ssa_v4_offsets[1] >=
-                                         h_i8_inline2773_inline13065.shapes[1] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         2048, h_i8_inline2773_inline13065.shapes[1] -
-                                                   h_tile_i8_inline2806_inline13011__ssa_v4_offsets[1]
-                                     ))
-                            };
-                            ChipTensor h_tile_i8_inline2806_inline13011__ssa_v4 = h_i8_inline2773_inline13065.view(
-                                h_tile_i8_inline2806_inline13011__ssa_v4_shapes,
-                                h_tile_i8_inline2806_inline13011__ssa_v4_offsets
-                            );
-                            uint32_t h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets[2] = {
-                                static_cast<uint32_t>(flat_tt0_inline2738_inline13081), 0
-                            };
-                            uint32_t h_tile_scale_dq_inline2808_inline12892__ssa_v2_shapes[2] = {
-                                (h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets[0] >=
-                                         h_scale_dq_inline2766_inline13156.shapes[0] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         16, h_scale_dq_inline2766_inline13156.shapes[0] -
-                                                 h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets[0]
-                                     )),
-                                (h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets[1] >=
-                                         h_scale_dq_inline2766_inline13156.shapes[1] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         1, h_scale_dq_inline2766_inline13156.shapes[1] -
-                                                h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets[1]
-                                     ))
-                            };
-                            ChipTensor h_tile_scale_dq_inline2808_inline12892__ssa_v2 =
-                                h_scale_dq_inline2766_inline13156.view(
-                                    h_tile_scale_dq_inline2808_inline12892__ssa_v2_shapes,
-                                    h_tile_scale_dq_inline2808_inline12892__ssa_v2_offsets
-                                );
-
-                            // Spmd exp_w2_mm_spmd_3: exp_w2_mm_3
-                            CoreTaskArgs params_t335;
-                            params_t335.add_output(y_i32_inline2737_inline13010);
-                            params_t335.add_input(h_tile_i8_inline2806_inline13011__ssa_v4);
-                            params_t335.add_input(routed_w2_last_inline489);
-                            params_t335.add_scalar(local_e_inline2742_inline13113);
-                            params_t335.launch_spec.set_block_num(4);
-                            params_t335.set_allow_early_resolve(true);
-                            TaskOutputTensors task_335_outs = rt_submit_aic_task(347, params_t335);
-                            uint32_t recv_y_tile_inline2730_inline12881_offsets[2] = {
-                                static_cast<uint32_t>(flat_tt0_inline2738_inline13081), 0
-                            };
-                            uint32_t recv_y_tile_inline2730_inline12881_shapes[2] = {
-                                (recv_y_tile_inline2730_inline12881_offsets[0] >=
-                                         recv_y_flat_inline2783_inline12910.shapes[0] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         16, recv_y_flat_inline2783_inline12910.shapes[0] -
-                                                 recv_y_tile_inline2730_inline12881_offsets[0]
-                                     )),
-                                (recv_y_tile_inline2730_inline12881_offsets[1] >=
-                                         recv_y_flat_inline2783_inline12910.shapes[1] ?
-                                     0u :
-                                     std::min<uint32_t>(
-                                         4096, recv_y_flat_inline2783_inline12910.shapes[1] -
-                                                   recv_y_tile_inline2730_inline12881_offsets[1]
-                                     ))
-                            };
-                            ChipTensor recv_y_tile_inline2730_inline12881 = recv_y_flat_inline2783_inline12910.view(
-                                recv_y_tile_inline2730_inline12881_shapes, recv_y_tile_inline2730_inline12881_offsets
-                            );
-
-                            // Spmd exp_w2_act_spmd_3: exp_w2_act_3
-                            CoreTaskArgs params_t336;
-                            params_t336.add_input(recv_w_out_inline13091);
-                            params_t336.add_input(h_tile_scale_dq_inline2808_inline12892__ssa_v2);
-                            params_t336.add_output(recv_y_tile_inline2730_inline12881);
-                            params_t336.add_input(y_i32_inline2737_inline13010);
-                            params_t336.add_input(routed_w2_scale_last_inline488);
-                            params_t336.add_scalar(local_e_inline2742_inline13113);
-                            params_t336.add_scalar(tt0_inline2740_inline12884);
-                            params_t336.launch_spec.set_block_num(1);
-                            params_t336.set_allow_early_resolve(true);
-                            TaskOutputTensors task_336_outs = rt_submit_aiv_task(348, params_t336);
-                        }
-                    }
-                }
-            }
-            uint32_t recv_y_flat_inline2828_inline12871_shapes[2] = {512, 4096};
-            ChipTensor recv_y_flat_inline2828_inline12871 =
-                recv_y_inline12940.reshape(recv_y_flat_inline2828_inline12871_shapes, 2);
-
-            // Spmd combine_spmd_3: combine_3
-            CoreTaskArgs params_t337;
-            params_t337.add_input(recv_meta_local_inline13136);
-            params_t337.add_input(recv_r_route_out_inline13100);
-            params_t337.add_inout(ext_routed_y_buf);
-            params_t337.add_input(recv_y_flat_inline2828_inline12871);
-            params_t337.add_scalar(routed_y_buf_ctx);
-            params_t337.launch_spec.set_block_num(32);
-            TaskOutputTensors task_337_outs = rt_submit_aiv_task(349, params_t337);
-            PTO2TaskId _combine_tid_inline2817_inline13120 = task_337_outs.task_id();
-
-            // Task 338: combine_wait_3
-            CoreTaskArgs params_t338;
-            params_t338.add_input(ext_combine_arrived);
-            params_t338.add_scalar(my_rank);
-            params_t338.add_scalar(last_moe_epoch_inline624);
-            params_t338.add_scalar(combine_arrived_ctx);
-            PTO2TaskId params_t338_deps[2];
-            uint32_t params_t338_deps_count = 0;
-            params_t338_deps[params_t338_deps_count++] = _combine_tid_inline2817_inline13120;
-            params_t338_deps[params_t338_deps_count++] = _push_tid_inline2710_inline13009;
-            params_t338.set_dependencies(params_t338_deps, params_t338_deps_count);
-            TaskOutputTensors task_338_outs = rt_submit_aiv_task(350, params_t338);
-            PTO2TaskId _cwait_tid_inline2826_inline12895 = task_338_outs.task_id();
-            int64_t active_tokens_inline2816_inline13087 = static_cast<int64_t>(nt_inline677__rv_v2);
-            int64_t active_tokens_inline2816_inline13087__phi_v4;
-            if ((8 < active_tokens_inline2816_inline13087)) {
-                int64_t active_tokens_inline2816_inline13087__ssa_v3 = static_cast<int64_t>(8);
-                active_tokens_inline2816_inline13087__phi_v4 = active_tokens_inline2816_inline13087__ssa_v3;
-            } else {
-                active_tokens_inline2816_inline13087__phi_v4 = active_tokens_inline2816_inline13087;
-            }
-
-            // Spmd shared_routed_spmd_3: shared_routed_3
-            CoreTaskArgs params_t339;
-            params_t339.add_input(sh_inline13063);
-            params_t339.add_input(ext_routed_y_buf);
-            params_t339.add_inout(ffn_out_inline12872);
-            params_t339.add_scalar(active_tokens_inline2816_inline13087__phi_v4);
-            params_t339.add_scalar(routed_y_buf_ctx);
-            params_t339.launch_spec.set_block_num(8);
-            PTO2TaskId params_t339_deps[1];
-            uint32_t params_t339_deps_count = 0;
-            params_t339_deps[params_t339_deps_count++] = _cwait_tid_inline2826_inline12895;
-            params_t339.set_dependencies(params_t339_deps, params_t339_deps_count);
-            TaskOutputTensors task_339_outs = rt_submit_aiv_task(351, params_t339);
-            int64_t t_dim_inline2845_inline12860 = 8;
-            uint32_t residual_flat_inline2836_inline12859_shapes[2] = {
-                static_cast<uint32_t>(t_dim_inline2845_inline12860), 16384
-            };
-            ChipTensor residual_flat_inline2836_inline12859 =
-                x_attn_last_inline539.reshape(residual_flat_inline2836_inline12859_shapes, 2);
-            uint32_t y_flat_inline2837_inline12858_shapes[2] = {
-                static_cast<uint32_t>(t_dim_inline2845_inline12860), 16384
-            };
-            ChipTensor y_flat_inline2837_inline12858 =
-                ext_pre_hc_hidden_out.reshape(y_flat_inline2837_inline12858_shapes, 2);
-
-            // Spmd hc_post_spmd_8: hc_post_8
-            CoreTaskArgs params_t340;
-            params_t340.add_output(y_flat_inline2837_inline12858);
-            params_t340.add_input(post_ffn_inline12972);
-            params_t340.add_input(ffn_out_inline12872);
-            params_t340.add_input(comb_ffn_inline13000);
-            params_t340.add_input(residual_flat_inline2836_inline12859);
-            params_t340.launch_spec.set_block_num(((t_dim_inline2845_inline12860 / 4) * 4));
-            rt_submit_aiv_task(352, params_t340);
-        }
+    {
+        uint32_t x_attn_csa_inline721_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo x_attn_csa_inline721_ci(x_attn_csa_inline721_ci_shapes, 3, DataType::FLOAT32);
+        uint32_t x_attn_hca_inline723_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo x_attn_hca_inline723_ci(x_attn_hca_inline723_ci_shapes, 3, DataType::FLOAT32);
+        uint32_t hidden_mid_inline726_ci_shapes[3] = {8, 4, 4096};
+        TensorCreateInfo hidden_mid_inline726_ci(hidden_mid_inline726_ci_shapes, 3, DataType::FLOAT32);
+        TaskOutputTensors alloc_55 =
+            alloc_tensors(x_attn_csa_inline721_ci, x_attn_hca_inline723_ci, hidden_mid_inline726_ci);
+        const ChipTensor &x_attn_csa_inline721 = alloc_55.get_ref(0);
+        const ChipTensor &x_attn_hca_inline723 = alloc_55.get_ref(1);
+        const ChipTensor &hidden_mid_inline726 = alloc_55.get_ref(2);
+        submit_csa_attn_block(42, 20, x_attn_csa_inline721, hidden_inline709);
+        submit_hca_moe_block(42, 43, x_attn_csa_inline721, ext_pre_hc_hidden_out);
     }
 
     // Task 341: moe_signal_clear

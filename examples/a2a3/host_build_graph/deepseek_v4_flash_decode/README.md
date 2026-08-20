@@ -15,12 +15,8 @@ device can execute what the host built. It is deliberately not a numerics test.
 `kernels/orchestration/decode_fwd_hostbuild.cpp` is the TMR orchestration with
 two edits, **51 lines in all**, kept as the non-Graph baseline.
 `kernels/orchestration/decode_fwd_graph.cpp` — the file the test points at —
-carries the same two edits and additionally recasts the 20-iteration decoder
-layer loop (40 of the 43 layers) as one `rt_submit_graph` per iteration: the
-layer's task set becomes the Graph body (a free function reading its per-layer
-views, scales and indices through `GraphTaskArgs`, positionally), and the host
-records a 744-node Definition once instead of submitting the loop's ~15600
-tasks individually. The runtime is untouched.
+carries the same two edits and recasts the network as Graph submissions. The
+runtime is untouched apart from the recorder retry this branch also carries.
 
 | Edit | Sites | Why |
 | ---- | ----- | --- |
@@ -30,6 +26,68 @@ tasks individually. The runtime is untouched.
 The other **31** `get_tensor_data` reads are left alone: they read external
 tensors (`ext_num_tokens_per_owner`, `hc_attn_scale_*`, `hc_ffn_scale_*`), which
 the runtime stages with a host view and which therefore return real values.
+
+## The Graph form on this branch: one Definition per hyper-connection block
+
+The network is 2 SWA + 21 CSA + 20 HCA layers, each an attention block followed
+by a MoE FFN block, then the head. Its decoder loop walks 20 CSA+HCA pairs
+(layers 2..41), leaving layers 0, 1 and 42 hand-peeled around it. This branch
+cuts the Graph at the **block**, not the loop iteration: each of the four blocks
+in the loop body is its own Definition carrying only the boundary args its own
+scope reads, and layer 42 — the network's 21st CSA layer, whose FFN is the
+sort-routed MoE variant — replays two of them at layer index 42.
+
+| Definition | boundary | replays | covers |
+| ---------- | -------- | ------- | ------ |
+| `csa_attn_block` | 47 tensors, 3 scalars | 21 | loop CSA + layer 42 |
+| `csa_moe_block` | 29 tensors, 15 scalars | 20 | loop CSA (hash+sort routed) |
+| `hca_attn_block` | 32 tensors, 3 scalars | 20 | loop HCA |
+| `hca_moe_block` | 27 tensors, 14 scalars | 21 | loop HCA + layer 42 (sort routed) |
+
+Four things are load-bearing:
+
+- **A boundary tensor the body writes crosses as INOUT.** The outer GRAPH task
+  derives both its fanin and its tensormap output registration from the boundary
+  tags, so an `add_input` tensor the body writes leaves the next consumer fanned
+  in on a stale producer. Ten tensors are in that position — `hidden`, both KV
+  caches, the CSA/HCA compress states, `cmp_kv`, `idx_kv_cache`, `idx_kv_scale`
+  — each written through a `reshape` local an inner node takes as `add_inout`.
+- **`x_attn_csa`, `x_attn_hca` and `hidden_mid` cross block boundaries**, so the
+  caller allocates them and they travel as INOUT; the ordinary tensormap path
+  then chains the four outer GRAPH tasks.
+- **Two counters index the weights.** Most views take the absolute layer number;
+  the per-attention-type tables (CSA/HCA compress weights, index caches) take
+  the loop iteration, so an emitter reused outside the loop needs both. Layer 42
+  is absolute index 42 and type index 20 — matching the literal `20480`
+  = 20 × 1024 the peeled code used.
+- **The last layer's MoE writes elsewhere.** Every loop layer's final `hc_post`
+  writes the internal running hidden state for the next layer; layer 42's writes
+  `ext_pre_hc_hidden_out`, which the head reads. Same kernel, different
+  destination, and the only argument-level difference across the block's 29
+  aligned nodes — so the destination is a parameter of the emitter.
+
+Layers 0 and 1 stay on the ordinary path: their MoE is the third routing variant
+(hash only) and cannot share one Definition even between the two of them,
+because `dispatch_meta` / `dispatch_wait` / `combine_wait` have the MoE epoch
+folded in as a constant at each site (`dispatch_wait` holds 32,
+`dispatch_wait_0` holds 64) where the loop's variants take it as a scalar.
+
+The device-side task count is invariant against the single-Definition form at
+**15971**, which is the equivalence check this decomposition is held to:
+
+| form | Definitions | replays | layers covered | host-submitted | device tasks |
+| ---- | ----------- | ------- | -------------- | -------------- | ------------ |
+| one layer-pair Definition | 1 × 743 nodes | 20 | 40/43 | 1131 | 20×743 + 1111 = 15971 |
+| four block Definitions | 4 × 742 nodes total | 80 | 40/43 | 1211 | 20×742 + 1131 = 15971 |
+| + layer 42 replayed | 4 × 742 nodes total | 82 | **41/43** | **835** | 20×742 + 378 + 753 = 15971 |
+
+The 378 nodes the two extra replays contribute are exactly the 378 tasks the
+deleted peeled layer-42 region used to submit. Those host-task figures were
+measured before #1897; see
+[the investigation](../../../../docs/investigations/2026-08-hbg-graph-block-decomposition.md)
+for what the overlap-recording change did to them and why the recorder retry is
+on this branch.
+
 
 Everything else — submit order, dependencies, scope nesting,
 `valid_rows = min(n_rows - t0, 16)` — is byte-identical to the TMR source inside
