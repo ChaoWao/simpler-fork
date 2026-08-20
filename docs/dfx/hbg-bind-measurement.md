@@ -65,6 +65,13 @@ Both are `level=3`, which matters for how their output is captured (below).
 
 ## Recipe A — stable numbers, many rounds
 
+Both recipes below are wrapped by
+[`tools/hbg_bind_measure.sh`](../../tools/hbg_bind_measure.sh) (`-m stats` for
+this one, `-m swimlane` for Recipe B), with the grouping and statistics in
+[`tools/hbg_phase_stats.py`](../../tools/hbg_phase_stats.py). Read the recipes to
+know what the flags mean and why the traps below exist; use the script so the
+flags and the pass grouping are not re-derived each time.
+
 Six rounds is the working minimum: this box is shared, and a single pass has been
 seen to land 3.5× off its own minimum. Which statistic to read depends on the
 question. For "how long does this path take", take the **minimum of the per-round
@@ -139,6 +146,19 @@ grep -oE 'device_wall ts=0 dur=[0-9]+' qwen.log | \
 
 A branch comparison is a different measurement from a single reading, and two of
 its failure modes have already produced wrong answers on this box.
+
+**Both arms must be the same ruler, and it is not enough that one of them used
+the script.** A hand-assembled baseline compared against a scripted measurement
+produced a wrong number once: the baseline was missing
+`TORCH_DEVICE_BACKEND_AUTOLOAD=0`, so it alone paid for `torch_npu` grabbing a
+device on import, and the difference was attributed to the branch.
+`hbg_bind_measure.sh` writes its whole environment as the log's first line and
+`hbg_phase_stats.py` echoes it above the table, so compare them before comparing
+numbers:
+
+```bash
+diff <(head -1 base.log) <(head -1 measure.log)   # must differ only in head=
+```
 
 **Interleave the conditions; never run one after the other.** `base` then
 `measure` attributes every drift in host load to the branch, and the drift is

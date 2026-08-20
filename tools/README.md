@@ -32,6 +32,50 @@ the workloads shared by both runtimes plus its matching Qwen case:
 `StressBatch16Seq3500` for TMR and `GraphExecutionBatch16Seq3500` for HBG. SPMD
 paged attention is not part of the benchmark sweep.
 
+## hbg_bind_measure.sh
+
+Measure a `host_build_graph` case's bind path **without running it on the
+device**, in either of the two shapes
+[docs/dfx/hbg-bind-measurement.md](../docs/dfx/hbg-bind-measurement.md)
+describes. Both modes set `SIMPLER_SKIP_DEVICE_RUN`, so a case whose device
+execution does not complete still yields its whole host picture and no device
+time is spent waiting for it to fail.
+
+```bash
+# Per-phase minima over the warm passes -- the numbers to compare across branches
+task-submit --device auto --device-num 2 --timeout 1800 --max-time 1800 \
+  --run "tools/hbg_bind_measure.sh -d \$TASK_DEVICE -m stats -n 5"
+
+# One pass per rank plus a swimlane, for where inside host_orch the time goes
+task-submit --device auto --device-num 2 --timeout 1200 --max-time 1200 \
+  --run "tools/hbg_bind_measure.sh -d \$TASK_DEVICE -m swimlane"
+```
+
+The two modes are mutually exclusive by construction, which is the main reason
+to use the script rather than assemble the flags: `--rounds > 1` force-disables
+every diagnostic flag, so there is no output directory and hence no per-event
+artifact. Many rounds give you statistics; one round gives you a timeline.
+
+`-c` / `-e` retarget it at another case (default: dsv4 flash decode at L3), `-p`
+picks the arch, `-l ''` runs a non-L3 case. `-o` names the log; by default it
+lands in `outputs/hbg_bind_<mode>_<sha>.log`.
+
+## hbg_phase_stats.py
+
+Parses the `bind phase=` LOG_TIMING lines out of such a log and reports each
+phase's min / median / max plus the control-plane total. `hbg_bind_measure.sh -m
+stats` calls it; point it at any log that carries the lines.
+
+```bash
+python3 tools/hbg_phase_stats.py outputs/hbg_bind_stats_<sha>.log --rounds 5
+```
+
+It encodes the three grouping rules that are easy to get wrong by hand:
+`arena_h2d` closes a pass (the segments are not contiguous, so timestamp order
+does not group them), the control-plane total is summed **within** a pass before
+any minimum is taken (summing per-phase minima yields a total no pass achieved
+and can invert a comparison's sign), and the first pass of each rank is warm-up.
+
 ## verify_packaging.sh
 
 Exercises all 5 install paths × 2 entry points from a fully clean state.
