@@ -593,6 +593,16 @@ static inline GraphSubmitResult rt_submit_graph_impl(uint64_t graph_key, const G
         return GraphSubmitResult{};
     }
     GraphScopeResult result = rt_graph_begin(graph_key, args);
+    if (result.execute_block && !result.recording) {
+        // One recording is in flight at a time, so a Graph whose key differs
+        // from the in-flight one is turned away here. The ordinary path below
+        // opens with rt_graph_commit(), which waits for exactly that recording
+        // to finish — so drain first and ask once more. Without the retry the
+        // Definition this call would have recorded is lost for the whole run
+        // and every later occurrence of it replays nothing.
+        rt_graph_commit();
+        result = rt_graph_begin(graph_key, args);
+    }
     if (result.recording) {
         GraphAsyncRecordingState &async = rt_graph_async_recording();
         std::shared_ptr<GraphOwnedArgs> owned_args;
