@@ -119,7 +119,12 @@ export SIMPLER_SKIP_DEVICE_RUN=1
 # torch_npu grabs a device on import, which a host-only measurement does not want.
 export TORCH_DEVICE_BACKEND_AUTOLOAD="${TORCH_DEVICE_BACKEND_AUTOLOAD:-0}"
 
-ARGS=(-p "$PLATFORM" -d "$DEVICES" --manual only --case "$CASE")
+# --skip-golden because the device never runs: the outputs a golden check would
+# compare are never produced, so a case that checks them fails at validation with
+# the whole bind measurement already complete in the log. dsv4 is declared
+# `skip_golden` and does not notice; qwen is not, and without this it fails every
+# time for a reason that has nothing to do with what is being measured.
+ARGS=(-p "$PLATFORM" -d "$DEVICES" --manual only --case "$CASE" --skip-golden)
 if [ -n "$LEVEL" ]; then
     # An L3 case run through the module runner's own L3 phase captures the child's
     # output, so the `bind phase=` lines never reach this log. Invoking the child

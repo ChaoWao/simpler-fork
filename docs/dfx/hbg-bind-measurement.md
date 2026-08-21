@@ -70,7 +70,9 @@ Both recipes below are wrapped by
 this one, `-m swimlane` for Recipe B), with the grouping and statistics in
 [`tools/hbg_phase_stats.py`](../../tools/hbg_phase_stats.py). Read the recipes to
 know what the flags mean and why the traps below exist; use the script so the
-flags and the pass grouping are not re-derived each time.
+flags and the pass grouping are not re-derived each time. The
+[`measure-bind-path`](../../.claude/skills/measure-bind-path/SKILL.md) skill has
+the ready-made invocations for both cases.
 
 Six rounds is the working minimum: this box is shared, and a single pass has been
 seen to land 3.5× off its own minimum. Which statistic to read depends on the
