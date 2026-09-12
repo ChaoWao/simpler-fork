@@ -314,7 +314,8 @@ Layer 1  Level axis
     │       └─ Layer 4  Class — one ChipWorker per (runtime, device), reused
     │                   across every class assigned to that device
     │           └─ Layer 5  Case — serial within a class
-    │               └─ Layer 6  Rounds — `--rounds N` loop, reuses Worker
+    │               └─ Layer 6  Rounds — `--rounds N` loop, reuses Worker;
+    │                           L2 child memory is declared per tensor, independent of N
 ```
 
 ### Quick examples
@@ -901,3 +902,40 @@ This eliminates the need for separate `examples/` (sim) and `tests/st/` (device)
 ### When separate directories are still needed
 
 When kernels themselves differ (e.g., templated tile sizes tuned for device), separate test files remain the correct approach.
+
+## Explicit L2 child memory
+
+`TensorArg(name, value, child_memory=True)` keeps a case-owned device buffer
+across all rounds, including `--rounds 1`. `TaskArgsBuilder.add_tensor` accepts
+the same keyword. The default remains host staging on every round.
+
+| Declaration / direction | Setup | Between rounds | Validation |
+| ----------------------- | ----- | -------------- | ---------- |
+| Host-staged (default) | Existing path | Restore OUT/INOUT host fixtures | Existing per-round copy-back |
+| Child-memory IN | Allocate and upload once | Keep device address and input contents | No output readback |
+| Child-memory OUT | Allocate without upload | Keep device contents; the case must define all compared elements | Final readback |
+| Child-memory INOUT | Allocate and upload once | Keep device state | Final readback |
+
+Golden evaluation follows the same state evolution: child-memory outputs retain
+state and host-staged outputs reset. Cases with child-memory outputs compare after
+the final round; other cases continue comparing every round.
+
+A tensor whose contents the HBG host orchestration reads (`get_tensor_data`) or
+writes (`set_tensor_data`) must stay host-staged — a child-memory tensor takes the
+device pass-through and is never registered as a readable region, so an
+orchestration access to it fails closed. The declaration is per argument, so
+a data-dependent case can keep its bulk tensors as child memory and leave its small
+control tensors staged.
+
+Declarations currently require L2, contiguous CPU fixtures, and non-overlapping
+storage. Empty fixtures allocate no device buffer; the existing transport
+still rejects zero-shaped Tensor arguments. Clone and rehost operations preserve
+declaration metadata. Streaming drivers can use
+`simpler_setup.child_memory_task_args.ChildMemoryTaskArgs` as a context manager and add
+one fixture at a time, so each large fixture can be released before the next is
+materialized.
+
+The HBG `paged_attention_unroll_manual_scope` examples include matched manual
+`HostStaged` and `ChildMemory` cases. The latter leaves
+`context_lens` and `block_table` host-staged because the orchestration reads
+them. Existing default cases retain host staging.

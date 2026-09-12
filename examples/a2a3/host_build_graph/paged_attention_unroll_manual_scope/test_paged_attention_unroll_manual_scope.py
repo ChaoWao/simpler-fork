@@ -107,13 +107,39 @@ class TestPagedAttentionUnrollManualScopeHostBuildGraph(SceneTestCase):
         },
     ]
 
+    # Matched A/B for the child_memory declaration: same workload, same fixtures,
+    # only the memory policy differs.
+    CASES += [
+        {
+            "name": name,
+            "platforms": ["a2a3"],
+            "manual": True,
+            "params": {
+                "batch": 16,
+                "num_heads": 16,
+                "kv_head_num": 1,
+                "head_dim": 128,
+                "block_size": 128,
+                "context_len": 1024,
+                "max_model_len": 2048,
+                "dtype": "bfloat16",
+                "child_memory": child_memory,
+            },
+        }
+        for name, child_memory in (("HostStaged", False), ("ChildMemory", True))
+    ]
+
     def generate_args(self, params):
         params = {**params, "variant": "paged_attention_unroll"}
         result = _pa_generate_inputs(params)
         specs = []
         for name, value in result:
             if isinstance(value, torch.Tensor):
-                specs.append(TensorArg(name, value))
+                # The orchestration reads these two on the host to shape the graph,
+                # so they stay host-staged; only the bulk tensors become child memory.
+                control = name in ("context_lens", "block_table")
+                child_memory = params.get("child_memory", False) and not control
+                specs.append(TensorArg(name, value, child_memory=child_memory))
             else:
                 specs.append(Scalar(name, value))
         return TaskArgsBuilder(*specs)
