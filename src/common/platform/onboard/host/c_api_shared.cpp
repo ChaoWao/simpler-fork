@@ -163,6 +163,15 @@ static void unregister_device_memory_from_host(void *runner_ctx, void *dev_ptr) 
     } catch (...) {}
 }
 
+static void *acquire_child_memory_host_view(void *runner_ctx, void *dev_ptr, size_t bytes) {
+    if (runner_ctx == nullptr) return nullptr;
+    try {
+        return static_cast<DeviceRunnerBase *>(runner_ctx)->acquire_child_memory_host_view(dev_ptr, bytes);
+    } catch (...) {
+        return nullptr;
+    }
+}
+
 static int device_memset(void *runner_ctx, void *dev_ptr, int value, size_t size) {
     if (runner_ctx == nullptr || dev_ptr == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
     try {
@@ -344,6 +353,7 @@ static const HostApiOps g_host_api_ops = {
     .copy_from_device = copy_from_device,
     .register_device_memory_to_host = register_device_memory_to_host,
     .unregister_device_memory_from_host = unregister_device_memory_from_host,
+    .acquire_child_memory_host_view = acquire_child_memory_host_view,
     .device_memset = device_memset,
     .get_retained_temp_buffer = get_retained_temp_buffer,
     .set_retained_temp_buffer = set_retained_temp_buffer,

@@ -232,6 +232,17 @@ public:
     }
     void unregister_device_memory_from_host(void *dev_ptr) { (void)dev_ptr; }
 
+    /**
+     * Host view of a child-memory address for a host-side orchestrator.
+     *
+     * Identity here, and holds nothing: `allocate_tensor` already returns host
+     * memory, so there is no mapping to establish, cache or release — the
+     * onboard counterpart's allocation-lifetime cache has no work to do. The
+     * containment check still runs, so a span outside every tracked allocation
+     * fails closed exactly as it does onboard.
+     */
+    void *acquire_child_memory_host_view(void *dev_ptr, size_t bytes);
+
     int record_device_orch_callable(
         int32_t callable_id, uint64_t chip_buffer_hash, uint64_t chip_dev, const void *orch_so_data,
         size_t orch_so_size, const char *func_name, const char *config_name,

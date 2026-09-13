@@ -143,7 +143,53 @@ void *DeviceRunnerBase::allocate_tensor(std::size_t bytes) { return mem_alloc_.a
 
 void DeviceRunnerBase::free_tensor(void *dev_ptr) {
     if (dev_ptr != nullptr) {
+        // Before the pages go: a mapping outliving them would hand a live host
+        // VA to whatever the driver puts there next.
+        if (child_memory_host_views_.take(dev_ptr)) {
+            unregister_device_memory_from_host(dev_ptr);
+        }
         mem_alloc_.free(dev_ptr);
+    }
+}
+
+void *DeviceRunnerBase::acquire_child_memory_host_view(void *dev_ptr, std::size_t bytes) {
+    if (dev_ptr == nullptr || bytes == 0) return nullptr;
+
+    void *alloc_base = nullptr;
+    std::size_t alloc_size = 0;
+    if (!mem_alloc_.owning_allocation(dev_ptr, &alloc_base, &alloc_size)) {
+        LOG_ERROR("acquire_child_memory_host_view: %p is not inside a tracked device allocation", dev_ptr);
+        return nullptr;
+    }
+    const auto *end = static_cast<const unsigned char *>(dev_ptr) + bytes;
+    if (end > static_cast<const unsigned char *>(alloc_base) + alloc_size) {
+        LOG_ERROR(
+            "acquire_child_memory_host_view: [%p, +%zu) overruns its allocation [%p, +%zu)", dev_ptr, bytes, alloc_base,
+            alloc_size
+        );
+        return nullptr;
+    }
+
+    if (void *cached = child_memory_host_views_.lookup(alloc_base, dev_ptr); cached != nullptr) {
+        return cached;
+    }
+
+    void *host_view = register_device_memory_to_host(alloc_base, alloc_size);
+    if (host_view == nullptr) {
+        return nullptr;
+    }
+    child_memory_host_views_.insert(alloc_base, alloc_size, host_view);
+    LOG_INFO(
+        "host-orch: mapped child-memory allocation %p (%zu bytes); %zu mapping(s), %llu bytes held", alloc_base,
+        alloc_size, child_memory_host_views_.count(),
+        static_cast<unsigned long long>(child_memory_host_views_.mapped_bytes())
+    );
+    return child_memory_host_views_.lookup(alloc_base, dev_ptr);
+}
+
+void DeviceRunnerBase::release_child_memory_host_views() {
+    for (void *alloc_base : child_memory_host_views_.take_all()) {
+        unregister_device_memory_from_host(alloc_base);
     }
 }
 
@@ -1653,6 +1699,9 @@ int DeviceRunnerBase::finalize_common_impl(bool abandon_device_resources) {
         abandon_graph_definition_blocks();
         retained_temp_addrs_.fill(nullptr);
         retained_temp_sizes_.fill(0);
+        // Forget the mappings without unregistering: the reset invalidated them
+        // and the call would be a further device operation.
+        (void)child_memory_host_views_.take_all();
     } else {
         release_graph_definition_blocks();
         clear_temporary_buffer();
@@ -1674,6 +1723,10 @@ int DeviceRunnerBase::finalize_common_impl(bool abandon_device_resources) {
 
     // Free all remaining allocations (including handshake buffer and binGmAddr)
     if (!abandon_device_resources) {
+        // The mappings name the allocations mem_alloc_ is about to free, so
+        // they cannot be released after it. A force reset already invalidated
+        // both, and the unregister would be a further device call.
+        release_child_memory_host_views();
         mem_alloc_.finalize();
     }
 

@@ -168,3 +168,9 @@ reports fewer staged tensors and fewer staged bytes for it. Numbers taken
 before and after a case declares child memory are therefore not comparable on the
 host/bind component; re-measure both arms with identical fixtures, hardware,
 round counts and validation settings.
+
+If the HBG orchestration reads or writes that argument, `bind.host_view_close`
+reports what the access cost. `devcopy=N` means no host mapping was available
+and each of the N accesses was a PCIe round trip — an arm that maps and an arm
+that copies are not comparable either, and the two can differ between hosts on
+the same arch (issue #1531).

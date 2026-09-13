@@ -386,6 +386,25 @@ void SimDeviceRunnerBase::free_tensor(void *dev_ptr) {
     }
 }
 
+void *SimDeviceRunnerBase::acquire_child_memory_host_view(void *dev_ptr, size_t bytes) {
+    if (dev_ptr == nullptr || bytes == 0) return nullptr;
+    void *alloc_base = nullptr;
+    size_t alloc_size = 0;
+    if (!mem_alloc_.owning_allocation(dev_ptr, &alloc_base, &alloc_size)) {
+        LOG_ERROR("acquire_child_memory_host_view: %p is not inside a tracked device allocation", dev_ptr);
+        return nullptr;
+    }
+    const auto *end = static_cast<const unsigned char *>(dev_ptr) + bytes;
+    if (end > static_cast<const unsigned char *>(alloc_base) + alloc_size) {
+        LOG_ERROR(
+            "acquire_child_memory_host_view: [%p, +%zu) overruns its allocation [%p, +%zu)", dev_ptr, bytes, alloc_base,
+            alloc_size
+        );
+        return nullptr;
+    }
+    return dev_ptr;
+}
+
 int SimDeviceRunnerBase::copy_to_device(void *dev_ptr, const void *host_ptr, size_t bytes) {
     std::memcpy(dev_ptr, host_ptr, bytes);
     return 0;

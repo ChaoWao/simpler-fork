@@ -70,6 +70,7 @@
 #include "host/host_phase_records.h"
 #include "host/host_phase_run_state.h"
 #include "host/kernel_entry_validation.h"
+#include "host/child_memory_host_view.h"
 #include "host/memory_allocator.h"
 #include "host/pmu_collector.h"
 #include "host/runtime_timeout_config.h"
@@ -180,6 +181,32 @@ public:
         return nullptr;
     }
     virtual void unregister_device_memory_from_host(void *dev_ptr) { (void)dev_ptr; }
+
+    /**
+     * Host view of a child-memory address for a host-side orchestrator, with
+     * the mapping owned by this runner rather than by the caller.
+     *
+     * The mapping covers the whole tracked allocation containing `dev_ptr` —
+     * that is the unit `free_tensor` invalidates, and several tensors or views
+     * inside one child buffer then share it. Established on the first request
+     * and kept until that allocation is freed, because establishing one costs
+     * ~5.2 µs plus ~7.0 ms/GiB and a bind would otherwise pay it every run
+     * (docs/investigations/2026-09-hbg-per-run-host-view-rebuild.md).
+     *
+     * @return a host address carrying `dev_ptr`'s offset within the allocation,
+     *         or nullptr when `dev_ptr` is not inside a tracked allocation, or
+     *         this backend has no host-map path (a5 onboard), or the platform
+     *         refused the mapping (issue #1531).
+     */
+    void *acquire_child_memory_host_view(void *dev_ptr, std::size_t bytes);
+
+    /**
+     * Unregister every child-memory mapping still held.
+     *
+     * Runs before `mem_alloc_.finalize()`, which frees the allocations these
+     * map: past that point the pages are gone and the mapping cannot be named.
+     */
+    void release_child_memory_host_views();
 
     /**
      * Commit the three per-Worker pooled regions (GM heap, shared
@@ -1307,6 +1334,11 @@ protected:
     host::LoadAicpuOp load_aicpu_op_;
 
     MemoryAllocator mem_alloc_;
+    // Host mappings of child-memory allocations a host-side orchestrator has
+    // touched — see HostApi acquire_child_memory_host_view. Keyed by allocation
+    // base and dropped by that allocation's free, which is what keeps a cached
+    // host VA from outliving its pages.
+    ChildMemoryHostViewCache child_memory_host_views_;
     // Retained temporary buffer for TRB device-arg staging, one per pipeline
     // slot (see HostApi get/set_retained_temp_buffer). Just a remembered
     // {addr, size} that the slot reuses across its runs and finalize frees;

@@ -38,6 +38,16 @@ struct HostApiOps {
     // backend without a host-map path return nullptr / no-op.
     void *(*register_device_memory_to_host)(void *runner_ctx, void *dev_ptr, size_t bytes);
     void (*unregister_device_memory_from_host)(void *runner_ctx, void *dev_ptr);
+    // Host view of a child-memory address, for a host-side orchestrator
+    // (host_build_graph) that reads or writes a device-resident tensor's bytes
+    // to shape the graph. Unlike the pair above, the runner owns the mapping:
+    // it is established over the whole containing allocation on first request
+    // and released by the free of that allocation, so a bind neither pays for
+    // it again nor has to pair an unregister. Returns a host address carrying
+    // dev_ptr's offset, or nullptr when this backend cannot map device memory
+    // to the host (a5 onboard) or the mapping was refused for this allocation
+    // (see issue #1531) — the caller then serves each access with a copy.
+    void *(*acquire_child_memory_host_view)(void *runner_ctx, void *dev_ptr, size_t bytes);
     // Set a device buffer to a byte value (device-side, no PCIe). Used to
     // zero-init pure OUTPUT buffers in lieu of an H2D copy-in.
     int (*device_memset)(void *runner_ctx, void *dev_ptr, int value, size_t size);
@@ -181,6 +191,10 @@ public:
     }
     void unregister_device_memory_from_host(void *dev_ptr) const {
         ops_->unregister_device_memory_from_host(runner_ctx_, dev_ptr);
+    }
+    void *acquire_child_memory_host_view(void *dev_ptr, size_t bytes) const {
+        if (ops_->acquire_child_memory_host_view == nullptr) return nullptr;
+        return ops_->acquire_child_memory_host_view(runner_ctx_, dev_ptr, bytes);
     }
     int device_memset(void *dev_ptr, int value, size_t size) const {
         return ops_->device_memset(runner_ctx_, dev_ptr, value, size);

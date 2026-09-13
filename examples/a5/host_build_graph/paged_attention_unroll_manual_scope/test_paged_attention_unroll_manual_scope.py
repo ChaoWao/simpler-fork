@@ -119,13 +119,10 @@ class TestPagedAttentionUnrollManualScopeHostBuildGraph(SceneTestCase):
     def generate_args(self, params):
         params = {**params, "variant": "paged_attention_unroll"}
         inputs = _pa_generate_inputs(params)
+        child_memory = params.get("child_memory", False)
         specs = []
         for name, val in inputs:
             if isinstance(val, torch.Tensor):
-                # The orchestration reads these two on the host to shape the graph,
-                # so they stay host-staged; only the bulk tensors become child memory.
-                control = name in ("context_lens", "block_table")
-                child_memory = params.get("child_memory", False) and not control
                 specs.append(TensorArg(name, val, child_memory=child_memory))
             else:
                 specs.append(Scalar(name, val))

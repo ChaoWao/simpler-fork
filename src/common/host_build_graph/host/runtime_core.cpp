@@ -167,7 +167,8 @@ get_tensor_data(RuntimeContext *rt, const simpler::hbg::Tensor &tensor, uint32_t
         rt->orchestrator->report_fatal(
             SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__,
             "no host view for device address %#llx (%llu bytes): during host orchestration only tensors the "
-            "runtime staged are readable, not runtime-created or child-memory buffers",
+            "runtime staged and child-memory tensors the caller passed in are readable, not runtime-created "
+            "buffers",
             (unsigned long long)elem_addr, (unsigned long long)elem_size
         );
         return 0;
@@ -197,7 +198,8 @@ void set_tensor_data(
         rt->orchestrator->report_fatal(
             SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__,
             "no writable host view for device address %#llx (%llu bytes): during host orchestration only tensors "
-            "the runtime staged are writable, not runtime-created or child-memory buffers",
+            "the runtime staged and child-memory tensors the caller passed in are writable, not runtime-created "
+            "buffers",
             (unsigned long long)elem_addr, (unsigned long long)elem_size
         );
     }
