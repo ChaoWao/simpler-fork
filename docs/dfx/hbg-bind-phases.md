@@ -31,7 +31,7 @@ the `chip.run.bind` span:
 | `host_orch` | **all** orchestration: every task submitted, every in-graph task recorded, the Definition built |
 | `graph_upload` | one H2D of the block holding every Definition object, and binding each Graph task to the one with its key. The recorders built the objects in that block's host staging during `host_orch`, so this segment writes their headers and copies in only what did not fit |
 | `arena_h2d` | one H2D of the arena's copied zone and the shared-memory image |
-| `host_view_close` | closing per-run tensor-access regions and any optional device mappings; the current bind path installs none (`count=0 bytes=0`) |
+| `host_view_close` | closing per-run tensor-access regions and any optional device mappings; the bind path installs none of its own (`count=0 bytes=0`). `devcopy=N` counts orchestration accesses to child memory that were served by a PCIe round trip because no host mapping was available — a mapping, where one is available, is held by the runtime for the allocation's lifetime and is not closed here |
 
 The **control plane** is `host_orch + graph_upload + arena_h2d`: everything
 between "the caller's data is in place" and "the device can start". It is what

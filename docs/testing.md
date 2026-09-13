@@ -921,11 +921,25 @@ state and host-staged outputs reset. Cases with child-memory outputs compare aft
 the final round; other cases continue comparing every round.
 
 A tensor whose contents the HBG host orchestration reads (`get_tensor_data`) or
-writes (`set_tensor_data`) must stay host-staged — a child-memory tensor takes the
-device pass-through and is never registered as a readable region, so an
-orchestration access to it fails closed. The declaration is per argument, so
-a data-dependent case can keep its bulk tensors as child memory and leave its small
-control tensors staged.
+writes (`set_tensor_data`) may be child memory. The declaration needs no extra
+opt-in: the runtime claims each child-memory span at bind and picks how to reach
+it only if an access actually lands there, so a tensor the orchestration never
+touches costs nothing.
+
+| Platform | Means | Per-access cost |
+| -------- | ----- | --------------- |
+| Host map available (a2a3 onboard, sim) | one mapping of the allocation, held by the runtime for the allocation's lifetime | none |
+| Host map unavailable (a5 onboard, or a 64 KiB-page host — issue #1531) | a device copy per access | one PCIe round trip, ~1.5 µs |
+
+On the second row the cost is per access, not per tensor, so a tensor the
+orchestration reads thousands of times — `paged_attention`'s `block_table` is
+read once per (batch, block) pair — is better left host-staged there. The
+declaration is per argument, so a data-dependent case can mix freely. The bind's
+`BindHostViewClose` phase attributes report `devcopy=N` when this path was taken.
+
+Runtime-created tensors (graph-heap allocations the orchestration made itself)
+remain unreadable: they are uninitialized until a task writes them, and
+`get_tensor_data` rejects a tensor with a producer outright.
 
 Declarations currently require L2, contiguous CPU fixtures, and non-overlapping
 storage. Empty fixtures allocate no device buffer; the existing transport
@@ -938,6 +952,7 @@ the `simpler_setup` public surface — it builds `TaskArgs` and copies back thro
 a `TaskArgsBuilder`, so it has no meaning outside this corpus.
 
 The HBG `paged_attention_unroll_manual_scope` examples include matched manual
-`HostStaged` and `ChildMemory` cases. The latter leaves
-`context_lens` and `block_table` host-staged because the orchestration reads
-them. Existing default cases retain host staging.
+`HostStaged` and `ChildMemory` cases, the latter declaring every tensor —
+including the two the orchestration reads. The HBG `paged_attention` scene tests
+carry the same pairing as non-manual cases, so CI covers an orchestration
+reading child memory on both arches. Existing default cases retain host staging.

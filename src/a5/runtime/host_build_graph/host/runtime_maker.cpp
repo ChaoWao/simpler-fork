@@ -1838,6 +1838,13 @@ extern "C" int bind_callable_to_runtime_impl(
         if (t.is_device_memory()) {
             always_assert(t.buffer.addr < HEAP_VIRTUAL_BASE && "caller tensor reaches into the virtual heap window");
             LOG_DEBUG("  ChipTensor %d: child memory, pass-through (0x%" PRIx64 ")", i, t.buffer.addr);
+            // The bytes stay where the caller put them, so orchestration has no
+            // staged buffer to read them from. Claim the span now and let the
+            // platform resolve a means only if an access actually lands in it.
+            if (!tensor_access.add_child_memory(t.buffer.addr, t.buffer.size)) {
+                LOG_ERROR("host-orch: could not claim child-memory tensor %d (0x%" PRIx64 ")", i, t.buffer.addr);
+                return PTO_RUNTIME_ERR_INTERNAL;
+            }
             device_args.add_tensor(t);
             continue;
         }
@@ -1985,11 +1992,15 @@ extern "C" int bind_callable_to_runtime_impl(
         // owns these buffers, so drop the window on both exits.
         const size_t view_count = tensor_access.mapping_count();
         const uint64_t view_bytes = tensor_access.mapped_bytes();
+        const uint64_t device_copies = tensor_access.device_copy_count();
         const BindPhaseMark view_close_phase = bind_phase_begin();
         tensor_access.close();
         {
             char attrs[kBindAttrsCapacity];
-            snprintf(attrs, sizeof(attrs), "count=%zu bytes=%" PRIu64, view_count, view_bytes);
+            snprintf(
+                attrs, sizeof(attrs), "count=%zu bytes=%" PRIu64 " devcopy=%" PRIu64, view_count, view_bytes,
+                device_copies
+            );
             record_bind_phase(HostPhaseKind::BindHostViewClose, view_close_phase, attrs);
         }
         if (total_tasks < 0) {
