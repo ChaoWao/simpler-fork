@@ -724,7 +724,7 @@ def _build_l2_ref_args(test_args: TaskArgsBuilder, orch_signature: list, worker,
         args: TaskArgs (TensorArg)
         output_names: list of tensor names that are OUTPUT or INOUT
     """
-    from simpler.task_interface import ArgDirection, TaskArgs, TensorArgType, scalar_to_uint64  # noqa: PLC0415
+    from simpler.task_interface import ArgDirection, TaskArgs, TensorArgType  # noqa: PLC0415
 
     from simpler_setup.torch_interop import make_tensor_arg  # noqa: PLC0415
 
@@ -754,7 +754,7 @@ def _build_l2_ref_args(test_args: TaskArgsBuilder, orch_signature: list, worker,
                 output_names.append(spec.name)
             tensor_idx += 1
         elif isinstance(spec, Scalar):
-            args.add_scalar(scalar_to_uint64(spec.value))
+            args.add_scalar(spec.value)
 
     return args, output_names
 
@@ -773,7 +773,6 @@ def _build_chip_task_args(test_args: TaskArgsBuilder, orch_signature: list):
     from simpler.task_interface import (  # noqa: PLC0415
         ArgDirection,
         ChipStorageTaskArgs,
-        scalar_to_uint64,
     )
 
     # make_chip_tensor_arg builds the chip POD (ChipTensor, carries an address) for the direct
@@ -798,7 +797,7 @@ def _build_chip_task_args(test_args: TaskArgsBuilder, orch_signature: list):
                 output_names.append(spec.name)
             tensor_idx += 1
         elif isinstance(spec, Scalar):
-            chip_args.add_scalar(scalar_to_uint64(spec.value))
+            chip_args.add_scalar(spec.value)
 
     return chip_args, output_names
 
@@ -868,7 +867,6 @@ def _build_l3_task_args(test_args: TaskArgsBuilder, orch_signature: list, worker
         ArgDirection,
         TaskArgs,
         TensorArgType,
-        scalar_to_uint64,
     )
 
     _DIR_TO_TAG = {
@@ -898,7 +896,7 @@ def _build_l3_task_args(test_args: TaskArgsBuilder, orch_signature: list, worker
                 output_names.append(spec.name)
             tensor_idx += 1
         elif isinstance(spec, Scalar):
-            chip_args.add_scalar(scalar_to_uint64(spec.value))
+            chip_args.add_scalar(spec.value)
 
     return chip_args, output_names
 
