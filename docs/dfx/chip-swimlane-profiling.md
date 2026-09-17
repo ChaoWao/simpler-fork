@@ -201,9 +201,36 @@ and pipeline diagnostics. All members submitted through one
 the current postprocessor therefore retains local-capture-index pairing for
 them and requires symmetric `dN` sets.
 
-Automatic merging is limited to one same-host L3 Worker. NETWORK1/L4 is
-rejected until the layout also carries a node namespace. Every Rank must expose
-the same complete set of local capture indexes; the postprocessor refuses
+When an L3 Worker is attached below L4, all of its outputs first enter the
+parent-assigned node namespace:
+
+```text
+<output_prefix>/
+├── host.<l4-pid>.log
+├── node0/
+│   ├── host.<l3-or-chip-pid>.log
+│   └── rank0/d0/
+│       ├── chip_swimlane_records.json
+│       └── dispatch_identity.json
+└── node1/
+    ├── host.<l3-or-chip-pid>.log
+    └── rank0/d0/
+        └── ...
+```
+
+`nodeN` uses the stable worker id returned by `Worker.add_worker()`,
+`Worker.add_remote_worker()`, or `Worker.add_mpirun_worker_group()`; one
+counter serves all three, so a local child and a remote one never share a
+number. Local, TCP-remote, and MPI-launched L3 Workers follow the same layout,
+so separately collected node subtrees can be placed below one run root without
+both claiming `rank0/d0`. A Worker that has no parent is the root of its
+capture tree and keeps the supplied prefix, preserving the direct-L3 layout
+above. At deeper levels the same rule is recursive: an attached L4 Worker owns
+a `network1N` directory before its L3 children add their `nodeN` directories.
+
+The current automatic merge still consumes one direct, same-host L3 root; it
+does not yet traverse the node namespaces. Every Rank in that root must expose
+the same complete set of local capture indexes, and the postprocessor refuses
 asymmetric sets instead of guessing pairings.
 
 Cross-Rank merging needs the run's Host log rather than a particular capture
@@ -487,13 +514,16 @@ Bound" lane in the trace.
 
 The Host block comes first and has two parts. Above the Ranks are the
 processes that dispatched to them — the L3 scheduler's `node.*` lanes, and an
-L4's `network1.*` above those. A run binds every process's host log to the same
-case root, so these are already beside the Rank captures; they are Host
-CLOCK_MONOTONIC and same-host cross-process comparable, so they are drawn
-directly and **carry no `slack_ns` at all** — containment is a device-clock
-term. Their logs cover the whole run while the merge covers one dispatch, so
-the invocations drawn are those overlapping the Ranks' own span on the axis,
-and `metadata.dispatcher_pids` names the processes they came from.
+L4's `network1.*` above those. Each process binds its host log to the root of
+the level namespace it owns, so a direct L3 run leaves all of them beside the
+Rank captures. Under a parent-assigned namespace only that namespace's own
+levels are beside them — the L4 above a `nodeN` writes one directory up, where
+a merge reading that `nodeN` does not look. They are Host CLOCK_MONOTONIC and
+same-host cross-process comparable, so they are drawn directly and **carry no
+`slack_ns` at all** — containment is a device-clock term. Their logs cover the
+whole run while the merge covers one dispatch, so the invocations drawn are
+those overlapping the Ranks' own span on the axis, and
+`metadata.dispatcher_pids` names the processes they came from.
 
 Then each Rank contributes three lanes read off its own Host log — its
 `chip.run` call tree (on the Host clock, no placement error), the `clk=dev`
