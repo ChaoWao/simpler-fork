@@ -238,6 +238,10 @@ void ChipWorker::init(
         get_arena_bank_gm_heap_base_fn_ =
             load_symbol<GetArenaBankGmHeapBaseFn>(handle, "get_arena_bank_gm_heap_base_ctx");
         get_retained_temp_addr_fn_ = load_symbol<GetRetainedTempAddrFn>(handle, "get_retained_temp_addr_ctx");
+        release_prepared_call_fn_ = load_symbol<ReleasePreparedCallFn>(handle, "simpler_release_prepared_call");
+        prepared_call_metrics_fn_ = load_symbol<PreparedCallMetricsFn>(handle, "simpler_prepared_call_metrics");
+        prepared_call_metrics_reset_fn_ =
+            load_symbol<PreparedCallMetricsResetFn>(handle, "simpler_prepared_call_metrics_reset");
         get_pipeline_contract_fn = load_symbol<GetPipelineContractFn>(handle, "get_pipeline_contract");
         unregister_callable_fn_ = load_symbol<SimplerUnregisterCallableFn>(handle, "simpler_unregister_callable");
         get_aicpu_dlopen_count_fn_ = load_symbol<GetAicpuDlopenCountFn>(handle, "get_aicpu_dlopen_count");
@@ -389,6 +393,9 @@ void ChipWorker::init(
         supports_concurrent_native_prepare_fn_ = nullptr;
         get_arena_bank_gm_heap_base_fn_ = nullptr;
         get_retained_temp_addr_fn_ = nullptr;
+        release_prepared_call_fn_ = nullptr;
+        prepared_call_metrics_fn_ = nullptr;
+        prepared_call_metrics_reset_fn_ = nullptr;
         unregister_callable_fn_ = nullptr;
         get_aicpu_dlopen_count_fn_ = nullptr;
         get_host_dlopen_count_fn_ = nullptr;
@@ -451,6 +458,9 @@ void ChipWorker::init(
         supports_concurrent_native_prepare_fn_ = nullptr;
         get_arena_bank_gm_heap_base_fn_ = nullptr;
         get_retained_temp_addr_fn_ = nullptr;
+        release_prepared_call_fn_ = nullptr;
+        prepared_call_metrics_fn_ = nullptr;
+        prepared_call_metrics_reset_fn_ = nullptr;
         unregister_callable_fn_ = nullptr;
         get_aicpu_dlopen_count_fn_ = nullptr;
         get_host_dlopen_count_fn_ = nullptr;
@@ -560,6 +570,9 @@ void ChipWorker::finalize() {
     supports_concurrent_native_prepare_fn_ = nullptr;
     get_arena_bank_gm_heap_base_fn_ = nullptr;
     get_retained_temp_addr_fn_ = nullptr;
+    release_prepared_call_fn_ = nullptr;
+    prepared_call_metrics_fn_ = nullptr;
+    prepared_call_metrics_reset_fn_ = nullptr;
     unregister_callable_fn_ = nullptr;
     get_aicpu_dlopen_count_fn_ = nullptr;
     get_host_dlopen_count_fn_ = nullptr;
@@ -639,6 +652,38 @@ std::vector<uint64_t> ChipWorker::runtime_buffer_addrs() const {
         addrs.push_back(reinterpret_cast<uint64_t>(buf.data()));
     }
     return addrs;
+}
+
+void ChipWorker::set_prepared_call_register(uint32_t reg) {
+    if (reg > SIMPLER_PREPARED_CALL_REGISTER_MAX) {
+        throw std::runtime_error(
+            "prepared-call register " + std::to_string(reg) + " is outside [0, " +
+            std::to_string(SIMPLER_PREPARED_CALL_REGISTER_MAX) + "]"
+        );
+    }
+    prepared_call_register_.store(reg, std::memory_order_relaxed);
+}
+
+uint32_t ChipWorker::prepared_call_register() const { return prepared_call_register_.load(std::memory_order_relaxed); }
+
+int ChipWorker::release_prepared_call(uint32_t reg) const {
+    if (!initialized_ || release_prepared_call_fn_ == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
+    return release_prepared_call_fn_(device_ctx_, reg);
+}
+
+SimplerPreparedCallMetrics ChipWorker::prepared_call_metrics() const {
+    SimplerPreparedCallMetrics metrics{};
+    if (!initialized_ || prepared_call_metrics_fn_ == nullptr) return metrics;
+    // A runtime that retains no preparation result answers UNSUPPORTED, which is
+    // reported as all-zero counters rather than as an error: a caller asking is
+    // not making a claim that this runtime has them.
+    (void)prepared_call_metrics_fn_(device_ctx_, &metrics);
+    return metrics;
+}
+
+int ChipWorker::reset_prepared_call_metrics() const {
+    if (!initialized_ || prepared_call_metrics_reset_fn_ == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
+    return prepared_call_metrics_reset_fn_(device_ctx_);
 }
 
 uint64_t ChipWorker::arena_bank_gm_heap_base(uint32_t bank_id) const {
@@ -754,10 +799,10 @@ ChipWorkerNativeRun ChipWorker::prepare_native_run_on_slot(
 
     int rc = -1;
     try {
-        const NativeRunDescriptor descriptor{slot_id,        arena_bank_for_slot(slot_id),
-                                             run_id,         generation,
-                                             dispatch_id,    run_epoch,
-                                             accepted_state, accepted_value};
+        const NativeRunDescriptor descriptor{
+            slot_id,        arena_bank_for_slot(slot_id), run_id, generation, dispatch_id, run_epoch, accepted_state,
+            accepted_value, prepared_call_register()
+        };
         rc = prepare_run_fn_(device_ctx_, runtime_bufs_[slot_id].data(), callable_id, args, &config, &descriptor);
     } catch (...) {
         std::lock_guard<std::mutex> lk(native_run_mu_);

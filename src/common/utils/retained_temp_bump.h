@@ -135,6 +135,18 @@ public:
     size_t next_offset() const { return align_up(offset_); }
     size_t capacity() const { return capacity_; }
 
+    /**
+     * Aligned base the slices are handed out from, or nullptr when nothing is
+     * retained. It moves between runs — a different pipeline slot has its own
+     * buffer, and a grown one is a new allocation — so a consumer that keeps a
+     * slice address past its own bind has to record the offset and re-derive the
+     * address from this base.
+     */
+    const void *base() const { return base_; }
+
+    /** Bytes sliced so far, i.e. the span this run's slices occupy from base(). */
+    size_t used() const { return offset_; }
+
 private:
     void *base_ = nullptr;
     size_t capacity_ = 0;

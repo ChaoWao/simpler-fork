@@ -55,6 +55,10 @@ struct HostTensorAccessor::Impl {
     // Bytes covered by `mappings`, i.e. excluding regions serving a fallback view.
     uint64_t mapped_bytes;
     uint64_t device_copy_count;
+    // Set by a write to a region with no host bytes of its own. Sticky for the
+    // accessor's whole life, and deliberately not cleared by close(): a consumer
+    // reads it after the window has been dropped.
+    bool wrote_device_memory;
 };
 
 // The region serving the whole of [dev_addr, dev_addr + bytes), or nullptr.
@@ -76,7 +80,7 @@ find_region(std::vector<HostTensorRegion> &regions, uint64_t dev_addr, uint64_t 
 }
 
 HostTensorAccessor::HostTensorAccessor(const HostApi *api) :
-    impl_(new Impl{api, {}, {}, 0, 0}) {}
+    impl_(new Impl{api, {}, {}, 0, 0, false}) {}
 
 HostTensorAccessor::~HostTensorAccessor() {
     close();
@@ -159,11 +163,16 @@ bool HostTensorAccessor::write(uint64_t dev_addr, const void *src, uint64_t byte
     }
     if (region->means == AccessMeans::DeviceCopy) {
         ++impl_->device_copy_count;
+        impl_->wrote_device_memory = true;
         return impl_->api->copy_to_device(reinterpret_cast<void *>(dev_addr), src, static_cast<size_t>(bytes)) == 0;
     }
     unsigned char *dst = region->host_view + offset;
     memcpy(dst, src, bytes);
     if (!region->needs_push_back) {
+        // A platform mapping writes the device allocation itself, so the bytes are
+        // already where the device reads them — and no later submission's transfer
+        // puts them there again.
+        impl_->wrote_device_memory = true;
         return true;
     }
     return impl_->api->copy_to_device(reinterpret_cast<void *>(dev_addr), dst, static_cast<size_t>(bytes)) == 0;
@@ -174,6 +183,8 @@ size_t HostTensorAccessor::mapping_count() const noexcept { return impl_->mappin
 uint64_t HostTensorAccessor::mapped_bytes() const noexcept { return impl_->mapped_bytes; }
 
 uint64_t HostTensorAccessor::device_copy_count() const noexcept { return impl_->device_copy_count; }
+
+bool HostTensorAccessor::wrote_device_memory() const noexcept { return impl_->wrote_device_memory; }
 
 void HostTensorAccessor::close() noexcept {
     for (void *dev_ptr : impl_->mappings) {

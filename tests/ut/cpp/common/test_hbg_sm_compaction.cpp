@@ -183,7 +183,12 @@ struct Compacted {
         image(sm_layout::segment_offsets(sm_layout::image_extents(usage_for(submitted))).end, 0xAA),
         bytes(0),
         used(usage_for(submitted)) {
-        bytes = sm_layout::compact_live_image(mirror.base(), WINDOW, used, rebase, image.base());
+        bytes = sm_layout::compact_live_image(mirror.base(), WINDOW, used, image.base());
+        // The two halves a bind performs in sequence: the restack leaves every heap
+        // address in the virtual window, and the rebase binds them to one committed
+        // heap. These tests drive both, so they assert on the bound image a device
+        // actually receives.
+        sm_layout::rebase_image(image.base(), used, rebase);
         storage = reinterpret_cast<ChipTaskStorage *>(image.base() + off().storage);
     }
 

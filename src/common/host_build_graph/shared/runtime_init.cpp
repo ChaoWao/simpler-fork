@@ -243,7 +243,7 @@ RuntimeArenaLayout runtime_reserve_layout(DeviceArena &arena, uint64_t task_capa
  * scheduler (ready / sync / dummy / graph queues) against the device SM.
  * rt->orchestrator is left null: the
  * orchestrator is a host-owned object the host-orch path
- * (run_host_orchestration) stands up against the host SM once that buffer
+ * (orchestrate_prepared_call) stands up against the host SM once that buffer
  * exists, and it is never uploaded to the device. Caller must follow up with
  * runtime_wire_arena_pointers. Returns the arena-resident RuntimeContext*, or
  * nullptr on failure.
@@ -262,7 +262,7 @@ RuntimeContext *runtime_init_data_from_layout(
     // Two components are deliberately not initialized here.
     //
     // The orchestrator is not in this arena at all: it is a host-owned object the
-    // host-orch path (run_host_orchestration) stands up against the host SM once
+    // host-orch path (orchestrate_prepared_call) stands up against the host SM once
     // that buffer is allocated, and rt->orchestrator only points at it for the
     // duration of that pass.
     //

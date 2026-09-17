@@ -12,6 +12,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -249,6 +250,39 @@ public:
     /// Retained temporary-buffer address the bound runner holds for one
     /// pipeline slot, or 0 while that slot holds none.
     uint64_t retained_temp_addr(uint32_t slot_id) const;
+
+    /**
+     * Prepared-call register every subsequent prepare on this worker names, or 0
+     * for the ordinary path.
+     *
+     * A narrow internal seam. `Worker.run` leaves this at 0, so an ordinary call
+     * builds a preparation result, consumes it once and drops it — there is no
+     * implicit cache that could reuse an obsolete graph. Setting a register asks
+     * the runtime to seal into it and, on a later prepare that matches, to publish
+     * from it instead of orchestrating again. A runtime that keeps no such result
+     * ignores it.
+     *
+     * Read on the thread that builds the run descriptor, which for the direct chip
+     * lane is the lane thread, so it is atomic; it is not a lock, and a caller
+     * that changes it while a submission is in flight gets whichever value that
+     * prepare happened to read.
+     */
+    void set_prepared_call_register(uint32_t reg);
+    uint32_t prepared_call_register() const;
+
+    /// Drop the preparation result held in `reg` (1-based). Returns 0 when a
+    /// result was released or the register was already empty, and non-zero for an
+    /// out-of-range register or a runtime that retains no such result.
+    int release_prepared_call(uint32_t reg) const;
+
+    /// Preparation-result counters from the bound runtime. All zero when the
+    /// runtime retains no such result.
+    SimplerPreparedCallMetrics prepared_call_metrics() const;
+
+    /// Zero the preparation-result counters. They are process-wide, so a caller
+    /// asserting on a delta resets them first rather than assuming it owns the
+    /// process.
+    int reset_prepared_call_metrics() const;
     size_t committed_device_memory() const;
     DeviceMemoryInfo device_memory_info() const;
 
@@ -274,6 +308,9 @@ private:
     using SimplerNativeRunFn = decltype(&simpler_launch_run);
     using SupportsConcurrentNativePrepareFn = int (*)(void *);
     using GetArenaBankGmHeapBaseFn = uint64_t (*)(void *, uint32_t);
+    using ReleasePreparedCallFn = int (*)(void *, uint32_t);
+    using PreparedCallMetricsFn = int (*)(void *, SimplerPreparedCallMetrics *);
+    using PreparedCallMetricsResetFn = int (*)(void *);
     using GetRetainedTempAddrFn = uint64_t (*)(void *, uint32_t);
     using GetPipelineContractFn = const PipelineContract *(*)();
     using SimplerUnregisterCallableFn = int (*)(void *, int32_t);
@@ -339,6 +376,10 @@ private:
     SimplerNativeRunFn finalize_run_fn_ = nullptr;
     SupportsConcurrentNativePrepareFn supports_concurrent_native_prepare_fn_ = nullptr;
     GetArenaBankGmHeapBaseFn get_arena_bank_gm_heap_base_fn_ = nullptr;
+    ReleasePreparedCallFn release_prepared_call_fn_ = nullptr;
+    PreparedCallMetricsFn prepared_call_metrics_fn_ = nullptr;
+    PreparedCallMetricsResetFn prepared_call_metrics_reset_fn_ = nullptr;
+    std::atomic<uint32_t> prepared_call_register_{0};
     GetRetainedTempAddrFn get_retained_temp_addr_fn_ = nullptr;
     SimplerUnregisterCallableFn unregister_callable_fn_ = nullptr;
     GetAicpuDlopenCountFn get_aicpu_dlopen_count_fn_ = nullptr;

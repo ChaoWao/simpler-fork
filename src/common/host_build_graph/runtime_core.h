@@ -199,7 +199,7 @@ RuntimeArenaLayout runtime_reserve_layout(DeviceArena &arena, uint64_t task_capa
  * Caller must follow up with runtime_wire_arena_pointers; rt->ops and the
  * AICore-side count fields are left untouched and must be filled by the
  * AICPU at boot. Initializes the scheduler only: the orchestrator is a
- * host-owned object the host-orch path (run_host_orchestration) stands up and
+ * host-owned object the host-orch path (orchestrate_prepared_call) stands up and
  * points rt->orchestrator at, and it is never uploaded to the device.
  */
 RuntimeContext *runtime_init_data_from_layout(

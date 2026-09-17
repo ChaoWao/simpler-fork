@@ -46,7 +46,10 @@ struct NativeRunContext {
         runner(runner_in),
         config(config_in),
         descriptor(descriptor_in),
-        host_api(runner_in, descriptor_in.pipeline_slot, descriptor_in.arena_bank, host_api_ops),
+        host_api(
+            runner_in, descriptor_in.pipeline_slot, descriptor_in.arena_bank, host_api_ops,
+            descriptor_in.prepared_call_register
+        ),
         trace_hid(trace_hid_in) {
         // Publish the storage tag only after every potentially-throwing member
         // has been constructed. A failed placement construction must leave the

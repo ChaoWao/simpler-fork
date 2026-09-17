@@ -1114,6 +1114,8 @@ add_a2a3_hbg_runtime_test(test_hbg_bind_ledger common/test_hbg_bind_ledger.cpp
     ${HBG_HOST_DIR}/host_phase_trace.cpp
     ${HBG_HOST_DIR}/ready_queue_sizing.cpp
     ${HBG_HOST_DIR}/host_tensor_access.cpp
+    ${HBG_HOST_DIR}/prepared_call.cpp
+    ${HBG_HOST_DIR}/graph_definition_pack.cpp
     ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/host/platform_compile_info.cpp
     ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/args_dump_aicpu.cpp
     # test_stubs.cpp already defines unified_log_*; only HostLogger is missing.
@@ -1123,6 +1125,14 @@ target_compile_definitions(test_hbg_bind_ledger PRIVATE SIMPLER_PLATFORM_NAME="a
 
 add_a2a3_hbg_runtime_test(test_hbg_self_relative_ptr common/test_hbg_self_relative_ptr.cpp)
 add_a2a3_hbg_runtime_test(test_hbg_sm_compaction common/test_hbg_sm_compaction.cpp)
+# The prepared-call machinery is shared between the architectures, so it is
+# covered once. It links the shared implementation plus the host logger the
+# refusal messages go through.
+add_a2a3_hbg_runtime_test(test_hbg_prepared_call common/test_hbg_prepared_call.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/host_build_graph/host/prepared_call.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/log/host_log.cpp
+)
+target_compile_definitions(test_hbg_prepared_call PRIVATE SIMPLER_PLATFORM_NAME="a2a3sim")
 add_a2a3_hbg_runtime_test(test_hbg_scheduler_drain common/test_hbg_scheduler_drain.cpp)
 target_sources(test_hbg_scheduler_drain PRIVATE
     ${HBG_RUNTIME_DIR}/scheduler/scheduler_completion.cpp

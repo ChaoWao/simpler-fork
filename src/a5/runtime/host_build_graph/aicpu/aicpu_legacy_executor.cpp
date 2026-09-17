@@ -317,7 +317,7 @@ int32_t LegacyAicpuExecutor::run(Runtime *runtime) {
             // the host task count is visible (host-orch has no concurrent orchestrator
             // to keep them alive).
             // NOTE: do NOT call rt_orchestration_done(rt) here. The HOST already
-            // called it in run_host_orchestration; the orchestrator's own
+            // called it in orchestrate_prepared_call; the orchestrator's own
             // task-allocator pointers name host memory the device never reads, so
             // mark_done()'s active_count() read would dereference it and fault the
             // AICPU. on_graph_attached only needs total_tasks and the scalar

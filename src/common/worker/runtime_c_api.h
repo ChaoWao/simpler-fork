@@ -199,6 +199,14 @@ typedef struct PipelineSlotLease {
 } PipelineSlotLease;
 
 /**
+ * Highest prepared-call register a descriptor may name. Registers are 1-based
+ * and 0 means "none", so the usable range is [1, MAX]. Held here because it is
+ * the caller's contract; the runtime that implements the table asserts its own
+ * capacity against this value.
+ */
+#define SIMPLER_PREPARED_CALL_REGISTER_MAX 8u
+
+/**
  * Immutable resource and trace identity copied into one prepared run.
  * `pipeline_slot` and `arena_bank` must be smaller than
  * PTO_PIPELINE_MAX_DEPTH; they remain explicit because some runtimes map a
@@ -216,6 +224,14 @@ typedef struct NativeRunDescriptor {
     uint64_t run_epoch;
     volatile int32_t *accepted_state;
     int32_t accepted_value;
+    /* Prepared-call register this run seals into or publishes from, or 0 for
+       the ordinary path. A runtime that keeps a reusable preparation result
+       (host_build_graph) publishes the register's result when it holds one and
+       otherwise builds a fresh one and seals it there. A register is named by a
+       small index rather than by an address so a result survives reuse of the
+       pipeline slot that built it. Runtimes without such a result ignore it;
+       see simpler_release_prepared_call. */
+    uint32_t prepared_call_register;
 } NativeRunDescriptor;
 
 /* Per-stage run timing is no longer returned. The platform emits it as
@@ -486,6 +502,51 @@ int simpler_wait_run(DeviceContextHandle ctx, RuntimeHandle runtime);
  * Also safely aborts a run that was prepared but never launched.
  */
 int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime);
+
+/**
+ * Counters describing preparation results a runtime retains and republishes.
+ *
+ * `host_orchestration_entries` is the one an integration test asserts on:
+ * publishing a retained result must not advance it, while an ordinary fresh call
+ * must. The two byte counts answer different questions and are therefore
+ * reported separately — what the retained results cost in host memory right now,
+ * and what the last publication wrote to the device. Every field is zero for a
+ * runtime that keeps no such result.
+ */
+typedef struct SimplerPreparedCallMetrics {
+    uint64_t host_orchestration_entries;
+    uint64_t definition_packs;
+    uint64_t calls_sealed;
+    uint64_t publications;
+    uint64_t reused_publications;
+    uint64_t retained_host_bytes;
+    uint64_t last_restored_device_bytes;
+} SimplerPreparedCallMetrics;
+
+/**
+ * Drop the preparation result held in `reg` (1-based). Returns 0 when a result
+ * was released, PTO_RUNTIME_ERR_INTERNAL for an out-of-range register, and
+ * PTO_RUNTIME_ERR_UNSUPPORTED from a runtime that retains no such result.
+ * Releasing an empty register is not an error.
+ *
+ * Safe to call while a run publishing from that register is in flight: the
+ * publication pins the result it reads, so the release only drops the register's
+ * own reference.
+ */
+int simpler_release_prepared_call(DeviceContextHandle ctx, uint32_t reg);
+
+/**
+ * Read the prepared-call counters. Returns 0 on success, PTO_RUNTIME_ERR_UNSUPPORTED
+ * from a runtime that keeps no preparation result.
+ */
+int simpler_prepared_call_metrics(DeviceContextHandle ctx, SimplerPreparedCallMetrics *out);
+
+/**
+ * Reset the prepared-call counters. Diagnostic only — the counters are
+ * process-wide, so a test that asserts on a delta zeroes them first rather than
+ * assuming it owns the process.
+ */
+int simpler_prepared_call_metrics_reset(DeviceContextHandle ctx);
 
 /**
  * Committed GM heap base of one arena bank, or 0 when that bank has never been

@@ -49,6 +49,7 @@ enum class HostPhaseKind : uint32_t {
     BindSharedMem,
     BindRuntimeInit,
     BindHostOrch,
+    BindGraphPack,
     BindGraphUpload,
     BindArenaH2d,
     BindHostViewClose,

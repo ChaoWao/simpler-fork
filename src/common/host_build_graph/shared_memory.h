@@ -92,7 +92,7 @@ struct alignas(64) SharedMemoryTaskHeader {
     std::atomic<ChipTaskState> *task_states;
 
     // Tasks this run submitted, i.e. the slot count the two segments above are
-    // pitched to. Written once by the host after orchestration (run_host_orchestration)
+    // pitched to. Written once by the host after orchestration (orchestrate_prepared_call)
     // and read-only from then on, so it packs into the padding rather than taking a
     // line of its own. Bounds every slot-indexed walk: no slot at or above it was
     // claimed, and the bytes past task_states[total_tasks - 1] are not states.
@@ -401,7 +401,13 @@ inline uint64_t rebased_heap_addr(uint64_t addr, const HeapRebase &rebase) noexc
 // `out_base` must be CHIP_ALIGN_SIZE-aligned and hold
 // `segment_offsets(image_extents(used)).end` bytes. Returns that byte count.
 //
-// Three things the restack has to fix up, all because the image is not the mirror:
+// The image this produces is the *canonical* form: every heap address it carries is
+// still in the HEAP_VIRTUAL_BASE window, so it names no device region and can be
+// bound to any committed heap by `rebase_image`. A prepared call retains the
+// canonical form and rebases a working copy per execution, which is what lets one
+// preparation serve either arena bank.
+//
+// Two things the restack has to fix up, both because the image is not the mirror:
 //
 //   - the task header's segment pointers name the mirror's arrays, so they leave as
 //     null rather than carrying host addresses into device memory (the device
@@ -411,23 +417,9 @@ inline uint64_t rebased_heap_addr(uint64_t addr, const HeapRebase &rebase) noexc
 //     against the image. A region keeps its position within its pool, so the re-take
 //     is the same arithmetic with the image's bases. A task's own three records need
 //     no such re-take: they share one ChipTaskStorage, so their distances are that
-//     type's layout and the change of pitch cannot reach them;
-//   - every heap address the orchestrator wrote is in the HEAP_VIRTUAL_BASE window,
-//     so `rebase` moves it onto the device region committed after orchestration.
-//     Three fields carry one: a descriptor's packed buffer bounds (read on the
-//     device by the Graph expansion in graph_execution.cpp), a payload's dispatch
-//     predicate (dereferenced by the scheduler), and a tensor argument's buffer
-//     address — the last one per task, in one walk: every task kind holds its
-//     arguments as simpler::hbg::Tensors, an outer GRAPH task's boundaries included.
-//
-// Those three are the whole surface: a heap address that reached the device through
-// an untyped channel would not be moved, and the scalar pool cannot be swept for
-// one, because a scalar's value is arbitrary and a quarter of the 64-bit range
-// falls inside the window. Orchestration must therefore pass a runtime-created
-// buffer as the tensor it got back, never as a scalar carrying its address.
-inline uint64_t compact_live_image(
-    const char *mirror_base, uint64_t max_tasks, const BindUsage &used, const HeapRebase &rebase, char *out_base
-) noexcept {
+//     type's layout and the change of pitch cannot reach them.
+inline uint64_t
+compact_live_image(const char *mirror_base, uint64_t max_tasks, const BindUsage &used, char *out_base) noexcept {
     // The mirror is dimensioned for the worst case, so a live count or a cursor past
     // it reads beyond the segment it is copying from and ships a corrupt image.
     // attach_populated tests the slot bound again on the device side.
@@ -504,17 +496,47 @@ inline uint64_t compact_live_image(
             // occupy. A positive whitelist, so it keeps holding as TaskId gains id spaces.
             const TaskId owner = tensors[j].owner_task_id;
             always_assert((!owner.is_valid() || owner.is_global()) && "a recording's tensor reached the image");
-            tensors[j].buffer.addr = rebased_heap_addr(tensors[j].buffer.addr, rebase);
         }
-        TaskDescriptor &out_task = out_entry.task;
-        out_task.packed_buffer_base = reinterpret_cast<void *>(
-            rebased_heap_addr(reinterpret_cast<uint64_t>(out_task.packed_buffer_base), rebase)
-        );
-        out_task.packed_buffer_end =
-            reinterpret_cast<void *>(rebased_heap_addr(reinterpret_cast<uint64_t>(out_task.packed_buffer_end), rebase));
-        out_payload.predicate.addr = rebased_heap_addr(out_payload.predicate.addr, rebase);
     }
     return to.end;
+}
+
+// Bind a compacted image to one committed graph heap, in place.
+//
+// Every heap address the orchestrator wrote is in the HEAP_VIRTUAL_BASE window, so
+// this moves it onto the device region committed after orchestration. Three fields
+// carry one: a descriptor's packed buffer bounds (read on the device by the Graph
+// expansion in graph_execution.cpp), a payload's dispatch predicate (dereferenced by
+// the scheduler), and a tensor argument's buffer address — the last one per task, in
+// one walk: every task kind holds its arguments as simpler::hbg::Tensors, an outer
+// GRAPH task's boundaries included.
+//
+// Those three are the whole surface: a heap address that reached the device through
+// an untyped channel would not be moved, and the scalar pool cannot be swept for
+// one, because a scalar's value is arbitrary and a quarter of the 64-bit range
+// falls inside the window. Orchestration must therefore pass a runtime-created
+// buffer as the tensor it got back, never as a scalar carrying its address.
+//
+// The translation is one-way: an address it has moved is a real device address and
+// no longer names its offset in the window. A second execution of the same graph
+// therefore rebases a fresh copy of the canonical image rather than this one again.
+inline void rebase_image(char *image_base, const BindUsage &used, const HeapRebase &rebase) noexcept {
+    const SegmentOffsets to = segment_offsets(image_extents(used));
+    auto *storage = reinterpret_cast<ChipTaskStorage *>(image_base + to.storage);
+    for (uint64_t i = 0; i < used.submitted_tasks; ++i) {
+        ChipTaskStorage &entry = storage[i];
+        TaskPayload &payload = entry.payload;
+        simpler::hbg::Tensor *tensors = payload.tensor_data();
+        for (int32_t j = 0; j < payload.tensor_count; ++j) {
+            tensors[j].buffer.addr = rebased_heap_addr(tensors[j].buffer.addr, rebase);
+        }
+        TaskDescriptor &task = entry.task;
+        task.packed_buffer_base =
+            reinterpret_cast<void *>(rebased_heap_addr(reinterpret_cast<uint64_t>(task.packed_buffer_base), rebase));
+        task.packed_buffer_end =
+            reinterpret_cast<void *>(rebased_heap_addr(reinterpret_cast<uint64_t>(task.packed_buffer_end), rebase));
+        payload.predicate.addr = rebased_heap_addr(payload.predicate.addr, rebase);
+    }
 }
 
 }  // namespace sm_layout

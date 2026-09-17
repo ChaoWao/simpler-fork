@@ -93,6 +93,14 @@ uint64_t get_arena_bank_gm_heap_base_ctx(DeviceContextHandle ctx, uint32_t bank_
 
 uint64_t get_retained_temp_addr_ctx(DeviceContextHandle ctx, uint32_t slot_id) { return 0; }
 
+int simpler_release_prepared_call(DeviceContextHandle ctx, uint32_t reg) { return PTO_RUNTIME_ERR_UNSUPPORTED; }
+
+int simpler_prepared_call_metrics(DeviceContextHandle ctx, SimplerPreparedCallMetrics *out) {
+    return PTO_RUNTIME_ERR_UNSUPPORTED;
+}
+
+int simpler_prepared_call_metrics_reset(DeviceContextHandle ctx) { return PTO_RUNTIME_ERR_UNSUPPORTED; }
+
 const PipelineContract *get_pipeline_contract(void) { return &contract; }
 
 int simpler_unregister_callable(DeviceContextHandle ctx, int32_t callable_id) { return PTO_RUNTIME_ERR_INTERNAL; }

@@ -135,7 +135,7 @@ void SharedMemoryHandle::destroy() {
 //
 // no need init data in pool, init pool data when used
 void SharedMemoryHandle::init_header() {
-    // 0 until run_host_orchestration writes the run's count; init runs before
+    // 0 until orchestrate_prepared_call writes the run's count; init runs before
     // orchestration, so the real value is not known here yet.
     header->tasks.total_tasks = 0;
 

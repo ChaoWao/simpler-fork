@@ -3574,6 +3574,44 @@ NB_MODULE(_task_interface, m) {
             "Committed GM heap base of one arena bank on the bound runner, or 0 "
             "when that bank has never been committed."
         )
+        .def_prop_rw(
+            "_prepared_call_register", &ChipWorker::prepared_call_register, &ChipWorker::set_prepared_call_register,
+            "Prepared-call register every subsequent prepare on this worker names, or 0 for the ordinary path. "
+            "Worker.run leaves it at 0, so an ordinary call builds a preparation result, consumes it once and "
+            "drops it. Setting a register asks the runtime to seal into it and, on a later matching prepare, to "
+            "publish from it instead of orchestrating again — an internal seam for exercising repeated "
+            "consumption, not a cache."
+        )
+        .def(
+            "_release_prepared_call", &ChipWorker::release_prepared_call, nb::arg("reg"),
+            nb::call_guard<nb::gil_scoped_release>(),
+            "Drop the preparation result held in one 1-based register. Returns 0 when a result was released or "
+            "the register was already empty."
+        )
+        .def(
+            "_prepared_call_metrics",
+            [](const ChipWorker &self) {
+                const SimplerPreparedCallMetrics metrics = self.prepared_call_metrics();
+                nb::dict out;
+                out["host_orchestration_entries"] = metrics.host_orchestration_entries;
+                out["definition_packs"] = metrics.definition_packs;
+                out["calls_sealed"] = metrics.calls_sealed;
+                out["publications"] = metrics.publications;
+                out["reused_publications"] = metrics.reused_publications;
+                out["retained_host_bytes"] = metrics.retained_host_bytes;
+                out["last_restored_device_bytes"] = metrics.last_restored_device_bytes;
+                return out;
+            },
+            "Preparation-result counters from the bound runtime, all zero when it retains no such result. "
+            "`host_orchestration_entries` is the one a reuse test asserts on: republishing a retained result "
+            "must not advance it."
+        )
+        .def(
+            "_reset_prepared_call_metrics", &ChipWorker::reset_prepared_call_metrics,
+            nb::call_guard<nb::gil_scoped_release>(),
+            "Zero the preparation-result counters. They are process-wide, so a caller asserting on a delta "
+            "resets them first."
+        )
         .def_prop_ro(
             "aicpu_dlopen_count", &ChipWorker::aicpu_dlopen_count,
             "Number of distinct callable entries the AICPU has dlopened for on the "

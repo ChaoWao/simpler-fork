@@ -110,6 +110,15 @@ __attribute__((weak)) int prepared_run_config_compatible_impl(
 ) {
     return 1;
 }
+/* A runtime that keeps a reusable preparation result (host_build_graph)
+ * overrides these four; one that rebuilds its graph on every bind has nothing
+ * to retain and reports so rather than answering with silent zeros. */
+__attribute__((weak)) int prepared_call_release_impl(uint32_t /*reg*/) { return PTO_RUNTIME_ERR_UNSUPPORTED; }
+__attribute__((weak)) int prepared_call_metrics_impl(SimplerPreparedCallMetrics * /*out*/) {
+    return PTO_RUNTIME_ERR_UNSUPPORTED;
+}
+__attribute__((weak)) int prepared_call_metrics_reset_impl(void) { return PTO_RUNTIME_ERR_UNSUPPORTED; }
+__attribute__((weak)) int prepared_call_drop_all_impl(void) { return PTO_RUNTIME_ERR_UNSUPPORTED; }
 
 /* ===========================================================================
  * Context-bound HostApi functions passed to runtime implementations.
@@ -448,6 +457,11 @@ int finalize_device(DeviceContextHandle ctx) {
             LOG_ERROR("finalize_device: native run must be finalized first");
             return PTO_RUNTIME_ERR_INTERNAL;
         }
+        // A retained preparation result names its kernels by func_id and its
+        // Definition objects by offsets into a runner-owned device block, both of
+        // which this teardown releases. Dropping the registers here is what keeps
+        // one from outliving the resources it describes.
+        (void)prepared_call_drop_all_impl();
         const int rc = runner->finalize();
         return rc;
     } catch (...) {
@@ -836,6 +850,15 @@ int simpler_prepare_run(
         );
         return PTO_RUNTIME_ERR_INTERNAL;
     }
+    // Rejected here rather than at the bind, so a register that cannot exist
+    // fails before any device resource is reserved.
+    if (descriptor->prepared_call_register > SIMPLER_PREPARED_CALL_REGISTER_MAX) {
+        LOG_ERROR(
+            "simpler_prepare_run: prepared_call_register=%u outside [0, %u]", descriptor->prepared_call_register,
+            SIMPLER_PREPARED_CALL_REGISTER_MAX
+        );
+        return PTO_RUNTIME_ERR_INTERNAL;
+    }
     if (reinterpret_cast<uintptr_t>(runtime) % alignof(OnboardNativeRunContext) != 0) {
         LOG_ERROR("simpler_prepare_run: runtime storage does not satisfy get_runtime_alignment()");
         return PTO_RUNTIME_ERR_INTERNAL;
@@ -1090,6 +1113,26 @@ int simpler_wait_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
     return state->completion_rc;
 }
 
+int simpler_release_prepared_call(DeviceContextHandle ctx, uint32_t reg) {
+    if (ctx == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
+    if (reg < 1 || reg > SIMPLER_PREPARED_CALL_REGISTER_MAX) {
+        LOG_ERROR("simpler_release_prepared_call: reg=%u outside [1, %u]", reg, SIMPLER_PREPARED_CALL_REGISTER_MAX);
+        return PTO_RUNTIME_ERR_INTERNAL;
+    }
+    return prepared_call_release_impl(reg);
+}
+
+int simpler_prepared_call_metrics(DeviceContextHandle ctx, SimplerPreparedCallMetrics *out) {
+    if (ctx == nullptr || out == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
+    *out = SimplerPreparedCallMetrics{};
+    return prepared_call_metrics_impl(out);
+}
+
+int simpler_prepared_call_metrics_reset(DeviceContextHandle ctx) {
+    if (ctx == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
+    return prepared_call_metrics_reset_impl();
+}
+
 int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
     OnboardNativeRunContext *state = native_run_context(ctx, runtime, "simpler_finalize_run");
     if (state == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
@@ -1248,6 +1291,12 @@ int simpler_unregister_callable(DeviceContextHandle ctx, int32_t callable_id) {
             );
             return PTO_RUNTIME_ERR_INTERNAL;
         }
+        // Same reason as finalize_device, one callable at a time: a register holds
+        // a result built from one callable's orchestration, and unregistering frees
+        // the code its image dispatches. Registers are a narrow internal seam, so
+        // dropping all of them is cheaper to reason about than tracking which
+        // register belongs to which callable.
+        (void)prepared_call_drop_all_impl();
         return runner->unregister_callable(callable_id);
     } catch (...) {
         return PTO_RUNTIME_ERR_INTERNAL;

@@ -579,6 +579,8 @@ inline const char *host_phase_kind_name(HostPhaseKind kind) {
         return "runtime_init";
     case HostPhaseKind::BindHostOrch:
         return "host_orch";
+    case HostPhaseKind::BindGraphPack:
+        return "graph_pack";
     case HostPhaseKind::BindGraphUpload:
         return "graph_upload";
     case HostPhaseKind::BindArenaH2d:

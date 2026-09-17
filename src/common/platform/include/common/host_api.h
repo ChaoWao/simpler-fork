@@ -173,10 +173,14 @@ struct HostApiOps {
  */
 struct HostApi {
 public:
-    HostApi(void *runner_ctx, uint32_t pipeline_slot, uint32_t arena_bank, const HostApiOps *ops) noexcept :
+    HostApi(
+        void *runner_ctx, uint32_t pipeline_slot, uint32_t arena_bank, const HostApiOps *ops,
+        uint32_t prepared_call_register = 0
+    ) noexcept :
         runner_ctx_(runner_ctx),
         pipeline_slot_(pipeline_slot),
         arena_bank_(arena_bank),
+        prepared_call_register_(prepared_call_register),
         ops_(ops) {}
 
     void *device_malloc(size_t size) const { return ops_->device_malloc(runner_ctx_, size); }
@@ -293,9 +297,21 @@ public:
         }
     }
 
+    /**
+     * This run's prepared-call register, or 0 for none.
+     *
+     * A bound member rather than a hook, because it selects nothing the platform
+     * owns: the register table belongs to the runtime that builds preparation
+     * results, and this is the run's request to seal into or publish from one. A
+     * runtime with no such notion ignores it. 0 is the ordinary path — seal a
+     * result, publish it once, drop it.
+     */
+    uint32_t prepared_call_register() const noexcept { return prepared_call_register_; }
+
 private:
     void *runner_ctx_{nullptr};
     uint32_t pipeline_slot_{0};
     uint32_t arena_bank_{0};
+    uint32_t prepared_call_register_{0};
     const HostApiOps *ops_{nullptr};
 };

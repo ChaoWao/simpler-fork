@@ -154,6 +154,20 @@ public:
      */
     uint64_t device_copy_count() const noexcept;
 
+    /**
+     * Whether any write landed in a region the accessor does not hold host bytes
+     * for — a child-memory tensor, served either by a platform mapping over the
+     * caller's device allocation or by a direct device copy.
+     *
+     * Those writes mutate memory the caller owns, and no per-submission transfer
+     * reproduces them: a bind stages nothing for a child-memory tensor. So an
+     * orchestration result that made one cannot be republished — replaying it
+     * would run against whatever the previous execution left in that buffer. A
+     * write through a caller-buffer view does not count: the bind's copy-in reads
+     * that buffer on every submission and therefore carries the effect forward.
+     */
+    bool wrote_device_memory() const noexcept;
+
 private:
     struct Impl;
     Impl *impl_;
