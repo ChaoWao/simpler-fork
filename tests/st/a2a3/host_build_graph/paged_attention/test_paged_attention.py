@@ -19,6 +19,7 @@ from simpler.task_interface import ArgDirection as D
 from simpler_setup import Scalar, SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
 from simpler_setup.goldens.paged_attention import compute_golden as _pa_compute_golden  # noqa: PLC0415
 from simpler_setup.goldens.paged_attention import generate_inputs as _pa_generate_inputs  # noqa: PLC0415
+from simpler_setup.scene_test import _build_chip_task_args, _compare_outputs
 
 
 @scene_test(level=2, runtime="host_build_graph")
@@ -170,6 +171,67 @@ class TestPagedAttentionHostBuildGraph(SceneTestCase):
         for s in args.specs:
             if isinstance(s, TensorArg) and s.name in tensors:
                 getattr(args, s.name)[:] = tensors[s.name]
+
+    def test_a_fallback_from_a_prepared_call_still_reads_its_control_tensors(self, st_platform, st_worker):
+        """A submission a retained preparation result cannot serve must still orchestrate.
+
+        This orchestration reads ``context_lens`` and ``block_table`` through the
+        bind's host-view window to decide how many blocks each batch row needs.
+        Whether a retained result can serve a submission is only settled after the
+        argument contract has been compared, which needs the temporary-buffer slice
+        offsets the tensor loop hands out — so the window has to be built before
+        that decision, not after it. Built the other way round, a fallback
+        orchestrates against an empty window, every control read fails closed, and
+        the graph comes out shaped for zero blocks.
+
+        Two submissions with different geometry through one register: the first
+        seals, the second cannot be served and must re-prepare. Both golden-check,
+        so a fallback that lost its control reads fails here rather than passing
+        vacuously.
+        """
+        chip_worker = st_worker._chip_worker
+        assert chip_worker is not None
+        callable_id = 1
+        register = 1
+        orch_sig = self.CALLABLE["orchestration"]["signature"]
+        config = self._build_config({})
+        chip_worker._register_callable_at_slot(callable_id, self.build_callable(st_platform))
+        assert chip_worker._impl._reset_prepared_call_metrics() == 0
+
+        def run(params):
+            test_args = self.generate_args(params)
+            chip_args, output_names = _build_chip_task_args(test_args, orch_sig)
+            golden_args = test_args.clone()
+            self.compute_golden(golden_args, params)
+            chip_worker._impl._prepared_call_register = register
+            try:
+                chip_worker._run_slot(callable_id, chip_args, config=config)
+            finally:
+                chip_worker._impl._prepared_call_register = 0
+            _compare_outputs(test_args, golden_args, output_names, self.RTOL, self.ATOL)
+
+        base = {
+            "batch": 1,
+            "num_heads": 16,
+            "kv_head_num": 1,
+            "head_dim": 16,
+            "block_size": 16,
+            "max_model_len": 256,
+            "dtype": "bfloat16",
+        }
+        try:
+            run({**base, "context_len": 16})
+            # A longer context gives the caches more blocks, so the argument
+            # geometry differs and the retained result cannot describe it.
+            run({**base, "context_len": 48})
+            metrics = chip_worker._impl._prepared_call_metrics()
+            assert metrics["host_orchestration_entries"] == 2, (
+                f"the second submission must re-prepare, saw {metrics['host_orchestration_entries']} orchestrations"
+            )
+            assert metrics["reused_publications"] == 0, "neither submission can reuse the other's result"
+        finally:
+            chip_worker._impl._release_prepared_call(register)
+            chip_worker._unregister_slot(callable_id)
 
 
 if __name__ == "__main__":

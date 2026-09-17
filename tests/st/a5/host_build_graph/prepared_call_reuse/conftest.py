@@ -16,8 +16,11 @@ class's runs move the numbers under them.
 Override ``st_worker`` here as class-scope, building a fresh L2 worker that does
 **not** enter ``_l2_worker_pool``. Cost: one extra init/close per test class.
 
-Mirrors the prepared_callable conftest, for the same reason and with the same
-shape — keep the two in sync.
+Mirrors the prepared_callable conftest, for the same reason, with one deliberate
+difference: ``init()`` runs inside the block that guarantees ``close()``. A
+partially-failed initialization journals teardown debt that only ``close()``
+retries, so releasing the device id without it would strand that debt on the
+device.
 """
 
 from __future__ import annotations
@@ -46,8 +49,8 @@ def st_worker(request, st_platform, device_pool):
             platform=st_platform,
             runtime=runtime,
         )
-        w.init()
         try:
+            w.init()
             yield w
         finally:
             w.close()

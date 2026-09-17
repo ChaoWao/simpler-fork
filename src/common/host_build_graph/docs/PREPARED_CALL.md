@@ -46,8 +46,8 @@ is neither in the heap window nor in the temporary buffer, so no relocation
 reaches it, and a submission that changed one is refused.
 
 Publication only ever reads a `PreparedCall`. A refused or part-failed publication
-therefore cannot damage it, and a retry starts from a state that has already
-executed. `test_hbg_prepared_call.cpp` pins that byte-for-byte.
+therefore cannot damage it, and a retry re-reads the unchanged canonical result.
+`test_hbg_prepared_call.cpp` pins that byte-for-byte.
 
 ## What the result owns
 

@@ -34,8 +34,8 @@
  *     submission can be rejected before anything on the device is touched.
  *
  * Publication only ever reads a `PreparedCall`. A rejected or partly-failed
- * publication therefore cannot damage it, and a retry starts from a state that has
- * already executed.
+ * publication therefore cannot damage it, and a retry re-reads the unchanged
+ * canonical result.
  */
 
 #pragma once

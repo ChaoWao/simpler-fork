@@ -793,7 +793,7 @@ int32_t orchestrate_prepared_call(
 // commits the two regions, ships the Definition block, copies the canonical bytes
 // into a working image, binds the three classes of address that image carries, and
 // H2Ds it. `call` is only read, so a rejected or part-failed publication cannot
-// damage it — a retry starts from a state that has already executed.
+// damage it, and a retry re-reads the unchanged canonical result.
 //
 // `temp_base` is the aligned base of the retained temp buffer this run sliced its
 // caller arguments from.
@@ -1165,10 +1165,16 @@ extern "C" int bind_callable_to_runtime_impl(
 
     // This run's host-view window. The accessor owns every mapping it
     // registers and releases them on every exit path, so no host view outlives
-    // the point at which a task could make it stale. A republished result runs no
-    // orchestration, so it registers nothing and the window stays empty.
+    // the point at which a task could make it stale.
+    //
+    // Populated whether or not a retained result is in play, because whether one
+    // can serve this submission is not settled until the argument contract has
+    // been compared — which needs the slice offsets this loop hands out. Building
+    // the window unconditionally costs a vector entry per tensor: every caller
+    // tensor here has a fallback host view, so `add` installs no platform mapping,
+    // and `add_child_memory` resolves nothing until an access lands in it. A
+    // republication makes no such access and closes an untouched window.
     HostTensorAccessor tensor_access(api);
-    const bool orchestrating = retained == nullptr;
 
     // A lease recorded by an earlier bind names an offset this bind is about to
     // re-slice, so carrying one over would copy this run's bytes back to that
@@ -1216,7 +1222,7 @@ extern "C" int bind_callable_to_runtime_impl(
             // The bytes stay where the caller put them, so orchestration has no
             // copy-in buffer to read them from. Claim the span now and let the
             // platform resolve a means only if an access actually lands in it.
-            if (orchestrating && !tensor_access.add_child_memory(t.buffer.addr, t.buffer.size)) {
+            if (!tensor_access.add_child_memory(t.buffer.addr, t.buffer.size)) {
                 LOG_ERROR("host-orch: could not claim child-memory tensor %d (0x%" PRIx64 ")", i, t.buffer.addr);
                 return PTO_RUNTIME_ERR_INTERNAL;
             }
@@ -1297,8 +1303,7 @@ extern "C" int bind_callable_to_runtime_impl(
         // buffer, which the copy-in above reads on every submission — so an
         // initialization orchestration produced survives a republication without
         // the host callback running again.
-        if (orchestrating && !is_pure_output &&
-            !tensor_access.add(reinterpret_cast<uint64_t>(dev_ptr), size, host_ptr)) {
+        if (!is_pure_output && !tensor_access.add(reinterpret_cast<uint64_t>(dev_ptr), size, host_ptr)) {
             LOG_ERROR("host-orch: no host view for tensor %d (dev_ptr %p, %zu bytes)", i, dev_ptr, size);
             return PTO_RUNTIME_ERR_INTERNAL;
         }
