@@ -891,8 +891,9 @@ int DeviceRunner::force_reset_device() {
     );
     // The reset may or may not have cleared the process's exception-callback
     // slot — that is unmeasured — so the registration is remade rather than
-    // assumed to have survived into this device generation.
-    (void)reinstall_device_fault_monitor_after_reset();
+    // assumed to have survived into this device generation. The evidence this
+    // generation accumulated retires here either way.
+    (void)retire_device_generation_after_confirmed_reset();
     return 0;
 }
 

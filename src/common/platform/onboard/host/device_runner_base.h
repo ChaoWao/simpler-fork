@@ -67,6 +67,7 @@
 #include "aicpu_loader/host/load_aicpu_op.h"
 #include "host/chip_swimlane_collector.h"
 #include "host/device_fault_monitor.h"
+#include "host/device_health_state.h"
 #include "host/dfx_run_config.h"
 #include "host/execution_mode_latch.h"
 #include "host/host_phase_records.h"
@@ -587,16 +588,34 @@ public:
     DeviceRunTerminal device_run_terminal(uint32_t pipeline_slot, uint64_t run_epoch) const;
 
     /**
-     * Log every notification reported since this runner last looked, and
-     * return how many there were.
+     * Consume every notification reported since this runner last looked, and
+     * return how many named a stream **this runner's runs submit on**.
      *
-     * Reporting only, and deliberately not per-run: a notification names a
-     * device and a faulting stream, and on the measured silicon its task id is
-     * always 0, while a pipelined pair shares one stream pair. So this says
-     * "this device reported a fault" and never "this run failed" — a run's own
-     * verdict comes from the record its device side published.
+     * Reports; decides nothing. A notice names a device and a stream, carries no
+     * run identity, and arrives up to 16 s late — so on its own it cannot tell a
+     * fault that impaired a run from one that did not. Measured in both
+     * directions: a fault on an auxiliary stream and a fault on a genuine run
+     * stream each arrive while every run on the card succeeds. Acting on either
+     * refuses the next healthy run, so nothing here stops admission or starts
+     * recovery.
+     *
+     * What is missing is not a verdict on the run but which *resources* a fault
+     * touched, so the device-health policy this feeds is still to be designed —
+     * and it stays its own axis: a decided run result neither causes nor vetoes
+     * a health action.
+     *
+     * Attribution is per stream, not merely per device: the notice's `device_id`
+     * is logical (the same space this runner names its device in) and its
+     * `stream_id` is a driver id compared against the ids this device's runs
+     * were recorded on at launch. A notice matching none of them is unattributed
+     * while that history is complete, and *undecided* once an id is missing —
+     * evicted by capacity, or never obtained because the query failed. The
+     * ring is process-wide, and this runner speaks for its own streams.
      */
-    uint64_t report_new_device_fault_notices() noexcept;
+    uint64_t consume_device_fault_notices() noexcept;
+
+    /** Evidence this device's fault channel has produced in the live generation. */
+    const DeviceHealthState &device_health() const { return device_health_; }
 
     /**
      * Per-slot task-timing dispatch/finish (ns) on the same device-clock timeline
@@ -1328,11 +1347,19 @@ protected:
     void release_device_fault_monitor() noexcept;
 
     /**
-     * Re-register the callback after a confirmed device reset. Whether a
-     * registration survives a force reset is unmeasured, so this re-registers
-     * rather than assuming either answer; registering twice is harmless.
+     * Retire this runner's per-generation fault evidence after a **confirmed**
+     * device reset, and re-register the callback if this runner holds the monitor.
+     *
+     * Named for the retirement because that is the part this always does. A
+     * runner whose `acquire` failed still runs work and still accumulates a
+     * generation's stream ids, so the reset has to invalidate them whether or not
+     * a callback was ever installed — the monitor's own fence is the conditional
+     * half. Whether a registration survives a force reset is unmeasured, so it is
+     * remade rather than assumed either way; registering twice is harmless.
+     *
+     * Returns the monitor's re-install rc, or 0 when no monitor is held.
      */
-    int reinstall_device_fault_monitor_after_reset() noexcept;
+    int retire_device_generation_after_confirmed_reset() noexcept;
 
     /**
      * Read and reduce this slot's device-phase/task-timing records after stream
@@ -1798,6 +1825,17 @@ protected:
     bool fault_monitor_held_{false};
     long fault_monitor_pid_{-1};
     DeviceFaultNoticeCursor fault_notices_;
+    // What the fault channel has said about *this* device, per generation. The
+    // quarantine itself lives in each arch's `device_unusable_`, which
+    // `recover_device_or_mark_unusable` sets and `can_accept_run` already reads;
+    // this holds the evidence and the reset fence that lets a card come back.
+    DeviceHealthState device_health_;
+    // Driver ids of the streams this device's runs were launched on, captured at
+    // boundary-record time. The fault filter reads these rather than asking a
+    // handle: it runs at teardown, where a force reset may already have
+    // invalidated the handles, and a stream a run used may since have been
+    // replaced. Retired with the generation.
+    RunStreamIdentities run_stream_ids_;
 
     /**
      * The process monitor this runner holds a reference on, or `nullptr`.
