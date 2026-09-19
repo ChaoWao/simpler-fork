@@ -1369,6 +1369,28 @@ target_sources(test_a5_hbg_scheduler_drain PRIVATE
     ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/chip_swimlane_collector_aicpu.cpp
     ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/device_phase_aicpu.cpp
 )
+add_a2a3_hbg_runtime_test(test_hbg_stall_dump_level common/test_hbg_stall_dump_level.cpp)
+target_sources(test_hbg_stall_dump_level PRIVATE
+    common/test_hbg_stall_dump_level_a2a3_stubs.cpp
+    ${HBG_RUNTIME_DIR}/scheduler/scheduler_cold_path.cpp
+    ${HBG_RUNTIME_DIR}/scheduler/scheduler_completion.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/a2a3/platform/shared/aicpu/pmu_collector_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/a2a3/platform/sim/aicpu/inner_platform_regs.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/args_dump_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/chip_swimlane_collector_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/device_phase_aicpu.cpp
+)
+add_a5_hbg_runtime_test(test_a5_hbg_stall_dump_level common/test_hbg_stall_dump_level.cpp)
+target_sources(test_a5_hbg_stall_dump_level PRIVATE
+    common/test_hbg_scheduler_drain_a5_stubs.cpp
+    common/test_hbg_stall_dump_level_a5_stubs.cpp
+    ${A5_HBG_RUNTIME_DIR}/scheduler/scheduler_cold_path.cpp
+    ${A5_HBG_RUNTIME_DIR}/scheduler/scheduler_completion.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/a5/platform/shared/aicpu/pmu_collector_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/args_dump_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/chip_swimlane_collector_aicpu.cpp
+    ${CMAKE_SOURCE_DIR}/../../../src/common/platform/shared/aicpu/device_phase_aicpu.cpp
+)
 target_sources(test_hbg_ready_queue_seed PRIVATE
     ${CMAKE_SOURCE_DIR}/../../../src/common/host_build_graph/host/ready_queue_sizing.cpp
     ${HBG_ORCH_SHARED_SOURCES}
