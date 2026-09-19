@@ -682,6 +682,7 @@ add_common_utils_test(test_device_arena common/test_device_arena.cpp)
 add_common_utils_test(test_retained_temp_bump common/test_retained_temp_bump.cpp)
 add_common_utils_test(test_thread_completion_gate common/test_thread_completion_gate.cpp)
 add_common_utils_test(test_device_fault_monitor common/test_device_fault_monitor.cpp)
+add_common_utils_test(test_device_health_state common/test_device_health_state.cpp)
 
 # Two loadable stand-ins for a host runtime, built from one source under two
 # names so the test can hold two distinct RTLD_LOCAL images at once. Each

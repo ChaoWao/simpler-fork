@@ -93,7 +93,38 @@ The candidate that does not require a synchronize is
 `aclrtSetExceptionInfoCallback` — the driver invokes it when a device exception
 occurs, so the error arrives without anyone waiting. It is device-scoped rather
 than run-scoped and brings its own threading and lifetime contract, so it is a
-subsystem to design, not a call to drop in. It is unmeasured here.
+subsystem rather than a call to drop in.
+
+That subsystem now exists and is consumed — as evidence, not yet as a trigger.
+The process owns the driver's single callback slot
+(`host/device_fault_monitor.h`), and each runner records the notices naming
+streams its own runs submit on, against the device's live generation
+(`host/device_health_state.h`, including the fence that retires a generation at a
+confirmed reset so one recovered fault cannot quarantine a card for the life of
+the process).
+
+It stops there deliberately. A notice carries no run identity and arrives up to
+16 s late, and that was measured to matter in both directions: a fault on an
+auxiliary stream and a fault on a genuine run stream each arrive while every run
+on the card succeeds, so acting on either refuses the next healthy run.
+
+What is missing is not a verdict on the run — it is a way to tell which
+*resources* a fault touched, and the streams a run submitted on are the closest
+thing the channel offers. So the trigger a later change adds is about the device,
+and it stays on its own axis: **a decided run result neither causes nor vetoes a
+device-health action.** A run that failed for its own reasons can leave a healthy
+card, and a run that succeeded can sit on a card that faulted underneath it —
+both were measured here. Result, health and resource retirement stay three
+separate decisions with three separate inputs, which is what the design has said
+since node A and what this channel must not quietly merge.
+
+Two limits of the generation fence, stated because neither is fixable from inside
+this channel. It skips notices **already in the ring** at the reset, so a fault
+caused before the reset but *delivered* after it still reads as the new
+generation's — the notice carries no timestamp, so the two are indistinguishable.
+And the stream identities it retires are held with finite capacity, so a
+sufficiently long generation reports attribution as undecided rather than
+claiming a notice is not its own.
 
 ### What this leaves open
 
@@ -103,9 +134,11 @@ open on this point, and replacing the read is a prerequisite of admitting a
 second launched run rather than a task that change can absorb. Concretely, that
 change owes:
 
-- an error channel that reports a device exception without a stream
-  synchronize, so a predecessor's drain stops depending on a successor's
-  kernels; and
+- ~~an error channel that reports a device exception without a stream
+  synchronize~~ — **delivered** and recorded per device generation, though not yet
+  a trigger: on its own a notice cannot say which resources a fault touched, so
+  the device-health policy it feeds is still to be designed. That policy is a
+  separate axis from the run result, not a refinement of it;
 - a decision on how a *successor's* fault is attributed, since a stream carries
   its error stickily and the predecessor's drain would otherwise report it.
 

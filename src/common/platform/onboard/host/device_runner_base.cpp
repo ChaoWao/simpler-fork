@@ -1865,7 +1865,7 @@ int DeviceRunnerBase::finalize_common_impl(bool abandon_device_resources) {
     // Anything this device reported and nobody has read yet is reported now:
     // after this the runner stops looking, and a notification that arrived
     // during teardown is the one most worth having in the log.
-    (void)report_new_device_fault_notices();
+    (void)consume_device_fault_notices();
     release_device_fault_monitor();
     // Completion-boundary events are released ahead of the streams they were
     // recorded on: no run is left to wait on them here, and a destroyed stream
@@ -2502,6 +2502,27 @@ int DeviceRunnerBase::record_run_boundary(
     const PreparedExecution &prepared, RunCompletionFence::StreamRole role, rtStream_t stream
 ) {
     RunCompletionFence &fence = run_fence(prepared.pipeline_slot);
+    // The one point where this stream is certainly live and certainly carrying a
+    // run, so it is where its driver id is captured for the fault channel's
+    // filter. A number survives both the stream's replacement and the device
+    // reset that would invalidate the handle; asking the handle later does not.
+    {
+        int32_t stream_id = -1;
+        if (aclrtStreamGetId(static_cast<aclrtStream>(stream), &stream_id) == ACL_SUCCESS) {
+            run_stream_ids_.note(stream_id);
+        } else {
+            // A stream this run submits on whose id is unknown. Skipping it
+            // silently would leave the history claiming to be whole while
+            // missing exactly the entry a later notice on this stream would
+            // carry, and that notice would then read as another runner's.
+            LOG_WARN(
+                "aclrtStreamGetId failed for the %s stream of slot %u; the fault channel's stream history is "
+                "incomplete from here, so an unmatched notice reads as undecided rather than as another runner's",
+                stream_role_name(role), prepared.pipeline_slot
+            );
+            run_stream_ids_.note_unidentified_stream();
+        }
+    }
     // The submission is a fact the instant the device queue accepted it, and it
     // has to be recorded before anything that can still fail — otherwise a
     // failing record below would leave the run looking unsubmitted.
@@ -2641,33 +2662,72 @@ void DeviceRunnerBase::release_device_fault_monitor() noexcept {
     monitor->release();
 }
 
-int DeviceRunnerBase::reinstall_device_fault_monitor_after_reset() noexcept {
-    DeviceFaultMonitor *monitor = fault_monitor_if_held();
-    if (monitor == nullptr) return 0;
-    const int rc = monitor->reinstall_after_device_reset();
-    if (rc != 0) {
-        LOG_WARN("device fault monitor: re-install after device reset failed: %d", rc);
+int DeviceRunnerBase::retire_device_generation_after_confirmed_reset() noexcept {
+    // `fault_monitor_if_held()` answering null is not a reason to skip the local
+    // retirement — see `retire_after_confirmed_device_reset`, which keeps that
+    // half unconditional.
+    const DeviceGenerationRetirement retirement =
+        retire_after_confirmed_device_reset(device_health_, run_stream_ids_, fault_monitor_if_held(), fault_notices_);
+    if (retirement.monitor_reinstalled && retirement.monitor_reinstall_rc != 0) {
+        LOG_WARN("device fault monitor: re-install after device reset failed: %d", retirement.monitor_reinstall_rc);
     }
-    return rc;
+    if (retirement.cleared_suspicion) {
+        LOG_WARN(
+            "device %d: confirmed reset retired the suspect generation; fault notices reported before it are no "
+            "longer this device's (generation is now %llu)",
+            device_id_, static_cast<unsigned long long>(device_health_.generation())
+        );
+    }
+    return retirement.monitor_reinstall_rc;
 }
 
-uint64_t DeviceRunnerBase::report_new_device_fault_notices() noexcept {
+uint64_t DeviceRunnerBase::consume_device_fault_notices() noexcept {
     DeviceFaultMonitor *monitor = fault_monitor_if_held();
     if (monitor == nullptr) return 0;
+    const uint32_t own_device = static_cast<uint32_t>(device_id_);
+
+    uint64_t own = 0;
     const DeviceFaultNoticeCursor::Progress progress =
-        fault_notices_.consume(*monitor, [](const DeviceFaultNotice &notice) {
-            // A device-level fact: the notification carries no run, slot or
-            // generation, so this says which device and which stream faulted
-            // and stops there.
+        fault_notices_.consume(*monitor, [&](const DeviceFaultNotice &notice) {
+            // The notice's device id is logical, the same space this runner names
+            // its own device in — measured with card 5 bound as logical 0 through
+            // ASCEND_RT_VISIBLE_DEVICES, which reported device_id=0. So this
+            // compares directly and must not translate through
+            // acl_to_hal_device_id.
+            //
+            // Its stream id is matched against the ids this device's runs were
+            // recorded on at launch, not against the handles live right now: this
+            // runs at teardown, where a force reset may already have invalidated
+            // those handles, and where a stream a run used may since have been
+            // replaced.
+            const bool my_device = notice.device_id == own_device;
+            const RunStreamIdentities::Attribution attribution =
+                my_device ? run_stream_ids_.attribute(notice.stream_id) : RunStreamIdentities::Attribution::NotMine;
+            const char *scope = !my_device ? "; names another device in this process" :
+                                attribution == RunStreamIdentities::Attribution::Mine ?
+                                             "" :
+                                attribution == RunStreamIdentities::Attribution::Undecided ?
+                                             "; names a stream this runner cannot place — its identity history "
+                                             "is incomplete, so attribution is undecided" :
+                                             "; names a stream no run of this runner submitted on";
             LOG_ERROR(
                 "device fault reported: device_id=%u stream_id=%u task_id=%u error_code=%u thread_id=%u "
-                "(device-level; not attributed to any run)",
-                notice.device_id, notice.stream_id, notice.task_id, notice.error_code, notice.thread_id
+                "(device-level; not attributed to any run%s)",
+                notice.device_id, notice.stream_id, notice.task_id, notice.error_code, notice.thread_id, scope
             );
+            if (attribution != RunStreamIdentities::Attribution::Mine) {
+                device_health_.note_unattributed_fault();
+                return;
+            }
+            ++own;
+            device_health_.note_own_device_fault(notice.error_code);
         });
-    // Both counts below are process-wide and deliberately not attributed to
-    // this runner's device: several devices can report into one process, and
-    // the ring reserves no share per device.
+    // Counted process-wide: several devices can report into one ring, and it
+    // reserves no share per device. An undelivered notice may have named a run
+    // stream of this runner's and the channel cannot say, so it counts as
+    // unattributable rather than as this device's — the same treatment a notice
+    // naming another stream gets, for the same reason: acting on it refuses
+    // healthy work on evidence that names nothing.
     if (progress.lost != 0) {
         LOG_ERROR(
             "device fault notices lost before the host read them: %llu overwritten in this process (ring holds %llu)",
@@ -2681,7 +2741,31 @@ uint64_t DeviceRunnerBase::report_new_device_fault_notices() noexcept {
             static_cast<unsigned long long>(progress.newly_dropped)
         );
     }
-    return progress.delivered;
+    device_health_.note_undelivered_notices(progress.lost, progress.newly_dropped);
+    if (own == 0) return own;
+
+    // Recorded, and nothing is started from it. A notice carries no run identity
+    // and arrives up to 16 s late, so on its own it cannot tell a fault that
+    // impaired a run from one that did not — measured in both directions: a fault
+    // on an auxiliary stream (a2a3, `stream_id=45/46`) and a fault on a genuine
+    // run stream (a5, `stream_id=61`) each arrive while every run on the card
+    // succeeds, and quarantining on either refuses the next healthy run.
+    //
+    // The missing half is not a verdict on the run: it is which *resources* a
+    // fault touched, and a notice's stream is the closest the channel comes to
+    // saying. So the device-health policy this feeds is still to be designed,
+    // and it stays its own axis — a decided run result neither causes nor vetoes
+    // a health action. A run can fail for its own reasons on a healthy card, and
+    // a run can succeed on a card that faulted underneath it; both were measured
+    // here. Result, health and resource retirement are three decisions with
+    // three inputs.
+    LOG_ERROR(
+        "device %d: fault channel reported %llu notice(s) on its run streams (first code=%u, generation=%llu). "
+        "Recorded only: a notice carries no run identity, so nothing is decided or recovered from it here.",
+        device_id_, static_cast<unsigned long long>(own), device_health_.first_error_code(),
+        static_cast<unsigned long long>(device_health_.generation())
+    );
+    return own;
 }
 
 void DeviceRunnerBase::read_device_wall_ns(uint32_t pipeline_slot) {

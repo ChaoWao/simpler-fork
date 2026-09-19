@@ -1368,10 +1368,21 @@ int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
             if (launched) {
                 state->runner->read_device_run_result(state->descriptor.pipeline_slot, state->descriptor.run_epoch);
                 report_terminal_disagreement(state, execution_rc);
-                // Separate axis, reported separately: a notification names a
-                // device and a faulting stream and carries no run identity, so
-                // it is never folded into this run's outcome.
-                (void)state->runner->report_new_device_fault_notices();
+                // Separate axis, and it decides nothing: a notification names a
+                // device and a stream, carries no run identity, and arrives up to
+                // 16 s late — so it can name a fault from an earlier run than
+                // this one, and cannot say whether any run was impaired. Recorded
+                // here so the channel's evidence accumulates against the device's
+                // live generation; the run's outcome is settled above and stays
+                // settled.
+                const uint64_t own_stream_faults = state->runner->consume_device_fault_notices();
+                if (own_stream_faults != 0) {
+                    LOG_WARN(
+                        "device fault channel reported %llu notice(s) on this runner's run streams while finalizing "
+                        "%s; recorded against the device, and this run's own outcome is unchanged",
+                        static_cast<unsigned long long>(own_stream_faults), state->trace_attrs
+                    );
+                }
             }
             {
                 STRACE("chip.run.validate");
