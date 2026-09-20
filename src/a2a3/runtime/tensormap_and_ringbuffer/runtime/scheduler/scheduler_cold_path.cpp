@@ -1014,6 +1014,7 @@ void SchedulerContext::assign_own_clusters(int32_t tidx) {
                 for (int k = 0; k < DMA_WORKSPACE_KIND_COUNT; ++k) {
                     dp.global_context.dma_workspace[k] = get_dma_workspace_addr(k);
                 }
+                dp.global_context.l2_cache_offset = get_dev_l2_cache_offset();
                 dp.args[PAYLOAD_LOCAL_CONTEXT_INDEX] = reinterpret_cast<uint64_t>(&dp.local_context);
                 dp.args[PAYLOAD_GLOBAL_CONTEXT_INDEX] = reinterpret_cast<uint64_t>(&dp.global_context);
             }
@@ -1342,6 +1343,7 @@ int32_t SchedulerContext::post_handshake_init(Runtime *runtime) {
             for (int k = 0; k < DMA_WORKSPACE_KIND_COUNT; ++k) {
                 dp.global_context.dma_workspace[k] = get_dma_workspace_addr(k);
             }
+            dp.global_context.l2_cache_offset = get_dev_l2_cache_offset();
             dp.args[PAYLOAD_LOCAL_CONTEXT_INDEX] = reinterpret_cast<uint64_t>(&dp.local_context);
             dp.args[PAYLOAD_GLOBAL_CONTEXT_INDEX] = reinterpret_cast<uint64_t>(&dp.global_context);
         }
