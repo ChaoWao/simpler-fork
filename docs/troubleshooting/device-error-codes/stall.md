@@ -70,12 +70,17 @@ exist) before reading. See the "Device logs" section of
 
 ## Code 8, specifically
 
-Only `tensormap_and_ringbuffer` raises this code. Its tensor-data wait defaults to
-15 s (`TENSOR_DATA_TIMEOUT_MS`, frequency-scaled). It means either the producer
-never completed, or a consumer never
-released its fanout reference. Check for a hung producer first (that is S1 above),
-then verify the consumer really declares the dependency and exits. If the kernel is
-merely slow, raising the timeout will prove it.
+Only `tensormap_and_ringbuffer` raises this code. Its frequency-scaled
+tensor-data wait defaults to 15 s onboard and 30 s in simulation, selected from
+`PLATFORM_ONBOARD_TENSOR_DATA_WAIT_TIMEOUT_MS` or
+`PLATFORM_SIM_TENSOR_DATA_WAIT_TIMEOUT_MS`. It means either the producer never
+completed, or a consumer never released its fanout reference. Check for a hung
+producer first (that is S1 above), then verify the consumer really declares the
+dependency and exits. If the kernel is merely slow, raising the corresponding
+platform default will prove it. Both defaults are compile-time constants — no
+environment variable or `runtime_env` knob reads them. To raise one, edit
+`src/{arch}/platform/include/common/platform_config.h` and rebuild the runtimes
+(`pip install --no-build-isolation -e .`).
 
 `host_build_graph` has no such wait: its orchestration finishes before the device
 starts, so `get_tensor_data` / `set_tensor_data` reject a tensor with a producer

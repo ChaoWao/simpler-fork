@@ -110,6 +110,31 @@ target_include_directories(a2a3_rt_objs PUBLIC
     ${CMAKE_SOURCE_DIR}/../../../src/common
 )
 
+# ---------------------------------------------------------------------------
+# Platform-variant selector checks (compile-time only, no test executable)
+#
+# spin_hint.h is the single point binding PLATFORM_TENSOR_DATA_WAIT_TIMEOUT_MS
+# to one platform_config.h default per variant. Each object below compiles the
+# same static_assert against one {arch, variant} include path, so an alias
+# pointing at the wrong variant's default fails the UT build.
+# ---------------------------------------------------------------------------
+foreach(arch a2a3 a5)
+    foreach(variant onboard sim)
+        string(TOUPPER ${variant} variant_uc)
+        add_library(${arch}_${variant}_spin_selector_check OBJECT
+            ${CMAKE_SOURCE_DIR}/common/spin_hint_selector_check.cpp
+        )
+        target_compile_definitions(${arch}_${variant}_spin_selector_check PRIVATE
+            EXPECTED_TENSOR_DATA_WAIT_TIMEOUT_MS=PLATFORM_${variant_uc}_TENSOR_DATA_WAIT_TIMEOUT_MS
+        )
+        target_include_directories(${arch}_${variant}_spin_selector_check PRIVATE
+            ${CMAKE_SOURCE_DIR}/../../../src/${arch}/platform/include
+            ${CMAKE_SOURCE_DIR}/../../../src/common/platform/${variant}/aicpu
+            ${CMAKE_SOURCE_DIR}/../../../src/common/platform/include
+        )
+    endforeach()
+endforeach()
+
 function(add_a2a3_runtime_test name src)
     add_executable(${name} ${src} ${ARGN})
     target_include_directories(${name} PRIVATE ${GTEST_INCLUDE_DIRS})
