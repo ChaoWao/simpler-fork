@@ -14,13 +14,16 @@
 // The route is chosen at publication, after prepare captured the values, so the
 // questions here are about that seam: that the published bytes are the captured
 // ones and not whatever the source holds by then, that either route sends
-// exactly one copy, that a failed copy publishes nothing and keeps its own
-// error, and that a runtime with no launch route is unaffected. The same source
-// compiles against both runtimes; `LaunchRouteSupported` is what tells them
-// apart, so neither needs a separate file.
+// exactly one copy of a range the block is not already known to hold, that a
+// failed copy publishes nothing and keeps its own error, and that a runtime with
+// no launch route is unaffected. The same source compiles against both runtimes;
+// `LaunchRouteSupported` is what tells them apart, so neither needs a separate
+// file.
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 
@@ -134,7 +137,9 @@ TEST_F(LaunchEntryArgs, PreparedIsReachableAndPublishingIsWhatCompletesIt) {
 }
 
 // Both routes send exactly one descriptor copy, and the launch route's is the
-// shorter one — it stops where the entry storage starts.
+// shorter one — it stops where the entry storage starts. Every publication here
+// is one no record covers: a first publication onto the block, a fallback, and
+// the first launch-route publication.
 TEST_F(LaunchEntryArgs, EitherRouteSendsExactlyOneCopy) {
     // Take the first publication out of the way: it carries the whole
     // initialized prefix whichever route is permitted.
@@ -151,7 +156,7 @@ TEST_F(LaunchEntryArgs, EitherRouteSendsExactlyOneCopy) {
 
     rts = {};
     ASSERT_EQ(run_once(true), 0);
-    EXPECT_EQ(rts.copies, 1) << "the launch route replaces bytes in the copy, not the copy";
+    EXPECT_EQ(rts.copies, 1) << "the first launch-route publication onto a block has no record to match";
     if (launch_route_supported(runtime)) {
         EXPECT_EQ(rts.last_copy_bytes, runtime_launch_entry_args_plan(runtime).descriptor_bytes_when_launched);
         EXPECT_LT(rts.last_copy_bytes, descriptor_route_bytes);
@@ -656,7 +661,8 @@ TEST_F(LaunchEntryArgs, AChangedWarmPrefixIsRepublished) {
     ASSERT_EQ(rts.copies, 0) << "baseline: this run would have been skipped";
     helper.release_run_view();
 
-    // A different tensor count changes entry_tensor_count_ at offset 124.
+    // A different tensor count changes `entry_tensor_count_`, which sits ahead
+    // of the entry storage and so inside the shorter prefix.
     runtime.set_orch_args(entry_args(4, 2, 0x1234));
     rts = {};
     ASSERT_EQ(run_once(true), 0);
@@ -705,26 +711,42 @@ TEST_F(LaunchEntryArgs, APartialCopyFailureIsNotSkippedWhenTheOldBytesReturn) {
     ASSERT_EQ(run_once(true), 0);  // records the prefix
     const uint32_t recorded = slot.published_prefix_bytes;
     ASSERT_GT(recorded, 0U);
+    // The block's contents as the record now describes them.
+    std::array<unsigned char, LAUNCH_ROUTE_PREFIX_CACHE_BYTES> recorded_contents{};
+    ASSERT_LE(recorded, recorded_contents.size());
+    std::memcpy(recorded_contents.data(), slot.runtime_args, recorded);
     helper.release_run_view();
 
-    // A reshaped run whose copy modifies the first bytes and then fails.
+    // A reshaped run whose copy reaches through the one word that moved and then
+    // fails: the count is on the device, the storage the shorter prefix ends at
+    // is not, and the block holds a mixture no record describes. Reaching that
+    // word is what makes this a partial write rather than a no-op — a failure
+    // stopping short of it would leave the recorded bytes intact.
+    constexpr uint64_t partial_bytes =
+        offsetof(DeviceRuntimeLaunchDesc, entry_tensor_count_) + sizeof(DeviceRuntimeLaunchDesc::entry_tensor_count_);
     runtime.set_orch_args(entry_args(4, 2, 0x5555));
     rts = {};
     rts.copy_rc = -91;
-    rts.partial_bytes_before_failure = 64;
+    rts.partial_bytes_before_failure = partial_bytes;
     ASSERT_EQ(prepare(), 0);
+    ASSERT_LT(partial_bytes, runtime_launch_entry_args_plan(runtime).descriptor_bytes_when_launched)
+        << "a write that covers the whole prefix is not the case under test";
     EXPECT_EQ(publish(true), -91) << "the copy's own error";
     EXPECT_FALSE(helper.runtime_args_published());
     EXPECT_EQ(helper.launch_payload(), nullptr) << "no payload a caller could launch with";
     EXPECT_EQ(slot.published_prefix_bytes, 0U) << "invalidated before the copy, not after it failed";
+    EXPECT_NE(std::memcmp(slot.runtime_args, recorded_contents.data(), recorded), 0)
+        << "the failed copy left the block holding bytes the record no longer describes";
 
-    // Back to the shape that was recorded before the failure. Its bytes equal
-    // what the record held, and the device no longer does.
+    // Back to the shape that was recorded before the failure: its bytes equal
+    // what the record held, and the block's do not.
     runtime.set_orch_args(entry_args(3, 2, 0x5555));
     rts = {};
     ASSERT_EQ(run_once(true), 0);
     EXPECT_EQ(rts.copies, 1) << "a partially written block must be rewritten";
     EXPECT_EQ(slot.published_prefix_bytes, recorded);
+    EXPECT_EQ(std::memcmp(slot.runtime_args, recorded_contents.data(), recorded), 0)
+        << "and the copy is what puts those bytes back";
 }
 
 // The descriptor fallback writes the same range without recording it, so a

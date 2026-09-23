@@ -283,9 +283,8 @@ int KernelArgsHelper::publish_runtime_args(bool launch_route_permitted) {
             // this call and gone once it returns.
             if (prefix_cacheable && slot_->published_prefix_bytes == bytes &&
                 std::memcmp(source, slot_->published_prefix.data(), bytes) == 0) {
-                // The block holds these bytes already. Skipping the copy is the
-                // whole change: the run is as published as a copy would have
-                // made it.
+                // The block holds these bytes already, and a skipped copy
+                // leaves the run as published as a copy would have.
                 return 0;
             }
             // Invalidated before the copy, not after a failure: a copy that
@@ -311,10 +310,13 @@ int KernelArgsHelper::publish_runtime_args(bool launch_route_permitted) {
     if (rc != 0) {
         LOG_ERROR("runtime metadata publication failed: %d", rc);
         args.runtime_args = nullptr;
-        // The block keeps whatever its handshake region held, so the next
-        // prepare on it must send the initializing prefix again. The package is
-        // withdrawn with it: a run whose descriptor never landed submits no
-        // kernel, so nothing may read a payload naming that descriptor.
+        // A failed first publication leaves `workers_initialized` false, so the
+        // next prepare on this block sends the initializing prefix again. A
+        // failed warm one leaves it set and sends the ordinary length; what
+        // covers that block is the invalidated prefix record, not the length.
+        // The package is withdrawn either way: a run whose descriptor never
+        // landed submits no kernel, so nothing may read a payload naming that
+        // descriptor.
         initializing_slot_ = nullptr;
         launch_payload_ = nullptr;
         launch_payload_bytes_ = 0;
