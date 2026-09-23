@@ -136,6 +136,7 @@ __attribute__((visibility("default"))) void build_paged_attention_graph(const Ch
     simpler::hbg::Tensor context_lens = simpler::hbg::make_tensor_external(
         orch_args.tensor(4).ref().data_as<void>(), cl_shapes, 1, DataType::INT32, false
     );
+    context_lens.address_space = orch_args.tensor(4).ref().address_space;
 
 #ifdef ENABLE_PROFILING
     CYCLE_COUNT_LAP(prof_ext_tensor);

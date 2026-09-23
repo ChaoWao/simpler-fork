@@ -301,11 +301,17 @@ def scene_level(level: int | SceneTestLevel):
 
 
 class TensorArg(NamedTuple):
-    """Named CPU tensor, optionally kept as child memory for the whole L2 case."""
+    """Named tensor source with one HOST / HOST_TO_DEVICE / DEVICE contract."""
 
     name: str
     value: Any  # torch.Tensor
-    child_memory: bool = False
+    memory_kind: Any = None  # None selects the ordinary HOST_TO_DEVICE program path.
+
+    @property
+    def child_memory(self) -> bool:
+        from simpler.buffer import AddressSpace  # noqa: PLC0415
+
+        return self.memory_kind == AddressSpace.DEVICE
 
 
 class Scalar(NamedTuple):
@@ -348,9 +354,9 @@ class TaskArgsBuilder:
             elif isinstance(spec, Scalar):
                 self._add_scalar(spec)
 
-    def add_tensor(self, name: str, value: Any, *, child_memory=False) -> None:
+    def add_tensor(self, name: str, value: Any, *, memory_kind=None) -> None:
         """Add a tensor. Must be called before any add_scalar."""
-        self._add_tensor(TensorArg(name, value, child_memory))
+        self._add_tensor(TensorArg(name, value, memory_kind))
 
     def add_scalar(self, name: str, value: Any) -> None:
         """Add a scalar. After this, add_tensor is not allowed."""
@@ -767,7 +773,7 @@ def _build_l2_ref_args(test_args: TaskArgsBuilder, orch_signature: list, worker,
             if child_args is not None and spec.name in child_args.tensors:
                 tensor_arg = child_args.tensors[spec.name]
             else:
-                tensor_arg = make_tensor_arg(worker, spec.value)
+                tensor_arg = make_tensor_arg(worker, spec.value, memory_kind=spec.memory_kind)
             args.add_tensor(tensor_arg, dir2tag.get(direction, TensorArgType.INPUT))
             if direction in (ArgDirection.OUT, ArgDirection.INOUT):
                 output_names.append(spec.name)
@@ -811,7 +817,7 @@ def _build_chip_task_args(test_args: TaskArgsBuilder, orch_signature: list):
                     f"Update CALLABLE['orchestration']['signature'] to match generate_args()."
                 )
             direction = orch_signature[tensor_idx]
-            chip_args.add_tensor(make_chip_tensor_arg(spec.value))
+            chip_args.add_tensor(make_chip_tensor_arg(spec.value, memory_kind=spec.memory_kind))
             if direction in (ArgDirection.OUT, ArgDirection.INOUT):
                 output_names.append(spec.name)
             tensor_idx += 1

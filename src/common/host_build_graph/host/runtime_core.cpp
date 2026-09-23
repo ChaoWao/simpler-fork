@@ -163,12 +163,11 @@ get_tensor_data(RuntimeContext *rt, const simpler::hbg::Tensor &tensor, uint32_t
     uint64_t elem_size = get_element_size(tensor.dtype);
     uint64_t elem_addr = tensor.buffer.addr + flat_offset * elem_size;
     uint64_t result = 0;
-    if (!host_tensor_read(rt->tensor_access, elem_addr, &result, elem_size)) {
+    if (tensor.address_space != AddressSpace::HOST ||
+        !host_tensor_read(rt->tensor_access, elem_addr, &result, elem_size)) {
         rt->orchestrator->report_fatal(
             SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__,
-            "no host view for device address %#llx (%llu bytes): during host orchestration only host-memory "
-            "tensors the runtime copied in and child-memory tensors the caller passed in are readable, not "
-            "runtime-created buffers",
+            "host read requires an explicitly HOST tensor with readable storage: %#llx (%llu bytes)",
             (unsigned long long)elem_addr, (unsigned long long)elem_size
         );
         return 0;
@@ -194,12 +193,11 @@ void set_tensor_data(
     uint64_t flat_offset = tensor.compute_flat_offset(indices, ndims);
     uint64_t elem_size = get_element_size(tensor.dtype);
     uint64_t elem_addr = tensor.buffer.addr + flat_offset * elem_size;
-    if (!host_tensor_write(rt->tensor_access, elem_addr, &value, elem_size)) {
+    if (tensor.address_space != AddressSpace::HOST ||
+        !host_tensor_write(rt->tensor_access, elem_addr, &value, elem_size)) {
         rt->orchestrator->report_fatal(
             SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__,
-            "no writable host view for device address %#llx (%llu bytes): during host orchestration only "
-            "host-memory tensors the runtime copied in and child-memory tensors the caller passed in are "
-            "writable, not runtime-created buffers",
+            "host write requires an explicitly HOST tensor with writable storage: %#llx (%llu bytes)",
             (unsigned long long)elem_addr, (unsigned long long)elem_size
         );
     }

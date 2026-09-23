@@ -27,6 +27,7 @@ from pathlib import Path
 
 import pytest
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 from simpler.task_interface import DataType, TaskArgs, TensorArgType
 from simpler.worker import (
@@ -159,7 +160,7 @@ class TestWorkerAsyncWholeRunFifo(SceneTestCase):
                 "orchestration": {
                     "source": _PIPELINED_VECTOR_ORCH,
                     "function_name": "aicpu_orchestration_entry",
-                    "signature": [D.IN, D.IN, D.OUT],
+                    "signature": [D.IN, D.IN, D.OUT, D.IN],
                 },
                 "incores": [
                     {
@@ -190,8 +191,8 @@ class TestWorkerAsyncWholeRunFifo(SceneTestCase):
     ]
 
     @staticmethod
-    def _tensor_from_host_buffer(worker, value):
-        buffer = worker.create_buffer(_SIZE * torch.float32.itemsize)
+    def _tensor_from_host_buffer(worker, value, *, memory_kind=AddressSpace.HOST_TO_DEVICE):
+        buffer = worker.create_buffer(_SIZE * torch.float32.itemsize, memory_kind=memory_kind)
         tensor = torch.frombuffer(buffer.shm.buf, dtype=torch.float32, count=_SIZE)
         tensor.fill_(value)
         return buffer, tensor
@@ -265,6 +266,10 @@ class TestWorkerAsyncWholeRunFifo(SceneTestCase):
                 buffers.append(buffer)
                 tensors.append(tensor)
 
+            host_control, _ = self._tensor_from_host_buffer(
+                st_worker, tensors[1][0].item(), memory_kind=AddressSpace.HOST
+            )
+            buffers.append(host_control)
             vector_handle = type(self)._st_chip_handles["vector"]
             vector_signature = type(self)._st_chip_handles["vector_sig"]
             sub_handle = type(self)._st_sub_handles["wait_for_release"]
@@ -416,6 +421,13 @@ class TestWorkerAsyncWholeRunFifo(SceneTestCase):
             if shared_control:
                 second_bufs[1] = first_bufs[1]
                 second_b = first_b
+            first_host, _ = self._tensor_from_host_buffer(st_worker, first_b[0].item(), memory_kind=AddressSpace.HOST)
+            second_host, _ = self._tensor_from_host_buffer(st_worker, second_b[0].item(), memory_kind=AddressSpace.HOST)
+            buffers.extend([first_host, second_host])
+            first_bufs = [*first_bufs, first_host]
+            second_bufs = [*second_bufs, second_host]
+            if shared_control:
+                second_bufs[3] = first_host
             vector_handle = type(self)._st_chip_handles["vector"]
             vector_signature = type(self)._st_chip_handles["vector_sig"]
             sub_handle = type(self)._st_sub_handles["wait_for_release"]
@@ -532,6 +544,11 @@ class TestWorkerAsyncWholeRunFifoTmr(TestWorkerAsyncWholeRunFifo):
                 tensors.append(tensor)
             first_a, first_b, first_out, second_a, second_b, second_out = tensors
             first_bufs, second_bufs = buffers[:3], buffers[3:]
+            first_host, _ = self._tensor_from_host_buffer(st_worker, first_b[0].item(), memory_kind=AddressSpace.HOST)
+            second_host, _ = self._tensor_from_host_buffer(st_worker, second_b[0].item(), memory_kind=AddressSpace.HOST)
+            buffers.extend([first_host, second_host])
+            first_bufs = [*first_bufs, first_host]
+            second_bufs = [*second_bufs, second_host]
             vector_handle = type(self)._st_chip_handles["vector"]
             vector_signature = type(self)._st_chip_handles["vector_sig"]
             sub_handle = type(self)._st_sub_handles["wait_for_release"]

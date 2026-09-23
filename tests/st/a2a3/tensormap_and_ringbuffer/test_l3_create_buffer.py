@@ -65,7 +65,7 @@ class TestL3CreateBuffer(SceneTestCase):
 
         # Owner-side handle contract.
         assert h0.backend_kind == BackendKind.POSIX_SHM
-        assert h0.address_space == AddressSpace.HOST
+        assert h0.address_space == AddressSpace.HOST_TO_DEVICE
         assert len(h0.identity.owner_instance_id) == OWNER_INSTANCE_ID_BYTES
         assert h0.identity.owner_instance_id == h1.identity.owner_instance_id  # same incarnation
         assert h0.identity.buffer_id != h1.identity.buffer_id  # monotonic

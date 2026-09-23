@@ -14,6 +14,7 @@ Templated kernels support variable tile sizes via runtime dispatch.
 """
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import Scalar, SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -119,9 +120,8 @@ class TestPagedAttentionHostBuildGraph(SceneTestCase):
             },
         },
         {
-            # Same workload as small1 with every tensor in child memory,
-            # including the context_lens and block_table this orchestration
-            # reads on the host to shape the graph.
+            # Device operands persist on device; host orchestration controls
+            # remain explicitly HOST and have no device allocation.
             "name": "small1_child_memory",
             "platforms": ["a2a3sim", "a2a3"],
             "params": {
@@ -159,7 +159,15 @@ class TestPagedAttentionHostBuildGraph(SceneTestCase):
         specs = []
         for name, val in inputs:
             if isinstance(val, torch.Tensor):
-                specs.append(TensorArg(name, val, child_memory=child_memory))
+                specs.append(
+                    TensorArg(
+                        name,
+                        val,
+                        memory_kind=AddressSpace.HOST
+                        if name in ("context_lens", "block_table")
+                        else (AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE),
+                    )
+                )
             else:
                 specs.append(Scalar(name, val))
         return TaskArgsBuilder(*specs)

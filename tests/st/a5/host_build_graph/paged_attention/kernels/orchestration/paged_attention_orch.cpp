@@ -126,10 +126,12 @@ __attribute__((visibility("default"))) void build_paged_attention_graph(const Ch
     simpler::hbg::Tensor block_table = simpler::hbg::make_tensor_external(
         orch_args.tensor(3).ref().data_as<void>(), bt_shapes, 2, DataType::INT32, false
     );
+    block_table.address_space = orch_args.tensor(3).ref().address_space;
     uint32_t cl_shapes[1] = {static_cast<uint32_t>(batch)};
     simpler::hbg::Tensor context_lens = simpler::hbg::make_tensor_external(
         orch_args.tensor(4).ref().data_as<void>(), cl_shapes, 1, DataType::INT32, false
     );
+    context_lens.address_space = orch_args.tensor(4).ref().address_space;
 
     // Create infos are loop-invariant — shapes depend only on q_tile/head_dim/block_size
     uint32_t tile2d_shapes[2] = {static_cast<uint32_t>(q_tile), static_cast<uint32_t>(head_dim)};

@@ -29,6 +29,7 @@ from simpler.buffer import (
     LocalEndpointBufferIdentityAllocator,
     mint_owner_instance_id,
 )
+from simpler.task_interface import DataType
 from simpler.worker import Worker, _Lifecycle, _NoBufferConsumerError, _SharedExclusiveLock
 
 
@@ -79,7 +80,7 @@ def test_any_forked_child_admits_a_buffer(kwargs):
         buffer = w._create_buffer_locked(64)
         assert buffer.nbytes == 64
         assert buffer.backend_kind == BackendKind.POSIX_SHM
-        assert buffer.address_space == AddressSpace.HOST
+        assert buffer.address_space == AddressSpace.HOST_TO_DEVICE
     finally:
         _drain(w)
 
@@ -343,3 +344,15 @@ def test_alloc_child_tensor_malloc_failure_consumes_the_burned_id():
     assert len(worker._child_alloc) == 0
     nxt = worker._burn_buffer_identity()
     assert int(nxt.buffer_id) == 2
+
+
+@pytest.mark.parametrize("space", [AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE])
+def test_explicit_host_storage_contract_survives_descriptor_and_view(space):
+    w = _bare_worker(2)
+    try:
+        buffer = w._create_buffer_locked(16, memory_kind=space)
+        assert buffer.address_space == space
+        assert buffer.to_descriptor().address_space == space
+        assert buffer.tensor((2,), DataType.INT32, byte_offset=4).buffer.address_space == space
+    finally:
+        _drain(w)

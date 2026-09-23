@@ -1779,8 +1779,9 @@ resolve_dispatch_predicate(OrchestratorState *orch, const CoreTaskPredicate &pre
     }
 
     const simpler::hbg::Tensor *operand = predicate.operand.tensor;
-    if (operand == nullptr || operand->buffer.addr == 0 || predicate.operand.ndims == 0 ||
-        predicate.operand.ndims > operand->ndims || predicate.operand.ndims > MAX_TENSOR_DIMS) {
+    if (operand == nullptr || operand->address_space != AddressSpace::DEVICE || operand->buffer.addr == 0 ||
+        predicate.operand.ndims == 0 || predicate.operand.ndims > operand->ndims ||
+        predicate.operand.ndims > MAX_TENSOR_DIMS) {
         orch->report_fatal(
             SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__, "dispatch predicate has an invalid operand tensor"
         );
@@ -1821,6 +1822,20 @@ resolve_dispatch_predicate(OrchestratorState *orch, const CoreTaskPredicate &pre
     resolved->target = predicate.target;
     resolved->elem_size = static_cast<uint8_t>(element_size);
     resolved->op = predicate.op;
+    return true;
+}
+
+template <typename Args>
+static bool require_device_operands(OrchestratorState *orch, const Args &args) {
+    for (int32_t i = 0; i < args.tensor_count(); ++i) {
+        if (args.tag(i) != TensorArgType::OUTPUT && args.tensor(i).ref().address_space != AddressSpace::DEVICE) {
+            orch->report_fatal(
+                SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__,
+                "device task operand %d requires DEVICE storage; pass a separate HOST_TO_DEVICE or DEVICE argument", i
+            );
+            return false;
+        }
+    }
     return true;
 }
 
@@ -2168,6 +2183,7 @@ bool graph_submit_outer(
     OrchestratorState *orch, GraphHostState *state, uint64_t full_key, int32_t owned_heap, bool defer_heap,
     const GraphTaskArgs &args, TaskId *submitted_id
 ) {
+    if (!require_device_operands(orch, args)) return false;
     always_assert(orch->scope_stack_top >= 0 && "Cannot submit Graph outside a scope");
     auto &allocator = orch->task_allocator;
     if (allocator.active_count() >= allocator.capacity() ||
@@ -3077,6 +3093,7 @@ TaskOutputTensors OrchestratorState::submit_task(const MixedKernels &mixed_kerne
         orch_mark_fatal(orch, SIMPLER_ERROR_INVALID_ARGS);
         return TaskOutputTensors{};
     }
+    if (!require_device_operands(orch, args)) return TaskOutputTensors{};
     // === Validate submit inputs ===
     ActiveMask active_mask = mixed_kernels.to_active_mask();
     if (!static_cast<bool>(active_mask)) {

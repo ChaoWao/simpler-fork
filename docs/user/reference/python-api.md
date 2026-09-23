@@ -97,6 +97,26 @@ callable is a **Python orchestration function** `f(orch, args, cfg)`, where
 | `allocate_domain(*, name, workers, window_size, buffers=())` | Context manager returning a handle indexed by domain-local rank |
 | `alloc_child_tensor(worker_id, shapes, dtype) -> Buffer` | Delegates allocation to the owning Worker; target chip memory is named by the returned handle |
 
+### Tensor storage contract
+
+Use the single `AddressSpace` enum from `simpler.buffer`:
+
+- `HOST`: host-only tensor, no implicit device copy or mapping.
+- `HOST_TO_DEVICE`: host source managed by the Program copy-in/copy-back path.
+- `DEVICE`: existing device storage, no implicit host readback or mapping.
+
+`ChipTensor.make(..., memory_kind=...)`, `Worker.make_tensor_arg(...,
+memory_kind=...)` and `Worker.create_buffer(..., memory_kind=...)` default to
+`HOST_TO_DEVICE`. A buffer's views retain its contract. `ChipTensor`'s legacy
+`child_memory=True/False` constructor keyword translates to DEVICE /
+HOST_TO_DEVICE; supplying it together with `memory_kind` is an error.
+The existing descriptor field `address_space` stores this one enum.
+
+Pass two independent tensor arguments when host orchestration and device
+kernels need corresponding data. Ensure host inputs are ready before host
+preparation. To read completed device results on host, use an explicit copy
+into separate host storage; synchronization alone does not create that copy.
+
 ## Callables and task args
 
 ```python

@@ -10,6 +10,7 @@
 """Benchmark BGEMM on host_build_graph."""
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -28,7 +29,7 @@ class TestBenchmarkBgemmHostBuildGraph(SceneTestCase):
             # from GM, adds the matmul result, and stores it back across grid_k
             # iterations. Its host-provided zeros must be copied in H2D, so C is
             # INOUT (read-before-write), not a pure OUT.
-            "signature": [D.IN, D.IN, D.INOUT, D.IN],
+            "signature": [D.IN, D.IN, D.INOUT, D.IN, D.IN],
         },
         "incores": [
             {
@@ -49,6 +50,11 @@ class TestBenchmarkBgemmHostBuildGraph(SceneTestCase):
     }
 
     CASES = [
+        {
+            "name": "HostDeviceConfig",
+            "platforms": ["a2a3sim", "a2a3"],
+            "params": {"matmul_add_task_num": 4, "incore_data_size": 128, "incore_loop": 1, "grid_k": 2},
+        },
         {
             "name": "Case0",
             "platforms": ["a2a3sim", "a2a3"],
@@ -71,6 +77,7 @@ class TestBenchmarkBgemmHostBuildGraph(SceneTestCase):
             TensorArg("B", B.flatten()),
             TensorArg("C", C.flatten()),
             TensorArg("config", config),
+            TensorArg("host_config", config.clone(), memory_kind=AddressSpace.HOST),
         )
 
     def compute_golden(self, args, params):

@@ -566,7 +566,7 @@ def _import_wire_buffer(export_desc: Any, shm_name: str, base: int) -> Buffer:
     return Buffer(
         identity=remote_backing_identity(export_desc.owner_worker_id, export_desc.buffer_id, export_desc.generation),
         owner_worker_path_id=intern_worker_path(f"remote/{int(export_desc.owner_worker_id)}"),
-        address_space=AddressSpace.HOST,
+        address_space=AddressSpace.HOST_TO_DEVICE,
         access=AccessMode.READWRITE,
         backend_kind=BackendKind.POSIX_SHM,
         nbytes=int(export_desc.nbytes),

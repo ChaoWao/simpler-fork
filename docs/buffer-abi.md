@@ -185,6 +185,31 @@ VA. `alloc_child_tensor` allocates device memory on a specific next-level worker
 and wraps the pointer; its `.base` is the device pointer (the `orch.copy_to`
 destination), and a tensor over it must be dispatched only to that worker.
 
+## Tensor storage contract
+
+`BufferDescriptor.address_space` and `ChipTensor.address_space` carry one
+`AddressSpace` enum: `HOST`, `HOST_TO_DEVICE`, or `DEVICE`. Views retain that
+value; a view never changes which side can access its backing.
+
+- `HOST` is consumed by host orchestration without tensor H2D or device allocation.
+- `HOST_TO_DEVICE` names host storage handled by the Program transfer path.
+  Preparation creates a separate DEVICE argument; IN/INOUT copy in and
+  OUT/INOUT copy back according to the callable signature.
+- `DEVICE` borrows existing device storage. It cannot be read or written by host
+  orchestration, including through a platform mapping or automatic D2H fallback.
+
+`Worker.create_buffer(..., memory_kind=...)` and
+`Worker.make_tensor_arg(..., memory_kind=...)` default to HOST_TO_DEVICE.
+`ChipTensor.make` accepts the same keyword. The legacy `child_memory` keyword
+translates to this enum; it is not a second independent tag.
+
+If both sides need the data, pass separate HOST and device-bound tensor
+arguments. Explicit copy operations remain available; after a producer finishes,
+copy its device result into separate host storage before a host consumer runs.
+A completed stream alone neither creates a host copy nor permits dereferencing
+a device address. TMR orchestration executes on device and rejects HOST entry
+arguments. L3 access permissions and dependency checks continue to apply.
+
 ## Naming a view
 
 `buffer.tensor(...)` names a view over the backing:

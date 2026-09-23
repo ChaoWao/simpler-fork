@@ -42,7 +42,7 @@ import sys
 from pathlib import Path
 
 import torch
-from simpler.buffer import Buffer
+from simpler.buffer import AddressSpace, Buffer
 from simpler.task_interface import ArgDirection as D
 from simpler.task_interface import CallConfig
 from simpler.worker import Worker
@@ -475,7 +475,7 @@ class TestQwen314BDecode(SceneTestCase):
 
     def generate_args(self, params):
         args = _decode_generate_inputs(params.get("seed", 1234), params.get("seq_len", 3500))
-        return TaskArgsBuilder(*(spec._replace(child_memory=True) for spec in args.specs))
+        return TaskArgsBuilder(*(spec._replace(memory_kind=AddressSpace.DEVICE) for spec in args.specs))
 
     def compute_golden(self, args, params):
         _decode_golden(args)

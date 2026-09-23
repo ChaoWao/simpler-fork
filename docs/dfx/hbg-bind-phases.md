@@ -31,7 +31,7 @@ the `chip.run.bind` span:
 | `host_orch` | orchestration and recording: every task submitted and every sub-task recorded; excludes the later Definition packing and Graph task binding in `bind_graph_definitions` |
 | `graph_upload` | the successful synchronous `copy_to_device` of the prepared Definition block in `publish_run_image_impl`; excludes staging growth, header writes, spill copies and Graph task binding. Absent when there is no Definition block |
 | `arena_h2d` | one H2D of the arena's copied zone and the shared-memory image |
-| `host_view_close` | closing per-run tensor-access regions and any optional device mappings; the bind path installs none of its own (`count=0 bytes=0`). `devcopy=N` counts orchestration accesses to child memory that were served by a PCIe round trip because no host mapping was available — a mapping, where one is available, is held by the runtime for the allocation's lifetime and is not closed here |
+| `host_view_close` | retiring explicitly HOST access regions after orchestration; `count` and `bytes` describe those host regions. No device mapping or device-copy fallback occurs |
 
 The parser's **control plane** label is the instrumented subtotal
 `host_orch + graph_upload + arena_h2d`, not the complete cost between "the
@@ -513,10 +513,11 @@ have both changed, so the same names do not make these rows comparable.
 
 **dsv4's `args` and `host_view_close` rows no longer describe that case at this
 scale.** Both are per-byte costs over what a bind copies in, and dsv4's parameters
-now live in child memory: allocated once before the first round, and passed
-through without malloc, H2D or a host view. What still crosses is
-`num_tokens_per_owner`, the one caller tensor the host orchestrator has to read —
-so a bind copies in **1 of its 92 tensors, 8 bytes**. On `dcf7559e8`, 12 binds
+at that later measurement lived in child memory: allocated once before the first round, and passed
+through without malloc, H2D or a host view. That measurement still copied
+`num_tokens_per_owner`, the one caller tensor the host orchestrator reads:
+**1 of its 92 tensors, 8 bytes** per bind. The current HBG fixture declares this
+argument HOST, so it contributes no H2D bytes and registers one host-only region. On `dcf7559e8`, 12 binds
 (`--rounds 6`, both ranks) measure `args` at 0.036–0.075 ms and
 `host_view_close` at 0.0012–0.0030 ms with `count=0 bytes=0`, against 1.48 s and
 0.28 s over 45.8 GB above. The same run peaks at 1.31 GiB of host RSS across the
@@ -525,12 +526,13 @@ streamed in, where the row above cost ~45.5 GB per rank. qwen still copies in it
 fixture.
 
 The rows also describe the legacy mapping behavior at the pinned commit. A
-current bind uses the caller's existing host buffers as its
-orchestration views, so it performs no `halHostRegister` calls and reports
-`host_view_close count=0 bytes=0`. On Qwen3-14B this makes the close marker
+caller-buffer-view implementation measured after it used existing host
+buffers, performed no `halHostRegister` calls, and reported
+`host_view_close count=0 bytes=0`. On Qwen3-14B that made the close marker
 20.12–24.73 us instead of the 0.25 s shown above. The old `args` figure included
-20 registrations in addition to copying 19 tensors in H2D; current `args` retains
-the H2D work but removes that registration side.
+20 registrations in addition to copying 19 tensors in H2D. Today the marker
+counts explicit HOST regions; it does not count device mappings. Re-measure
+rather than treating these historical counts or durations as current results.
 
 Three of these deserve reading together. `host_orch` is the whole story on dsv4 —
 839 `submit_task`, 743 `record_sub_task` and 272 `alloc_tensors` per bind against qwen's

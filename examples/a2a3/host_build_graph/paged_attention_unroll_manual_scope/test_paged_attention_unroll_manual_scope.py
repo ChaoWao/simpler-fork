@@ -10,6 +10,7 @@
 """Paged attention unroll manual-scope benchmark for host_build_graph."""
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import Scalar, SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -136,7 +137,15 @@ class TestPagedAttentionUnrollManualScopeHostBuildGraph(SceneTestCase):
         specs = []
         for name, value in result:
             if isinstance(value, torch.Tensor):
-                specs.append(TensorArg(name, value, child_memory=child_memory))
+                specs.append(
+                    TensorArg(
+                        name,
+                        value,
+                        memory_kind=AddressSpace.HOST
+                        if name in ("context_lens",)
+                        else (AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE),
+                    )
+                )
             else:
                 specs.append(Scalar(name, value))
         return TaskArgsBuilder(*specs)

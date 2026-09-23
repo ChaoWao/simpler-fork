@@ -1145,3 +1145,19 @@ def test_burn_stays_consumed_when_the_caller_fails():
         caller()
     nxt = allocator.burn_identity()
     assert int(nxt.buffer_id) == 2
+
+
+@pytest.mark.parametrize("space", [AddressSpace.HOST, AddressSpace.DEVICE, AddressSpace.HOST_TO_DEVICE])
+def test_chip_tensor_has_one_storage_contract(space):
+    tensor = ChipTensor.make(0x1000, (4,), DataType.INT32, memory_kind=space)
+    assert tensor.memory_kind == space
+    assert tensor.child_memory == (space == AddressSpace.DEVICE)
+    tensor.shapes = (2, 2)
+    assert tensor.memory_kind == space
+    with pytest.raises(ValueError, match="not both"):
+        ChipTensor.make(0x1000, (4,), DataType.INT32, child_memory=False, memory_kind=space)
+
+
+def test_legacy_chip_tensor_defaults_keep_program_copy_semantics():
+    assert ChipTensor.make(0x1000, (4,), DataType.INT32).memory_kind == AddressSpace.HOST_TO_DEVICE
+    assert ChipTensor.make(0x1000, (4,), DataType.INT32, child_memory=True).memory_kind == AddressSpace.DEVICE

@@ -995,7 +995,7 @@ class TestCopyHandleValidation:
         assert (wid, size, dst_off, src_off) == (0, _HOSTSRC.nbytes, 0, 0)
         assert _device_ptr(dst_desc) == 0x2000
         assert src_desc.identity == _HOSTSRC.identity
-        assert src_desc.address_space == AddressSpace.HOST
+        assert src_desc.address_space == AddressSpace.HOST_TO_DEVICE
 
 
 class TestCopyHandleTransport:

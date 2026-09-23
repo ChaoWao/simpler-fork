@@ -87,7 +87,7 @@ struct ChipTensor {
     uint32_t strides[MAX_TENSOR_DIMS];  // Element stride per dimension; ALWAYS > 0
     uint32_t ndims;                     // Number of dimensions used
     DataType dtype;                     // Data type of tensor elements
-    AddressSpace address_space;         // HOST (default) or DEVICE (child-managed device memory; skips H2D copy)
+    AddressSpace address_space;         // HOST / DEVICE / HOST_TO_DEVICE; no cross-side mapping
 
     ChipTensor() = default;
 
@@ -141,7 +141,7 @@ struct ChipTensor {
     /// strides become row-major; start_offset = 0.
     void init_external(
         void *addr, uint64_t buffer_size_bytes, const uint32_t in_shapes[], uint32_t in_ndims, DataType in_dtype,
-        AddressSpace in_address_space = AddressSpace::HOST
+        AddressSpace in_address_space = AddressSpace::HOST_TO_DEVICE
     ) {
         always_assert(in_ndims > 0 && in_ndims <= MAX_TENSOR_DIMS);
         buffer = {reinterpret_cast<uint64_t>(addr), buffer_size_bytes};
@@ -200,7 +200,7 @@ static_assert(sizeof(ChipTensor) == 72, "ChipTensor is geometry plus a resolved 
 /// strides == row_major(shapes).
 inline ChipTensor make_tensor_external(
     void *addr, const uint32_t shapes[], uint32_t ndims, DataType dtype = DataType::FLOAT32,
-    AddressSpace address_space = AddressSpace::HOST
+    AddressSpace address_space = AddressSpace::HOST_TO_DEVICE
 ) {
     uint64_t total = 1;
     for (uint32_t i = 0; i < ndims; i++) {
@@ -216,7 +216,7 @@ inline ChipTensor make_tensor_external(
 /// permute / step-sliced wire Tensor. buffer.size is the element extent in bytes.
 inline ChipTensor make_tensor_strided(
     void *addr, const uint32_t shapes[], const uint32_t strides[], uint32_t ndims, DataType dtype = DataType::FLOAT32,
-    AddressSpace address_space = AddressSpace::HOST
+    AddressSpace address_space = AddressSpace::HOST_TO_DEVICE
 ) {
     always_assert(ndims > 0 && ndims <= MAX_TENSOR_DIMS);
     ChipTensor t{};

@@ -963,63 +963,38 @@ This eliminates the need for separate `examples/` (sim) and `tests/st/` (device)
 
 When kernels themselves differ (e.g., templated tile sizes tuned for device), separate test files remain the correct approach.
 
-## Explicit L2 child memory
+## Tensor storage declarations
 
-`TensorArg(name, value, child_memory=True)` keeps a case-owned device buffer
-across all rounds, including `--rounds 1`. `TaskArgsBuilder.add_tensor` accepts
-the same keyword. The default remains host memory; IN and INOUT tensors are copied in on every round, while pure OUT buffers skip the copy.
+`TensorArg(name, value, memory_kind=AddressSpace.DEVICE)` keeps a case-owned
+device buffer across rounds. `TaskArgsBuilder.add_tensor` accepts the same
+keyword. Import `AddressSpace` from `simpler.buffer`; there is one enum, with
+`HOST`, `DEVICE`, and `HOST_TO_DEVICE` values.
 
-| Declaration / direction | Setup | Between rounds | Validation |
-| ----------------------- | ----- | -------------- | ---------- |
-| Host memory (default) | Existing path | Restore OUT/INOUT host fixtures | Existing per-round copy-back |
-| Child-memory IN | Allocate and upload once | Keep device address and input contents | No output readback |
-| Child-memory OUT | Allocate without upload | Keep device contents; the case must define all compared elements | Final readback |
-| Child-memory INOUT | Allocate and upload once | Keep device state | Final readback |
+| Declaration | Behavior |
+| ----------- | -------- |
+| `HOST_TO_DEVICE` (default) | Program creates device storage; IN/INOUT copy in, OUT/INOUT copy back |
+| `HOST` | Host orchestration accesses host storage; no tensor device allocation or transfer |
+| `DEVICE` | Case-owned device storage; no host scalar access or automatic D2H-on-read |
 
-Golden evaluation follows the same state evolution: child-memory outputs retain
-state and host-memory outputs reset. Cases with child-memory outputs compare after
-the final round; other cases continue comparing every round.
+The scene helper explicitly uploads DEVICE fixtures at setup and reads device
+outputs back for golden comparison. These test operations are separate from
+runtime argument handling. DEVICE output state persists across rounds; default
+HOST_TO_DEVICE output fixtures reset according to the existing round contract.
 
-A tensor whose contents the HBG host orchestration reads (`get_tensor_data`) or
-writes (`set_tensor_data`) may be child memory. The declaration needs no extra
-opt-in: the runtime claims each child-memory span at bind and picks how to reach
-it only if an access actually lands there, so a tensor the orchestration never
-touches costs nothing.
+HBG `get_tensor_data` / `set_tensor_data` accept HOST tensors only, subject to
+read/write direction and range checks. Device tasks accept DEVICE tensors only;
+HOST_TO_DEVICE arguments become DEVICE during preparation. A tensor used by
+both sides must be supplied as two independent arguments. The runtime never
+maps either side's storage for the other and never falls back to a synchronous
+device copy on a host read.
 
-| Platform | Means | Per-access cost |
-| -------- | ----- | --------------- |
-| Host map available (a2a3 onboard, sim) | one mapping of the allocation, held by the runtime for the allocation's lifetime | none |
-| Host map unavailable (a5 onboard, or a 64 KiB-page host — issue #1531) | a device copy per access | one synchronous driver round trip, ~9.5 µs† |
+Caller-owned device buffers use `Worker.copy_from` explicitly after producer
+completion when host control data is needed. Stream completion does not itself
+produce a HOST tensor. TMR orchestration runs on device and rejects HOST entry
+arguments; its controls must be DEVICE or explicitly HOST_TO_DEVICE.
 
-† Measured on a2a3 with 4 KiB host pages (CANN 9.0.0), which is neither
-configuration in that row — a2a3 on ordinary pages takes the mapping. It is
-what a small synchronous `aclrtMemcpy` costs against this driver; a5 and
-64 KiB-page hosts are unmeasured. See
-[the investigation](investigations/2026-09-hbg-per-run-host-view-rebuild.md).
-
-On the second row the cost is per access, not per tensor, so a tensor the
-orchestration reads thousands of times — `paged_attention`'s `block_table` is
-read once per (batch, block) pair, 16,384 times in Case1, which is ~156 ms — is
-better left in host memory there. The declaration is per argument, so a
-data-dependent case can mix freely. The bind's `BindHostViewClose` phase
-attributes report `devcopy=N` when this path was taken.
-
-Runtime-created tensors (graph-heap allocations the orchestration made itself)
-remain unreadable: they are uninitialized until a task writes them, and
-`get_tensor_data` rejects a tensor with a producer outright.
-
-Declarations currently require L2, contiguous CPU fixtures, and non-overlapping
-storage. Empty fixtures allocate no device buffer; the existing transport
-still rejects zero-shaped Tensor arguments. Clone and rehost operations preserve
-declaration metadata. An in-repo standalone driver that owns its own `Worker`
-reuses the same owner, `simpler_setup.scene_test.ChildMemoryTaskArgs`, as a
-context manager, adding one fixture at a time so each large fixture can be
-released before the next is materialized. It is a scene-test helper, not part of
-the `simpler_setup` public surface — it builds `TaskArgs` and copies back through
-a `TaskArgsBuilder`, so it has no meaning outside this corpus.
-
-The HBG `paged_attention_unroll_manual_scope` examples include matched manual
-`HostStaged` and `ChildMemory` cases, the latter declaring every tensor —
-including the two the orchestration reads. The HBG `paged_attention` scene tests
-carry the same pairing as non-manual cases, so CI covers an orchestration
-reading child memory on both arches. Existing default cases retain host memory.
+The HBG paged-attention fixtures declare host-only controls as HOST even in
+cases whose device operands use persistent device allocations. Batch paged
+attention and benchmark GEMM pass separate host and device control arguments.
+Clone and rehost operations retain the enum. DEVICE scene fixtures currently
+require L2, contiguous CPU sources and non-overlapping storage.

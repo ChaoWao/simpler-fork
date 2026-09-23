@@ -9098,7 +9098,7 @@ class Worker:
     def _register_worker_chip_orch_comm_host_buffer(self, handle) -> None:
         if not isinstance(handle, Buffer):
             raise TypeError("L3-L2 host buffer registration expects a Buffer")
-        if handle.address_space != AddressSpace.HOST:
+        if handle.address_space not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
             raise ValueError("L3-L2 payload buffer must be host storage, not device storage")
         base = int(handle.base)
         nbytes = int(handle.nbytes)
@@ -9118,7 +9118,7 @@ class Worker:
     def _validate_worker_chip_orch_comm_host_buffer(self, handle) -> None:
         if not isinstance(handle, Buffer):
             raise ValueError("L3-L2 payload buffer must be a Buffer returned by orch.alloc(...)")
-        if handle.address_space != AddressSpace.HOST:
+        if handle.address_space not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
             raise ValueError("L3-L2 payload buffer must be host storage, not device storage")
         base = int(handle.base)
         nbytes = int(handle.nbytes)
@@ -11428,7 +11428,7 @@ class Worker:
         if not isinstance(obj, Buffer):
             addr, nbytes = host_ptr_nbytes(obj)
             return None, addr, nbytes
-        if obj.address_space != AddressSpace.HOST:
+        if obj.address_space not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
             raise ValueError(f"Worker.{api}: the host side must be a HOST handle, got {obj.address_space.name}")
         needed = AccessMode.WRITE if writing else AccessMode.READ
         if obj.access not in (needed, AccessMode.READWRITE):
@@ -11574,7 +11574,7 @@ class Worker:
     # Post-fork zero-copy host buffers
     # ------------------------------------------------------------------
 
-    def create_buffer(self, nbytes: int) -> Buffer:
+    def create_buffer(self, nbytes: int, *, memory_kind: AddressSpace = AddressSpace.HOST_TO_DEVICE) -> Buffer:
         """Allocate a shared ``Buffer`` owned by this Worker (P1-B).
 
         The backing is a POSIX shm; the Buffer carries a typed canonical identity and a
@@ -11588,7 +11588,7 @@ class Worker:
         if self.level < 2:
             raise TypeError("create_buffer requires a level >= 2 Worker")
         with self._operation_lease("create_buffer"):
-            return self._create_buffer_locked(int(nbytes))
+            return self._create_buffer_locked(int(nbytes), memory_kind=memory_kind)
 
     def alloc_shared_tensor(self, shapes: tuple[int, ...], dtype) -> Buffer:
         """Allocate a runtime-managed intermediate buffer (the ``Tensor`` form of ``orch.alloc``).
@@ -11619,7 +11619,15 @@ class Worker:
             backend_kind=BackendKind.FORK_SHM,
         )
 
-    def make_tensor_arg(self, tensor, shapes: tuple[int, ...], dtype: int, *, strides: tuple[int, ...] | None = None):
+    def make_tensor_arg(
+        self,
+        tensor,
+        shapes: tuple[int, ...],
+        dtype: int,
+        *,
+        strides: tuple[int, ...] | None = None,
+        memory_kind: AddressSpace = AddressSpace.HOST_TO_DEVICE,
+    ):
         """Name a **pre-fork** host tensor as a ``Tensor`` over a memoized ``FORK_SHM`` handle.
 
         The torch (or buffer-protocol) tensor MUST be allocated before ``init()`` so its VA is
@@ -11630,6 +11638,9 @@ class Worker:
         it; the ``byte_offset`` this computes is what then separates two views that do not intersect.
         At L2 (no fork) any host tensor works. ``dtype`` is the ``DataType`` int value.
         """
+        memory_kind = AddressSpace(memory_kind)
+        if memory_kind not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
+            raise ValueError("make_tensor_arg: host storage requires HOST or HOST_TO_DEVICE")
         untyped_storage = getattr(tensor, "untyped_storage", None)
         if callable(untyped_storage):
             st = untyped_storage()
@@ -11647,6 +11658,10 @@ class Worker:
         handle = self._fork_tensor_handles.get(base)
         if handle is not None and handle.nbytes != nbytes:
             handle = None
+        if handle is not None and handle.address_space != memory_kind:
+            raise ValueError(
+                "make_tensor_arg: one backing has one memory contract; use separate tensors for host and device"
+            )
         if handle is None:
             # Copy-on-write only bites when a fork stands between the writer and this process. An
             # L2 leaf consumes its own args in-process, so any host tensor is writable there; at L3+
@@ -11668,6 +11683,7 @@ class Worker:
                 generation=int(identity.generation),
                 access=AccessMode.READWRITE if shared else AccessMode.READ,
                 backend_kind=BackendKind.FORK_SHM if shared else BackendKind.FORK_COW,
+                memory_kind=memory_kind,
             )
             self._fork_tensor_handles[base] = handle
         return handle.tensor(shapes=tuple(shapes), dtype=dtype, strides=strides, byte_offset=byte_offset)
@@ -11687,7 +11703,7 @@ class Worker:
             self._reexport_by_source[key] = handle
         return handle
 
-    def _create_buffer_locked(self, nbytes: int) -> Buffer:
+    def _create_buffer_locked(self, nbytes: int, *, memory_kind: AddressSpace = AddressSpace.HOST_TO_DEVICE) -> Buffer:
         # An L3+ buffer is consumed by a forked child that lazily maps it, so a childless L3+ buffer
         # can reach no consumer. Every kind of forked child counts: a next-level Worker child maps a
         # POSIX_SHM backing by name exactly as a chip or sub child does, so an L4 whose only children
@@ -11707,6 +11723,7 @@ class Worker:
             buffer_id=buffer_id,
             owner_worker_path=_format_worker_path(int(self.level)),
             generation=int(identity.generation),
+            memory_kind=memory_kind,
         )
         with self._registry_lock:
             self._buffers[buffer_id] = buffer

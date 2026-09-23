@@ -541,6 +541,9 @@ static bool copy_in_device_args(
             continue;
         }
 
+        // Device orchestration cannot read a HOST argument; H2D is explicit.
+        if (t.address_space != AddressSpace::HOST_TO_DEVICE) return false;
+        t.address_space = AddressSpace::DEVICE;
         void *host_ptr = reinterpret_cast<void *>(static_cast<uintptr_t>(t.buffer.addr));
         size_t size = static_cast<size_t>(t.nbytes());
         if (size == 0) {

@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 import pytest
 import torch
+from simpler.buffer import AddressSpace
 
 from simpler_setup import SceneTestCase, TaskArgsBuilder, TensorArg
 
@@ -21,7 +22,7 @@ scene = sys.modules["simpler_setup.scene_test"]
 
 
 def test_clone_preserves_child_memory_declarations():
-    args = TaskArgsBuilder(TensorArg("x", torch.ones(4), child_memory=True))
+    args = TaskArgsBuilder(TensorArg("x", torch.ones(4), memory_kind=AddressSpace.DEVICE))
     clone = args.clone()
     assert clone.specs[0].child_memory
     assert clone.x.data_ptr() != args.x.data_ptr()
@@ -29,7 +30,7 @@ def test_clone_preserves_child_memory_declarations():
 
 def test_builder_add_tensor_accepts_child_memory():
     args = TaskArgsBuilder()
-    args.add_tensor("x", torch.ones(4), child_memory=True)
+    args.add_tensor("x", torch.ones(4), memory_kind=AddressSpace.DEVICE)
     assert args.specs[0].child_memory
 
 
@@ -65,7 +66,7 @@ class FakeWorker:
         self.downloads.append(buf)
         host.copy_(self.data[buf.identity])
 
-    def make_tensor_arg(self, host, *, shapes, dtype):
+    def make_tensor_arg(self, host, *, shapes, dtype, memory_kind=None):
         from simpler.buffer import AccessMode, BackendKind, wrap_fork_inherited
 
         return wrap_fork_inherited(
@@ -82,10 +83,10 @@ def test_child_memory_directions_empty_and_lifo():
     from simpler.task_interface import ArgDirection as D
 
     args = TaskArgsBuilder(
-        TensorArg("x", torch.ones(4), True),
-        TensorArg("y", torch.ones(4), True),
-        TensorArg("z", torch.zeros(4), True),
-        TensorArg("empty", torch.empty(0), True),
+        TensorArg("x", torch.ones(4), AddressSpace.DEVICE),
+        TensorArg("y", torch.ones(4), AddressSpace.DEVICE),
+        TensorArg("z", torch.zeros(4), AddressSpace.DEVICE),
+        TensorArg("empty", torch.empty(0), AddressSpace.DEVICE),
         TensorArg("host_memory", torch.ones(4)),
     )
     worker = FakeWorker()
@@ -131,7 +132,11 @@ def test_round_state_and_final_copyback(rounds, child_memory, skip_golden):
 
         def generate_args(self, _params):
             self.args = TaskArgsBuilder(
-                TensorArg("state", torch.ones(4), child_memory=child_memory),
+                TensorArg(
+                    "state",
+                    torch.ones(4),
+                    memory_kind=AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE,
+                ),
                 TensorArg("out", torch.zeros(4)),
             )
             return self.args
@@ -166,7 +171,9 @@ def test_round_state_and_final_copyback(rounds, child_memory, skip_golden):
 def test_partial_construction_and_execution_failure_release():
     from simpler.task_interface import ArgDirection as D
 
-    args = TaskArgsBuilder(TensorArg("x", torch.ones(4), True), TensorArg("bad", torch.ones(2, 3).T, True))
+    args = TaskArgsBuilder(
+        TensorArg("x", torch.ones(4), AddressSpace.DEVICE), TensorArg("bad", torch.ones(2, 3).T, AddressSpace.DEVICE)
+    )
     worker = FakeWorker()
     with pytest.raises(ValueError, match="contiguous"):
         scene._child_memory_args(worker, args, [D.IN, D.IN])
@@ -189,8 +196,12 @@ def test_invalid_direction_and_alias_rejected():
 
     host = torch.ones(8)
     for args, sig, match in [
-        (TaskArgsBuilder(TensorArg("x", host, True)), [D.SCALAR], "unsupported direction"),
-        (TaskArgsBuilder(TensorArg("x", host[:4], True), TensorArg("y", host[2:])), [D.IN, D.IN], "alias"),
+        (TaskArgsBuilder(TensorArg("x", host, AddressSpace.DEVICE)), [D.SCALAR], "unsupported direction"),
+        (
+            TaskArgsBuilder(TensorArg("x", host[:4], AddressSpace.DEVICE), TensorArg("y", host[2:])),
+            [D.IN, D.IN],
+            "alias",
+        ),
     ]:
         worker = FakeWorker()
         with pytest.raises(ValueError, match=match):
@@ -220,7 +231,7 @@ def test_l3_rejects_child_memory_before_allocation():
         CASES = []
 
         def generate_args(self, params):
-            return TaskArgsBuilder(TensorArg("x", torch.ones(4), child_memory=True))
+            return TaskArgsBuilder(TensorArg("x", torch.ones(4), memory_kind=AddressSpace.DEVICE))
 
     worker = FakeWorker()
     with pytest.raises(ValueError, match="require L2"):

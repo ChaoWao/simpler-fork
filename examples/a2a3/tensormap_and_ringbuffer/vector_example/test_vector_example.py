@@ -10,6 +10,7 @@
 """Tensormap-and-ringbuffer vector example: f = (a+b+1)*(a+b+2) + (a+b)."""
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -62,9 +63,21 @@ class TestVectorExample(SceneTestCase):
         child_memory = params.get("child_memory", False)
         SIZE = 128 * 128
         return TaskArgsBuilder(
-            TensorArg("a", torch.full((SIZE,), 2.0, dtype=torch.float32), child_memory=child_memory),
-            TensorArg("b", torch.full((SIZE,), 3.0, dtype=torch.float32), child_memory=child_memory),
-            TensorArg("f", torch.zeros(SIZE, dtype=torch.float32), child_memory=child_memory),
+            TensorArg(
+                "a",
+                torch.full((SIZE,), 2.0, dtype=torch.float32),
+                memory_kind=AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE,
+            ),
+            TensorArg(
+                "b",
+                torch.full((SIZE,), 3.0, dtype=torch.float32),
+                memory_kind=AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE,
+            ),
+            TensorArg(
+                "f",
+                torch.zeros(SIZE, dtype=torch.float32),
+                memory_kind=AddressSpace.DEVICE if child_memory else AddressSpace.HOST_TO_DEVICE,
+            ),
         )
 
     def compute_golden(self, args, params):

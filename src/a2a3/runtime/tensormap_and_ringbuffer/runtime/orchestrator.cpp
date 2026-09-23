@@ -1300,6 +1300,12 @@ TaskOutputTensors OrchestratorState::submit_task(const MixedKernels &mixed_kerne
         orch_mark_fatal(orch, SIMPLER_ERROR_INVALID_ARGS);
         return TaskOutputTensors{};
     }
+    for (int32_t i = 0; i < args.tensor_count(); ++i) {
+        if (args.tag(i) != TensorArgType::OUTPUT && args.tensor(i).ref().address_space != AddressSpace::DEVICE) {
+            orch->report_fatal(SIMPLER_ERROR_INVALID_ARGS, __FUNCTION__, "device task operand requires DEVICE storage");
+            return TaskOutputTensors{};
+        }
+    }
     always_assert(orch->scheduler != nullptr);
     // === Validate submit inputs ===
     ActiveMask active_mask = mixed_kernels.to_active_mask();

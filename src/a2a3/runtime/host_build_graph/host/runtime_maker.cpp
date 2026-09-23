@@ -19,11 +19,9 @@
  *     which bind then invokes per run
  *
  * bind_callable_to_runtime_impl:
- *   - Gives host-memory tensor arguments slices of the pipeline slot's retained
- *     temporary buffer, copies every readable input H2D, and records one lease
- *     each with its transfer directions. The copy is here rather than in
- *     copy_in_run_inputs_impl because the orchestration entry below reads these
- *     tensors while it builds the graph
+ *   - Gives HOST_TO_DEVICE arguments retained device slices and records their
+ *     transfer directions. HOST arguments remain host-only; DEVICE arguments
+ *     pass through. No argument supplies a view to the other side.
  *   - Runs the resolved orchestration entry to build the graph
  *   - Sets up runtime state for host orchestration
  *
@@ -741,11 +739,8 @@ int32_t run_host_orchestration(
     orchestrator.total_cluster_count = block_dim * PLATFORM_AIC_CORES_PER_BLOCKDIM;
     orchestrator.total_aiv_count = block_dim * PLATFORM_AIV_CORES_PER_BLOCKDIM;
     rt->mode = MODE_EXECUTE;
-    // get_tensor_data/set_tensor_data resolve buffer.addr through the host
-    // views registered at copy-in time (host_build_graph/host_tensor_access.h),
-    // so the host orchestrator can read control tensors (e.g. paged_attention's
-    // context_lens/block_table) whether or not the platform maps device memory
-    // into the host address space.
+    // Host scalar access accepts only explicitly HOST arguments. Device task
+    // operands come from separate DEVICE or HOST_TO_DEVICE arguments.
 
     const auto *entry_points = reinterpret_cast<const HostOrchEntryPoints *>(host_orch_func_ptr);
     if (entry_points->bind == nullptr) {
@@ -1217,10 +1212,9 @@ extern "C" int bind_callable_to_runtime_impl(
     // Build device args: copy from input, replace host tensor pointers with device pointers
     ChipStorageTaskArgs device_args;
 
-    // This run's host-view window. The accessor owns every mapping it
-    // registers and releases them on every exit path, so no host view outlives
-    // the point at which a task could make it stale.
-    HostTensorAccessor tensor_access(api);
+    // Host regions are borrowed only while this run builds its graph. No
+    // device address is registered in this accessor.
+    HostTensorAccessor tensor_access;
 
     // A lease recorded by an earlier bind names an offset this bind is about to
     // re-slice, so carrying one over would copy this run's bytes back to that
@@ -1258,22 +1252,30 @@ extern "C" int bind_callable_to_runtime_impl(
         if (t.is_device_memory()) {
             always_assert(t.buffer.addr < HEAP_VIRTUAL_BASE && "caller tensor reaches into the virtual heap window");
             LOG_DEBUG("  ChipTensor %d: child memory, pass-through (0x%" PRIx64 ")", i, t.buffer.addr);
-            // The bytes stay where the caller put them, so orchestration has no
-            // copy-in buffer to read them from. Claim the span now and let the
-            // platform resolve a means only if an access actually lands in it.
-            if (!tensor_access.add_child_memory(t.buffer.addr, t.buffer.size)) {
-                LOG_ERROR("host-orch: could not claim child-memory tensor %d (0x%" PRIx64 ")", i, t.buffer.addr);
-                return PTO_RUNTIME_ERR_INTERNAL;
+            device_args.add_tensor(t);
+            continue;
+        }
+
+        if (t.address_space == AddressSpace::HOST) {
+            const auto direction = signature != nullptr && i < sig_count ? signature[i] : ArgDirection::INOUT;
+            if (t.nbytes() != 0 &&
+                !tensor_access.add(
+                    t.buffer.addr, t.buffer.size, direction != ArgDirection::OUT, direction != ArgDirection::IN
+                )) {
+                LOG_ERROR("host-orch: invalid HOST tensor %d", i);
+                return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
             }
             device_args.add_tensor(t);
             continue;
         }
+        if (t.address_space != AddressSpace::HOST_TO_DEVICE) return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
 
         void *host_ptr = reinterpret_cast<void *>(static_cast<uintptr_t>(t.buffer.addr));
         size_t size = static_cast<size_t>(t.nbytes());
         // An empty tensor addresses nothing, so it takes no slice and carries a
         // null address rather than one aliasing the next tensor's.
         if (size == 0) {
+            t.address_space = AddressSpace::DEVICE;
             t.buffer.addr = 0;
             device_args.add_tensor(t);
             continue;
@@ -1291,10 +1293,8 @@ extern "C" int bind_callable_to_runtime_impl(
         // Pure write-only OUTPUT buffers are never read by the kernel and hold
         // no meaningful host content, so they need no copy-in — the
         // kernel defines what it writes and any unwritten bytes are undefined.
-        // IN / INOUT (read-before-write) are copied in H2D. The copy happens here
-        // rather than in copy_in_run_inputs_impl because the orchestrator below
-        // runs on the host and reads these tensors while it builds the graph;
-        // that function documents what makes the earlier copy sound.
+        // IN / INOUT are copied in H2D during bind. Host orchestration cannot
+        // read this device copy; it needs a separate HOST argument.
         bool is_pure_output = (signature != nullptr && i < sig_count && signature[i] == ArgDirection::OUT);
         bool needs_copy_in = !is_pure_output;
         if (needs_copy_in) {
@@ -1318,18 +1318,7 @@ extern "C" int bind_callable_to_runtime_impl(
         );
         LOG_DEBUG("  ChipTensor %d: %zu bytes at %p", i, size, dev_ptr);
 
-        // host_build_graph runs the orchestrator on the host, which may read
-        // host-memory control tensors (e.g. paged_attention's context_lens and
-        // block_table) via get_tensor_data to shape the graph. A pure output
-        // has no valid readable bytes before execution, and a5 cannot map it;
-        // exposing its caller buffer would therefore make reads unsafe. Leave
-        // it unregistered so both get_tensor_data and set_tensor_data fail
-        // closed during orchestration.
-        if (!is_pure_output && !tensor_access.add(reinterpret_cast<uint64_t>(dev_ptr), size, host_ptr)) {
-            LOG_ERROR("host-orch: no host view for tensor %d (dev_ptr %p, %zu bytes)", i, dev_ptr, size);
-            return PTO_RUNTIME_ERR_INTERNAL;
-        }
-
+        t.address_space = AddressSpace::DEVICE;
         t.buffer.addr = reinterpret_cast<uint64_t>(dev_ptr);
         always_assert(t.buffer.addr < HEAP_VIRTUAL_BASE && "an argument slice reaches into the virtual heap window");
         device_args.add_tensor(t);
@@ -1416,19 +1405,14 @@ extern "C" int bind_callable_to_runtime_impl(
         int32_t total_tasks = run_host_orchestration(
             runtime, api, tensor_access, rt, host_arena, layout, sm_size, task_capacity, host_orch_func_ptr, orch_l2
         );
-        // The orchestrator is the only host-view reader; from here the device
-        // owns these buffers, so drop the window on both exits.
-        const size_t view_count = tensor_access.mapping_count();
-        const uint64_t view_bytes = tensor_access.mapped_bytes();
-        const uint64_t device_copies = tensor_access.device_copy_count();
+        // The host region registry is needed only during orchestration.
+        const size_t view_count = tensor_access.region_count();
+        const uint64_t view_bytes = tensor_access.host_bytes();
         const BindPhaseMark view_close_phase = bind_phase_begin();
         tensor_access.close();
         {
             char attrs[kBindAttrsCapacity];
-            snprintf(
-                attrs, sizeof(attrs), "count=%zu bytes=%" PRIu64 " devcopy=%" PRIu64, view_count, view_bytes,
-                device_copies
-            );
+            snprintf(attrs, sizeof(attrs), "count=%zu bytes=%" PRIu64, view_count, view_bytes);
             record_bind_phase(HostPhaseKind::BindHostViewClose, view_close_phase, attrs);
         }
         if (total_tasks < 0) {
@@ -1508,16 +1492,8 @@ extern "C" int publish_run_image_impl(Runtime *runtime, const HostApi *api) {
     return 0;
 }
 
-/**
- * Stage one run's inputs. A no-op for this runtime.
- *
- * host_build_graph runs its orchestrator on the host during bind, and that
- * orchestrator reads the input tensors it was given while it builds the graph,
- * so the bytes have to be in place before orchestration rather than after it —
- * `bind_callable_to_runtime_impl` copies them there. What makes that sound is
- * that a bind serves exactly one run: the graph this bind materializes carries
- * the values it read, so the bytes and the graph belong to the same run.
- */
+// H2D copies are completed by bind. HOST inputs never participate in this
+// transfer step, and each run owns its own device argument slices.
 extern "C" int copy_in_run_inputs_impl(const Runtime * /*runtime*/, const HostApi * /*api*/) { return 0; }
 
 /**

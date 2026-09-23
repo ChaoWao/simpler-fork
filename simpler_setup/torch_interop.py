@@ -81,7 +81,7 @@ def torch_dtype_to_datatype(dt) -> DataType:
     return _TORCH_DTYPE_MAP[dt]  # pyright: ignore[reportOptionalSubscript]
 
 
-def make_chip_tensor_arg(tensor) -> ChipTensor:
+def make_chip_tensor_arg(tensor, *, memory_kind=None) -> ChipTensor:
     """Create a ``ChipTensor`` — the materialized chip POD — from a torch.Tensor.
 
     Distinct from ``Worker.make_tensor_arg``, which names a wire ``Tensor`` (identity, no
@@ -116,10 +116,10 @@ def make_chip_tensor_arg(tensor) -> ChipTensor:
             "contiguous); call tensor.contiguous() before passing it."
         )
     shapes = tuple(int(s) for s in tensor.shape)
-    return ChipTensor.make(tensor.data_ptr(), shapes, dt)
+    return ChipTensor.make(tensor.data_ptr(), shapes, dt, memory_kind=memory_kind)
 
 
-def make_tensor_arg(worker, tensor):
+def make_tensor_arg(worker, tensor, *, memory_kind=None):
     """A ``Tensor`` task arg over a **pre-fork** host torch tensor.
 
     Names ``tensor`` as a memoized ``FORK_SHM`` handle on ``worker`` (``worker.make_tensor_arg``), inferring
@@ -136,4 +136,11 @@ def make_tensor_arg(worker, tensor):
     if not tensor.is_contiguous():
         raise ValueError("make_tensor_arg requires a contiguous tensor; call tensor.contiguous() first.")
     shapes = tuple(int(s) for s in tensor.shape)
-    return worker.make_tensor_arg(tensor, shapes=shapes, dtype=int(dt.value))
+    from simpler.buffer import AddressSpace
+
+    return worker.make_tensor_arg(
+        tensor,
+        shapes=shapes,
+        dtype=int(dt.value),
+        memory_kind=AddressSpace.HOST_TO_DEVICE if memory_kind is None else memory_kind,
+    )

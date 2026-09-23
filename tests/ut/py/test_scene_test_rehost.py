@@ -22,6 +22,7 @@ from multiprocessing.shared_memory import SharedMemory
 
 import pytest
 import torch
+from simpler.buffer import AddressSpace
 
 from simpler_setup.scene_test import Scalar, TaskArgsBuilder, TensorArg, _RehostedTaskArgs
 
@@ -335,7 +336,7 @@ def test_builder_valid_args_order_named_access_and_clone():
 
 
 def test_rehost_and_release_preserve_declarations():
-    args = TaskArgsBuilder(TensorArg("x", torch.ones(4), child_memory=True))
+    args = TaskArgsBuilder(TensorArg("x", torch.ones(4), memory_kind=AddressSpace.DEVICE))
     original = args.x
     worker = _FakeWorker()
     rehosted = _RehostedTaskArgs(worker, args)

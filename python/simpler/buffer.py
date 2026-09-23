@@ -282,11 +282,15 @@ def create_host_shared_buffer(
     owner_worker_path: str = "",
     generation: int = 1,
     access: AccessMode = AccessMode.READWRITE,
+    memory_kind: AddressSpace = AddressSpace.HOST_TO_DEVICE,
 ) -> Buffer:
     """Allocate a POSIX-shm host backing and wrap it as an owner ``Buffer`` (backend POSIX_SHM).
 
     The backend body is the shm name (UTF-8); the consumer maps it by name in ``ImportRegistry``.
     """
+    memory_kind = AddressSpace(memory_kind)
+    if memory_kind not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
+        raise ValueError("host buffer requires HOST or HOST_TO_DEVICE")
     if nbytes <= 0:
         raise ValueError(f"create_host_shared_buffer: nbytes must be positive, got {nbytes}")
     shm = SharedMemory(create=True, size=nbytes)
@@ -294,7 +298,7 @@ def create_host_shared_buffer(
     return Buffer(
         identity=identity,
         owner_worker_path_id=intern_worker_path(owner_worker_path),
-        address_space=AddressSpace.HOST,
+        address_space=memory_kind,
         access=access,
         backend_kind=BackendKind.POSIX_SHM,
         nbytes=nbytes,
@@ -390,6 +394,7 @@ def wrap_fork_inherited(
     generation: int = 1,
     access: AccessMode = AccessMode.READ,
     backend_kind: BackendKind = BackendKind.FORK_COW,
+    memory_kind: AddressSpace = AddressSpace.HOST_TO_DEVICE,
 ) -> Buffer:
     """Wrap a pre-fork, fork-inherited host allocation as a zero-copy ``Buffer``.
 
@@ -407,11 +412,14 @@ def wrap_fork_inherited(
     The two are not interchangeable and neither implies an ``access``: a ``MAP_SHARED`` backing
     granted READ only is a legal, expressible combination.
     """
+    memory_kind = AddressSpace(memory_kind)
+    if memory_kind not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
+        raise ValueError("host buffer requires HOST or HOST_TO_DEVICE")
     identity = CanonicalIdentity(owner_instance_id, buffer_id, generation)
     return Buffer(
         identity=identity,
         owner_worker_path_id=intern_worker_path(owner_worker_path),
-        address_space=AddressSpace.HOST,
+        address_space=memory_kind,
         access=access,
         backend_kind=backend_kind,
         nbytes=nbytes,

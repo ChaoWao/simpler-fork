@@ -150,7 +150,7 @@ class _PinnedBuffer:
     def __init__(self, obj: Any, *, writable: bool = False) -> None:
         self._keepalive: Any = obj
         if isinstance(obj, Buffer):
-            if obj.address_space != AddressSpace.HOST:
+            if obj.address_space not in (AddressSpace.HOST, AddressSpace.HOST_TO_DEVICE):
                 raise ValueError("region payload buffer must be host storage, not device storage")
             self.addr = int(obj.base)
             self.nbytes = int(obj.nbytes)
@@ -1183,7 +1183,10 @@ def _require_legal_actual_lowering(
         raise RuntimeError(f"committed {part_name} planned backing does not match the admitted plan")
     if descriptor.backend_kind is not expected_actual:
         raise RuntimeError("committed actual backend is not the legal lowering of the admitted plan")
-    if expected_actual is BackendKind.POSIX_SHM and descriptor.address_space is not AddressSpace.HOST:
+    if expected_actual is BackendKind.POSIX_SHM and descriptor.address_space not in (
+        AddressSpace.HOST,
+        AddressSpace.HOST_TO_DEVICE,
+    ):
         raise RuntimeError("SIM POSIX_SHM descriptors must use HOST address space")
     if expected_actual is BackendKind.VMM_SHAREABLE and descriptor.address_space is not AddressSpace.DEVICE:
         raise RuntimeError("ONBOARD VMM_SHAREABLE descriptors must use DEVICE address space")

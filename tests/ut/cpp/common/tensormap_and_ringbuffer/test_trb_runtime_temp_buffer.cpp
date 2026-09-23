@@ -260,7 +260,7 @@ ChipTensor make_tensor(std::vector<uint8_t> &storage, bool child_memory = false)
     uint32_t shape[1] = {static_cast<uint32_t>(storage.size())};
     tensor.init_external(
         storage.data(), storage.size(), shape, 1, DataType::UINT8,
-        child_memory ? AddressSpace::DEVICE : AddressSpace::HOST
+        child_memory ? AddressSpace::DEVICE : AddressSpace::HOST_TO_DEVICE
     );
     return tensor;
 }
@@ -272,12 +272,12 @@ ChipStorageTaskArgs make_args(std::vector<uint8_t> &input, std::vector<uint8_t> 
     return args;
 }
 
-// A HOST tensor with a size and no address. `init_external` accepts it and the
+// A HOST_TO_DEVICE tensor with a size and no address. `init_external` accepts it and the
 // bind gives it a real device slice, so it is reachable through the native API.
 ChipTensor null_source_tensor(size_t bytes) {
     ChipTensor tensor;
     uint32_t shape[1] = {static_cast<uint32_t>(bytes)};
-    tensor.init_external(nullptr, bytes, shape, 1, DataType::UINT8, AddressSpace::HOST);
+    tensor.init_external(nullptr, bytes, shape, 1, DataType::UINT8, AddressSpace::HOST_TO_DEVICE);
     return tensor;
 }
 
@@ -892,4 +892,19 @@ TEST(KernelPipelineBuilder, SizingKeepsNoSharedState) {
     }
     for (auto &thread : threads)
         thread.join();
+}
+
+TEST_F(TrbRuntimeTempBufferTest, HostOnlyArgumentIsRejectedBeforeAnyUpload) {
+    Runtime runtime = make_runtime();
+    std::vector<uint8_t> bytes(64, 0x37);
+    auto host = make_tensor(bytes);
+    host.address_space = AddressSpace::HOST;
+    ChipStorageTaskArgs args;
+    args.add_tensor(host);
+    const ArgDirection signature[] = {ArgDirection::IN};
+
+    EXPECT_NE(bind_runtime(runtime, api_, args, signature, 1), 0);
+    EXPECT_EQ(fake_.copy_to_count, 0);
+    EXPECT_EQ(fake_.copy_from_count, 0);
+    EXPECT_EQ(release_run_bindings_impl(&runtime, &api_), 0);
 }

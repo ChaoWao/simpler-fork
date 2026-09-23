@@ -64,7 +64,7 @@ import sys
 from pathlib import Path
 
 import torch
-from simpler.buffer import Buffer
+from simpler.buffer import AddressSpace, Buffer
 from simpler.task_interface import ArgDirection as D
 from simpler.task_interface import (
     CallConfig,
@@ -675,7 +675,7 @@ def _write_host_int32(handle: Buffer, values: list[int]) -> None:
     del view
 
 
-def _allocate_whole(worker: Worker, n_ranks: int) -> dict[str, Buffer]:
+def _allocate_whole(worker: Worker, n_ranks: int, *, runtime: str) -> dict[str, Buffer]:
     """Allocate the host-backed whole parameters and write their values.
 
     ``num_tokens_per_owner`` is every rank's token count, read by the host
@@ -690,7 +690,9 @@ def _allocate_whole(worker: Worker, n_ranks: int) -> dict[str, Buffer]:
         spec = PARAM_SPEC_BY_NAME[step[1]]
         if spec.name != "num_tokens_per_owner":
             raise AssertionError(f"no value known for whole parameter {spec.name!r}")
-        handle = worker.create_buffer(4 * n_ranks)
+        handle = worker.create_buffer(
+            4 * n_ranks, memory_kind=AddressSpace.HOST if runtime == "host_build_graph" else AddressSpace.HOST_TO_DEVICE
+        )
         _write_host_int32(handle, [T] * n_ranks)
         buffers[spec.name] = handle
     return buffers
@@ -851,7 +853,7 @@ def run(  # noqa: PLR0913 -- one knob per CLI flag
     worker.init()
     try:
         params = _allocate_params(worker, N_RANKS)
-        whole = _allocate_whole(worker, N_RANKS)
+        whole = _allocate_whole(worker, N_RANKS, runtime=runtime)
         if not skip_golden:
             print("[dsv4] uploading the host fixture into child memory...", flush=True)
             _upload_fixture(worker, params, seed)

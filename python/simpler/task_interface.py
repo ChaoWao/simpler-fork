@@ -864,7 +864,9 @@ def _task_args_add_tensor(self: TaskArgs, tensor, tag: TensorArgType = TensorArg
             buffer_id=0 if inline else int(handle._buffer_id),
             generation=0 if inline else int(handle._generation),
             address_space=(
-                AddressSpace.DEVICE if handle.address_space == RemoteAddressSpace.REMOTE_DEVICE else AddressSpace.HOST
+                AddressSpace.DEVICE
+                if handle.address_space == RemoteAddressSpace.REMOTE_DEVICE
+                else AddressSpace.HOST_TO_DEVICE
             ),
             byte_offset=int(tensor.offset),
         )

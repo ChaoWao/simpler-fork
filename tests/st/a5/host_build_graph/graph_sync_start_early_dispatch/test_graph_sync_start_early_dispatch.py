@@ -35,6 +35,7 @@ which parks the scheduler threads that would have rung the sibling (#2256).
 """
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -116,7 +117,7 @@ class TestGraphSyncStartEarlyDispatchHbg(SceneTestCase):
                 "output",
                 torch.full((TOTAL_CL * FLOATS_PER_CACHE_LINE,), UNWRITTEN, dtype=torch.float32),
             ),
-            TensorArg("layout", torch.zeros(1, dtype=torch.int32)),
+            TensorArg("layout", torch.zeros(1, dtype=torch.int32), memory_kind=AddressSpace.HOST),
         )
 
     def compute_golden(self, args, params):

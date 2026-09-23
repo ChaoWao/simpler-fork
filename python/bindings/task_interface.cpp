@@ -2200,6 +2200,7 @@ NB_MODULE(_task_interface, m) {
     // int()-convert interchangeably — the descriptor stores them as raw u8.
     nb::enum_<AddressSpace>(m, "AddressSpace", nb::is_arithmetic())
         .value("HOST", AddressSpace::HOST)
+        .value("HOST_TO_DEVICE", AddressSpace::HOST_TO_DEVICE)
         .value("DEVICE", AddressSpace::DEVICE);
 
     nb::enum_<AccessMode>(m, "AccessMode", nb::is_arithmetic())
@@ -2474,7 +2475,15 @@ NB_MODULE(_task_interface, m) {
 
         .def_static(
             "make",
-            [](uint64_t data, nb::tuple shapes, DataType dtype, bool child_memory) -> ChipTensor {
+            [](uint64_t data, nb::tuple shapes, DataType dtype, nb::object child_memory,
+               nb::object memory_kind) -> ChipTensor {
+                if (!child_memory.is_none() && !memory_kind.is_none())
+                    throw std::invalid_argument("ChipTensor.make: specify memory_kind or child_memory, not both");
+                const auto space = !memory_kind.is_none() ? nb::cast<AddressSpace>(memory_kind) :
+                                                            (!child_memory.is_none() && nb::cast<bool>(child_memory) ?
+                                                                 AddressSpace::DEVICE :
+                                                                 AddressSpace::HOST_TO_DEVICE);
+                if (!is_valid_address_space(space)) throw std::invalid_argument("ChipTensor.make: invalid memory_kind");
                 size_t n = nb::len(shapes);
                 if (n == 0 || n > MAX_TENSOR_DIMS)
                     throw std::invalid_argument("ChipTensor.make: shapes length must be in [1, MAX_TENSOR_DIMS]");
@@ -2484,17 +2493,15 @@ NB_MODULE(_task_interface, m) {
                 // make_tensor_external yields a contiguous ChipTensor: row-major strides,
                 // start_offset == 0, buffer.size == numel * element_size.
                 return make_tensor_external(
-                    reinterpret_cast<void *>(static_cast<uintptr_t>(data)), shp, static_cast<uint32_t>(n), dtype,
-                    child_memory ? AddressSpace::DEVICE : AddressSpace::HOST
+                    reinterpret_cast<void *>(static_cast<uintptr_t>(data)), shp, static_cast<uint32_t>(n), dtype, space
                 );
             },
-            // The keyword stays `child_memory` while the C++ field is `address_space`: it is the
-            // name of a u8 on the remote-L3 tensor wire (see remote_wire.cpp encode_tensor), which
-            // renaming here would not change and which this constructor decodes into.
-            nb::arg("data"), nb::arg("shapes"), nb::arg("dtype"), nb::arg("child_memory") = false,
-            "Create a contiguous ChipTensor over pre-allocated memory. Set child_memory=True when "
-            "data is a device pointer allocated by the child process (skips H2D copy in "
-            "init_runtime_impl)."
+            // Both keywords initialize the same address_space byte; child_memory is a legacy alias.
+            nb::arg("data"), nb::arg("shapes"), nb::arg("dtype"), nb::arg("child_memory") = nb::none(), nb::kw_only(),
+            nb::arg("memory_kind") = nb::none(),
+            "Create a contiguous ChipTensor. memory_kind is HOST, HOST_TO_DEVICE (default), or DEVICE. "
+            "HOST is host-only; HOST_TO_DEVICE uses Program tensor transfers; DEVICE borrows device storage. "
+            "No kind grants cross-side mapped access."
         )
 
         // `data` is the tensor's memory address — i.e. ChipTensor::buffer.addr.
@@ -2560,12 +2567,23 @@ NB_MODULE(_task_interface, m) {
         )
 
         .def_prop_rw(
+            "memory_kind",
+            [](const ChipTensor &self) {
+                return self.address_space;
+            },
+            [](ChipTensor &self, AddressSpace space) {
+                if (!is_valid_address_space(space)) throw std::invalid_argument("invalid tensor memory_kind");
+                self.address_space = space;
+            }
+        )
+
+        .def_prop_rw(
             "child_memory",
             [](const ChipTensor &self) -> bool {
                 return self.is_device_memory();
             },
             [](ChipTensor &self, bool v) {
-                self.address_space = v ? AddressSpace::DEVICE : AddressSpace::HOST;
+                self.address_space = v ? AddressSpace::DEVICE : AddressSpace::HOST_TO_DEVICE;
             }
         )
 

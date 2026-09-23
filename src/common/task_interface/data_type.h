@@ -33,13 +33,19 @@ inline constexpr bool is_supported_scalar_arg_v = std::is_arithmetic_v<std::remo
 // owned by either.
 constexpr int MAX_TENSOR_DIMS = 5;
 
-// Memory space of a backing. Orthogonal to location (local/remote, derived) and to visibility.
-// Both a `BufferDescriptor` field and byte 43 of `ChipTensor` store it, so it is shared here rather
-// than owned by either.
+// One tensor storage contract, shared by BufferDescriptor and ChipTensor.
+// HOST and DEVICE permit access only on that side. HOST_TO_DEVICE names host
+// storage that the program adapter copies into separate device storage; it
+// grants no cross-side mapping. Direction still comes from the call signature.
 enum class AddressSpace : uint8_t {
     HOST = 0,
     DEVICE = 1,
+    HOST_TO_DEVICE = 2,
 };
+
+inline constexpr bool is_valid_address_space(AddressSpace space) {
+    return space == AddressSpace::HOST || space == AddressSpace::DEVICE || space == AddressSpace::HOST_TO_DEVICE;
+}
 
 /**
  * Supported data types for tensor elements

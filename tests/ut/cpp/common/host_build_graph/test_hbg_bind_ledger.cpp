@@ -430,10 +430,10 @@ const HostApiOps &fake_ops() {
     return ops;
 }
 
-ChipTensor host_tensor(std::vector<uint8_t> &storage) {
+ChipTensor host_tensor(std::vector<uint8_t> &storage, AddressSpace space = AddressSpace::HOST_TO_DEVICE) {
     ChipTensor t;
     uint32_t shape[1] = {static_cast<uint32_t>(storage.size())};
-    t.init_external(storage.data(), storage.size(), shape, 1, DataType::UINT8, AddressSpace::HOST);
+    t.init_external(storage.data(), storage.size(), shape, 1, DataType::UINT8, space);
     return t;
 }
 
@@ -1009,17 +1009,16 @@ TEST_F(HbgBindLedgerTest, HostGetSetCompletesBeforeMetadataPublication) {
     init_runtime(runtime);
     std::vector<uint8_t> input(64, 0x37);
     ChipStorageTaskArgs args;
-    args.add_tensor(host_tensor(input));
+    args.add_tensor(host_tensor(input, AddressSpace::HOST));
     ArgDirection sig[] = {ArgDirection::INOUT};
     ASSERT_EQ(bind(runtime, args, sig, 1), 0);
-    EXPECT_EQ(fake_.copy_count, 2);
+    EXPECT_EQ(fake_.copy_count, 0);
     EXPECT_EQ(input[0], 0x52);
-    ASSERT_EQ(runtime.tensor_leases().size(), 1u);
-    EXPECT_EQ(std::memcmp(runtime.tensor_leases()[0].dev_ptr, input.data(), input.size()), 0);
+    EXPECT_TRUE(runtime.tensor_leases().empty());
     for (const auto &copy : fake_.copies)
         EXPECT_NE(copy.dst, runtime.pending_publication().device_target);
     EXPECT_EQ(release_run_bindings_impl(&runtime, &api_), 0);
-    EXPECT_EQ(fake_.copy_count, 2);
+    EXPECT_EQ(fake_.copy_count, 0);
     EXPECT_TRUE(runtime.tensor_leases().empty());
 }
 
@@ -1183,183 +1182,129 @@ TEST_F(HbgBindLedgerTest, BindDrainsItsRecordersWithoutJoiningAnotherRuntime) {
     }
 }
 
-TEST_F(HbgHostAccessContractTest, HostInputIsReadableDuringBindAndInoutWritesReachBothCopies) {
+TEST_F(HbgHostAccessContractTest, HostInputHasNoDeviceAllocationOrCopy) {
     Runtime runtime;
     init_runtime(runtime);
-    auto runtime_cleanup = cleanup_runtime(runtime);
+    auto cleanup = cleanup_runtime(runtime);
     std::vector<uint8_t> input(4, 0x17);
     ChipStorageTaskArgs args;
-    args.add_tensor(host_tensor(input));
+    args.add_tensor(host_tensor(input, AddressSpace::HOST));
     ArgDirection sig[] = {ArgDirection::INOUT};
-
     ASSERT_EQ(bind(runtime, args, sig, 1), 0);
     ASSERT_EQ(access_.reads.size(), 1u);
     EXPECT_EQ(access_.reads[0], 0x17u);
-    EXPECT_EQ(access_.error, 0);
-    ASSERT_EQ(runtime.tensor_leases().size(), 1u);
-    EXPECT_EQ(*static_cast<uint8_t *>(runtime.tensor_leases()[0].dev_ptr), 0x17);
-    // An unpublished record belongs to the run that prepared it, so this run ends
-    // before the one below binds.
+    EXPECT_TRUE(runtime.tensor_leases().empty());
+    EXPECT_EQ(fake_.copy_count, 0);
     ASSERT_EQ(release_run_bindings_impl(&runtime, &api_), 0);
-
     access_.write = true;
     ASSERT_EQ(bind(runtime, args, sig, 1), 0);
     EXPECT_EQ(input[0], 0x5a);
-    ASSERT_EQ(runtime.tensor_leases().size(), 1u);
-    EXPECT_EQ(*static_cast<uint8_t *>(runtime.tensor_leases()[0].dev_ptr), 0x5a);
+    EXPECT_TRUE(runtime.tensor_leases().empty());
+    EXPECT_EQ(fake_.copy_count, 0);
 }
 
-TEST_F(HbgHostAccessContractTest, ChildMemoryInputUsesItsCurrentDeviceBytesDuringBind) {
-    Runtime runtime;
-    init_runtime(runtime);
-    auto runtime_cleanup = cleanup_runtime(runtime);
-    std::vector<uint8_t> device_bytes(4, 0x29);
-    ChipTensor child = host_tensor(device_bytes);
-    child.address_space = AddressSpace::DEVICE;
-    ChipStorageTaskArgs args;
-    args.add_tensor(child);
-    ArgDirection sig[] = {ArgDirection::INOUT};
-
-    ASSERT_EQ(bind(runtime, args, sig, 1), 0);
-    ASSERT_EQ(access_.reads.size(), 1u);
-    EXPECT_EQ(access_.reads[0], 0x29u);
-    EXPECT_TRUE(runtime.tensor_leases().empty()) << "child memory must not acquire host staging";
-    ASSERT_EQ(release_run_bindings_impl(&runtime, &api_), 0);
-    access_.write = true;
-    ASSERT_EQ(bind(runtime, args, sig, 1), 0);
-    EXPECT_EQ(device_bytes[0], 0x5a);
+TEST_F(HbgHostAccessContractTest, DeviceAndCopiedInputsRejectHostReadsAndWrites) {
+    for (const auto space : {AddressSpace::DEVICE, AddressSpace::HOST_TO_DEVICE}) {
+        for (bool write : {false, true}) {
+            SCOPED_TRACE(static_cast<int>(space));
+            SCOPED_TRACE(write);
+            access_.write = write;
+            access_.error = 0;
+            Runtime runtime;
+            init_runtime(runtime);
+            auto cleanup = cleanup_runtime(runtime);
+            std::vector<uint8_t> input(4, 0x29);
+            ChipStorageTaskArgs args;
+            args.add_tensor(host_tensor(input, space));
+            ArgDirection sig[] = {ArgDirection::INOUT};
+            EXPECT_EQ(bind(runtime, args, sig, 1), runtime_status_from_error_code(SIMPLER_ERROR_INVALID_ARGS));
+            EXPECT_EQ(access_.error, SIMPLER_ERROR_INVALID_ARGS);
+            EXPECT_EQ(input, std::vector<uint8_t>(4, 0x29));
+        }
+    }
 }
 
-TEST_F(HbgHostAccessContractTest, PureHostOutputRejectsGetAndSet) {
+TEST_F(HbgHostAccessContractTest, HostDirectionRejectsReadOfOutputAndWriteOfInput) {
     for (bool write : {false, true}) {
-        SCOPED_TRACE(write);
         access_.write = write;
         access_.error = 0;
         Runtime runtime;
         init_runtime(runtime);
         auto cleanup = cleanup_runtime(runtime);
-        std::vector<uint8_t> output(4, 0x39);
+        std::vector<uint8_t> input(4, 0x39);
         ChipStorageTaskArgs args;
-        args.add_tensor(host_tensor(output));
-        ArgDirection signature[] = {ArgDirection::OUT};
-        EXPECT_EQ(bind(runtime, args, signature, 1), runtime_status_from_error_code(SIMPLER_ERROR_INVALID_ARGS));
-        EXPECT_EQ(access_.error, SIMPLER_ERROR_INVALID_ARGS);
-        EXPECT_EQ(output, std::vector<uint8_t>(4, 0x39));
+        args.add_tensor(host_tensor(input, AddressSpace::HOST));
+        ArgDirection sig[] = {write ? ArgDirection::IN : ArgDirection::OUT};
+        EXPECT_EQ(bind(runtime, args, sig, 1), runtime_status_from_error_code(SIMPLER_ERROR_INVALID_ARGS));
+        EXPECT_EQ(input, std::vector<uint8_t>(4, 0x39));
     }
 }
 
-TEST_F(HbgHostAccessContractTest, SuccessorReadsPredecessorOutputAfterExplicitCopyback) {
-    Runtime predecessor;
-    init_runtime(predecessor);
-    auto predecessor_cleanup = cleanup_runtime(predecessor);
-    std::vector<uint8_t> output(4, 0x11);
+TEST_F(HbgBindLedgerTest, SeparateHostAndDeviceArgumentsReachTheirOwnConsumers) {
+    eps_ = {
+        [](const ChipTaskArgs &args) {
+            const uint32_t index[] = {0};
+            EXPECT_EQ(args.tensor(0).ref().address_space, AddressSpace::HOST);
+            EXPECT_EQ(args.tensor(1).ref().address_space, AddressSpace::DEVICE);
+            EXPECT_EQ(get_tensor_data(g_orch_runtime, args.tensor(0).ref(), 1, index), 0x17u);
+            CoreTaskArgs task;
+            task.add_input(args.tensor(1).ref());
+            MixedKernels kernels{};
+            kernels.aiv0_kernel_id = 0;
+            EXPECT_TRUE(g_orch_runtime->orchestrator->submit_task(kernels, task).task_id().is_valid());
+        },
+        capture_orch_bind
+    };
+    Runtime runtime;
+    init_runtime(runtime);
+    auto cleanup = cleanup_runtime(runtime);
+    const ArgDirection core_sig[] = {ArgDirection::IN};
+    auto callable = make_callable<CORE_MAX_TENSOR_ARGS>(core_sig, 1, nullptr, 0);
+    reinterpret_cast<CoreCallable *>(callable.data())->set_resolved_addr(0x1000);
+    const uint64_t object_table[] = {reinterpret_cast<uint64_t>(callable.data())};
+    const uint64_t entry_table[] = {0x1000};
+    runtime.set_callable_tables(
+        object_table, reinterpret_cast<uint64_t>(object_table), reinterpret_cast<uint64_t>(entry_table), 1
+    );
+    std::vector<uint8_t> host(4, 0x17);
+    std::vector<uint8_t> device_source(4, 0x29);
     ChipStorageTaskArgs args;
-    args.add_tensor(host_tensor(output));
-    ArgDirection sig[] = {ArgDirection::INOUT};
-    ASSERT_EQ(bind(predecessor, args, sig, 1), 0);
-    ASSERT_EQ(predecessor.tensor_leases().size(), 1u);
-
-    // Model bytes from a completed kernel. A device fence alone would leave
-    // the caller's host buffer stale; the explicit finalize copy-back is needed.
-    *static_cast<uint8_t *>(predecessor.tensor_leases()[0].dev_ptr) = 0x42;
-    EXPECT_EQ(output[0], 0x11);
-    ASSERT_EQ(finish_run(predecessor, 0), 0);
-    ASSERT_EQ(output[0], 0x42);
-
-    Runtime successor;
-    init_runtime(successor);
-    auto successor_cleanup = cleanup_runtime(successor);
-    ASSERT_EQ(bind(successor, args, sig, 1), 0);
-    ASSERT_EQ(access_.reads.size(), 2u);
-    EXPECT_EQ(access_.reads.back(), 0x42u);
+    args.add_tensor(host_tensor(host, AddressSpace::HOST));
+    args.add_tensor(host_tensor(device_source, AddressSpace::HOST_TO_DEVICE));
+    ArgDirection sig[] = {ArgDirection::IN, ArgDirection::IN};
+    ASSERT_EQ(bind(runtime, args, sig, 2), 0);
+    ASSERT_EQ(runtime.tensor_leases().size(), 1u);
+    EXPECT_EQ(*static_cast<uint8_t *>(runtime.tensor_leases()[0].dev_ptr), 0x29u);
+    EXPECT_EQ(fake_.copy_count, 1);
 }
 
-TEST_F(HbgHostAccessContractTest, IndependentAndSharedReadOnlyInputsCanPrepareBeforeCopyback) {
-    Runtime predecessor;
-    init_runtime(predecessor);
-    auto predecessor_cleanup = cleanup_runtime(predecessor);
-    std::vector<uint8_t> output(4, 0x11);
-    std::vector<uint8_t> shared_input(4, 0x27);
-    ChipStorageTaskArgs first_args;
-    first_args.add_tensor(host_tensor(output));
-    first_args.add_tensor(host_tensor(shared_input));
-    ArgDirection first_sig[] = {ArgDirection::INOUT, ArgDirection::IN};
-    ASSERT_EQ(bind(predecessor, first_args, first_sig, 2), 0);
-    ASSERT_EQ(predecessor.tensor_leases().size(), 2u);
-    *static_cast<uint8_t *>(predecessor.tensor_leases()[0].dev_ptr) = 0x42;
-
-    // A separate fake bank retains the predecessor's staging, as the runner's
-    // leased slot does. No wait/copy-back is called before this bind.
-    FakeHostApi successor_bank;
-    g_fake = &successor_bank;
-    Runtime successor;
-    init_runtime(successor);
-    auto successor_cleanup = cleanup_runtime(successor);
-    std::vector<uint8_t> independent(4, 0x38);
-    ChipStorageTaskArgs second_args;
-    second_args.add_tensor(host_tensor(shared_input));
-    second_args.add_tensor(host_tensor(independent));
-    ArgDirection second_sig[] = {ArgDirection::IN, ArgDirection::IN};
-    EXPECT_EQ(bind(successor, second_args, second_sig, 2), 0);
-    EXPECT_EQ(access_.reads, (std::vector<uint64_t>{0x11, 0x27, 0x27, 0x38}));
-    EXPECT_EQ(output[0], 0x11);
-    EXPECT_EQ(finish_run(successor, 0), 0);
-
-    g_fake = &fake_;
-    EXPECT_EQ(finish_run(predecessor, 0), 0);
-    EXPECT_EQ(output[0], 0x42);
-    EXPECT_EQ(shared_input[0], 0x27);
-}
-
-TEST_F(HbgHostAccessContractTest, GetAndSetRejectCurrentGraphOutputsAndOverlappingWriters) {
-    for (InputProducer producer : {InputProducer::Allocated, InputProducer::Overlapping}) {
-        for (bool write : {false, true}) {
-            SCOPED_TRACE(static_cast<int>(producer));
-            SCOPED_TRACE(write);
-            access_.producer = producer;
-            access_.write = write;
-            access_.error = 0;
-            Runtime runtime;
-            init_runtime(runtime);
-            auto runtime_cleanup = cleanup_runtime(runtime);
-            std::vector<uint8_t> input(4, 0x17);
-            ChipStorageTaskArgs args;
-            args.add_tensor(host_tensor(input));
-            ArgDirection sig[] = {ArgDirection::INOUT};
-
-            EXPECT_EQ(bind(runtime, args, sig, 1), runtime_status_from_error_code(SIMPLER_ERROR_INVALID_ARGS));
-            EXPECT_EQ(access_.error, SIMPLER_ERROR_INVALID_ARGS);
-            EXPECT_EQ(input[0], 0x17) << "a rejected write must not reach the caller's buffer";
-        }
-    }
-}
-
-TEST_F(HbgHostAccessContractTest, DisjointWriterDoesNotPreventReadyInputAccess) {
-    for (bool write : {false, true}) {
-        access_.producer = InputProducer::Disjoint;
-        access_.write = write;
-        access_.error = 0;
-        Runtime runtime;
-        init_runtime(runtime);
-        auto runtime_cleanup = cleanup_runtime(runtime);
-        // a5sim resolves the callable metadata while constructing its scheduler
-        // image, even though this memory backend never launches the kernel.
-        auto callable = make_callable<CORE_MAX_TENSOR_ARGS>(nullptr, 0, nullptr, 0);
-        reinterpret_cast<CoreCallable *>(callable.data())->set_resolved_addr(0x1000);
-        const uint64_t object_table[] = {reinterpret_cast<uint64_t>(callable.data())};
-        const uint64_t entry_table[] = {0x1000};
-        runtime.set_callable_tables(
-            object_table, reinterpret_cast<uint64_t>(object_table), reinterpret_cast<uint64_t>(entry_table), 1
-        );
-        std::vector<uint8_t> input(4, 0x17);
-        ChipStorageTaskArgs args;
-        args.add_tensor(host_tensor(input));
-        ArgDirection sig[] = {ArgDirection::INOUT};
-
-        ASSERT_EQ(bind(runtime, args, sig, 1), 0);
-        EXPECT_EQ(access_.error, 0);
-        EXPECT_EQ(input[0], 0x17);
-        EXPECT_EQ(input[1], write ? 0x5a : 0x17);
-        if (!write) EXPECT_EQ(access_.reads.back(), 0x17u);
-    }
+TEST_F(HbgBindLedgerTest, HostTensorCannotBecomeADeviceTaskOperand) {
+    eps_ = {
+        [](const ChipTaskArgs &args) {
+            CoreTaskArgs task;
+            task.add_input(args.tensor(0).ref());
+            MixedKernels kernels{};
+            kernels.aiv0_kernel_id = 0;
+            EXPECT_FALSE(g_orch_runtime->orchestrator->submit_task(kernels, task).task_id().is_valid());
+        },
+        capture_orch_bind
+    };
+    Runtime runtime;
+    init_runtime(runtime);
+    auto cleanup = cleanup_runtime(runtime);
+    const ArgDirection core_sig[] = {ArgDirection::IN};
+    auto callable = make_callable<CORE_MAX_TENSOR_ARGS>(core_sig, 1, nullptr, 0);
+    reinterpret_cast<CoreCallable *>(callable.data())->set_resolved_addr(0x1000);
+    const uint64_t object_table[] = {reinterpret_cast<uint64_t>(callable.data())};
+    const uint64_t entry_table[] = {0x1000};
+    runtime.set_callable_tables(
+        object_table, reinterpret_cast<uint64_t>(object_table), reinterpret_cast<uint64_t>(entry_table), 1
+    );
+    std::vector<uint8_t> host(4, 0x17);
+    ChipStorageTaskArgs args;
+    args.add_tensor(host_tensor(host, AddressSpace::HOST));
+    ArgDirection sig[] = {ArgDirection::IN};
+    EXPECT_EQ(bind(runtime, args, sig, 1), runtime_status_from_error_code(SIMPLER_ERROR_INVALID_ARGS));
+    EXPECT_TRUE(runtime.tensor_leases().empty());
+    EXPECT_EQ(fake_.copy_count, 0);
 }

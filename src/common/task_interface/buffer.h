@@ -295,7 +295,7 @@ inline void validate_buffer_descriptor(const BufferDescriptor &h) {
     };
 
     if (h.magic != BUFFER_DESCRIPTOR_MAGIC) reject("invalid BufferDescriptor: magic");
-    if (h.address_space > static_cast<uint8_t>(AddressSpace::DEVICE))
+    if (!is_valid_address_space(static_cast<AddressSpace>(h.address_space)))
         reject("invalid BufferDescriptor: address_space out of range");
     if (h.access > static_cast<uint8_t>(AccessMode::READWRITE)) reject("invalid BufferDescriptor: access out of range");
     if (h.backend_kind > static_cast<uint8_t>(BackendKind::VMM_SHAREABLE))

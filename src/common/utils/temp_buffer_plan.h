@@ -27,11 +27,9 @@
  * kernel reads the wrong bytes. It lives here, in one copy shared by both
  * runtimes and both architectures, precisely because that failure is silent.
  *
- * The predicate: a device-memory tensor is passed through untouched and an
- * empty one addresses nothing, so neither takes a slice. Everything else takes
- * one, rounded up to the bump's slice alignment — including a pure `OUT`
- * tensor, which needs the device buffer but no H2D copy-in, so this is not the
- * same set as the tensors `bind.args` reports as `h2d=`.
+ * Only nonempty HOST_TO_DEVICE arguments consume slices. HOST stays on the
+ * host, DEVICE is already allocated, and pure OUT still needs a device slice
+ * even though it has no copy-in.
  *
  * Separate from `utils/retained_temp_bump.h` so that header stays free of
  * task_interface types; it needs only <cstddef>, and its unit test compiles
@@ -41,7 +39,7 @@ inline size_t packed_temp_bytes(const ChipStorageTaskArgs *orch_args) {
     size_t required = 0;
     for (int i = 0; i < orch_args->tensor_count(); i++) {
         ChipTensor t = orch_args->tensor(i);
-        if (t.is_device_memory() || t.nbytes() == 0) {
+        if (t.address_space != AddressSpace::HOST_TO_DEVICE || t.nbytes() == 0) {
             continue;
         }
         required += RetainedTempBump::align_up(static_cast<size_t>(t.nbytes()));

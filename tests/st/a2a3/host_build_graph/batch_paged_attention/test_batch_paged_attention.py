@@ -10,6 +10,7 @@
 """Batch paged attention benchmark for the host-build-graph runtime."""
 
 import torch
+from simpler.buffer import AddressSpace
 from simpler.task_interface import ArgDirection as D
 
 from simpler_setup import Scalar, SceneTestCase, TaskArgsBuilder, TensorArg, scene_test
@@ -26,7 +27,7 @@ class TestBatchPagedAttentionHostBuildGraph(SceneTestCase):
         "orchestration": {
             "source": "kernels/orchestration/paged_attention_orch.cpp",
             "function_name": "aicpu_orchestration_entry",
-            "signature": [D.IN, D.IN, D.IN, D.IN, D.IN, D.OUT],
+            "signature": [D.IN, D.IN, D.IN, D.IN, D.IN, D.OUT, D.IN],
         },
         "incores": [
             {
@@ -192,7 +193,12 @@ class TestBatchPagedAttentionHostBuildGraph(SceneTestCase):
                 specs.append(TensorArg(name, value))
             else:
                 specs.append(Scalar(name, value))
-        return TaskArgsBuilder(*specs)
+        tensors = [spec for spec in specs if isinstance(spec, TensorArg)]
+        scalars = [spec for spec in specs if isinstance(spec, Scalar)]
+        host_context = next(spec.value for spec in tensors if spec.name == "context_lens").clone()
+        return TaskArgsBuilder(
+            *tensors, TensorArg("host_context_lens", host_context, memory_kind=AddressSpace.HOST), *scalars
+        )
 
     def compute_golden(self, args, params):
         tensors = {s.name: s.value for s in args.specs if isinstance(s, TensorArg)}
