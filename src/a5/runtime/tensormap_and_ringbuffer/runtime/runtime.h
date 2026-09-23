@@ -477,6 +477,10 @@ static_assert(
     "field placed between it and workers would fall outside every steady-state publication"
 );
 static_assert(
+    offsetof(DeviceRuntimeLaunchDesc, orch_args_storage_) <= LAUNCH_ROUTE_PREFIX_CACHE_BYTES,
+    "the launch route's published prefix must fit the fixed per-allocation host copy a slot keeps of it"
+);
+static_assert(
     offsetof(DeviceRuntimeLaunchDesc, orch_args_storage_) % 64 == 0,
     "orch_args_storage_ must start on a cache line: the steady-state length is its offset plus a whole "
     "number of 64-byte-aligned Tensor slots, and both halves have to stay line-aligned"

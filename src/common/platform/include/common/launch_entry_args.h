@@ -48,6 +48,19 @@ enum class EntryArgsSource : uint32_t {
 inline constexpr size_t LAUNCH_ENVELOPE_HEADER_BYTES = 192;
 
 /**
+ * Host bytes a persistent argument block keeps of the descriptor prefix its
+ * launch route last published onto it.
+ *
+ * A cap, not a layout: a runtime that uses the launch route asserts its own
+ * prefix fits, and one without a launch route never reads the storage. Fixed
+ * and trivially copyable on purpose — recording a prefix after the copy that
+ * put it on the device has to allocate nothing and throw nothing, or a
+ * successful publication could be followed by a failure with no state to
+ * report it in.
+ */
+inline constexpr size_t LAUNCH_ROUTE_PREFIX_CACHE_BYTES = 256;
+
+/**
  * What the host needs to route one run's entry arguments, captured once per run
  * from the descriptor snapshot that publication will consume.
  *
