@@ -47,6 +47,25 @@
 /** Upper bound on the regions one transaction covers; a bank has three. */
 inline constexpr size_t kMaxArenaTransactionRegions = 4;
 
+/**
+ * A block a region stops being published at, and which of the two boundaries
+ * ended the claim.
+ *
+ * Only a caller that owns its allocations beyond the arena needs these. The
+ * third way a region's backing changes — a replacement that published — is not
+ * reported here: the arena then holds the new block, so the owner settles the
+ * generation it replaced against that new base rather than against an event.
+ */
+enum class ArenaRegionDisposition {
+    // Staged for this region and then dropped, because a peer region's staging
+    // failed. It never became the generation the region publishes, and no
+    // consumer of this transaction's plan ever saw it.
+    StageAborted,
+    // The region was asked to hold nothing and detached this block. The region
+    // is published at no address at all until it republishes.
+    Detached,
+};
+
 struct ArenaRegionRequest {
     DeviceArena *arena;
     // The capacity the caller publishes for this region. Written only on
@@ -54,6 +73,20 @@ struct ArenaRegionRequest {
     size_t *cached_size;
     size_t requested_size;
     const char *name;
+    // Announced immediately before this region's backing is staged, for a
+    // caller whose allocation callback needs to know which region is asking —
+    // the callback's own arguments carry only a byte count. Null when the
+    // caller has no such need, which is every caller that owns one pool.
+    void (*announce)(void *ctx, size_t region_index){nullptr};
+    void *announce_ctx{nullptr};
+    // Reported when this region gives up a block, before the free callback that
+    // would release it. The free callback alone cannot carry this: a caller that
+    // owns the allocation refuses every free it makes, and the same callback
+    // serves a stage abort, a superseded backing and a teardown — which mean
+    // different things to an owner. Null when the caller's allocations are the
+    // arena's to free, which is every caller that keeps no ledger of its own.
+    void (*disposition)(void *ctx, size_t region_index, ArenaRegionDisposition what, void *base){nullptr};
+    void *disposition_ctx{nullptr};
 };
 
 enum class ArenaRegionAction {
@@ -119,12 +152,22 @@ inline ArenaTransactionResult run_arena_replacement_transaction(
     // Covers a throwing allocation as well as a null return: either way the
     // staged blocks this call created are the only ones to drop.
     auto staged_guard = RAIIScopeGuard([&]() {
-        for (size_t i = 0; i < count; ++i)
+        for (size_t i = 0; i < count; ++i) {
+            void *staged = requests[i].arena->staged_raw_backing();
+            // A staged block that is the block this region is already committed
+            // at is no new generation to give up: the caller's allocator handed
+            // the same allocation back because it already covered the request,
+            // and abandoning that claim would abandon the region's own backing.
+            if (staged != nullptr && staged != requests[i].arena->raw_backing() && requests[i].disposition != nullptr) {
+                requests[i].disposition(requests[i].disposition_ctx, i, ArenaRegionDisposition::StageAborted, staged);
+            }
             requests[i].arena->abort_replacement();
+        }
     });
 
     for (size_t i = 0; i < count; ++i) {
         if (actions[i] != ArenaRegionAction::Replace) continue;
+        if (requests[i].announce != nullptr) requests[i].announce(requests[i].announce_ctx, i);
         if (requests[i].arena->stage_replacement(requests[i].requested_size, base_align) != nullptr) continue;
         result.failed_region = static_cast<int>(i);
         return result;
@@ -145,8 +188,15 @@ inline ArenaTransactionResult run_arena_replacement_transaction(
     }
     result.published = true;
 
-    for (size_t i = 0; i < count; ++i)
+    for (size_t i = 0; i < count; ++i) {
+        // Before the free, so an owner that refuses the free has already
+        // recorded that this region no longer publishes the block.
+        if (superseded[i] != nullptr && actions[i] == ArenaRegionAction::Release &&
+            requests[i].disposition != nullptr) {
+            requests[i].disposition(requests[i].disposition_ctx, i, ArenaRegionDisposition::Detached, superseded[i]);
+        }
         requests[i].arena->free_superseded(superseded[i]);
+    }
     return result;
 }
 

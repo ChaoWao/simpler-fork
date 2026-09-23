@@ -195,7 +195,8 @@ ChipWorker::~ChipWorker() {
 void ChipWorker::init(
     const std::string &host_lib_path, const std::string &aicpu_path, const std::string &aicore_path,
     const std::string &dispatcher_path, int device_id, const CallConfig *prewarm_config, bool enable_sdma,
-    const std::string &sim_context_path, const std::string &sdma_warmup_path, bool collect_across_runs
+    const std::string &sim_context_path, const std::string &sdma_warmup_path, bool collect_across_runs,
+    uint64_t workspace_budget_bytes
 ) {
     if (finalized_) {
         throw std::runtime_error("ChipWorker already finalized; cannot reinitialize");
@@ -276,6 +277,10 @@ void ChipWorker::init(
             set_retain_runs_fn_ =
                 reinterpret_cast<SimplerSetRetainRunsFn>(dlsym(handle, "simpler_set_dfx_session_ctx"));
         }
+        set_workspace_budget_fn_ =
+            reinterpret_cast<SimplerSetWorkspaceBudgetFn>(dlsym(handle, "simpler_set_workspace_budget_ctx"));
+        get_workspace_report_fn_ =
+            reinterpret_cast<SimplerGetWorkspaceReportFn>(dlsym(handle, "simpler_get_workspace_report_ctx"));
         flush_diagnostics_fn_ =
             reinterpret_cast<SimplerFlushDiagnosticsFn>(dlsym(handle, "simpler_flush_diagnostics_ctx"));
         supports_concurrent_native_prepare_fn_ =
@@ -418,6 +423,19 @@ void ChipWorker::init(
                 throw std::runtime_error("ChipWorker::init: retaining runs across boundaries could not be enabled");
             }
         }
+        // Both halves of the capability, resolved together: a caller that asked
+        // for a budget must fail visibly rather than run unmanaged, and the
+        // teardown protection that reads the report must never be left unable
+        // to tell "no budget" from "budget whose accounting cannot be read".
+        if (workspace_budget_bytes != 0) {
+            if (set_workspace_budget_fn_ == nullptr || get_workspace_report_fn_ == nullptr) {
+                throw std::runtime_error("ChipWorker::init: this runtime module has no workspace budget support");
+            }
+            if (set_workspace_budget_fn_(device_ctx_, workspace_budget_bytes) != 0) {
+                throw std::runtime_error("ChipWorker::init: workspace budget could not be enabled");
+            }
+            workspace_budget_latched_ = true;
+        }
         init_rc = simpler_init_fn_(
             device_ctx_, device_id, aicpu_bytes.data(), aicpu_bytes.size(), aicore_bytes.data(), aicore_bytes.size(),
             dispatcher_ptr, dispatcher_bytes.size(), prewarm_config, enable_sdma ? 1 : 0, warmup_ptr,
@@ -426,6 +444,12 @@ void ChipWorker::init(
     } catch (...) {
         destroy_device_context_fn_(device_ctx_);
         device_ctx_ = nullptr;
+        // The context is gone, and its own teardown already released or
+        // quarantined every block it owned. So this generation's budget is
+        // resolved and the latch must not outlive it: a later unmanaged init
+        // would otherwise be unable to tell "no budget" from "a budget whose
+        // accounting cannot be read" and refuse every close.
+        workspace_budget_latched_ = false;
         create_device_context_fn_ = nullptr;
         destroy_device_context_fn_ = nullptr;
         device_malloc_ctx_fn_ = nullptr;
@@ -447,6 +471,8 @@ void ChipWorker::init(
         finalize_run_fn_ = nullptr;
         probe_run_retention_fn_ = nullptr;
         get_teardown_report_fn_ = nullptr;
+        set_workspace_budget_fn_ = nullptr;
+        get_workspace_report_fn_ = nullptr;
         supports_concurrent_native_prepare_fn_ = nullptr;
         supports_joined_native_launch_fn_ = nullptr;
         get_arena_bank_gm_heap_base_fn_ = nullptr;
@@ -492,6 +518,8 @@ void ChipWorker::init(
         // sim context.
         destroy_device_context_fn_(device_ctx_);
         device_ctx_ = nullptr;
+        // Resolved with the context, as in the catch above.
+        workspace_budget_latched_ = false;
         create_device_context_fn_ = nullptr;
         destroy_device_context_fn_ = nullptr;
         device_malloc_ctx_fn_ = nullptr;
@@ -513,6 +541,8 @@ void ChipWorker::init(
         finalize_run_fn_ = nullptr;
         probe_run_retention_fn_ = nullptr;
         get_teardown_report_fn_ = nullptr;
+        set_workspace_budget_fn_ = nullptr;
+        get_workspace_report_fn_ = nullptr;
         supports_concurrent_native_prepare_fn_ = nullptr;
         supports_joined_native_launch_fn_ = nullptr;
         get_arena_bank_gm_heap_base_fn_ = nullptr;
@@ -575,6 +605,24 @@ void ChipWorker::capture_teardown_report_noexcept() noexcept {
     if (rc != 0 || report.schema != TEARDOWN_REPORT_SCHEMA) return;
     teardown_report_ = report;
     teardown_report_captured_ = true;
+}
+
+ChipWorker::WorkspaceReportStatus ChipWorker::workspace_report(SimplerWorkspaceReport *out) const noexcept {
+    if (!workspace_budget_latched_) return WorkspaceReportStatus::Disabled;
+    if (out == nullptr || device_ctx_ == nullptr || get_workspace_report_fn_ == nullptr) {
+        return WorkspaceReportStatus::Unavailable;
+    }
+    SimplerWorkspaceReport report{};
+    int rc = PTO_RUNTIME_ERR_INTERNAL;
+    try {
+        rc = get_workspace_report_fn_(device_ctx_, &report, sizeof(report));
+    } catch (...) {
+        return WorkspaceReportStatus::Unavailable;
+    }
+    // An unrecognised schema is the whole record absent, not a partial read.
+    if (rc != 0 || report.schema != WORKSPACE_REPORT_SCHEMA) return WorkspaceReportStatus::Unavailable;
+    *out = report;
+    return WorkspaceReportStatus::Available;
 }
 
 bool ChipWorker::teardown_report(SimplerTeardownReport *out) const {
@@ -655,6 +703,13 @@ void ChipWorker::finalize() {
     finalize_run_fn_ = nullptr;
     probe_run_retention_fn_ = nullptr;
     get_teardown_report_fn_ = nullptr;
+    // Reached only past the throw a failed teardown takes, which keeps the
+    // latch — and with it a readable report — for the retry. Past it, every
+    // block this generation owned has been released or quarantined, so the
+    // latch is resolved and must not outlive the generation that set it.
+    workspace_budget_latched_ = false;
+    set_workspace_budget_fn_ = nullptr;
+    get_workspace_report_fn_ = nullptr;
     supports_concurrent_native_prepare_fn_ = nullptr;
     supports_joined_native_launch_fn_ = nullptr;
     get_arena_bank_gm_heap_base_fn_ = nullptr;

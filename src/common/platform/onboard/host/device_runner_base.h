@@ -77,6 +77,7 @@
 #include "host/child_memory_host_view.h"
 #include "host/kernel_execution_state.h"
 #include "host/memory_allocator.h"
+#include "host/workspace_manager.h"
 #include "host/pmu_collector.h"
 #include "host/queued_stream_waits.h"
 #include "host/run_boundary_marks.h"
@@ -372,6 +373,79 @@ public:
      */
     int acquire_run_image_staging(uint32_t pipeline_slot, std::size_t bytes, std::size_t alignment, void **addr_out);
     void clear_temporary_buffer();
+
+    /**
+     * Latch this context's finite workspace budget, once.
+     *
+     * @return 0 on success; PTO_RUNTIME_ERR_INVALID_ARGUMENT for a zero budget
+     *         or a second call.
+     */
+    int set_workspace_budget(std::uint64_t limit_bytes);
+
+    /** Fill one workspace report. False when no budget is latched. */
+    bool workspace_report(SimplerWorkspaceReport *out) const;
+
+    /** Whether a workspace budget is latched on this context. */
+    bool workspace_enabled() const { return workspace_.enabled(); }
+
+    /**
+     * Report one run fact at the boundary that produced it.
+     *
+     * Called from the run phase entries, never derived from a phase word or
+     * from the code a caller received.
+     */
+    void note_workspace_run_fact(uint32_t pipeline_slot, std::uint64_t run_epoch, WorkspaceManager::RunFact fact) {
+        workspace_.note_run_fact(pipeline_slot, run_epoch, fact);
+    }
+
+    /**
+     * Publish the run identity this thread's workspace requests belong to.
+     *
+     * The arena callbacks and the retained-temp grow carry no identity of their
+     * own, so the prepare driving them names one around the call. Thread-scoped
+     * because a prepared successor may be built on another thread while this
+     * one still holds its own plan.
+     */
+    static void begin_workspace_plan(uint32_t pipeline_slot, std::uint64_t run_epoch) noexcept;
+    static void end_workspace_plan() noexcept;
+
+    /**
+     * Name the consumer region this thread's next workspace request serves.
+     *
+     * The arena allocation callback receives only a byte count, so the setup
+     * driving it announces each region just before that region's backing is
+     * staged. A block belongs to exactly one region, which is what stops a
+     * growing GM heap from being handed the block a still-attached
+     * shared-memory region is published at.
+     */
+    static void set_workspace_plan_region(const WorkspaceManager::RegionKey &region) noexcept;
+    static WorkspaceManager::RegionKey workspace_plan_region() noexcept;
+
+    /** Scopes one thread's workspace plan identity to a prepare. */
+    class WorkspacePlanScope {
+    public:
+        WorkspacePlanScope(uint32_t pipeline_slot, std::uint64_t run_epoch) noexcept {
+            begin_workspace_plan(pipeline_slot, run_epoch);
+        }
+        ~WorkspacePlanScope() { end_workspace_plan(); }
+        WorkspacePlanScope(const WorkspacePlanScope &) = delete;
+        WorkspacePlanScope &operator=(const WorkspacePlanScope &) = delete;
+    };
+
+    /** Runs still holding workspace whose completion a caller can still prove. */
+    std::uint32_t workspace_live_consumers() const { return workspace_.live_drainable_consumers(); }
+
+    /**
+     * Acquire this slot's retained temporary staging buffer.
+     *
+     * Managed contexts answer from the ledger; unmanaged ones allocate exactly
+     * as `RetainedTempBump` did on its own. Either way the slot ends up naming
+     * the returned block, and a failure leaves the previous block named and
+     * intact.
+     *
+     * @return 0 on success, non-zero when no block of `bytes` could be had
+     */
+    int acquire_retained_temp(uint32_t pipeline_slot, std::size_t bytes, void **addr_out, std::size_t *size_out);
     /**
      * Map a device buffer into the host address space and return a
      * host-readable VA (or nullptr on failure); the paired unregister releases
@@ -387,7 +461,18 @@ public:
         (void)bytes;
         return nullptr;
     }
-    virtual void unregister_device_memory_from_host(void *dev_ptr) { (void)dev_ptr; }
+    /**
+     * Release a mapping established above.
+     *
+     * @return 0 once the range is no longer mapped into this process, non-zero
+     *         when it still is. A caller that owns the storage must keep it: the
+     *         mapping covers the whole allocation, so releasing the bytes behind
+     *         one would hand a live host address to the next allocation.
+     */
+    virtual int unregister_device_memory_from_host(void *dev_ptr) {
+        (void)dev_ptr;
+        return 0;
+    }
 
     /**
      * Host view of a child-memory address for a host-side orchestrator, with
@@ -414,6 +499,18 @@ public:
      * map: past that point the pages are gone and the mapping cannot be named.
      */
     void release_child_memory_host_views();
+
+    /**
+     * Unregister the one mapping over `alloc_base`, if it has one.
+     *
+     * The record is dropped only once the platform confirms the range is
+     * unmapped, so a failure leaves this runner still naming the mapping it
+     * still holds instead of forgetting it.
+     *
+     * @return 0 when `alloc_base` is no longer mapped into this process —
+     *         including the common case of never having been mapped
+     */
+    int drop_child_memory_host_view(void *alloc_base);
 
     /**
      * Commit the three per-Worker pooled regions (GM heap, shared
@@ -1326,14 +1423,62 @@ protected:
 
     /**
      * `DeviceArena` callback trampolines bridging from C-style
-     * `void *(void *ctx, size_t)` / `void (void *ctx, void *)` to the
-     * `MemoryAllocator` member function calls. The `ctx` opaque pointer
-     * passed at arena construction time is `&mem_alloc_`.
+     * `void *(void *ctx, size_t)` / `void (void *ctx, void *)` to this runner.
+     * The `ctx` opaque pointer passed at arena construction time is the runner,
+     * not the allocator: a context with a latched workspace budget routes its
+     * arena backing through the ledger that owns those blocks, and one without
+     * a budget reaches the same allocator calls it always did.
      */
     static void *arena_alloc_trampoline(void *ctx, std::size_t size) {
-        return static_cast<MemoryAllocator *>(ctx)->alloc(size);
+        return static_cast<DeviceRunnerBase *>(ctx)->acquire_arena_backing(size);
     }
-    static void arena_free_trampoline(void *ctx, void *p) { static_cast<MemoryAllocator *>(ctx)->free(p); }
+    static void arena_free_trampoline(void *ctx, void *p) {
+        static_cast<DeviceRunnerBase *>(ctx)->release_arena_backing(p);
+    }
+
+    /**
+     * Arena backing acquisition and hand-back for one bank region.
+     *
+     * Unmanaged: the allocator, as before. Managed: the workspace ledger, which
+     * may hand back a block an earlier generation still fits and no consumer
+     * references, and which treats the hand-back as dropping this run's
+     * reference rather than as permission to free.
+     */
+    void *acquire_arena_backing(std::size_t size);
+    void release_arena_backing(void *p);
+
+    /** The runner and bank one arena setup announces its regions against. */
+    struct ArenaRegionAnnounce {
+        DeviceRunnerBase *runner;
+        uint32_t bank;
+    };
+
+    /**
+     * Record that a bank region has given up the block at `base`.
+     *
+     * A managed block outlives the arena that was using it, so the arena's own
+     * free callback cannot end its ownership — and the same callback serves a
+     * stage abort, a superseded backing and a teardown, which mean different
+     * things here. This is the transaction telling the ledger which of them
+     * happened, so a claim that ends stops holding budget: an aborted staging
+     * never became a generation anybody named, and a detached region publishes
+     * no address at all. Neither drops a run reference or lifts a quarantine,
+     * so the bytes still wait for their last true consumer.
+     */
+    void note_arena_region_disposition(uint32_t arena_bank, ArenaRegionDisposition what, void *base);
+
+    /**
+     * Register this plan as a consumer of every region the bank now publishes.
+     *
+     * A region whose existing capacity was enough allocates nothing, so it
+     * reaches no allocation callback — and a plan that read and wrote it
+     * without registering would let a later growth treat those bytes as free
+     * to overwrite.
+     *
+     * @return 0, or PTO_RUNTIME_ERR_INTERNAL when a reference could not be
+     *         recorded — refused rather than silently unprotected
+     */
+    int reference_bank_arenas(uint32_t arena_bank, const ArenaRegionRequest *requests, std::size_t count);
 
     /**
      * Configure STARS op execution timeout (once per DeviceRunner lifetime).
@@ -2065,6 +2210,11 @@ protected:
     host::LoadAicpuOp load_aicpu_op_;
 
     MemoryAllocator mem_alloc_;
+
+    // One budget and one ownership ledger for this context's workspace
+    // regions. Off unless a caller latches a budget.
+    WorkspaceManager workspace_;
+
     // Host mappings of child-memory allocations a host-side orchestrator has
     // touched — see HostApi acquire_child_memory_host_view. Keyed by allocation
     // base and dropped by that allocation's free, which is what keeps a cached
