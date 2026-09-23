@@ -155,6 +155,11 @@ int KernelArgsHelper::prepare_runtime_args(
         slot.runtime_args = reinterpret_cast<Runtime *>(runtime_dev);
         slot.runtime_bytes = runtime_extent;
         slot.workers_initialized = false;
+        // A fresh block inherits no claim about its contents. The two teardown
+        // paths reset the whole struct, but a slot reaching this branch with a
+        // freed pointer has not been through either, so the transition is made
+        // here rather than inherited.
+        slot.published_prefix_bytes = 0;
     }
     // A block whose handshake region has never been published still holds
     // whatever the allocator returned, so the first publication onto it carries
@@ -260,12 +265,46 @@ int KernelArgsHelper::publish_runtime_args(bool launch_route_permitted) {
     }
 
     const size_t publish_bytes = launch_route ? plan_.descriptor_bytes_when_launched : runtime_image_.size();
+    // A publication this block may already be holding: the launch route's own
+    // prefix, onto an allocation a previous launch-route publication recorded.
+    // Every other publication — the first onto a block, the descriptor
+    // fallback, a runtime with no launch route — writes a range nothing
+    // recorded, so it copies and records nothing.
+    const bool prefix_cacheable = launch_route && plan_.supported && initializing_slot_ == nullptr &&
+                                  publish_bytes == plan_.descriptor_bytes_when_launched &&
+                                  publish_bytes <= LAUNCH_ROUTE_PREFIX_CACHE_BYTES;
     // The consumed snapshot is neither pending nor published during the copy.
     // Reentrant publish is rejected; copy failure leaves fresh prepare admissible.
     runtime_args_state_ = RuntimeArgsState::Empty;
     const int rc = runtime_image_.publish(
-        [this](const void *source, size_t bytes) {
-            return rtMemcpy(args.runtime_args, bytes, source, bytes, RT_MEMCPY_HOST_TO_DEVICE);
+        [this, prefix_cacheable](const void *source, size_t bytes) -> int {
+            // Compared and recorded here, inside the callback, because `source`
+            // is the snapshot the publication consumes: it is alive for exactly
+            // this call and gone once it returns.
+            if (prefix_cacheable && slot_->published_prefix_bytes == bytes &&
+                std::memcmp(source, slot_->published_prefix.data(), bytes) == 0) {
+                // The block holds these bytes already. Skipping the copy is the
+                // whole change: the run is as published as a copy would have
+                // made it.
+                return 0;
+            }
+            // Invalidated before the copy, not after a failure: a copy that
+            // modifies part of the block and then fails leaves contents no
+            // record may describe, and the next publication must not be able to
+            // match its way out of re-sending them. The length changing is not
+            // the mechanism — a warm failure leaves `workers_initialized` set,
+            // so the next prepare sends this same length again.
+            slot_->published_prefix_bytes = 0;
+            const int copy_rc = rtMemcpy(args.runtime_args, bytes, source, bytes, RT_MEMCPY_HOST_TO_DEVICE);
+            if (copy_rc != 0) return copy_rc;
+            if (prefix_cacheable) {
+                // After the copy that earned it, into fixed storage: no
+                // allocation and nothing that can throw between a device write
+                // and the state that records it.
+                std::memcpy(slot_->published_prefix.data(), source, bytes);
+                slot_->published_prefix_bytes = static_cast<uint32_t>(bytes);
+            }
+            return copy_rc;
         },
         publish_bytes
     );

@@ -29,6 +29,7 @@
 
 #include <runtime/rt.h>
 
+#include <array>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -155,6 +156,22 @@ struct SlotPersistentArgs {
     // block above; and here rather than in the per-run helper so the growth is
     // paid once per slot instead of once per run.
     std::vector<std::byte> launch_package;
+
+    // The descriptor prefix this block's launch route last published onto it,
+    // and how many of those bytes are valid. **Zero length means invalid**,
+    // which is what value-initialization gives — so the whole-struct reset both
+    // teardown paths already perform clears it, and a replacement allocation
+    // starts with no claim about its contents.
+    //
+    // A publication whose bytes equal this skips its copy: the block already
+    // holds them, and on this runtime nothing but a publication writes that
+    // range. Only the launch route records here, so the copy is never skipped
+    // on the strength of a range some other route wrote. Fixed and trivially
+    // copyable because recording happens *after* the copy that earned it, where
+    // an allocation or a throw would leave a published descriptor with no state
+    // saying so.
+    std::array<std::byte, LAUNCH_ROUTE_PREFIX_CACHE_BYTES> published_prefix{};
+    uint32_t published_prefix_bytes{0};
 };
 
 /**
