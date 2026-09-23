@@ -1177,24 +1177,14 @@ public:
     virtual void arm_host_dep_gen_capture(bool /*enable*/) {}
 
     /**
-     * Launch an AICPU kernel. Internal helper used by the subclass's
-     * `launch_execution()`; thin wrapper that dispatches through `load_aicpu_op_`'s
-     * cached `rtFuncHandle` (resolved by `LoadAicpuOp::Init` at first
-     * bootstrap).
+     * Launch an AICPU entry with an arbitrary launch-arg payload.
      *
-     * @param stream       AICPU stream
-     * @param k_args       Front-less KernelArgs payload (runtime_args @ 0)
-     * @param kernel_name  Name of the kernel to launch (e.g.
-     *                     `host::KernelNames::RunName`)
-     * @param aicpu_num    Number of AICPU instances to launch
-     * @return 0 on success, error code on failure
-     */
-    int launch_aicpu_kernel(rtStream_t stream, KernelArgs *k_args, const char *kernel_name, int aicpu_num);
-
-    /**
-     * Launch an AICPU entry with an arbitrary launch-arg payload. Used by the
-     * non-exec entries whose payload is not KernelArgs: `simpler_aicpu_init`
+     * Every AICPU launch goes through here: the run entry, whose payload is
+     * `KernelArgs` alone or that header followed by this run's entry values,
+     * and the non-exec entries whose payload is neither — `simpler_aicpu_init`
      * (InitArgs) and `simpler_aicpu_register_callable` (RegisterCallableArgs).
+     * `args_size` is what reaches `rtsLaunchCpuKernel` as `argsSize`, so it is
+     * how far past the header RTS copies.
      *
      * @param stream       AICPU stream
      * @param args         Payload pointer (host memory; CANN copies it in)

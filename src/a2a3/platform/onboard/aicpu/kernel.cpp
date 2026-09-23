@@ -14,6 +14,7 @@
 #include "common/unified_log.h"
 #include "common/kernel_args.h"
 #include "common/platform_config.h"
+#include "aicpu/platform_entry_args.h"
 #include "aicpu/aicpu_device_config.h"
 #include "aicpu/dep_gen_collector_aicpu.h"
 #include "aicpu/device_log.h"
@@ -128,6 +129,16 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_exec(void *a
     // host allocated no region, which every publisher treats as "nothing to
     // publish into".
     set_platform_run_result(k_args->run_result_data_base, k_args->run_result_epoch);
+    // This thread's own view of the launch package, published under its gate
+    // survivor index so no other thread writes the slot and no other thread's
+    // arguments are borrowed. Base and offset stay separate: the runtime forms
+    // the payload address only after checking both against its descriptor.
+    set_platform_entry_args(
+        platform_aicpu_affinity_thread_idx(), PlatformEntryArgs{
+                                                  arg, k_args->entry_args_offset, k_args->entry_tensor_count,
+                                                  k_args->entry_scalar_count, k_args->entry_args_source
+                                              }
+    );
     AicpuPhaseScope run_wall(AicpuPhase::RunWall);
 
     int rc = aicpu_execute(runtime);

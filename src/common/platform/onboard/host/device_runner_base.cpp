@@ -1830,19 +1830,13 @@ void DeviceRunnerBase::publish_host_phase_records_to_swimlane(uint32_t pipeline_
 // Group E (minimal) — shared AICPU launch helper
 // =============================================================================
 
-int DeviceRunnerBase::launch_aicpu_kernel(
-    rtStream_t stream, KernelArgs *k_args, const char *kernel_name, int aicpu_num
-) {
-    // kernel_name is host::KernelNames::RunName — the runtime SO's actual
-    // exported symbol (simpler_aicpu_exec). LaunchBuiltInOp dispatches via
-    // rtsLaunchCpuKernel on the cached rtFuncHandle resolved by
-    // LoadAicpuOp::Init at first-time bootstrap.
-    return load_aicpu_op_.LaunchBuiltInOp(stream, k_args, sizeof(KernelArgs), aicpu_num, kernel_name);
-}
-
 int DeviceRunnerBase::launch_aicpu_payload(
     rtStream_t stream, void *args, size_t args_size, const char *kernel_name, int aicpu_num
 ) {
+    // For the run entry, kernel_name is host::KernelNames::RunName — the runtime
+    // SO's actual exported symbol (simpler_aicpu_exec). LaunchBuiltInOp
+    // dispatches via rtsLaunchCpuKernel on the cached rtFuncHandle resolved by
+    // LoadAicpuOp::Init at first-time bootstrap.
     return load_aicpu_op_.LaunchBuiltInOp(stream, args, args_size, aicpu_num, kernel_name);
 }
 
@@ -3167,8 +3161,15 @@ int DeviceRunnerBase::init_runtime_args_with_metadata(
         LOG_ERROR("prepare_runtime_args failed: %d", rc);
         return rc;
     }
-    rc = kernel_args.publish_runtime_args();
-    if (rc != 0) return rc;
+    // A runtime whose entry values can travel as launch arguments publishes at
+    // launch instead, because which route they take is only answerable once the
+    // run holds the stream it will submit on. The snapshot taken above is what
+    // that publication sends, so the values are still this run's either way.
+    // Every other runtime publishes here, as it always has.
+    if (!runtime_launch_entry_args_plan(runtime).supported) {
+        rc = kernel_args.publish_runtime_args(/*launch_route_permitted=*/false);
+        if (rc != 0) return rc;
+    }
     // Log config and device ordinal are no longer published per-run on
     // KernelArgs — they were latched once into the AICPU SO globals by
     // simpler_aicpu_init (ensure_aicpu_init_launched) at device init.

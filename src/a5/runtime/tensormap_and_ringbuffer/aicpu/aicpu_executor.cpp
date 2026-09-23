@@ -28,6 +28,7 @@
 #include "aicpu/device_run_result_aicpu.h"
 #include "aicpu/device_run_result_base_aicpu.h"
 #include "aicpu/orch_so_file.h"
+#include "aicpu/platform_entry_args.h"
 #include "callable_protocol.h"
 #include "common/kernel_args.h"
 #include "dispatch_payload.h"
@@ -228,6 +229,48 @@ static_assert(
 );
 
 // ===== AicpuExecutor Method Implementations =====
+
+namespace {
+
+// Whether this launch's entry-argument header names values the descriptor
+// agrees with, adopting them when it does. A descriptor-route run consumes
+// nothing: its values are already in place, and the header only has to say so.
+bool adopt_launch_entry_args(Runtime *runtime, int32_t thread_idx) {
+    // This thread's own slot: `thread_idx` is the gate survivor index the
+    // platform entry published under, on this same thread, so the block the
+    // view names is the one that thread still owns.
+    const PlatformEntryArgs view = get_platform_entry_args(thread_idx);
+    const uint32_t source = view.source;
+    const uint32_t offset = view.offset;
+    const uint32_t tensors = view.tensor_count;
+    const uint32_t scalars = view.scalar_count;
+    // Decided before any address is formed from these values; the verdict says
+    // which check refused, and Adopt is the only one that licenses the read.
+    const LaunchEntryArgsVerdict verdict = classify_launch_entry_args(*runtime, source, offset, tensors, scalars);
+    if (verdict == LaunchEntryArgsVerdict::Descriptor) return true;
+    if (verdict != LaunchEntryArgsVerdict::Adopt) {
+        LOG_ERROR(
+            "Thread %d: launch entry-args rejected (verdict=%d, source=%u/%u, offset=%u, counts=%u/%u vs %u/%u)",
+            thread_idx, static_cast<int32_t>(verdict), source, static_cast<uint32_t>(runtime->get_entry_args_source()),
+            offset, tensors, scalars, runtime->get_entry_tensor_count(), runtime->get_entry_scalar_count()
+        );
+        return false;
+    }
+
+    const void *base = view.args_base;
+    if (base == nullptr) {
+        LOG_ERROR("Thread %d: launch entry-args base is null", thread_idx);
+        return false;
+    }
+    const void *payload = static_cast<const unsigned char *>(base) + LAUNCH_ENVELOPE_HEADER_BYTES;
+    if (!runtime->adopt_entry_args_from_launch(payload, tensors, scalars)) {
+        LOG_ERROR("Thread %d: launch entry-args %u/%u were rejected by the storage", thread_idx, tensors, scalars);
+        return false;
+    }
+    return true;
+}
+
+}  // namespace
 
 int32_t AicpuExecutor::init(Runtime *runtime) {
     if (runtime == nullptr) {
@@ -588,6 +631,41 @@ int32_t AicpuExecutor::run_orchestration(Runtime *runtime, int32_t thread_idx) {
             p_func = &entry.func;
             p_bind = &entry.bind;
             DeviceOrchestrationConfigFunc *p_config_func = &entry.config_func;
+
+            // Entry values arrive either in the descriptor already or as raw
+            // bytes appended to this launch's arguments. Adopt the launch form
+            // before anything reads the storage, and only after the offset, the
+            // counts and the source agree with the descriptor's own — a payload
+            // address formed from unchecked values is what this ordering
+            // prevents. Runs before create_from_entry_storage below, and only on
+            // the orchestrator thread: the scheduler threads are still waiting
+            // on runtime_init_ready_, and nothing else reads these values.
+            if (!adopt_launch_entry_args(runtime, thread_idx)) {
+                // Pre-runtime failure, reported by the thread's own return: rt
+                // and the SM header do not exist yet, so there is no shared
+                // error state to latch. The two statements below are the same
+                // pair the arg-count rejection a few lines down already uses,
+                // and what follows them is that path's, not new code:
+                //
+                //   `run` sees a non-zero run_orchestration and withholds this
+                //   thread's `normal_path` claim -> the release below frees the
+                //   scheduler threads from their runtime_init_ready_ spin ->
+                //   each sees `rt` null (file-scope, nulled by every run's gate
+                //   cleanup), skips dispatch and withholds its own claim ->
+                //   every thread still calls sched_ctx_.shutdown to retire the
+                //   cores it owns, then terminal_.record_participant, then
+                //   arrives at completion_gate_ -> the last arrival runs
+                //   snapshot_run_terminal, where run_terminal_select turns an
+                //   incomplete normal path carrying a participant failure into
+                //   an Error terminal rather than a success or an undecided
+                //   read.
+                //
+                // Returning out of the entry instead would leave the AICore
+                // workers waiting on gates nobody releases until the
+                // op-execute timeout.
+                runtime_init_ready_.store(true, std::memory_order_release);
+                return -1;
+            }
 
             // Build the entry-arg once per run; both the config call below and
             // the orchestration entry (consumed at orch_args_cached_) use it.
