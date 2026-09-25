@@ -787,6 +787,13 @@ private:
             b->released = true;
             b->state = BlockState::ProvenUnused;
             reserved_bytes_ -= b->bytes;
+            // The one further attempt a block whose earlier free failed is
+            // allowed reached a proved outcome, so the doubt it was carrying
+            // is over: leaving the marks would report a freed block as
+            // unconfirmed for the rest of this context's life, and would keep
+            // its record out of compaction forever.
+            b->release_unconfirmed = false;
+            b->release_rc = 0;
             return;
         }
         // A failed free is not a reclamation: the bytes keep their charge and

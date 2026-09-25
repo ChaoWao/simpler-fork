@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -1158,6 +1159,46 @@ TEST(WorkspaceManagerOwnership, AReleaseUnconfirmedBlockIsNotHandedBackByReferen
     // disposition. Handing back storage whose free was attempted and failed
     // would let a run write where the platform may already have reclaimed.
     EXPECT_FALSE(m.reference(stale, 8));
+}
+
+TEST(WorkspaceManagerDegraded, ASweepThatProvesTheFreeClearsTheEarlierDoubt) {
+    FakeBackend backend;
+    WorkspaceManager m;
+    ASSERT_TRUE(m.configure(backend.ops()));
+    const WorkspaceManager::RegionKey region = WorkspaceManager::staging_region(0);
+
+    void *stale = nullptr;
+    ASSERT_NO_FATAL_FAILURE(publish_and_retire(m, region, 1, kOneMiB, &stale));
+    ASSERT_NO_FATAL_FAILURE(publish_and_retire(m, region, 2, kTwoMiB, nullptr));
+    backend.fail_release_of = stale;
+    EXPECT_NE(m.reclaim_obsolete(), 0);
+    ASSERT_EQ(m.block_state(stale), WorkspaceManager::BlockState::ReleaseUnconfirmed);
+
+    // The ordinary close path does not try this block again — that failure is
+    // the run boundary's and is already recorded. It still releases the other,
+    // unreferenced block, so what must not grow is this block's own attempt
+    // count rather than the total.
+    const auto attempts_on = [&backend](void *base) {
+        return std::count(backend.released.begin(), backend.released.end(), base);
+    };
+    ASSERT_EQ(attempts_on(stale), 1);
+    EXPECT_EQ(m.release_unreferenced(), 0);
+    EXPECT_EQ(attempts_on(stale), 1);
+
+    // The terminal sweep gets the one further attempt that can settle it, and
+    // when it succeeds the doubt is over: a freed block reported as
+    // unconfirmed would stay that way for the rest of the context's life and
+    // never leave the ledger.
+    {
+        WorkspaceManager::TerminalSweep sweep = m.begin_terminal_sweep();
+        EXPECT_FALSE(sweep.must_keep(stale));
+        sweep.note_result(stale, 0, /*kept=*/false);
+    }
+    EXPECT_FALSE(m.owns(stale));
+    SimplerWorkspaceReport report{};
+    ASSERT_TRUE(m.report(&report));
+    EXPECT_EQ(report.release_unconfirmed_blocks, 0u);
+    EXPECT_EQ(report.proof_unavailable, 0u);
 }
 
 }  // namespace
