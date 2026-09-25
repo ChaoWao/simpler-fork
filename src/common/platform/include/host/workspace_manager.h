@@ -946,11 +946,13 @@ private:
      * Ownership of some block can no longer be proved, so this manager stops
      * publishing new ones.
      *
-     * Every unprovable record is permanent — a failed free and a failed unmap
-     * cannot be retried into certainty, and a run destroyed before its facts
-     * completed can never produce them. Without this latch each later round
-     * could publish another block and leave another record behind it, so the
-     * ledger would grow with the failures rather than stopping at them.
+     * Nothing this manager does on its own can clear such a record. The
+     * terminal sweep is the one place a failed free can still be settled, and
+     * only there, once; a failed unmap leaves a live host address that no
+     * later attempt makes safe; and a run destroyed before its facts completed
+     * can never produce them. Without this latch each later round could
+     * publish another block and leave another record behind it, so the ledger
+     * would grow with the failures rather than stopping at them.
      *
      * It frees nothing, caps no bytes, and leaves blocks already proven safe
      * reusable: only the publication of *new* blocks stops.

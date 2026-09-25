@@ -832,17 +832,29 @@ TEST(WorkspaceManagerOwnership, AnUnmappableBlockIsKeptRatherThanFreedUnderItsMa
     EXPECT_EQ(report.quarantined_mapped_bytes, kOneMiB);
     EXPECT_EQ(report.proof_unavailable, 1u);
 
-    // Not by an ordinary release, and not by growth's reclamation either — even
-    // once the region has republished elsewhere and left it obsolete.
+    // Not by an ordinary release: a block a host address still covers is
+    // excluded from every release path.
     EXPECT_EQ(m.release_unreferenced(), 0);
     EXPECT_TRUE(backend.released.empty());
-    void *successor = m.acquire(region, 2, kTwoMiB);
-    ASSERT_NE(successor, nullptr);
-    m.note_published(region, successor);
-    retire(m, 0, 2);
-    EXPECT_EQ(m.acquire(region, 3, kFourMiB), nullptr);
+
+    // The region cannot republish past it either, and for a stronger reason
+    // than this case once asserted. It used to publish a successor and check
+    // that growth's reclamation stepped over the mapped block; now ownership
+    // of that block is unprovable, so no new block is published at all and
+    // the mapped one can never even become an obsolete generation.
+    WorkspaceManager::AcquireRefusal why = WorkspaceManager::AcquireRefusal::None;
+    EXPECT_EQ(m.acquire(region, 2, kTwoMiB, &why), nullptr);
+    EXPECT_EQ(why, WorkspaceManager::AcquireRefusal::Degraded);
+
+    // Through all of it the bytes stay owned here and unfreed, which is the
+    // property the mapping made necessary.
     EXPECT_TRUE(backend.released.empty());
     EXPECT_TRUE(m.owns(mapped));
+    EXPECT_TRUE(m.must_keep(mapped));
+    EXPECT_EQ(m.block_state(mapped), WorkspaceManager::BlockState::Quarantined);
+    ASSERT_TRUE(m.report(&report));
+    EXPECT_EQ(report.quarantined_mapped_bytes, kOneMiB);
+    EXPECT_EQ(m.reserved_bytes(), kOneMiB);
 }
 
 TEST(WorkspaceManagerBudget, AGivenUpClaimStillWaitsForItsLastConsumer) {
