@@ -198,22 +198,25 @@ public:
 
     /** Whether one workspace report could be produced, and why not. */
     enum class WorkspaceReportStatus : uint32_t {
-        /** No budget was ever latched on this context: the default. */
+        /** This context's workspace regions have no owner: sim, a chip child,
+            or any route that asked for neither management nor a budget. */
         Disabled = 0,
         /** `out` carries this context's accounting. */
         Available = 1,
-        /** A budget is latched but its accounting could not be read. */
+        /** This context is managed but its accounting could not be read. */
         Unavailable = 2,
     };
 
     /**
      * Read this context's workspace accounting.
      *
-     * Three answers rather than two, because "no budget" and "a budget whose
-     * accounting cannot be read" have opposite safety consequences: a caller
-     * that protects teardown on this must refuse on `Unavailable` and must not
-     * mistake it for `Disabled`. Whether a budget is latched is this object's
-     * own recorded fact, independent of any query succeeding.
+     * Three answers rather than two, because "not managed" and "managed but
+     * unreadable" have opposite safety consequences: a caller that protects
+     * teardown on this must refuse on `Unavailable` and must not mistake it
+     * for `Disabled`. Whether this context is managed is this object's own
+     * recorded fact, independent of any query succeeding — and it is a
+     * different question from whether a finite budget is enforced, which the
+     * report answers through `budget_enforced`.
      */
     WorkspaceReportStatus workspace_report(SimplerWorkspaceReport *out) const noexcept;
 

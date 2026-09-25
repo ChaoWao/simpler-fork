@@ -529,6 +529,12 @@ public:
         int last_error = 0;
         for (Block &b : blocks_) {
             if (b.quarantined || b.ref_count != 0 || b.released || b.swept) continue;
+            // A release that already failed is not attempted again here. Its
+            // bytes keep their charge and its record keeps the failure, and
+            // the terminal sweep below still gets the one further attempt that
+            // can reach a proved outcome — trying again on this ordinary path
+            // would only add a second failure to the same block.
+            if (b.release_unconfirmed) continue;
             const int rc = apply_release_locked(b);
             if (rc != 0) last_error = rc;
         }

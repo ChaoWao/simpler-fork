@@ -66,6 +66,7 @@
 #include "device_runner_helpers.h"
 #include "aicpu_loader/host/load_aicpu_op.h"
 #include "host/arena_replacement_transaction.h"
+#include "host/workspace_staging.h"
 #include "host/chip_swimlane_collector.h"
 #include "host/device_fault_monitor.h"
 #include "host/device_health_state.h"
@@ -377,12 +378,6 @@ public:
     void clear_temporary_buffer();
 
     /**
-     * Latch this context's finite workspace budget, once.
-     *
-     * @return 0 on success; PTO_RUNTIME_ERR_INVALID_ARGUMENT for a zero budget
-     *         or a second call.
-     */
-    /**
      * Record that this context wants workspace ownership management, and
      * optionally a finite byte limit, when it is initialized.
      *
@@ -390,6 +385,10 @@ public:
      * hold is not latched yet, and management belongs only to a program
      * context. Allocates nothing, so a context that never installs is
      * untouched. `limit_bytes == 0` requests management with no limit.
+     *
+     * @return 0 on success; PTO_RUNTIME_ERR_INVALID_ARGUMENT for a second
+     *         request, which never replaces the first one;
+     *         PTO_RUNTIME_ERR_INVALID_STATE once management is installed
      */
     int stage_workspace_management(std::uint64_t limit_bytes);
 
@@ -409,10 +408,15 @@ public:
      */
     int reclaim_workspace_obsolete();
 
-    /** Fill one workspace report. False when no budget is latched. */
+    /**
+     * Fill one workspace report. False when this context is not managed.
+     *
+     * Management, not a budget: a managed context with no finite limit still
+     * has a report, and says so through `budget_enforced == 0`.
+     */
     bool workspace_report(SimplerWorkspaceReport *out) const;
 
-    /** Whether a workspace budget is latched on this context. */
+    /** Whether this context's workspace regions have an owner. */
     bool workspace_enabled() const { return workspace_.enabled(); }
 
     /**
@@ -2188,10 +2192,9 @@ protected:
     int device_id_{-1};
     // This context's execution identity. Write-once: the first init entry to
     // run latches it, and it never changes afterwards.
-    // Staged by `stage_workspace_management` before init and consumed once by
-    // `install_staged_workspace`; neither owns a device resource.
-    bool workspace_staged_{false};
-    std::uint64_t workspace_staged_limit_{0};
+    // Recorded by `stage_workspace_management` before init and consumed once
+    // by `install_staged_workspace`; owns no device resource.
+    WorkspaceStagingRequest workspace_staging_;
     ExecutionModeLatch execution_mode_latch_;
     KernelExecutionState kernel_exec_state_;
     PersistentKernelArgs persistent_args_;

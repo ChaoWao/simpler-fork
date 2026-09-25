@@ -467,23 +467,14 @@ int DeviceRunnerBase::stage_workspace_management(std::uint64_t limit_bytes) {
     // context that never reaches `install_staged_workspace` is exactly the
     // context it was before. The mode this entry belongs to is not latched
     // yet, which is why the install is deferred rather than done here.
-    if (workspace_.enabled()) return PTO_RUNTIME_ERR_INVALID_STATE;
-    workspace_staged_ = true;
-    if (limit_bytes != 0) workspace_staged_limit_ = limit_bytes;
-    return 0;
+    return workspace_staging_.record(limit_bytes, workspace_.enabled());
 }
 
-void DeviceRunnerBase::clear_staged_workspace() noexcept {
-    workspace_staged_ = false;
-    workspace_staged_limit_ = 0;
-}
+void DeviceRunnerBase::clear_staged_workspace() noexcept { workspace_staging_.clear(); }
 
 int DeviceRunnerBase::install_staged_workspace() {
-    if (!workspace_staged_) {
-        // A limit with no management request is a caller that skipped the
-        // staging entry; enforcing nothing silently would hide that.
-        return workspace_staged_limit_ == 0 ? 0 : PTO_RUNTIME_ERR_INVALID_ARGUMENT;
-    }
+    const WorkspaceStagingRequest::Install plan = workspace_staging_.plan();
+    if (plan == WorkspaceStagingRequest::Install::Nothing) return 0;
     WorkspaceManager::Backend backend{};
     backend.ctx = this;
     backend.acquire = [](void *ctx, std::size_t bytes) -> void * {
@@ -519,7 +510,8 @@ int DeviceRunnerBase::install_staged_workspace() {
         return WorkspaceManager::ReleaseOutcome::Freed;
     };
     if (!workspace_.configure(backend)) return PTO_RUNTIME_ERR_INVALID_STATE;
-    if (workspace_staged_limit_ != 0 && !workspace_.set_limit(workspace_staged_limit_)) {
+    if (plan == WorkspaceStagingRequest::Install::ManageWithLimit &&
+        !workspace_.set_limit(workspace_staging_.limit_bytes())) {
         return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
     }
     return 0;

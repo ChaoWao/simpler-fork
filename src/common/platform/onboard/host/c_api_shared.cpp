@@ -1138,10 +1138,15 @@ int simpler_prepare_run(
         // needs. Obsolete generations left by earlier runs — including a
         // staging a failed prepare abandoned — are released here rather than
         // at the boundary that produced them, because that boundary could not
-        // prove attachment. A reclaim failure does not fail this prepare: the
-        // ledger keeps the block owned and stops publishing new ones, which
-        // the allocation below then reports if it matters.
-        (void)runner->reclaim_workspace_obsolete();
+        // prove attachment.
+        //
+        // A failure here is this call's only error, and it is reported rather
+        // than dropped: a free or an unmap that did not happen is a device
+        // fact, and a prepare that returned success would leave the caller
+        // with no indication of it at all unless a later growth happened to
+        // refuse. The cleanup path releases whatever this prepare had taken.
+        const int reclaim_rc = runner->reclaim_workspace_obsolete();
+        if (reclaim_rc != 0) return cleanup_failed_prepare(state, reclaim_rc);
 
         if (overlaps_active_run) {
             // The probe exists to protect a *shared* arena bank, so require it
@@ -1729,8 +1734,15 @@ int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
     // call's own result, and every device step above is guarded by it. This
     // keeps a steady-state workload from carrying an obsolete generation until
     // its next prepare, without ever guessing that the thread is attached.
+    //
+    // Recorded rather than returned here: this run's lease, slot and context
+    // still have to be released below, and an error from a *previous* run's
+    // block must not displace this run's own execution or validation failure.
+    // It is folded into the return precedence last, so it is reported exactly
+    // when nothing that outranks it went wrong.
+    int reclaim_rc = 0;
     if (attach_rc == 0) {
-        (void)state->runner->reclaim_workspace_obsolete();
+        reclaim_rc = state->runner->reclaim_workspace_obsolete();
     }
 
     // Before the slot becomes reusable, not after: releasing the claim is "the
@@ -1761,6 +1773,10 @@ int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
     }
     if (validation_rc != 0) return validation_rc;
     if (resources_rc != 0) return resources_rc;
+    if (launched && execution_rc != 0) return execution_rc;
+    // Last: a standalone workspace-reclamation failure is still a failure, and
+    // with nothing above it to report this is where the caller learns of it.
+    if (reclaim_rc != 0) return reclaim_rc;
     return launched ? execution_rc : 0;
 }
 

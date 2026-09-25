@@ -167,17 +167,65 @@ def test_the_guard_is_driven_alone_before_the_buffer_cleanup_batch():
     assert "raise gate_err" in source[gate_drive:batch]
 
 
-def test_the_level_two_route_asks_for_management_and_no_other_route_does():
-    """Lifetime ownership of the four regions is the default on the one route
-    whose teardown can be fenced before the public Buffer release, and it is
-    not a user option: a forked chip child reaches the same `ChipWorker.init`
-    without it and keeps its existing path until L3 has a close proof."""
-    import inspect
+def _l2_with_recording_chip(monkeypatch, **extra):
+    """Build a real level-2 Worker whose ChipWorker records what init received.
 
-    from simpler.worker import Worker, _chip_process_loop  # noqa: PLC0415
+    Drives the production `_init_level2`, so what is asserted is the call the
+    route actually makes rather than the text of the function that makes it.
+    """
+    import simpler.worker as worker_mod  # noqa: PLC0415
 
-    level2 = inspect.getsource(Worker._init_level2)
-    assert "manage_workspace=True" in level2
-    # Not reachable through configuration: nothing reads it out of _config.
-    assert '_config.get("manage_workspace"' not in level2
-    assert "manage_workspace" not in inspect.getsource(_chip_process_loop)
+    import simpler_setup.runtime_builder as rb_mod  # noqa: PLC0415
+
+    seen: dict = {}
+
+    class _RecordingChip:
+        def init(self, *_a, **kwargs):
+            seen.update(kwargs)
+
+        def _register_callable_at_slot(self, *_a, **_k):  # pragma: no cover
+            pass
+
+        def finalize(self):  # pragma: no cover
+            pass
+
+    class _FakeBuilder:
+        def __init__(self, *_a, **_k):
+            pass
+
+        def get_binaries(self, *_a, **_k):
+            return object()
+
+    monkeypatch.setattr(worker_mod, "ChipWorker", _RecordingChip)
+    monkeypatch.setattr(rb_mod, "RuntimeBuilder", _FakeBuilder)
+    worker = worker_mod.Worker(2, device_id=0, **_COMMON, **extra)
+    worker._init_level2()
+    return seen
+
+
+def test_the_level_two_route_asks_for_management_and_carries_no_budget_by_default(monkeypatch):
+    """Ownership of the four regions is the default on the one route whose
+    teardown can be fenced before the public Buffer release, and it arrives
+    without a budget: the two are separate requests."""
+    seen = _l2_with_recording_chip(monkeypatch)
+    assert seen["manage_workspace"] is True
+    assert seen["workspace_budget_bytes"] == 0
+
+
+def test_an_explicit_budget_still_reaches_the_same_route(monkeypatch):
+    """A caller that sets one gets management and that limit, unchanged."""
+    seen = _l2_with_recording_chip(monkeypatch, workspace_budget_bytes=4 << 20)
+    assert seen["manage_workspace"] is True
+    assert seen["workspace_budget_bytes"] == 4 << 20
+
+
+def test_a_chip_child_reaches_chip_worker_init_unmanaged():
+    """The forked child calls the same entry without asking, so the default of
+    the parameter is what keeps it on its existing path until L3 has a
+    cross-process close proof of its own."""
+    import inspect  # noqa: PLC0415
+
+    from simpler.task_interface import ChipWorker  # noqa: PLC0415
+
+    parameter = inspect.signature(ChipWorker.init).parameters["manage_workspace"]
+    assert parameter.default is False
