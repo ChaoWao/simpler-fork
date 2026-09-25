@@ -561,6 +561,19 @@ int simpler_set_dfx_session_ctx(DeviceContextHandle ctx, int32_t enabled);
 int simpler_set_workspace_budget_ctx(DeviceContextHandle ctx, uint64_t limit_bytes);
 
 /**
+ * Ask for workspace ownership management with no byte limit.
+ *
+ * The additive half of the pair: `simpler_set_workspace_budget_ctx` asks for
+ * management *and* a finite limit, and is unchanged for every caller that
+ * already uses it. Both record the request and are consumed by `simpler_init`
+ * once the context's execution mode is latched, so a kernel context is never
+ * managed and the ledger exists before the eager prewarm allocates.
+ *
+ * @return 0 on success, non-zero when this context is already managed
+ */
+int simpler_enable_workspace_management_ctx(DeviceContextHandle ctx);
+
+/**
  * Read this context's workspace accounting into a caller-owned record.
  *
  * `out_bytes` is the caller's `sizeof`, so a module built against a shorter

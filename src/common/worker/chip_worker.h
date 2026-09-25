@@ -91,7 +91,7 @@ public:
         const std::string &host_lib_path, const std::string &aicpu_path, const std::string &aicore_path,
         const std::string &dispatcher_path, int device_id, const CallConfig *prewarm_config = nullptr,
         bool enable_sdma = false, const std::string &sim_context_path = "", const std::string &sdma_warmup_path = "",
-        bool collect_across_runs = false, uint64_t workspace_budget_bytes = 0
+        bool collect_across_runs = false, uint64_t workspace_budget_bytes = 0, bool manage_workspace = false
     );
 
     /**
@@ -479,13 +479,18 @@ private:
     using SimplerFlushDiagnosticsFn = decltype(&simpler_flush_diagnostics_ctx);
     SimplerSetRetainRunsFn set_retain_runs_fn_ = nullptr;
     using SimplerSetWorkspaceBudgetFn = decltype(&simpler_set_workspace_budget_ctx);
+    using SimplerEnableWorkspaceManagementFn = decltype(&simpler_enable_workspace_management_ctx);
     using SimplerGetWorkspaceReportFn = decltype(&simpler_get_workspace_report_ctx);
     SimplerSetWorkspaceBudgetFn set_workspace_budget_fn_ = nullptr;
+    SimplerEnableWorkspaceManagementFn enable_workspace_management_fn_ = nullptr;
     SimplerGetWorkspaceReportFn get_workspace_report_fn_ = nullptr;
     // Latched when init accepted a budget. A caller protecting teardown reads
     // this, never "the last query worked", so a failed query cannot pass for a
     // context that never had a budget.
-    bool workspace_budget_latched_ = false;
+    // Management and a finite limit are separate predicates: a managed context
+    // may enforce no limit, and the report must not confuse the two.
+    bool workspace_managed_ = false;
+    bool workspace_limit_latched_ = false;
     SimplerFlushDiagnosticsFn flush_diagnostics_fn_ = nullptr;
     SupportsConcurrentNativePrepareFn supports_concurrent_native_prepare_fn_ = nullptr;
     SupportsConcurrentNativePrepareFn supports_joined_native_launch_fn_ = nullptr;

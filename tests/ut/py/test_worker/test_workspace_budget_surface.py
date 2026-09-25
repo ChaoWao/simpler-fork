@@ -165,3 +165,19 @@ def test_the_guard_is_driven_alone_before_the_buffer_cleanup_batch():
     gate_drive = source.index('drive({("native", "workspace live-consumer gate")})')
     assert gate_drive < batch
     assert "raise gate_err" in source[gate_drive:batch]
+
+
+def test_the_level_two_route_asks_for_management_and_no_other_route_does():
+    """Lifetime ownership of the four regions is the default on the one route
+    whose teardown can be fenced before the public Buffer release, and it is
+    not a user option: a forked chip child reaches the same `ChipWorker.init`
+    without it and keeps its existing path until L3 has a close proof."""
+    import inspect
+
+    from simpler.worker import Worker, _chip_process_loop  # noqa: PLC0415
+
+    level2 = inspect.getsource(Worker._init_level2)
+    assert "manage_workspace=True" in level2
+    # Not reachable through configuration: nothing reads it out of _config.
+    assert '_config.get("manage_workspace"' not in level2
+    assert "manage_workspace" not in inspect.getsource(_chip_process_loop)

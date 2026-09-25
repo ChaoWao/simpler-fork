@@ -382,7 +382,32 @@ public:
      * @return 0 on success; PTO_RUNTIME_ERR_INVALID_ARGUMENT for a zero budget
      *         or a second call.
      */
-    int set_workspace_budget(std::uint64_t limit_bytes);
+    /**
+     * Record that this context wants workspace ownership management, and
+     * optionally a finite byte limit, when it is initialized.
+     *
+     * Staging rather than installing: the execution mode this context will
+     * hold is not latched yet, and management belongs only to a program
+     * context. Allocates nothing, so a context that never installs is
+     * untouched. `limit_bytes == 0` requests management with no limit.
+     */
+    int stage_workspace_management(std::uint64_t limit_bytes);
+
+    /** Install what was staged. Called once, after the program-mode latch. */
+    int install_staged_workspace();
+
+    /** Forget a staging that never became an installation. */
+    void clear_staged_workspace() noexcept;
+
+    /**
+     * Release obsolete workspace generations whose consumers have all
+     * finished, and compact fully released ledger records.
+     *
+     * The caller must have attached this thread to the device: the releases
+     * are device calls. A no-op on an unmanaged context and when the ledger
+     * has nothing reclaimable.
+     */
+    int reclaim_workspace_obsolete();
 
     /** Fill one workspace report. False when no budget is latched. */
     bool workspace_report(SimplerWorkspaceReport *out) const;
@@ -2163,6 +2188,10 @@ protected:
     int device_id_{-1};
     // This context's execution identity. Write-once: the first init entry to
     // run latches it, and it never changes afterwards.
+    // Staged by `stage_workspace_management` before init and consumed once by
+    // `install_staged_workspace`; neither owns a device resource.
+    bool workspace_staged_{false};
+    std::uint64_t workspace_staged_limit_{0};
     ExecutionModeLatch execution_mode_latch_;
     KernelExecutionState kernel_exec_state_;
     PersistentKernelArgs persistent_args_;

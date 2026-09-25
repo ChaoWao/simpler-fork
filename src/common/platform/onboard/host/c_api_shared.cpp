@@ -583,6 +583,20 @@ int simpler_init(
         return latch_rc;
     }
 
+    // Immediately after the latch, and before anything allocates: this context
+    // is now known to be a program context, which is the only identity
+    // workspace management belongs to, and the eager prewarm below is the
+    // first thing that takes device memory. Installing here rather than at the
+    // staging call is what keeps a kernel context from ever being managed.
+    // Nothing has been allocated yet, so a failure returns an untouched
+    // context.
+    const int workspace_rc = runner->install_staged_workspace();
+    if (workspace_rc != 0) {
+        LOG_ERROR("simpler_init: workspace ownership management could not be installed: %d", workspace_rc);
+        runner->clear_staged_workspace();
+        return workspace_rc;
+    }
+
     // CANN dlog must be levelled BEFORE the device context is opened
     // (rtSetDevice inside attach_current_thread): CANN snapshots the
     // device-side log session's level at context-open time, so a later
@@ -1024,6 +1038,13 @@ static int cleanup_failed_prepare(OnboardNativeRunContext *state, int execution_
         }
         state->runner_resources_owned = false;
     }
+    // Before the slot becomes reusable, for the same reason as in
+    // simpler_finalize_run: a successor claiming this slot records against it,
+    // and this run's terminal fact must land while the slot is still its own.
+    // This path frees nothing — whatever it leaves unreferenced is released at
+    // the next boundary that can prove the calling thread is attached, which
+    // this one cannot (it is reached from the attach failure itself).
+    note_workspace_fact(state, WorkspaceManager::RunFact::ContextDestroyed);
     if (state->runner_claimed) {
         state->runner->release_native_run(state);
         state->runner_claimed = false;
@@ -1032,9 +1053,6 @@ static int cleanup_failed_prepare(OnboardNativeRunContext *state, int execution_
         state->runner->release_native_run_reservation(state);
         state->runner_reserved = false;
     }
-    // Last: after this the run object is gone, so no further fact about it can
-    // arrive and whatever it still references becomes unprovable.
-    note_workspace_fact(state, WorkspaceManager::RunFact::ContextDestroyed);
     destroy_native_run_context(state);
     emit_native_run_host_wall(trace_inv, trace_hid, trace_start_ns, trace_attrs);
     if (validation_rc != 0) return validation_rc;
@@ -1116,6 +1134,14 @@ int simpler_prepare_run(
 
         int rc = runner->attach_current_thread(runner->device_id());
         if (rc != 0) return cleanup_failed_prepare(state, rc);
+        // This thread is now proven attached, which is what a device release
+        // needs. Obsolete generations left by earlier runs — including a
+        // staging a failed prepare abandoned — are released here rather than
+        // at the boundary that produced them, because that boundary could not
+        // prove attachment. A reclaim failure does not fail this prepare: the
+        // ledger keeps the block owned and stops publishing new ones, which
+        // the allocation below then reports if it matters.
+        (void)runner->reclaim_workspace_obsolete();
 
         if (overlaps_active_run) {
             // The probe exists to protect a *shared* arena bank, so require it
@@ -1699,6 +1725,23 @@ int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
 
     const bool export_clock_log = launched && execution_rc == 0 && validation_rc == 0 &&
                                   state->runner->host_clock_alignment_log_required(state->descriptor.pipeline_slot);
+    // Opportunistic, and only where attachment is proven: `attach_rc` is this
+    // call's own result, and every device step above is guarded by it. This
+    // keeps a steady-state workload from carrying an obsolete generation until
+    // its next prepare, without ever guessing that the thread is attached.
+    if (attach_rc == 0) {
+        (void)state->runner->reclaim_workspace_obsolete();
+    }
+
+    // Before the slot becomes reusable, not after: releasing the claim is "the
+    // point a successor's launch becomes admissible", and a successor that
+    // claims this slot records its own facts against it. This run's terminal
+    // fact has to land while the slot is still this run's, or it would arrive
+    // against a record that already belongs to somebody else.
+    //
+    // Nothing between here and the destruction below reports a further fact,
+    // so "no further fact can arrive" is still true when it is recorded.
+    note_workspace_fact(state, WorkspaceManager::RunFact::ContextDestroyed);
     if (state->runner_claimed) {
         // The point a successor's launch becomes admissible. Ordering a
         // successor's device work against this boundary is what separates a
@@ -1711,9 +1754,6 @@ int simpler_finalize_run(DeviceContextHandle ctx, RuntimeHandle runtime) {
         state->runner->release_native_run_reservation(state);
         state->runner_reserved = false;
     }
-    // Last: after this the run object is gone, so no further fact about it can
-    // arrive and whatever it still references becomes unprovable.
-    note_workspace_fact(state, WorkspaceManager::RunFact::ContextDestroyed);
     destroy_native_run_context(state);
     emit_native_run_host_wall(trace_inv, trace_hid, trace_start_ns, trace_attrs);
     if (export_clock_log && !export_host_clock_alignment_log(output_prefix, trace_inv, clock_log_offset)) {
@@ -1828,8 +1868,27 @@ size_t committed_device_memory_ctx(DeviceContextHandle ctx) {
 
 int simpler_set_workspace_budget_ctx(DeviceContextHandle ctx, uint64_t limit_bytes) {
     if (ctx == NULL) return PTO_RUNTIME_ERR_INTERNAL;
+    // Unchanged for every existing caller: a positive limit is still a
+    // complete request, asking for management *and* that limit. What changed
+    // is when it takes effect — it is recorded here and installed by
+    // simpler_init once the program-mode latch is taken, so the ownership
+    // ledger exists before the prewarm allocates rather than after.
+    //
+    // Zero is still refused. A caller that wants management without a limit
+    // uses simpler_enable_workspace_management_ctx instead, so the two
+    // requests stay distinguishable and no sentinel value is overloaded.
+    if (limit_bytes == 0) return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
     try {
-        return static_cast<DeviceRunnerBase *>(ctx)->set_workspace_budget(limit_bytes);
+        return static_cast<DeviceRunnerBase *>(ctx)->stage_workspace_management(limit_bytes);
+    } catch (...) {
+        return PTO_RUNTIME_ERR_INTERNAL;
+    }
+}
+
+int simpler_enable_workspace_management_ctx(DeviceContextHandle ctx) {
+    if (ctx == NULL) return PTO_RUNTIME_ERR_INTERNAL;
+    try {
+        return static_cast<DeviceRunnerBase *>(ctx)->stage_workspace_management(0);
     } catch (...) {
         return PTO_RUNTIME_ERR_INTERNAL;
     }
