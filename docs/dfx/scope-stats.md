@@ -189,6 +189,54 @@ Metadata line (line 1):
 | `dep_pool_max` | int[] | Per-ring dependency-list pool capacity (indexed by `ring`) |
 | `tensormap_max` | int | Tensormap entry capacity (scalar) |
 
+At the counting limit these two numbers saturate rather than wrap: the device
+counters clamp at `4294967295`, and a run that reaches it is reported with
+unknown counts instead of a small wrapped number that would look complete. The
+figure is the only way a default-mode artifact differs from earlier releases.
+
+### Background mode (`collect_across_runs=True`)
+
+With `Worker(collect_across_runs=True)` on a level-3 worker, the run boundary
+keeps the receive drain and the terminal read and hands only the rendering and
+the file write to a background writer, so the next run's device work can start
+while this run's file is still being written. **`run()` returning no longer
+means `scope_stats.jsonl` exists — `Worker.flush_diagnostics()` is the barrier
+that says the files up to that point are published.** TMR only; on
+`host_build_graph` there is no producer and the boundary behaves as it always
+has. The default (`collect_across_runs=False`) path is unchanged.
+
+Four keys are added to the metadata line in this mode only, so a reader that
+ignores them sees the same shape as before:
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `collection_verdict` | string | `published`, `partial_safe` (loss, host refusal or a latched fatal, counts still known) or `partial_cut_unknown` (a saturated counter or an accounting mismatch) |
+| `counts_unknown` | bool | `true` only when the counts themselves cannot be trusted; a device fatal alone leaves this `false` |
+| `host_received_records` | uint | Records the host took delivery of, including one recovered unpublished buffer |
+| `host_retained_records` | uint | Of those, how many the 256 MiB per-collector budget kept |
+
+A run that ends without the producer handing its last buffer over leaves that
+buffer named in `current_buf_ptr` — holding whatever records the boundary has
+just recovered, possibly none, and still stamped with the run that acquired it.
+Because the producer only re-stamps a buffer it *pops*, reusing that pointer
+would make the next run append behind those records and inherit their identity.
+Admission therefore re-stamps the buffer's 64-byte header — `count`,
+`run_epoch`, `local_seq` — for the run being admitted, so each artifact holds
+only its own records. The pointer and the free queue are left alone: the drain
+shard is the sole runtime writer of the free queue, and clearing the pointer
+would orphan a pool buffer. A header that cannot be republished to the device
+fails the admission, so no artifact is written for a run whose records the
+device could misattribute.
+
+A published file is not by itself a success: loss, a fatal and unknown counts
+each make `flush_diagnostics()` raise, and the error is sticky for the runner's
+life. A file already occupying the destination is never removed or overwritten
+— the run fails instead. And a run whose device completion could not be proved
+writes **no** file at all: nothing shared is read on that path, its host copies
+are discarded once the collector threads are joined, and every later
+`flush_diagnostics()` and `close()` reports the failure. While such a run is
+held, a later run that enables scope stats is refused before it is submitted.
+
 Per-sample lines, oldest-first:
 
 | Field | Type | Description |
