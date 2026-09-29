@@ -181,3 +181,205 @@ def test_direct_l2_uses_the_shared_writable_overlap_rule(l2, second_offset, reje
     else:
         worker._submit_l2_locked(3, args, CallConfig())
         assert calls[0].tensor(1).data == buffer.base + second_offset
+
+
+def borrow(worker, base=0x8000, nbytes=64, **kwargs):
+    return worker.borrow_device_buffer(base, nbytes, device_id=0, **kwargs)
+
+
+def test_borrowed_device_buffer_submits_and_is_never_freed(l2):
+    worker, calls, frees = l2
+    buffer = borrow(worker)
+    args = arguments(buffer)
+    handle = worker._submit_l2_locked(3, args, CallConfig())
+    assert calls[0].tensor(0).data == 0x8000
+    with pytest.raises(RuntimeError, match="in-flight"):
+        worker.release_buffer(buffer)
+    worker._finalize_run_handle(handle, handle._run_id, None)
+    with pytest.raises(ValueError, match="borrowed"):
+        worker.free(buffer)
+    worker.release_buffer(buffer)
+    assert not frees
+    with pytest.raises(ValueError, match="not a live"):
+        worker._submit_l2_locked(3, args, CallConfig())
+
+
+@pytest.mark.parametrize("base,nbytes", [(0x8000, 64), (0x8010, 16), (0x7FF0, 32)])
+def test_borrow_rejects_overlapping_registration(l2, base, nbytes):
+    worker, _, _ = l2
+    buffer = borrow(worker)
+    with pytest.raises(ValueError, match="overlap"):
+        borrow(worker, base, nbytes)
+    worker.release_buffer(buffer)
+
+
+def test_borrow_cannot_alias_an_owned_allocation(l2):
+    worker, _, _ = l2
+    register_buffer(worker, base=0x8000)
+    with pytest.raises(ValueError, match="overlap"):
+        borrow(worker)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"device_id": 1},
+        {"device_ptr": 0},
+        {"nbytes": 0},
+        {"device_ptr": (1 << 64) - 4},
+        {"access": 99},
+    ],
+)
+def test_borrow_rejects_invalid_contract(l2, kwargs):
+    worker, _, frees = l2
+    values = dict(device_ptr=0x8000, nbytes=64, device_id=0)
+    values.update(kwargs)
+    with pytest.raises((ValueError, TypeError)):
+        worker.borrow_device_buffer(**values)
+    assert not frees and not list(worker._child_alloc.values())
+
+
+def test_borrow_preserves_grant_and_view_bounds(l2):
+    worker, calls, _ = l2
+    buffer = borrow(worker, access=AccessMode.READ)
+    with pytest.raises(ValueError):
+        worker._submit_l2_locked(3, arguments(buffer, tag=TensorArgType.OUTPUT_EXISTING), CallConfig())
+    with pytest.raises(ValueError):
+        buffer.tensor((17,), DataType.FLOAT32)
+    assert not calls
+    worker.release_buffer(buffer)
+
+
+def test_release_and_reregister_cannot_revive_an_old_descriptor(l2):
+    worker, _, frees = l2
+    old = borrow(worker)
+    old_args = arguments(old)
+    worker._materialize_l2_args(old_args)
+    worker.release_buffer(old)
+    new = borrow(worker)
+    assert old.identity != new.identity
+    with pytest.raises(ValueError, match="not a live"):
+        worker._submit_l2_locked(3, old_args, CallConfig())
+    handle = worker._submit_l2_locked(3, arguments(new), CallConfig())
+    worker._finalize_run_handle(handle, handle._run_id, None)
+    worker.release_buffer(new)
+    assert not frees
+
+
+def test_borrowed_release_rechecks_a_submission_accepted_after_lookup(l2, monkeypatch):
+    worker, calls, frees = l2
+    buffer = borrow(worker)
+    original = worker._release_borrowed_device_buffer
+
+    def submit_then_release(value):
+        worker._submit_l2_locked(3, arguments(value), CallConfig())
+        return original(value)
+
+    monkeypatch.setattr(worker, "_release_borrowed_device_buffer", submit_then_release)
+    with pytest.raises(RuntimeError, match="in-flight"):
+        worker.release_buffer(buffer)
+    assert len(calls) == 1 and not frees
+    assert worker._child_alloc.get(buffer.identity) is not None
+
+
+def test_failed_borrow_registration_rolls_back_both_tables(l2, monkeypatch):
+    worker, _, frees = l2
+    original = worker._record_device_alloc
+
+    def fail_after_registration(handle):
+        original(handle)
+        raise RuntimeError("registration interrupted")
+
+    monkeypatch.setattr(worker, "_record_device_alloc", fail_after_registration)
+    with pytest.raises(RuntimeError, match="registration interrupted"):
+        borrow(worker)
+    assert not list(worker._child_alloc.values())
+    assert not worker._borrowed_device_buffers and not frees
+
+
+def test_close_revokes_borrowed_registrations_without_free(l2):
+    worker, _, frees = l2
+    buffer = borrow(worker)
+    worker._chip_worker._impl.workspace_report = lambda: ("disabled", {})
+    worker._chip_worker._impl._close_chip_run_lane = lambda: None
+    worker._chip_worker.finalize = lambda: None
+    worker.close()
+    assert worker._child_alloc.get(buffer.identity) is None
+    assert not worker._borrowed_device_buffers and not frees
+
+
+class _Index:
+    def __init__(self, value):
+        self._value = value
+
+    def __index__(self):
+        return self._value
+
+
+def test_borrow_accepts_index_protocol_addresses(l2):
+    worker, _, _ = l2
+    buffer = worker.borrow_device_buffer(_Index(0x8000), _Index(64), device_id=_Index(0))
+    assert buffer.base == 0x8000 and buffer.nbytes == 64
+    worker.release_buffer(buffer)
+
+
+@pytest.mark.parametrize("address", [32768.5, True])
+def test_borrow_does_not_coerce_non_integer_addresses(l2, address):
+    worker, _, _ = l2
+    with pytest.raises(TypeError):
+        worker.borrow_device_buffer(address, 64, device_id=0)
+
+
+def test_borrowed_release_fences_a_contending_submit(l2, monkeypatch):
+    worker, calls, frees = l2
+    buffer = borrow(worker)
+    args = arguments(buffer)
+    checked = threading.Event()
+    submit_attempted = threading.Event()
+    resume_release = threading.Event()
+    failures = []
+    original_check = worker._refuse_l2_free_while_in_flight
+    original_lock = worker._child_prov_worker_lock
+
+    def pause_release(identity):
+        original_check(identity)
+        checked.set()
+        assert resume_release.wait(5)
+
+    def observe_lock(worker_id):
+        if threading.current_thread().name == "borrow-submit":
+            submit_attempted.set()
+        return original_lock(worker_id)
+
+    def release():
+        try:
+            worker.release_buffer(buffer)
+        except BaseException as error:
+            failures.append(("release", error))
+
+    def submit():
+        try:
+            worker._submit_l2_locked(3, args, CallConfig())
+        except BaseException as error:
+            failures.append(("submit", error))
+
+    monkeypatch.setattr(worker, "_refuse_l2_free_while_in_flight", pause_release)
+    monkeypatch.setattr(worker, "_child_prov_worker_lock", observe_lock)
+    releaser = threading.Thread(target=release, daemon=True)
+    submitter = threading.Thread(target=submit, name="borrow-submit", daemon=True)
+    releaser.start()
+    try:
+        assert checked.wait(5)
+        submitter.start()
+        assert submit_attempted.wait(5)
+        assert not calls
+    finally:
+        resume_release.set()
+        releaser.join(5)
+        if submitter.ident is not None:
+            submitter.join(5)
+    assert not releaser.is_alive() and not submitter.is_alive()
+    assert len(failures) == 1 and failures[0][0] == "submit"
+    assert isinstance(failures[0][1], ValueError)
+    assert "not a live" in str(failures[0][1])
+    assert not calls and not frees

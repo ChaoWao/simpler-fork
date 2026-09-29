@@ -339,7 +339,7 @@ gates, or keys on it.
 | `FORK_SHM` | the same VA, no map | exactly 8 bytes, a non-zero u64 LE base | a pre-fork `MAP_SHARED` host buffer (e.g. `share_memory_()`), writable from the child |
 | `FORK_COW` | the same VA, no map | exactly 8 bytes, a non-zero u64 LE base | a pre-fork plain host buffer: copy-on-write, so **READ only** |
 | `VMM_WINDOW` | the device VA of the window carved by `allocate_domain`, no map | exactly 8 bytes, a non-zero u64 LE base | communication-domain window / buffer |
-| `DEVICE_MALLOC` | the device pointer, no map (chip-local) | exactly 8 bytes, a non-zero u64 LE base | `alloc_child_tensor` |
+| `DEVICE_MALLOC` | the device pointer, no map (chip-local) | exactly 8 bytes, a non-zero u64 LE base | `alloc_child_tensor`, L2 `malloc` / `borrow_device_buffer` |
 | `REMOTE_SIDECAR` | (P2) resolved via the remote transport | empty | an arg to a remote L3; the descriptor rides in the sidecar |
 
 **The body rule is enforced, not advisory.** `backend_kind` is what selects how a
@@ -406,7 +406,7 @@ phase (P2).
 Buffer lifecycle robustness is partly in place, and which guarantee applies
 depends on the API that releases the storage. `Worker.free` is atomic with a
 direct L2 submission's accepted-use registration — see
-[Direct L2 invocation binding](#direct-l2-invocation-binding). `release_buffer`
+[Direct L2 invocation binding](#direct-l2-invocation-binding). `release_buffer` on host backings
 and deferred physical free are still P2.
 
 ## Direct L2 invocation binding
@@ -430,14 +430,59 @@ materialization, native submission and execution through run finalization; a
 failed bind or rejected submission drops it. This retains the existing fail-fast
 in-flight free contract, without adding deferred physical free.
 
-`release_buffer` is **not** inside that fence. It samples the same in-flight set
-and then closes the backing, so a submission accepted between the sample and the
-close can still map an identity that release is about to unlink. Bringing host
-backing release inside the fence is part of the P2 lifecycle work above.
+For a borrowed device Buffer, `release_buffer` also holds the chip lock across
+its in-flight recheck and revocation. For a host backing, `release_buffer` only
+samples the in-flight set and then closes the backing: a submission accepted
+between the sample and close can still map an identity about to be unlinked.
+Bringing host backing release inside the fence remains P2 lifecycle work.
 
 This boundary covers the public Worker TaskArgs path. The low-level ChipWorker
-POD compatibility entry and external borrowed-pointer construction remain separate
-migration work. It introduces no HOST/NONE chip execution or cross-side mapping.
+POD compatibility entry remains separate migration work. It introduces no
+HOST/NONE chip execution or cross-side mapping.
 Explicit task dependencies stay an L3 orchestration concept: a direct L2
 submission is one task, so no `TaskArgs` dependency entry reaches the chip
 through this path.
+
+### Borrowed device storage
+
+An initialized direct L2 Worker accepts a caller-owned address through the same
+Buffer/Tensor/TaskArgs path:
+
+```python
+buffer = worker.borrow_device_buffer(ptr, capacity_bytes, device_id=device_id)
+args = TaskArgs()
+args.add_tensor(buffer.tensor((count,), DataType.FLOAT32))
+worker.submit(callable_handle, args).wait()
+worker.release_buffer(buffer)
+```
+
+- The caller guarantees the pointer's actual device, capacity and lifetime. The
+  declared device must match the Worker; this check does not query the allocation
+  behind an arbitrary address. This API does not retain a Python owner object.
+- All views of this registration share its identity. The borrow entry rejects
+  overlap with currently registered owned, domain or borrowed ranges on this L2
+  Worker's single chip; derive another view from the existing Buffer. This does
+  not add a global overlap check to other allocation entries or discover aliases
+  outside this Worker. Freeing/reusing external storage before revocation violates
+  the caller's lifetime contract.
+- `access` defaults to READWRITE and may narrow the grant to READ or WRITE.
+  The ordinary submit-time grant, geometry and live-descriptor checks still apply.
+- `free` rejects a borrowed registration. `release_buffer` refuses in-flight use,
+  revokes the identity and drops its cached import, without calling device free.
+  Registering the same address afterwards creates a new identity; old TaskArgs
+  remain invalid. Borrowed release requires a READY, non-poisoned Worker; after
+  poisoning, close revokes registrations. Host release keeps its existing
+  lifecycle preconditions. Ownership is private Worker state, not a forgeable
+  descriptor field or wire change.
+- The caller keeps storage stable until all actual uses finish. An error is not
+  proof of completion: recovery from an unproven device completion remains the
+  caller's lifetime obligation. Revoking a registration is not a device fence.
+- Closing the Worker revokes its registrations without freeing borrowed addresses.
+  This is still a Program-mode Worker that owns its device context and may reset
+  the device at close; borrowing a Buffer does not attach a borrowed context.
+
+A call mixing tracked owned buffers and untracked external storage retains every
+tracked allocation independently of the all-spans coverage result. Unknown spans
+still prevent joined enqueue. If finalization cannot prove completion, the native
+borrow table continues refusing free of the known allocations, including INPUTs
+that have no write declaration. Successful completion releases those references.

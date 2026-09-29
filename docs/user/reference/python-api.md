@@ -62,7 +62,9 @@ else raises. Remote-worker and remote-memory calls require `level >= 4`.
 | ------ | ----- |
 | `malloc(size) -> Buffer` | L2 only; allocates on this worker's chip |
 | `alloc_child_tensor(worker_id, shapes, dtype) -> Buffer` | Allocates on an L3 worker's chip child; use `handle.tensor(shapes, dtype)` to name a task argument |
-| `free(handle)` | Releases a device `Buffer` returned by either allocation method |
+| `borrow_device_buffer(ptr, nbytes, *, device_id, access=AccessMode.READWRITE) -> Buffer` | READY L2 only; registers caller-owned storage on the declared device without allocating or taking ownership. The caller guarantees the actual device, capacity and stable lifetime |
+| `free(handle)` | Releases an owned device Buffer from `malloc` / `alloc_child_tensor`; rejects borrowed buffers |
+| `release_buffer(handle)` | Releases an owned host backing, or revokes a borrowed device registration without freeing caller storage. Both reject observed in-flight use; borrowed device release also fences submission and requires a READY, non-poisoned Worker |
 | `copy_to(dst, src, *, dst_offset=0, src_offset=0, nbytes=None)` | H2D; `dst` is a device `Buffer`, `src` a host `Buffer` from `create_buffer` (at L2, also any torch tensor or writable buffer). `nbytes` defaults to the rest of the host side after `src_offset`, so `copy_to(dst, src)` transfers the whole host backing |
 | `copy_from(dst, src, *, dst_offset=0, src_offset=0, nbytes=None)` | D2H; `dst` is the host `Buffer` (at L2, also any writable buffer). Same defaulting, measured from `dst_offset` on the host side |
 | `create_buffer(nbytes) -> Buffer` / `Buffer.close()` | Shared host backing this Worker owns; build a view over `handle.shm.buf`, name it on the wire with `handle.tensor(shapes, dtype)` |
@@ -134,7 +136,13 @@ args = TaskArgs()
 args.add_tensor(device_buffer.tensor((rows, cols), DataType.FLOAT32), TensorArgType.INPUT)
 ```
 
-`device_buffer` is a `Buffer` returned by `malloc` or `alloc_child_tensor`.
+`device_buffer` is a `Buffer` returned by `malloc`, `alloc_child_tensor`, or the
+L2-only `borrow_device_buffer`. Revoke a borrow with `release_buffer`; never pass
+it to `free`. Borrowing does not retain a Python allocation owner, and an error
+is not proof of device completion. Keep external memory alive and stable through
+actual last use and any required recovery. Closing this Program-mode Worker may
+reset its device; borrowed storage does not imply a borrowed device context.
+See [borrowed device storage](../../buffer-abi.md#borrowed-device-storage).
 Add tensors **in signature order**, before any scalars. Use `INPUT` for an
 input, `OUTPUT_EXISTING` for a caller-allocated output, and `INOUT` for an
 input/output view. `DataType` carries the element types.

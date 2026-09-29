@@ -67,6 +67,7 @@ import importlib
 import json
 import logging
 import math
+import operator
 import os
 import re
 import shutil
@@ -10923,6 +10924,8 @@ class Worker:
         # revoked BEFORE the native free (and before a domain's backend release), so an interrupted
         # op never leaves an identity resolving to memory that is already gone. Cleared on close().
         self._child_alloc = _DeviceAllocations()
+        # Registration authorizes a raw external pointer; it never authorizes allocator free.
+        self._borrowed_device_buffers: set[CanonicalIdentity] = set()
         # Which identities each CommDomain allocation minted, so its release revokes them together.
         self._domain_members: dict[int, set[CanonicalIdentity]] = {}
         # Guards every device-allocation table. Entry points take it (`_require_device_capability`,
@@ -10962,6 +10965,7 @@ class Worker:
         identity resolvable to an address that is already gone.
         """
         self._child_alloc.revoke(identity)
+        self._borrowed_device_buffers.discard(identity)
 
     def _drop_domain_allocs(self, allocation_id: int) -> None:
         """Revoke every identity a CommDomain allocation minted. Caller holds neither lock.
@@ -11015,6 +11019,8 @@ class Worker:
                 f"Worker.{api}: {handle.identity} is not a live device allocation on this worker "
                 f"(never allocated here, or already freed)"
             )
+        if handle.identity in self._borrowed_device_buffers:
+            raise ValueError(f"Worker.{api}: borrowed device memory is released with release_buffer, never free")
         if registered.backend_kind is not BackendKind.DEVICE_MALLOC:
             raise ValueError(
                 f"Worker.{api}: {handle.identity} is a CommDomain buffer; it is released with its "
@@ -11221,6 +11227,7 @@ class Worker:
         """
         with self._child_prov_lock:
             self._child_alloc.clear()
+            self._borrowed_device_buffers.clear()
             self._domain_members.clear()
 
     def _check_chip_worker_id(self, worker_id: int) -> None:
@@ -11264,6 +11271,68 @@ class Worker:
                 )
                 self._record_device_alloc(handle)
         return handle
+
+    def borrow_device_buffer(
+        self, device_ptr: int, nbytes: int, *, device_id: int, access: AccessMode = AccessMode.READWRITE
+    ) -> Buffer:
+        """Register caller-owned device storage for this initialized L2 worker.
+
+        ``device_id`` declares the actual pointer's device and must match this Worker.
+        The caller guarantees the address/capacity and keeps the allocation alive and at
+        that address through every use, including recovery from unproven completion.
+        This API neither allocates memory nor retains a Python allocation owner. The
+        Worker still owns its device context; close may reset that device.
+
+        Derive all views from the returned Buffer. Overlapping live registrations are
+        refused, including overlap with owned allocations. ``release_buffer`` revokes
+        the registration after its last accepted use; ``free`` never frees this storage.
+        """
+        if self.level != 2:
+            raise TypeError("borrow_device_buffer requires a direct L2 worker")
+        if any(isinstance(value, bool) for value in (device_ptr, nbytes, device_id)):
+            raise TypeError("borrow_device_buffer requires integer device_ptr, nbytes and device_id")
+        device_ptr, nbytes, device_id = map(operator.index, (device_ptr, nbytes, device_id))
+        if device_ptr <= 0 or nbytes <= 0 or device_ptr + nbytes > 1 << 64:
+            raise ValueError("borrow_device_buffer requires a nonempty uint64 address range")
+        if device_id != int(self._config.get("device_id", 0)):
+            raise ValueError("borrow_device_buffer: device_id does not match this worker")
+        if access not in (AccessMode.READ, AccessMode.WRITE, AccessMode.READWRITE):
+            raise ValueError("borrow_device_buffer: invalid access grant")
+        with self._operation_lease("borrow_device_buffer"), self._child_prov_worker_lock(0):
+            with self._child_prov_lock:
+                # The L2-only entry has one chip, so every registered range shares its address space.
+                for registered in self._child_alloc.values():
+                    if device_ptr < registered.base + registered.nbytes and registered.base < device_ptr + nbytes:
+                        raise ValueError("borrow_device_buffer: range overlaps a live Buffer; derive another view")
+                identity = self._burn_buffer_identity()
+                handle = wrap_device_malloc(
+                    device_ptr,
+                    nbytes,
+                    bytes(identity.owner_instance_id),
+                    int(identity.buffer_id),
+                    "L2",
+                    generation=int(identity.generation),
+                    access=access,
+                )
+                # Even an interrupted registration must never authorize allocator free.
+                self._borrowed_device_buffers.add(handle.identity)
+                try:
+                    self._record_device_alloc(handle)
+                except BaseException:
+                    self._drop_device_alloc(handle.identity)
+                    raise
+                return handle
+
+    def _release_borrowed_device_buffer(self, buffer: Buffer) -> None:
+        """Revoke an external registration while holding the same fence as submit and copy."""
+        with self._child_prov_worker_lock(0):
+            with self._child_prov_lock:
+                if buffer.identity not in self._borrowed_device_buffers:
+                    return
+                self._refuse_l2_free_while_in_flight(buffer.identity)
+                self._drop_device_alloc(buffer.identity)
+            self._release_import_recursive(buffer.identity)
+            buffer.close()
 
     def alloc_child_tensor(self, worker_id: int, shapes: tuple[int, ...], dtype) -> Buffer:
         """Allocate device memory on next-level ``worker_id`` sized for ``shapes`` × ``dtype``; returns a
@@ -11850,7 +11919,8 @@ class Worker:
 
     def release_buffer(self, buffer: Buffer) -> None:
         """Close + unlink one owner Buffer, drop its registry entry, and tell every descendant to
-        drop its own cached import for the identity.
+        drop its own cached import for the identity. For a borrowed device Buffer,
+        only the registration is revoked; its allocation remains caller-owned.
 
         Rejects outright if any currently in-flight L3+ run (not yet past ``_cleanup_published``)
         sent this identity as a NEXT_LEVEL or SUB Tensor arg, or any in-flight L2 direct-chip run
@@ -11877,7 +11947,12 @@ class Worker:
         two checks run sequentially rather than under one shared lock. Neither is checked once
         ``buffer`` is already closed, matching ``Buffer.close()``'s own idempotency.
 
-        Unlike ``Worker.free``, this L2 check is a sample rather than a fence: it reads the set,
+        A borrowed device release instead holds the chip lock across its recheck and revoke,
+        and requires a READY, non-poisoned worker via an operation lease. Close revokes borrows
+        when that precondition is no longer met.
+
+        Host backing release keeps its existing lifecycle behavior. Unlike ``Worker.free``,
+        its L2 check is a sample rather than a fence: it reads the set,
         releases ``_registry_lock``, and only then closes the backing, so a submission accepted in
         between still maps an identity this call is about to unlink. ``free`` closes that window by
         rechecking under the chip lock a direct L2 submission publishes beneath; there is no
@@ -11896,6 +11971,13 @@ class Worker:
         The slot is dropped only when it still holds *this* buffer: a buffer_id minted elsewhere can
         collide with a registry key, and evicting the live entry it names would strand that
         backing."""
+        if self.level == 2:
+            with self._child_prov_lock:
+                borrowed = buffer.identity in self._borrowed_device_buffers
+            if borrowed:
+                with self._operation_lease("release_buffer"):
+                    self._release_borrowed_device_buffer(buffer)
+                return
         if not buffer.closed:
             # Exclusive, not shared: `shared()` would already exclude admission and so
             # satisfy the "never mid-callback" argument above, but this keeps the

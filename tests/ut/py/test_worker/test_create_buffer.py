@@ -39,6 +39,7 @@ def _bare_worker(level: int, *, chip: int = 0, sub: int = 0, next_level: int = 0
     w._sub_shms = [object()] * sub
     w._next_level_shms = [object()] * next_level
     w._registry_lock = threading.Lock()
+    w._init_device_allocation_tables()
     w._owner_instance_id = mint_owner_instance_id()
     w._buffer_identity_allocator = LocalEndpointBufferIdentityAllocator(w._owner_instance_id)
     w._buffers = {}

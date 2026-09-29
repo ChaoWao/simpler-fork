@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------------------------------------
 """A completed producer supplies the next run's native host scalar access."""
 
+import ctypes
 import struct
 from contextlib import ExitStack
 from pathlib import Path
@@ -58,7 +59,7 @@ def _args(worker, source, control, output, mode, offset=0.0):
 @pytest.mark.platforms(["a2a3", "a5", "a2a3sim", "a5sim"])
 @pytest.mark.device_count(1)
 @pytest.mark.runtime(_RUNTIME)
-@pytest.mark.parametrize("storage", ["host", "child"])
+@pytest.mark.parametrize("storage", ["host", "child", "borrowed"])
 @pytest.mark.parametrize("write_control", [False, True], ids=["get", "get-set"])
 def test_completed_producer_supplies_native_host_access(st_platform, st_device_ids, storage, write_control):
     with ExitStack() as cleanup:
@@ -70,9 +71,21 @@ def test_completed_producer_supplies_native_host_access(st_platform, st_device_i
         control = torch.full((_SIZE,), -91.0)
         output = torch.zeros(_SIZE)
         device = None
-        if storage == "child":
-            device = worker.malloc(control.nbytes)
-            cleanup.callback(worker.free, device)
+        if storage in ("child", "borrowed"):
+            if storage == "child":
+                device = worker.malloc(control.nbytes)
+                cleanup.callback(worker.free, device)
+            else:
+                if st_platform.endswith("sim"):
+                    # This process address is absent from both the Worker allocation
+                    # table and the native caller-buffer allocator.
+                    external = ctypes.create_string_buffer(control.nbytes)
+                    address = ctypes.addressof(external)
+                else:
+                    address = worker._chip_worker.malloc(control.nbytes)
+                    cleanup.callback(worker._chip_worker.free, address)
+                device = worker.borrow_device_buffer(address, control.nbytes, device_id=int(st_device_ids[0]))
+                cleanup.callback(worker.release_buffer, device)
             worker.copy_to(device, control)
             control_arg = device.tensor((_SIZE,), DataType.FLOAT32)
         else:

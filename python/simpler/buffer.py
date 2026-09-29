@@ -449,8 +449,10 @@ def wrap_device_malloc(
     access: AccessMode = AccessMode.READWRITE,
     owner_worker_id: int = 0,
 ) -> Buffer:
-    """Wrap a device pointer (from a worker device malloc) as a ``DEVICE_MALLOC`` ``Buffer``.
+    """Encode a chip-local pointer as a ``DEVICE_MALLOC`` ``Buffer``.
 
+    This descriptor does not confer allocation ownership or authorize submission. Worker registration
+    distinguishes owned allocations from borrowed pointers and controls free/dispatch permission.
     The backend body is the device pointer (u64 LE); the consumer materializes to that pointer with no
     mapping. The pointer is valid only on the chip that allocated it, so a tensor over this buffer must be
     dispatched only to that chip (a topology invariant, as for the former ``child_memory`` tensor).
