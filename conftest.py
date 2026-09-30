@@ -508,10 +508,17 @@ def pytest_configure(config):
         "makes a later AICore fault on that device cost minutes instead of "
         "~0.3 s (#1425). Two consequences follow from the one marker: such a "
         "test never shares an L2 Worker (the pool key carries the flag) and it "
-        "sorts after every ordinary test, so fault-injection cases run on a "
-        "device that has never provisioned. The a2a3 CI additionally runs them "
-        "in a step of their own via -m sdma until #1425 is fixed. On sim platforms, "
+        "sorts after every ordinary test. The a2a3 CI runs the SDMA demos and "
+        "the `sdma_fault` case in separate task-submit jobs until #1425 is fixed. "
+        "On sim platforms, "
         "the workspace is inert scratch and no hardware streams are created.",
+    )
+    config.addinivalue_line(
+        "markers",
+        "sdma_fault: a fault-injection case that provisions SDMA and then faults an "
+        "AICore, so its own teardown is what #1425 charges. The a2a3 CI selects it "
+        "into a one-device task of its own, and both other selections exclude it by "
+        "name -- so it reaches that task whether or not it also carries `sdma`.",
     )
     config.addinivalue_line(
         "markers",

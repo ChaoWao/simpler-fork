@@ -46,17 +46,17 @@ ctest --test-dir tests/ut/cpp/build -L "^requires_hardware(_a2a3)?$" --output-on
 # Scene tests (pytest, @scene_test classes)
 pytest examples tests/st                          # all sim platforms (auto-parametrized)
 pytest examples tests/st --platform a2a3sim       # specific sim
-pytest examples tests/st -m "not sdma" --platform a2a3 --exclude-level 4          # hardware
-pytest examples tests/st -m "not sdma" --platform a2a3 --exclude-level 4 --device 4-7  # hardware with device pool
+pytest examples tests/st -m "not sdma and not sdma_fault" --platform a2a3 --exclude-level 4          # hardware
+pytest examples tests/st -m "not sdma and not sdma_fault" --platform a2a3 --exclude-level 4 --device 4-7  # hardware with device pool
 
 # Compile the selected hardware batch without creating a Worker or using an NPU
 python -m simpler_setup.tools.scene_test_compile examples tests/st \
-    -m "not sdma" --platform a2a3 --exclude-level 4 --require-pto-isa --compile-workers 8
+    -m "not sdma and not sdma_fault" --platform a2a3 --exclude-level 4 --require-pto-isa --compile-workers 8
 
-# SDMA cases run separately, as they do in CI: they are quarantined by
-# @pytest.mark.sdma so no fault-injection case shares a device with a
-# provisioned SDMA workspace (issue #1425)
-pytest examples tests/st -m sdma --platform a2a3 --device 4-5
+# SDMA demos and the fault-injection case use separate device tasks, as in CI.
+# The fault case is selected by @pytest.mark.sdma_fault (issue #1425).
+pytest examples tests/st -m "sdma and not sdma_fault" --platform a2a3 --device 4-5
+pytest examples tests/st -m sdma_fault --platform a2a3 --device 4
 
 # A5 runs the non-network1 corpus, including SDMA tests, on both host architectures
 pytest examples tests/st --platform a5 --exclude-level 4 --device 0-7
@@ -747,8 +747,10 @@ pytest examples tests/st --platform a2a3sim
 # Standalone (single case)
 python test_my_kernel.py -p a2a3sim
 
-# On hardware (SDMA cases quarantined by marker; run them with -m sdma)
-pytest examples tests/st -m "not sdma" --platform a2a3 --exclude-level 4
+# On hardware (SDMA demos and the isolated fault case use separate tasks)
+pytest examples tests/st -m "not sdma and not sdma_fault" --platform a2a3 --exclude-level 4
+pytest examples tests/st -m "sdma and not sdma_fault" --platform a2a3 --device 4-5
+pytest examples tests/st -m sdma_fault --platform a2a3 --device 4
 ```
 
 Key fields:
