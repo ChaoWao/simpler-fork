@@ -170,7 +170,7 @@ make_chip(const std::vector<int32_t> &func_ids, const std::vector<uint8_t> &bina
     for (size_t i = 0; i < func_ids.size(); ++i)
         children.push_back(make_child(binary));
     const uint8_t orch[64] = {orch_tag};
-    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 1024>(
+    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 2048>(
         nullptr, 0, "orch_entry", orch, sizeof(orch), func_ids.data(), children.data(),
         static_cast<int32_t>(func_ids.size()), "orch_config"
     );

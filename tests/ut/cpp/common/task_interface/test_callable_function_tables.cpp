@@ -38,7 +38,7 @@ namespace {
 
 // Stands in for the runtime's own RUNTIME_MAX_FUNC_ID, which is the exclusive
 // bound registration validates a child's func_id against.
-constexpr uint32_t kFuncIdDomain = 1024;
+constexpr uint32_t kFuncIdDomain = 2048;
 
 // A device base far from any host address, so an entry that came from the host
 // scratch instead of the patched device base is visible in the value.
@@ -58,7 +58,7 @@ std::vector<uint8_t> make_chip_with_children(const std::vector<int32_t> &func_id
         children.push_back(make_core_child(static_cast<uint8_t>(0xB0 + i), 128));
     }
     const uint8_t orch[64] = {0x5a};
-    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 1024>(
+    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 2048>(
         nullptr, 0, "orch_entry", orch, sizeof(orch), func_ids.data(), children.data(),
         static_cast<int32_t>(func_ids.size()), "orch_config"
     );

@@ -84,7 +84,7 @@ inline int validate_kernel_callable_image(const void *callable_image, size_t cal
     }
     const auto *callable = static_cast<const ChipCallable *>(callable_image);
     if (callable->sig_count_ < 0 || callable->sig_count_ > CHIP_MAX_TENSOR_ARGS || callable->child_count_ < 0 ||
-        callable->child_count_ > 1024 || callable->func_name_len_ >= CALLABLE_FUNC_NAME_MAX ||
+        callable->child_count_ > ChipCallable::MAX_CHILDREN || callable->func_name_len_ >= CALLABLE_FUNC_NAME_MAX ||
         callable->config_name_len_ >= CALLABLE_FUNC_NAME_MAX ||
         callable->func_name_[callable->func_name_len_] != '\0' ||
         callable->config_name_[callable->config_name_len_] != '\0') {

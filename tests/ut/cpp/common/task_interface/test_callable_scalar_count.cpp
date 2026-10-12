@@ -34,7 +34,7 @@ std::vector<uint8_t> build_chip_callable(int32_t scalar_entries) {
     int32_t child_ids[1] = {3};
     std::vector<uint8_t> children[1] = {std::move(core)};
 
-    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 1024>(
+    return make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 2048>(
         sig.data(), static_cast<int32_t>(sig.size()), "orch_fn", fake_orch_so, sizeof(fake_orch_so), child_ids,
         children, 1, "cfg_name"
     );
@@ -53,7 +53,7 @@ TEST(CallableScalarCount, DerivesTensorScalarSplitFromSignature) {
 }
 
 TEST(CallableScalarCount, EmptySignatureHasNoScalars) {
-    auto buf = make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 1024>(
+    auto buf = make_callable<CoreCallable, CHIP_MAX_TENSOR_ARGS, 2048>(
         nullptr, 0, "orch_fn", nullptr, 0, nullptr, nullptr, 0, ""
     );
     const auto *callable = reinterpret_cast<const ChipCallable *>(buf.data());

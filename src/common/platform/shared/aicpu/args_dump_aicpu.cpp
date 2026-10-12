@@ -762,7 +762,7 @@ int dump_arg_record(int thread_idx, const ArgsDumpInfo &info) {
     rec->scalar_value = is_scalar ? info.scalar_value : 0;
     rec->kind = info.kind;
     rec->flags = info.flags;
-    // kernel_id is bounded by RUNTIME_MAX_FUNC_ID (1024), far below the 0xFFFF
+    // kernel_id is bounded by RUNTIME_MAX_FUNC_ID (2048), far below the 0xFFFF
     // "unknown" sentinel, so this narrowing is lossless and never collides.
     // func_ids carries the task's active-subtask set (its mix membership).
     rec->func_count = static_cast<uint8_t>(info.func_count);

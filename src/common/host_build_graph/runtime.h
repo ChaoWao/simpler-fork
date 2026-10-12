@@ -51,7 +51,7 @@
 // =============================================================================
 
 #define RUNTIME_MAX_WORKER PLATFORM_MAX_CORES
-#define RUNTIME_MAX_FUNC_ID 1024
+#define RUNTIME_MAX_FUNC_ID 2048
 
 // The AICore compiler defines these; host and AICPU builds compile the same
 // declarations with them empty. Mirrors the guard in the a5 scheduler's
