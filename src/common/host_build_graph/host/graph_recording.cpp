@@ -230,9 +230,8 @@ uint64_t graph_full_key(uint64_t callable_hash, uint64_t graph_key) {
 // map. Only the pages stay.
 //
 // Safe as a thread_local because a thread records one body at a time: graph_prepare
-// refuses to bind while this thread already has a recording active, so a Graph nested
-// inside a recorded body takes the ordinary path rather than claiming this storage
-// twice.
+// refuses to bind while this thread already has a recording active, and a Graph nested
+// inside a recorded body is refused at graph_begin, so nothing claims this storage twice.
 GraphRecording &recorder_recording() {
     static thread_local GraphRecording storage;
     return storage;
@@ -323,9 +322,18 @@ bool graph_classify_tensor(const GraphRecording &recording, int32_t task_index, 
 // exact size. required_heap comes from the fill, which is the pass that walks the
 // tasks in order.
 std::optional<GraphDefinition> graph_layout_definition(const GraphRecording &recording) {
+    // The boundary's tensor count is bounded above by the fixed boundary and not at all below.
+    // GRAPH_MAX_TENSOR_ARGS is the cap `GraphTaskArgs` is sized to, so this states the same
+    // contract `rt_graph_args_cacheable` admits a submission under; the two have to agree,
+    // because a boundary admitted there and refused here records a whole body and then fails at
+    // `graph_end` instead of at the submission that named it.
+    //
+    // No lower bound: a body that reaches its buffers through its Config passes no tensors, and
+    // nothing here indexes one. The only reader of a boundary tensor on this path is a body
+    // tensor whose owner names a parameter, and `graph_boundary_relocate_params` stamps a PARAM
+    // owner once per boundary tensor — so a boundary of none produces no such owner.
     if (recording.unsupported || recording.task_count == 0 || recording.task_count > SUB_TASK_MAX_NUM ||
-        recording.bound_boundary().params.tensor_count() <= 0 ||
-        recording.bound_boundary().params.tensor_count() > UINT16_MAX) {
+        recording.bound_boundary().params.tensor_count() > GRAPH_MAX_TENSOR_ARGS) {
         return std::nullopt;
     }
 

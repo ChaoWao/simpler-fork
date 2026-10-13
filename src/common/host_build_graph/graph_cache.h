@@ -20,7 +20,10 @@
 #include "host_build_graph/types.h"
 
 struct GraphScopeResult {
-    bool execute_block{true};
+    // The submission failed: no shell was published and no recording opened. Every path
+    // that sets it latches a fatal first, so a caller needs no handling of its own --
+    // every later orchestration call short-circuits to a no-op.
+    bool has_error{false};
     bool recording{false};
     TaskId task_id{TaskId::invalid()};
     // The recording this call opened, non-null exactly when `recording` is set.
@@ -98,36 +101,28 @@ constexpr uint64_t graph_const_hash_impl(const char *s, uint64_t h) {
 // call site in this repository uses that overload.
 constexpr uint64_t GRAPH_KEY(const char *s) { return graph_const_hash_impl(s, 1469598103934665603ULL); }
 
+// Whether a boundary can open a Graph at all: it carries no error, and it fits the fixed
+// boundary.
+//
+// A boundary of no tensors is one of them — the shape a Config-driven Graph has, where the body
+// reaches its buffers through handles its Config carries. Admitting it here is only half of that:
+// `graph_layout_definition` decides whether the recording may be published, and it carries the
+// same absence of a lower bound. The two have to agree, because a boundary admitted here and
+// refused there records a whole body and then fails at `graph_end` instead of at the submission
+// that named it.
 inline bool rt_graph_args_cacheable(const GraphTaskArgs &args) {
-    if (args.has_error() || args.tensor_count() <= 0 || args.tensor_count() > GRAPH_MAX_TENSOR_ARGS) {
+    if (args.has_error() || args.tensor_count() > GRAPH_MAX_TENSOR_ARGS) {
         return false;
     }
     return true;
 }
 
-inline uint64_t rt_graph_make_key(uint64_t graph_id) { return graph_id; }
-
-template <typename T>
-inline uint64_t graph_hash_config_value(uint64_t hash, T value) {
-    using Value = std::remove_cv_t<std::remove_reference_t<T>>;
-    static_assert(
-        std::is_integral_v<Value> || std::is_same_v<Value, float> || std::is_same_v<Value, double>,
-        "Graph construction parameters must be integral, float, or double values"
-    );
-    constexpr uint8_t category = std::is_same_v<Value, bool> ? 1 :
-                                 std::is_integral_v<Value>   ? (std::is_signed_v<Value> ? 2 : 3) :
-                                                               4;
-    constexpr uint8_t width = sizeof(Value);
-    hash = graph_hash_byte(hash, category);
-    hash = graph_hash_byte(hash, width);
-    return graph_hash_bytes(hash, &value, sizeof(value));
-}
-
-template <typename... Config>
-inline uint64_t rt_graph_make_key(uint64_t graph_id, Config... config) {
+// A Graph's key: its identity mixed with the hash of its construction parameters.
+//
+// One path, whatever the Graph was submitted with. A Graph that takes no construction
+// parameters passes a DefaultConfig, whose hash is zero, so there is no second key
+// arithmetic to keep in step with this one.
+inline uint64_t rt_graph_make_key(uint64_t graph_id, uint64_t config_hash) {
     uint64_t hash = graph_hash_bytes(1469598103934665603ULL, &graph_id, sizeof(graph_id));
-    const uint32_t count = sizeof...(Config);
-    hash = graph_hash_bytes(hash, &count, sizeof(count));
-    ((hash = graph_hash_config_value(hash, config)), ...);
-    return hash;
+    return graph_hash_bytes(hash, &config_hash, sizeof(config_hash));
 }

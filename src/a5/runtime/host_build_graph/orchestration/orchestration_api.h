@@ -33,14 +33,14 @@
 #include <cstring>
 #include <ctime>
 #include <functional>
-#include <tuple>
 #include <type_traits>
 
 // Type headers needed by orchestration
-#include "assert_compat.h"                    // debug_assert
+#include "assert_compat.h"                    // always_assert
 #include "host_build_graph/common.h"          // framework_bind_runtime / framework_current_runtime
 #include "common/host_phase_kind.h"           // HostPhaseKind, for the phase records below
 #include "host_build_graph/graph_cache.h"     // Graph Execution key and result helpers
+#include "host_build_graph/graph_config.h"    // simpler::hbg::ConfigBase, DefaultConfig, Config traits
 #include "host_build_graph/runtime_ops.h"     // RuntimeOps, RuntimeContext forward declaration
 #include "host_build_graph/runtime_status.h"  // SIMPLER_ERROR_*
 #include "host_build_graph/submit_types.h"    // MixedKernels, INVALID_KERNEL_ID, subtask slots
@@ -198,8 +198,19 @@ static inline TaskOutputTensors rt_submit_dummy_task(const CoreTaskArgs &args) {
 
 static inline GraphScopeResult rt_graph_begin(uint64_t graph_key, const GraphTaskArgs &args) {
     RuntimeContext *rt = current_runtime();
-    if (rt->ops->is_fatal(rt) || rt->ops->graph_begin == nullptr) {
-        return GraphScopeResult{};
+    // Every runtime reaching this header implements graph_begin, so a null one means the ops
+    // table is not the one this call belongs to. Asserted rather than reported: the default
+    // result below says "nothing submitted, no error", under which the caller drops the body
+    // and leaves no record of having done so.
+    always_assert(rt->ops->graph_begin != nullptr && "an HBG runtime's ops table carries graph_begin");
+    // An already-fatal runtime fails this submission like any other: nothing is submitted
+    // and no recording opens. No report of its own -- `has_error` promises a latched fatal,
+    // and the one that short-circuited this call is it. graph_begin answers the same
+    // condition the same way, through require_device_arguments.
+    if (rt->ops->is_fatal(rt)) {
+        GraphScopeResult rejected;
+        rejected.has_error = true;
+        return rejected;
     }
     return rt->ops->graph_begin(rt, graph_key, args);
 }
@@ -429,15 +440,16 @@ static inline uint64_t rt_graph_function_id(Function function) {
 // its own boundary copy as a parameter for exactly that reason.
 template <typename Invoke>
 static inline GraphSubmitResult rt_submit_graph_impl(uint64_t graph_key, const GraphTaskArgs &args, Invoke invoke) {
-    debug_assert(!args.has_error() && "Graph boundary GraphTaskArgs construction failed");
-    debug_assert(args.tensor_count() <= GRAPH_MAX_TENSOR_ARGS && "Graph boundary exceeds the tensor limit");
-    debug_assert(
-        args.explicit_dep_count() == 0 && "Explicit dependencies crossing the Graph boundary are not supported"
-    );
+    // A boundary cannot hold a runtime-allocated output: GraphTaskArgs::add_output rejects a
+    // TensorCreateInfo at compile time, so this tag is reachable only by a bug.
+    //
+    // The caller-triggerable conditions -- a construction error, a boundary past the tensor
+    // cap, explicit dependencies -- are tested at the guard below, which refuses them the
+    // same way in both builds.
     for (int32_t i = 0; i < args.tensor_count(); ++i) {
-        debug_assert(
+        always_assert(
             args.tag(i) != TensorArgType::OUTPUT &&
-            "Runtime-allocated TensorCreateInfo is not supported at the Graph boundary"
+            "a Graph boundary cannot hold a runtime-allocated output (TensorCreateInfo)"
         );
     }
     RtSubmitPhaseState &_phase = rt_submit_phase_state();
@@ -454,14 +466,29 @@ static inline GraphSubmitResult rt_submit_graph_impl(uint64_t graph_key, const G
     if (_between != 0 && _between < kBindBoundaryNs) {
         rt_record_orch_phase(HostPhaseKind::OrchGeneratedArgs, _phase.prev_exit_ns, _entry_ns, _phase.count);
     }
-    if (!rt_graph_args_cacheable(args)) {
-        invoke(args);
-        _phase.prev_exit_ns = rt_orch_phase_now_ns();
-        return GraphSubmitResult{};
+    // A boundary that cannot open a Graph is a contract violation, not a reason to run
+    // the body quietly: the caller declared a Graph and gets told why it is not one.
+    //
+    // Explicit dependencies are tested here rather than inside rt_graph_args_cacheable
+    // because they are refused only at a Graph boundary -- an ordinary task takes them. The
+    // same pair is tested again in graph_begin_inner, which is what a caller reaching the
+    // host layer by another route meets; this one reports at the API the caller named.
+    if (!rt_graph_args_cacheable(args) || args.explicit_dep_count() != 0) {
+        rt_report_fatal(
+            SIMPLER_ERROR_INVALID_ARGS,
+            "[GraphExecution] boundary cannot open a Graph: tensors=%d scalars=%d explicit_deps=%u error=%d",
+            args.tensor_count(), args.scalar_count(), args.explicit_dep_count(), static_cast<int>(args.has_error())
+        );
+        GraphSubmitResult rejected;
+        rejected.has_error = true;
+        return rejected;
     }
     const uint64_t _admitted_ns = rt_orch_phase_now_ns();
     rt_record_orch_phase(HostPhaseKind::OrchSubmitAdmit, _entry_ns, _admitted_ns, graph_key);
     GraphScopeResult result = rt_graph_begin(graph_key, args);
+    // A failed submission has latched a fatal, so there is no body to run and no phase
+    // worth recording: the orchestration it belongs to will not produce a timeline.
+    if (result.has_error) return result;
     const uint64_t _begun_ns = rt_orch_phase_now_ns();
     if (result.recording) {
         void *handle = result.recording_handle;
@@ -508,9 +535,6 @@ static inline GraphSubmitResult rt_submit_graph_impl(uint64_t graph_key, const G
                 throw;
             }
         }
-    } else if (result.execute_block) {
-        // Un-cacheable at begin, or the Definition cache is full: ordinary path.
-        if (!current_runtime()->ops->is_fatal(current_runtime())) invoke(args);
     }
     // A cache hit or an in-flight hit skips the body. Every in-flight Graph task
     // is finalized at orchestration completion.
@@ -527,44 +551,116 @@ static inline GraphSubmitResult rt_submit_graph_impl(uint64_t graph_key, const G
     return result;
 }
 
-static inline GraphSubmitResult rt_submit_graph(uint64_t graph_id, GraphFunction function, const GraphTaskArgs &args) {
-    debug_assert(function != nullptr && "Graph function must not be null");
-    if (function == nullptr) return GraphSubmitResult{};
-    return rt_submit_graph_impl(rt_graph_make_key(graph_id), args, [function](const GraphTaskArgs &record_args) {
+template <typename ConfigT>
+static inline GraphSubmitResult
+rt_submit_graph(uint64_t graph_id, GraphFunction function, const GraphTaskArgs &args, const ConfigT &config) {
+    simpler::hbg::assert_config<ConfigT>();
+    if (function == nullptr) {
+        // Reported rather than asserted: debug_assert is a no-op in release, where a null
+        // body would otherwise drop the Graph silently and let the orchestration carry on.
+        rt_report_fatal(
+            SIMPLER_ERROR_INVALID_ARGS, "%s",
+            "[GraphExecution] a Graph was submitted with a null body, which names nothing to record"
+        );
+        GraphSubmitResult rejected;
+        rejected.has_error = true;
+        return rejected;
+    }
+    const uint64_t graph_key = rt_graph_make_key(graph_id, config.hash());
+    if (!simpler::hbg::retain_config(graph_key, config)) {
+        rt_report_fatal(
+            SIMPLER_ERROR_INVALID_ARGS,
+            "[GraphExecution] Graph key collision: key 0x%llx was already submitted with a different Config. "
+            "Two Configs hashing alike means the key no longer names one Graph -- check that hash() mixes "
+            "every field operator== compares",
+            static_cast<unsigned long long>(graph_key)
+        );
+        GraphSubmitResult rejected;
+        rejected.has_error = true;
+        return rejected;
+    }
+    return rt_submit_graph_impl(graph_key, args, [function](const GraphTaskArgs &record_args) {
         function(record_args);
     });
 }
 
+// Submitting without a Config and submitting a DefaultConfig are the same submission. They
+// share this one path rather than computing a key each, so the two spellings cannot drift
+// into two keys for one Graph.
+static inline GraphSubmitResult rt_submit_graph(uint64_t graph_id, GraphFunction function, const GraphTaskArgs &args) {
+    return rt_submit_graph(graph_id, function, args, simpler::hbg::DefaultConfig{});
+}
+
 static inline GraphSubmitResult rt_submit_graph(GraphFunction function, const GraphTaskArgs &args) {
-    return rt_submit_graph(rt_graph_function_id(function), function, args);
+    return rt_submit_graph(rt_graph_function_id(function), function, args, simpler::hbg::DefaultConfig{});
 }
 
-template <typename... Config>
-using GraphFunctionWithConfig = void (*)(const GraphTaskArgs &, Config...);
-
-template <typename... Config>
-static inline GraphSubmitResult rt_submit_graph(
-    uint64_t graph_id, GraphFunctionWithConfig<Config...> function, const GraphTaskArgs &args, Config... config
-) {
-    debug_assert(function != nullptr && "Graph function must not be null");
-    if (function == nullptr) return GraphSubmitResult{};
-    auto configs = std::make_tuple(config...);
-    return rt_submit_graph_impl(
-        rt_graph_make_key(graph_id, config...), args, [function, configs](const GraphTaskArgs &record_args) {
-            std::apply(
-                [&](auto... values) {
-                    function(record_args, values...);
-                },
-                configs
-            );
-        }
-    );
-}
-
-template <typename... Config>
+template <typename ConfigT>
 static inline GraphSubmitResult
-rt_submit_graph(GraphFunctionWithConfig<Config...> function, const GraphTaskArgs &args, Config... config) {
-    return rt_submit_graph(rt_graph_function_id(function), function, args, config...);
+rt_submit_graph(GraphFunction function, const GraphTaskArgs &args, const ConfigT &config) {
+    return rt_submit_graph(rt_graph_function_id(function), function, args, config);
+}
+
+// A Graph whose body reads construction parameters. The body takes the Config by its own
+// type, so a call that pairs a body with the wrong Config fails to deduce ConfigT rather
+// than compiling into a wrong read.
+template <typename ConfigT>
+using GraphFunctionWithConfig = void (*)(const GraphTaskArgs &, const ConfigT &);
+
+template <typename ConfigT>
+static inline GraphSubmitResult rt_submit_graph(
+    uint64_t graph_id, GraphFunctionWithConfig<ConfigT> function, const GraphTaskArgs &args, const ConfigT &config
+) {
+    simpler::hbg::assert_config<ConfigT>();
+    if (function == nullptr) {
+        // Reported rather than asserted: debug_assert is a no-op in release, where a null
+        // body would otherwise drop the Graph silently and let the orchestration carry on.
+        rt_report_fatal(
+            SIMPLER_ERROR_INVALID_ARGS, "%s",
+            "[GraphExecution] a Graph was submitted with a null body, which names nothing to record"
+        );
+        GraphSubmitResult rejected;
+        rejected.has_error = true;
+        return rejected;
+    }
+    const uint64_t graph_key = rt_graph_make_key(graph_id, config.hash());
+    if (!simpler::hbg::retain_config(graph_key, config)) {
+        rt_report_fatal(
+            SIMPLER_ERROR_INVALID_ARGS,
+            "[GraphExecution] Graph key collision: key 0x%llx was already submitted with a different Config. "
+            "Two Configs hashing alike means the key no longer names one Graph -- check that hash() mixes "
+            "every field operator== compares",
+            static_cast<unsigned long long>(graph_key)
+        );
+        GraphSubmitResult rejected;
+        rejected.has_error = true;
+        return rejected;
+    }
+    // The lambda captures its own copy: the recording job runs on a recorder thread that
+    // outlives this call, so it may hold nothing of the caller's frame -- `config` included.
+    return rt_submit_graph_impl(graph_key, args, [function, config](const GraphTaskArgs &record_args) {
+        function(record_args, config);
+    });
+}
+
+template <typename ConfigT>
+static inline GraphSubmitResult
+rt_submit_graph(GraphFunctionWithConfig<ConfigT> function, const GraphTaskArgs &args, const ConfigT &config) {
+    return rt_submit_graph(rt_graph_function_id(function), function, args, config);
+}
+
+// Release what this .so holds for the bind that just ended. The host calls it once per bind,
+// after the orchestration entry returns, so anything retained here covers the same window as
+// the host's Definition cache -- which is a local of run_host_orchestration and dies with it.
+//
+// Currently that is the Graph Config registry. A registry outliving the cache would report a
+// collision between two Configs that, the cache having been emptied in between, could never
+// have been confused for one another.
+//
+// `used` because this is an inline definition nothing inside the .so calls: the host reaches
+// it by dlsym, so the symbol has to be emitted anyway.
+extern "C" __attribute__((visibility("default"), used)) inline void framework_finish_orch() {
+    simpler::hbg::clear_config_registry();
 }
 
 #define _SIMPLER_CONCATENATE_IMPL(x, y) x##y

@@ -25,6 +25,7 @@
 #include "host_build_graph/runtime_status.h"
 
 #include "graph_cache.h"
+#include "graph_config.h"
 #include "graph_execution.h"
 #include "graph_image_view.h"
 #include "runtime_status/error_names.h"
@@ -76,9 +77,15 @@ enum class TestRoot { ORDINARY, PREDICATED, DUMMY };
 // is what has to say so.
 enum class TestEdDefect { NONE, CANDIDATE_ON_ROOT, CANDIDATE_WITH_PREDICATE, CANDIDATE_ON_DUMMY };
 
+// Whether this body reaches its buffers through the boundary or entirely through its own
+// heap. NONE is the shape a Config-driven Graph has: nothing is passed as a tensor, so no
+// body tensor can name a parameter and the boundary carries scalars only.
+enum class TestBoundary { WITH_TENSOR, NONE };
+
 std::vector<std::byte> make_test_definition(
     uint64_t graph_key, uint64_t boundary_address, uint32_t boundary_scalar_count = 1,
-    TestRoot root_variant = TestRoot::ORDINARY, TestEdDefect ed_defect = TestEdDefect::NONE
+    TestRoot root_variant = TestRoot::ORDINARY, TestEdDefect ed_defect = TestEdDefect::NONE,
+    TestBoundary boundary_variant = TestBoundary::WITH_TENSOR
 ) {
     std::vector<std::byte> image(sizeof(GraphDefinition));
 
@@ -154,8 +161,13 @@ std::vector<std::byte> make_test_definition(
     // Tensor 0 came through the boundary: its owner names parameter 0, and its recorded
     // address is dropped because replay takes the buffer from this invocation's argument.
     // Tensor 1 is task 0's output, so its address is an offset into the graph heap.
+    //
+    // Under TestBoundary::NONE tensor 0 is heap-owned too, at an offset clear of tensor 1:
+    // with no boundary tensor there is no parameter for it to name, and graph_rebind_tensor
+    // refuses a PARAM owner whose index is past boundary_tensor_count.
     std::vector<simpler::hbg::TensorData> tensors{
-        make_test_tensor(0, TaskId::make_param(0)),
+        boundary_variant == TestBoundary::WITH_TENSOR ? make_test_tensor(0, TaskId::make_param(0)) :
+                                                        make_test_tensor(64, TaskId::make_sub_task(0, 0)),
         make_test_tensor(16, TaskId::make_sub_task(0, 0)),
     };
     tensors[1].buffer.size = 32;
@@ -171,7 +183,7 @@ std::vector<std::byte> make_test_definition(
     definition.task_count = 2;
     definition.edge_count = 1;
     definition.root_count = 1;
-    definition.boundary_tensor_count = 1;
+    definition.boundary_tensor_count = boundary_variant == TestBoundary::WITH_TENSOR ? 1 : 0;
     definition.boundary_scalar_count = boundary_scalar_count;
     definition.tensor_arg_count = 2;
     definition.scalar_arg_count = 2;
@@ -319,7 +331,11 @@ public:
             return nullptr;
         }
         std::memset(boundary_tensors_.data(), 0, TENSOR_SLOTS * sizeof(simpler::hbg::Tensor));
-        boundary_tensors_[0] = make_test_boundary(boundary_address);
+        // Only as many slots as the Definition counts. A boundary of none reserves no slot,
+        // so slot 0 is already the tail the cases below expect untouched.
+        if (definition->boundary_tensor_count > 0) {
+            boundary_tensors_[0] = make_test_boundary(boundary_address);
+        }
         storage_entry_.payload.tensor_count = definition->boundary_tensor_count;
         storage_entry_.payload.scalar_count = definition->boundary_scalar_count;
         std::fill_n(boundary_scalars_.data(), definition->boundary_scalar_count, uint64_t{0});
@@ -350,9 +366,38 @@ private:
 
 }  // namespace
 
-TEST(GraphCache, RejectsEmptyBoundary) {
-    GraphTaskArgs args;
+// A boundary of no tensors opens a Graph like any other. A body that reaches its buffers
+// through its Config rather than through arguments passes none. Both ends of the Graph path
+// carry the same absence of a lower bound: this admission, and the layout in
+// graph_layout_definition that decides whether the recording may be published --
+// HbgGraphRecordingBoundsTest.ABoundaryOfNoTensorsRecordsAndPublishes drives that one.
+TEST(GraphCache, AcceptsABoundaryWithNoTensor) {
+    GraphTaskArgs scalars_only;
+    scalars_only.add_scalar(uint32_t{17});
 
+    EXPECT_TRUE(rt_graph_args_cacheable(scalars_only));
+
+    // And one carrying nothing at all: there is no third thing a boundary holds, so an
+    // empty one is the same submission with both counts at zero.
+    GraphTaskArgs empty;
+
+    EXPECT_TRUE(rt_graph_args_cacheable(empty));
+}
+
+// The structural refusal left. A boundary past the fixed cap is refused through the error
+// the Arg recorded: GraphTaskArgs is an Arg of GRAPH_MAX_TENSOR_ARGS slots, so add_input
+// past the cap sets the error and leaves the count at the cap rather than exceeding it --
+// the count test in rt_graph_args_cacheable is the backstop behind that, not the live path.
+TEST(GraphCache, RejectsABoundaryBeyondTheTensorCap) {
+    std::array<uint8_t, 64> buffer{};
+    const simpler::hbg::Tensor tensor = make_test_boundary(reinterpret_cast<uint64_t>(buffer.data()));
+
+    GraphTaskArgs args;
+    for (int32_t i = 0; i <= GRAPH_MAX_TENSOR_ARGS; ++i) {
+        args.add_input(tensor);
+    }
+
+    ASSERT_TRUE(args.has_error());
     EXPECT_FALSE(rt_graph_args_cacheable(args));
 }
 
@@ -367,11 +412,167 @@ TEST(GraphCache, AcceptsBoundaryScalars) {
     EXPECT_TRUE(rt_graph_args_cacheable(args));
 }
 
+// A Config whose single field reaches its hash, so two values of it are two keys.
+struct VariantConfig : simpler::hbg::ConfigBase {
+    explicit VariantConfig(int v) :
+        variant(v) {}
+
+    int variant;
+
+    uint64_t hash() const { return simpler::hbg::config_hash(variant); }
+    bool operator==(const VariantConfig &other) const { return variant == other.variant; }
+};
+
 TEST(GraphCache, ConfigValuesSelectDifferentDefinitions) {
     constexpr uint64_t GRAPH_ID = 0x1234;
 
-    EXPECT_NE(rt_graph_make_key(GRAPH_ID, 0), rt_graph_make_key(GRAPH_ID, 1));
-    EXPECT_EQ(rt_graph_make_key(GRAPH_ID, 0), rt_graph_make_key(GRAPH_ID, 0));
+    EXPECT_NE(
+        rt_graph_make_key(GRAPH_ID, VariantConfig{0}.hash()), rt_graph_make_key(GRAPH_ID, VariantConfig{1}.hash())
+    );
+    EXPECT_EQ(
+        rt_graph_make_key(GRAPH_ID, VariantConfig{0}.hash()), rt_graph_make_key(GRAPH_ID, VariantConfig{0}.hash())
+    );
+}
+
+// Submitting no Config and submitting a DefaultConfig are the same submission, so they must
+// land on one key rather than on two that happen to agree today.
+TEST(GraphCache, NoConfigAndADefaultConfigShareOneKey) {
+    constexpr uint64_t GRAPH_ID = 0x1234;
+
+    EXPECT_EQ(
+        rt_graph_make_key(GRAPH_ID, simpler::hbg::DefaultConfig{}.hash()),
+        rt_graph_make_key(GRAPH_ID, simpler::hbg::DefaultConfig{}.hash())
+    );
+    // A Config that carries values is a different Graph even at the same id.
+    EXPECT_NE(
+        rt_graph_make_key(GRAPH_ID, simpler::hbg::DefaultConfig{}.hash()),
+        rt_graph_make_key(GRAPH_ID, VariantConfig{0}.hash())
+    );
+}
+
+// The comparison a key collision is settled by. It runs where the Config's own type is
+// known, so it is an ordinary operator== rather than a virtual call.
+TEST(GraphCache, ConfigComparesByValue) {
+    EXPECT_TRUE(VariantConfig{0} == VariantConfig{0});
+    EXPECT_FALSE(VariantConfig{0} == VariantConfig{1});
+    EXPECT_TRUE(simpler::hbg::DefaultConfig{} == simpler::hbg::DefaultConfig{});
+}
+
+// What the retained Config is recovered through: a base pointer, so one table holds every
+// Config type, and a cast that fails on any other type -- which is how a collision between
+// two different Config types is caught rather than compared field by field.
+TEST(GraphCache, RetainedConfigRecoversItsOwnTypeAndRefusesAnother) {
+    const std::unique_ptr<simpler::hbg::ConfigBase> retained = std::make_unique<VariantConfig>(7);
+
+    const auto *same_type = dynamic_cast<const VariantConfig *>(retained.get());
+    ASSERT_NE(same_type, nullptr);
+    EXPECT_TRUE(*same_type == VariantConfig{7});
+    EXPECT_FALSE(*same_type == VariantConfig{8});
+
+    EXPECT_EQ(dynamic_cast<const simpler::hbg::DefaultConfig *>(retained.get()), nullptr);
+}
+
+// The three requirements the submit path enforces, checked here so a Config that fails one
+// is a compile error at a named line rather than wherever it is first submitted.
+static_assert(std::is_base_of_v<simpler::hbg::ConfigBase, VariantConfig>);
+static_assert(simpler::hbg::has_config_hash_v<VariantConfig>);
+static_assert(simpler::hbg::has_config_equality_v<VariantConfig>);
+static_assert(simpler::hbg::has_config_hash_v<simpler::hbg::DefaultConfig>);
+static_assert(simpler::hbg::has_config_equality_v<simpler::hbg::DefaultConfig>);
+
+// ConfigBase itself provides neither, which is what makes the traits above a real check
+// rather than something every derived type satisfies for free.
+static_assert(!simpler::hbg::has_config_hash_v<simpler::hbg::ConfigBase>);
+static_assert(!simpler::hbg::has_config_equality_v<simpler::hbg::ConfigBase>);
+
+// A second Config type, so a collision between two *different* types can be exercised.
+// Its field is a different type from VariantConfig's on purpose: the two must still be
+// told apart by what they are, not by what they hold.
+struct ThresholdConfig : simpler::hbg::ConfigBase {
+    explicit ThresholdConfig(bool e) :
+        enabled(e) {}
+
+    bool enabled;
+
+    uint64_t hash() const { return simpler::hbg::config_hash(enabled); }
+    bool operator==(const ThresholdConfig &other) const { return enabled == other.enabled; }
+};
+
+// The registry is a process-wide table, so each case starts and leaves it empty rather
+// than inheriting whatever an earlier one retained.
+class GraphConfigRegistryTest : public ::testing::Test {
+protected:
+    void SetUp() override { simpler::hbg::config_registry().clear(); }
+    void TearDown() override { simpler::hbg::config_registry().clear(); }
+};
+
+// The ordinary case: one Graph submitted repeatedly within a bind.
+TEST_F(GraphConfigRegistryTest, ResubmittingOneKeyWithItsOwnConfigAgrees) {
+    constexpr uint64_t KEY = 0x9001;
+
+    EXPECT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    EXPECT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    EXPECT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+}
+
+// The hole this registry exists to close. Two Configs reaching one key means the key no
+// longer names the Graph its Definition was recorded from, so the next hit would replay the
+// wrong body -- the failure mode that was silent before. Reported rather than asserted: a
+// Config's hash() is the caller's own code, so a collision is caller-triggerable, and the
+// submission turns this false into a fatal naming the key.
+TEST_F(GraphConfigRegistryTest, TwoConfigValuesOnOneKeyFailLoudly) {
+    constexpr uint64_t KEY = 0x9002;
+
+    ASSERT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    EXPECT_FALSE(simpler::hbg::retain_config(KEY, VariantConfig{4}));
+}
+
+// Same hole, across types rather than values. One table for every Config type is what makes
+// this case visible at all: per-type tables would put these two in separate maps.
+TEST_F(GraphConfigRegistryTest, TwoConfigTypesOnOneKeyFailLoudly) {
+    constexpr uint64_t KEY = 0x9003;
+
+    ASSERT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    EXPECT_FALSE(simpler::hbg::retain_config(KEY, ThresholdConfig{true}));
+}
+
+// A refused submission leaves the retained Config alone: the first one still owns the key,
+// so a later submission carrying it is still admitted.
+TEST_F(GraphConfigRegistryTest, ARefusedConfigDoesNotDisplaceTheRetainedOne) {
+    constexpr uint64_t KEY = 0x9008;
+
+    ASSERT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    ASSERT_FALSE(simpler::hbg::retain_config(KEY, VariantConfig{4}));
+
+    EXPECT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    EXPECT_EQ(simpler::hbg::config_registry().size(), 1u);
+}
+
+// Distinct keys are independent, so an unrelated Graph is never dragged into a comparison.
+TEST_F(GraphConfigRegistryTest, DistinctKeysRetainIndependently) {
+    ASSERT_TRUE(simpler::hbg::retain_config(0x9004, VariantConfig{3}));
+    ASSERT_TRUE(simpler::hbg::retain_config(0x9005, VariantConfig{4}));
+    ASSERT_TRUE(simpler::hbg::retain_config(0x9006, ThresholdConfig{false}));
+
+    EXPECT_TRUE(simpler::hbg::retain_config(0x9004, VariantConfig{3}));
+    EXPECT_TRUE(simpler::hbg::retain_config(0x9005, VariantConfig{4}));
+    EXPECT_TRUE(simpler::hbg::retain_config(0x9006, ThresholdConfig{false}));
+    EXPECT_EQ(simpler::hbg::config_registry().size(), 3u);
+}
+
+// What framework_finish_orch does at the end of every bind. Clearing is what pairs this
+// table with the host's Definition cache: once that cache is gone, a key carries nothing,
+// so the same key may legitimately come back under a different Config.
+TEST_F(GraphConfigRegistryTest, ClearingReleasesEveryKey) {
+    constexpr uint64_t KEY = 0x9007;
+
+    ASSERT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{3}));
+    ASSERT_FALSE(simpler::hbg::retain_config(KEY, VariantConfig{4}));
+
+    simpler::hbg::config_registry().clear();
+
+    EXPECT_TRUE(simpler::hbg::config_registry().empty());
+    EXPECT_TRUE(simpler::hbg::retain_config(KEY, VariantConfig{4}));
 }
 
 // Arg's storage stays unreachable only while the base is private. Under a public base an
@@ -383,6 +584,28 @@ static_assert(
         const CoreTaskArgs *,
         const TaskArgsTpl<TensorRef, uint64_t, MAX_TENSOR_ARGS, MAX_SCALAR_ARGS, TensorArgType> *>,
     "Arg must not be convertible to its storage base"
+);
+
+// The same rule one level up, and here it guards a correctness invariant rather than an
+// encapsulation one. Every mutator on Arg is non-virtual, so under a public base
+// `Arg &a = core_args; a.reset();` would run Arg's body alone and leave scalar_inherited_
+// holding origins for slots that no longer exist. A slot still naming an origin while
+// holding a value of its own is recorded as following a boundary parameter, so the
+// Definition would take that slot's value from the wrong place.
+static_assert(
+    !std::is_convertible_v<const CoreTaskArgs *, const Arg<MAX_TENSOR_ARGS, MAX_SCALAR_ARGS> *>,
+    "InheritableArg must not be convertible to Arg: a base reference would bypass the origin array"
+);
+static_assert(
+    !std::is_convertible_v<const GraphTaskArgs *, const Arg<GRAPH_MAX_TENSOR_ARGS, GRAPH_MAX_SCALAR_ARGS> *>,
+    "a Graph boundary must not be convertible to Arg either"
+);
+
+// ChipTaskArgs is the deliberate exception: its every slot holds a value of its own, so it
+// has no origin array for a base reference to bypass, and it derives from Arg publicly.
+static_assert(
+    std::is_convertible_v<const ChipTaskArgs *, const Arg<CHIP_MAX_TENSOR_ARGS, CHIP_MAX_SCALAR_ARGS> *>,
+    "ChipTaskArgs is an ordinary Arg"
 );
 
 // The slot array is handed out as void*, so index it the way recording does.
@@ -404,12 +627,12 @@ uint64_t slot_value(const ArgT &args, int32_t i) {
 // &scalars_[i], and subtracting the base yields i. Were a boundary parameter to name an
 // origin -- a caller local, or a scratch buffer used while deep-copying -- scalar(i)
 // would hand out that address instead, it would fall outside the slot array, and
-// graph_classify_scalars would record the parameter as static. Every dynamic parameter
-// would silently stop being refreshed on replay.
-TEST(GraphScalarProvenance, AStaticParameterIsItsOwnOrigin) {
+// graph_classify_scalars would record the parameter as the body's own value. Every
+// parameter would silently stop being refreshed on replay.
+TEST(GraphScalarProvenance, ABoundaryParameterIsItsOwnOrigin) {
     GraphTaskArgs boundary_args;
     uint64_t scratch = 18;
-    boundary_args.add_static_scalar(scratch);
+    boundary_args.add_scalar(scratch);
     CoreTaskArgs task_args;
 
     task_args.add_scalar(boundary_args.scalar(0));
@@ -419,23 +642,21 @@ TEST(GraphScalarProvenance, AStaticParameterIsItsOwnOrigin) {
     EXPECT_NE(task_args.scalar_origin(0), &scratch);
 }
 
-TEST(GraphScalarProvenance, AnLvalueDeclaresADynamicParameter) {
-    GraphTaskArgs args;
+// What a slot follows is decided by what was passed, not by how it was spelled. An lvalue
+// and a literal both give the slot a value of its own; only a handle makes it follow a
+// parameter.
+TEST(GraphScalarProvenance, ValueCategoryDoesNotDeclareAnything) {
+    CoreTaskArgs args;
     uint32_t token_pos = 17;
 
-    // An lvalue is a parameter the caller holds and may change between invocations; a
-    // literal cannot be changed by anyone. Width does not enter into it -- the value is
-    // converted here, where its type is still known.
     args.add_scalar(token_pos);
     args.add_scalar(uint32_t{18});
-    args.add_static_scalar(token_pos);
 
-    EXPECT_TRUE(args.scalar_dynamic(0));
-    EXPECT_EQ(args.scalar_origin(0), &token_pos);
+    EXPECT_FALSE(args.scalar_dynamic(0)) << "an lvalue is still just a value";
+    EXPECT_EQ(args.scalar_origin(0), nullptr);
+    EXPECT_NE(args.scalar_origin(0), &token_pos);
     EXPECT_FALSE(args.scalar_dynamic(1));
     EXPECT_EQ(args.scalar_origin(1), nullptr);
-    EXPECT_FALSE(args.scalar_dynamic(2)) << "add_static_scalar overrides value category";
-    EXPECT_EQ(args.scalar<uint32_t>(2), 17u);
 }
 
 TEST(GraphScalarProvenance, ForwardedScalarRetainsBoundarySource) {
@@ -464,29 +685,14 @@ TEST(GraphScalarProvenance, ForwardedScalarNamesOriginThroughAnIntermediary) {
     EXPECT_EQ(task_args.scalar_origin(0), slot_addr(boundary_args.scalar_slot_base(), 1));
 }
 
-TEST(GraphScalarProvenance, FreezingAParameterNeedsAnExplicitRead) {
-    GraphTaskArgs boundary_args;
-    boundary_args.add_scalar(uint32_t{17}, uint32_t{18});
-    CoreTaskArgs task_args;
-
-    // A handle cannot be declared static -- it names a parameter. Reading the slot as a
-    // value takes the number, and this is how an enclosing Graph's parameter is
-    // deliberately frozen rather than followed.
-    task_args.add_static_scalar(boundary_args.scalar<uint64_t>(1));
-
-    EXPECT_FALSE(task_args.scalar_dynamic(0));
-    EXPECT_EQ(task_args.scalar_origin(0), nullptr);
-    EXPECT_EQ(task_args.scalar<uint64_t>(0), uint64_t{18});
-}
-
 TEST(GraphScalarProvenance, ValueScalarHoldsItsOwnValue) {
     CoreTaskArgs task_args;
     task_args.add_scalar(uint32_t{17}, 2.5F);
 
     EXPECT_FALSE(task_args.scalar_dynamic(0));
     EXPECT_FALSE(task_args.scalar_dynamic(1));
-    EXPECT_EQ(task_args.scalar<uint64_t>(0), uint64_t{17});
-    EXPECT_EQ(task_args.scalar<float>(1), 2.5F);
+    EXPECT_EQ(slot_value(task_args, 0), uint64_t{17});
+    EXPECT_EQ(from_u64<float>(slot_value(task_args, 1)), 2.5F);
 }
 
 TEST(GraphScalarProvenance, ZeroInitialisedSlotsReadAsStaticZero) {
@@ -518,6 +724,9 @@ TEST(GraphScalarProvenance, PackCopiesEveryValue) {
     EXPECT_EQ(packed[2], uint64_t{9});
 }
 
+// A value is copied at add_scalar time, so the variable it came from need not outlive the
+// Arg. Nothing records that variable's address either: only a handle gives a slot an origin,
+// and a handle's origin is a boundary slot rather than a caller local.
 TEST(GraphScalarProvenance, AValueOutlivesItsOrigin) {
     CoreTaskArgs task_args;
     {
@@ -525,9 +734,8 @@ TEST(GraphScalarProvenance, AValueOutlivesItsOrigin) {
         task_args.add_scalar(transient);
     }
 
-    // The origin now dangles, and that is by design: the value was copied at add_scalar
-    // time, and the address is only ever compared, never read through.
-    EXPECT_TRUE(task_args.scalar_dynamic(0));
+    EXPECT_FALSE(task_args.scalar_dynamic(0));
+    EXPECT_EQ(task_args.scalar_origin(0), nullptr);
     EXPECT_EQ(slot_value(task_args, 0), uint64_t{42});
 }
 
@@ -561,34 +769,33 @@ TEST(GraphScalarProvenance, InheritingAValueSlotNamesThatSlot) {
     EXPECT_EQ(slot_value(b, 0), uint64_t{7});
 }
 
-// The read the defect went through. A body receives the boundary's parameter list, and a
-// number taken out of a dynamic parameter becomes ordinary host data: whatever the body
-// computes from it is fixed in the Definition, and every later invocation replays that
-// number instead of the one it passed. There is no fallback -- the ordinary path runs the
-// same body and reaches the same read -- so the read is refused rather than warned about.
+// What the boundary is after gen_scalar_params_from_args: every parameter names itself,
+// whatever the caller's own slot held. That is what keeps this list the basis recording
+// resolves against -- a task slot following parameter i reports this array's i-th slot, and
+// subtracting the base yields i.
 //
-// What a dynamic parameter is actually refreshed with on replay is
-// GraphExecutionReplay.ResubmissionRebuildsFromDefinition below: a second invocation's
-// task reads that invocation's own value, not the recorded one.
-TEST(GraphScalarProvenance, AValueReadOfADynamicParameterIsRefused) {
+// Unconditional because a boundary parameter is refreshed per invocation, with no second
+// kind to tell apart: a Graph's fixed values live in its Config. What a parameter is
+// actually refreshed with on replay is GraphExecutionReplay.ResubmissionRebuildsFromDefinition
+// below -- a second invocation's task reads that invocation's own value, not the recorded one.
+TEST(GraphScalarProvenance, EveryBoundaryParameterNamesItself) {
     uint64_t caller_held = 4;
     GraphTaskArgs caller_args;
     caller_args.add_scalar(caller_held);
-    caller_args.add_static_scalar(uint64_t{9});
+    caller_args.add_scalar(uint64_t{9});
 
-    // The parameter list the body reads, not the caller's arguments: a dynamic parameter
-    // names itself only after this, and that is the object the recorded body resolves
-    // against.
     GraphTaskArgs params;
     params.gen_scalar_params_from_args(caller_args);
 
-    EXPECT_THROW(params.scalar<uint64_t>(0), AssertionError);
-    // Its static sibling in the same list reads, so what the refusal turns on is the
-    // declaration rather than the read.
-    EXPECT_EQ(params.scalar<uint64_t>(1), uint64_t{9});
-    // Forwarding is what the parameter is for, and it is what stays available.
     EXPECT_TRUE(params.scalar_dynamic(0));
+    EXPECT_TRUE(params.scalar_dynamic(1));
     EXPECT_EQ(params.scalar(0).origin(), params.scalar_slot_base());
+    EXPECT_EQ(params.scalar(1).origin(), slot_addr(params.scalar_slot_base(), 1));
+    // Neither names where the caller's value came from, which would fall outside this array.
+    EXPECT_NE(params.scalar(0).origin(), &caller_held);
+    // The values carry across unchanged.
+    EXPECT_EQ(slot_value(params, 0), uint64_t{4});
+    EXPECT_EQ(slot_value(params, 1), uint64_t{9});
 }
 
 TEST(GraphExecutionStorage, ComputesAlignedExactSize) {
@@ -740,6 +947,71 @@ TEST(GraphExecutionReplay, ResubmissionRebuildsFromDefinition) {
     EXPECT_EQ(storage.slot.completed_subtasks.load(std::memory_order_relaxed), 0);
     EXPECT_EQ(storage.payload.published_block_count.load(std::memory_order_relaxed), 0);
     EXPECT_EQ(storage.payload.dump_metadata.dump_arg_mask, uint64_t{1} << 0);
+}
+
+// A body that passes no tensors at all replays on this same path. That is the shape a
+// Config-driven Graph has -- its buffers are reached through raw handles its Config
+// carries, so nothing crosses the boundary as a tensor.
+//
+// This case enters at replay, from a hand-built Definition: what it shows is that
+// materialization resolves every body tensor against the graph heap when no parameter can be
+// named, and that the boundary's scalars still refresh per invocation. It shows nothing about
+// whether such a boundary can be *recorded* -- the layout and publish stage is a separate end,
+// and the two disagreeing is its own defect. That end is
+// HbgGraphRecordingBoundsTest.ABoundaryOfNoTensorsRecordsAndPublishes, which drives the real
+// recorder through graph_begin, graph_prepare, a sub-task and graph_end.
+TEST(GraphExecutionReplay, ReplaysABodyWithNoBoundaryTensor) {
+    constexpr uint64_t GRAPH_KEY_VALUE = 0x4321;
+
+    const std::vector<std::byte> definition = make_test_definition(
+        GRAPH_KEY_VALUE, /*boundary_address=*/0, /*boundary_scalar_count=*/1, TestRoot::ORDINARY, TestEdDefect::NONE,
+        TestBoundary::NONE
+    );
+    const TestDefinitionObject definition_object(definition);
+    ASSERT_EQ(definition_object.definition()->boundary_tensor_count, 0);
+
+    OuterHeap heap(definition, 0xAA);
+    GraphExecution *execution = heap.initialize_execution(definition_object, /*boundary_address=*/0, 17);
+    ASSERT_NE(execution, nullptr);
+    EXPECT_EQ(execution->boundary_tensor_count, 0);
+
+    ChipTaskStorage outer{};
+    TaskDescriptor &outer_task = outer.task;
+    outer_task.task_id = TaskId::make_global(7);
+    outer_task.packed_buffer_base = heap.base();
+    outer_task.packed_buffer_end = heap.end();
+    ChipTaskSlotState &outer_slot = outer.slot;
+    outer_slot.task_kind = TaskKind::GRAPH;
+    outer_slot.graph_context = execution;
+
+    ASSERT_EQ(
+        graph_execution_materialize_slice(outer_slot, *execution, heap.image(), 2), GraphMaterializeResult::MATERIALIZED
+    );
+    // Both body tensors resolve against the heap, because neither can name a parameter.
+    ChipTaskStorage &root = execution->task_at(0);
+    ASSERT_EQ(root.payload.tensor_count, 1);
+    EXPECT_EQ(root.payload.tensor_data()[0].buffer.addr, reinterpret_cast<uint64_t>(heap.base() + 64));
+    EXPECT_EQ(execution->task_at(1).payload.tensor_data()[0].buffer.addr, reinterpret_cast<uint64_t>(heap.base() + 16));
+    // The boundary still carries scalars, and the one that follows a parameter takes this
+    // invocation's value.
+    ASSERT_EQ(root.payload.scalar_count, 1);
+    EXPECT_EQ(root.payload.scalar_data()[0], 17U);
+    EXPECT_EQ(execution->task_at(1).payload.scalar_data()[0], 18U);
+
+    // A second invocation refreshes that parameter, as it does for a body with a boundary
+    // tensor: nothing about the refresh depends on a tensor having crossed.
+    graph_execution_mark_completed(*execution);
+    execution->retired_tasks.store(2, std::memory_order_release);
+    outer_task.task_id = TaskId::make_global(8);
+
+    execution = heap.initialize_execution(definition_object, /*boundary_address=*/0, 99);
+    ASSERT_NE(execution, nullptr);
+    outer_slot.graph_context = execution;
+    ASSERT_EQ(
+        graph_execution_materialize_slice(outer_slot, *execution, heap.image(), 2), GraphMaterializeResult::MATERIALIZED
+    );
+    EXPECT_EQ(execution->task_at(0).payload.scalar_data()[0], 99U);
+    EXPECT_EQ(execution->task_at(0).payload.tensor_data()[0].buffer.addr, reinterpret_cast<uint64_t>(heap.base() + 64));
 }
 
 TEST(GraphExecutionReplay, PublishedTaskCompletesBeforeRemainingTasksMaterialize) {
