@@ -15,9 +15,13 @@ import shutil
 import subprocess
 import threading
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from _task_interface import CallConfig, RuntimeEnv, _ChipWorker  # pyright: ignore[reportMissingImports]
+from simpler.buffer import Buffer
+from simpler.task_interface import DataType, ExecutionContextRefused, TaskArgs, Tensor, TensorArgType
+from simpler.worker import Worker, _Lifecycle
 
 # ============================================================================
 # CallConfig tests
@@ -387,8 +391,9 @@ class TestChipWorkerBorrowedInit:
         try:
             before = observer.test_closes(), observer.test_destroys()
             observer.test_validation(-88)
-            with pytest.raises(RuntimeError, match="context validation failed with code -88"):
+            with pytest.raises(ExecutionContextRefused, match="context validation failed with code -88") as error:
                 worker._validate_execution_context()
+            assert isinstance(error.value, RuntimeError)
             assert worker.initialized and worker.runtime_slot_count == 1
             assert (observer.test_closes(), observer.test_destroys()) == before
             observer.test_validation(0)
@@ -396,6 +401,56 @@ class TestChipWorkerBorrowedInit:
         finally:
             observer.test_validation(0)
             worker.finalize()
+
+    @pytest.mark.parametrize("operation", ["wait", "result"])
+    def test_native_wait_refusal_keeps_python_run_retryable(self, kernel_symbol_runtime, operation):
+        runtime = kernel_symbol_runtime(borrowed=True)
+        observer = ctypes.CDLL(str(runtime))
+        native = _ChipWorker()
+        native.init(str(runtime), os.devnull, os.devnull, "", 0, borrowed_context_generation=77)
+        owner = Worker(level=2)
+        fences = []
+
+        def wait(timeout):
+            native._validate_execution_context()
+            fences.append(timeout)
+            return True
+
+        owner._chip_worker = SimpleNamespace(
+            _impl=SimpleNamespace(
+                _submit_chip_run_direct=lambda *_: SimpleNamespace(wait=wait),
+            )
+        )
+        owner._lifecycle = _Lifecycle.READY
+        try:
+            source = Buffer.wrap(address=0x8000, nbytes=64, location=owner.device_location)
+            args = TaskArgs()
+            args.add_tensor(Tensor(source, shapes=(4,), dtype=DataType.FLOAT32), TensorArgType.INPUT)
+            handle = owner._submit_l2_locked(3, args, CallConfig())
+            run_id, keepalive = handle._run_id, handle._keepalive
+            observer.test_validation(-88)
+            for _ in range(2):
+                with pytest.raises(ExecutionContextRefused, match="context validation failed with code -88"):
+                    getattr(handle, operation)()
+                assert not handle._terminal and not handle._wait_in_progress
+                assert handle._run_id == run_id and handle._keepalive is keepalive
+                assert run_id in owner._chip_runs and run_id in owner._chip_source_uses
+                assert not owner._source_context_failed and not fences
+                with pytest.raises(RuntimeError, match="in-flight or unproven"):
+                    source.close()
+            observer.test_validation(0)
+            getattr(handle, operation)()
+            assert handle.done and fences == [-1.0]
+            assert not owner._chip_runs and not owner._chip_source_uses
+            source.close()
+            assert source.closed
+        finally:
+            owner._chip_runs.clear()
+            owner._chip_run_touched_identities.clear()
+            owner._close_chip_import_registry()
+            owner._lifecycle = _Lifecycle.CLOSED
+            observer.test_validation(0)
+            native.finalize()
 
     def test_borrowed_init_uses_shared_binding_and_can_close(self, kernel_symbol_runtime):
         runtime = kernel_symbol_runtime(borrowed=True)

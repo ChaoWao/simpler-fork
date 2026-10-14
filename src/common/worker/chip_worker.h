@@ -50,6 +50,13 @@ class ChipRun;
 class ChipRunLane;
 struct ChipRunLaneState;
 
+// A current-context preflight refusal occurs before lane progress or native
+// phase mutation; it supplies no execution or completion verdict.
+class ExecutionContextRefused : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
 class UnsupportedRuntimeOperation : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;

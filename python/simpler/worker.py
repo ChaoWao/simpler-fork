@@ -80,7 +80,7 @@ import threading
 import time
 import uuid
 import weakref
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from multiprocessing import resource_tracker
 from multiprocessing.shared_memory import SharedMemory
@@ -284,6 +284,7 @@ from .task_interface import (
     CommBufferSpec,
     CommDomainHandle,
     DeviceMemoryInfo,
+    ExecutionContextRefused,
     GlobalCommDomainHandle,
     GlobalCommDomainView,
     ProvenanceTable,
@@ -4662,14 +4663,11 @@ class RunHandle:
         run_id: int,
         keepalive: tuple[Any, ...],
         resources: _RunResources | None = None,
-        *,
-        _validate_context: Callable[[], None] | None = None,
     ) -> None:
         self._worker = worker
         self._run_id: int | None = run_id
         self._keepalive: tuple[Any, ...] | None = keepalive
         self._resources = resources if resources is not None else _RunResources()
-        self._validate_context = _validate_context
         self._cv = threading.Condition()
         self._wait_in_progress = False
         self._accept_wait_in_progress = False
@@ -4692,7 +4690,6 @@ class RunHandle:
         handle._run_id = None
         handle._keepalive = None
         handle._resources = _RunResources()
-        handle._validate_context = None
         handle._cv = threading.Condition()
         handle._wait_in_progress = False
         handle._accept_wait_in_progress = False
@@ -4803,7 +4800,6 @@ class RunHandle:
                         self._run_id = None
                         if not self._finalization_abandoned:
                             self._keepalive = None
-                        self._validate_context = None
                         self._launch_accepted = True
                         self._terminal = True
                     self._wait_in_progress = False
@@ -4891,13 +4887,13 @@ class RunHandle:
                 boundary_hook("after_election")
 
             assert run_id is not None
-            # Context refusal leaves the run retryable; only a native execution
-            # verdict enters terminal finalization and releases its references.
-            if self._validate_context is not None:
-                self._validate_context()
             remaining = None if deadline is None else max(0.0, deadline - _monotonic())
             try:
                 completed = self._worker._wait_run_handle(run_id, remaining)
+            except ExecutionContextRefused:
+                # No native completion verdict exists; the elected waiter
+                # unwinds without retiring the run or its argument references.
+                raise
             except Exception as exc:  # native run failures are terminal
                 completed = True
                 native_error = exc
@@ -12694,7 +12690,6 @@ class Worker:
         completion fence through :meth:`RunHandle.wait`.
         """
         assert self._chip_worker is not None
-        validate_context = self._chip_worker._impl._validate_execution_context
         args = _snapshot_local_task_args(TaskArgs() if args is None else args)
         _validate_host_control_access(self._callable_registry.get(callable_id), args)
         touched = self._identities_in_args(args)
@@ -12737,7 +12732,7 @@ class Worker:
             self._chip_runs[run_id] = chip_run
         # The handle owns this invocation's argument values. Storage release is fenced by
         # the touched-identity registration until finalization, not by descriptor copies.
-        return RunHandle(self, run_id, (callable_id, args, cfg, chip_args), _validate_context=validate_context)
+        return RunHandle(self, run_id, (callable_id, args, cfg, chip_args))
 
     def _chip_run_for(self, run_id: int) -> Any | None:
         return self._chip_runs.get(run_id)

@@ -85,12 +85,15 @@ cannot walk a legal-looking length past the end.
 `RunHandle` exposes the `done` property, `wait(timeout=None)`, and
 `result(timeout=None)`.
 
-Direct L2 handles validate the native execution context before waiting. A
-context refusal leaves the handle, its argument snapshot and its Buffer uses
-intact; restore the required context before retrying. A device execution error
-is terminal and retains unproven Buffer uses. The public Worker initialization
-still owns its device; borrowed-context initialization is an internal native
-entry, and this preflight alone does not expose a public borrowed Worker.
+Direct L2 handles validate the execution context inside the native wait.
+`ExecutionContextRefused`, imported from `simpler.task_interface`, is a
+`RuntimeError` subclass for current-context preflight refusal. It supplies no
+completion verdict: the handle, its argument snapshot and its Buffer uses remain
+intact; restore the required context before retrying. Other native wait errors
+remain terminal and retain unproven Buffer uses; error messages do not determine
+the classification. The public Worker initialization still owns its device;
+borrowed-context initialization is an internal native entry, and this exception
+alone does not expose a public borrowed Worker.
 
 At L2 the `callable` is a registered `ChipCallable` handle. At L3+ the top-level
 callable is a **Python orchestration function** `f(orch, args, cfg)`, where

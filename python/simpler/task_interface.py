@@ -73,6 +73,7 @@ from _task_interface import (  # pyright: ignore[reportMissingImports]
     CoreCallable,
     DataType,
     DeviceMemoryInfo,
+    ExecutionContextRefused,
     ProvenanceTable,
     RuntimeEnv,
     TaskArgs,
@@ -206,6 +207,7 @@ from .global_comm_domain import GlobalDomainAttachment, GlobalDomainBuffer, Glob
 __all__ = [
     "DataType",
     "DeviceMemoryInfo",
+    "ExecutionContextRefused",
     "get_element_size",
     "get_dtype_name",
     "MAX_TENSOR_DIMS",

@@ -2051,6 +2051,8 @@ NB_MODULE(_task_interface, m) {
     // silently — struct layouts differ and fields read as garbage.
     m.attr("__build_commit__") = SIMPLER_BUILD_COMMIT;
 
+    nb::exception<ExecutionContextRefused>(m, "ExecutionContextRefused", PyExc_RuntimeError);
+
     // --- DataType enum ---
     nb::enum_<DataType>(m, "DataType")
         .value("FLOAT32", DataType::FLOAT32)

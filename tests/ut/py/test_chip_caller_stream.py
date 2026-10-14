@@ -66,6 +66,7 @@ def _run(arch, runtime, device, depth, borrowed):
         ChipStorageTaskArgs,
         ChipTensor,
         DataType,
+        ExecutionContextRefused,
     )
     from simpler.worker import RunHandle, Worker  # noqa: PLC0415
 
@@ -150,9 +151,7 @@ def _run(arch, runtime, device, depth, borrowed):
             # real borrowed native runs to its shared Python completion path.
             run_id = invocation + 1
             handle_owner._chip_runs[run_id] = run
-            python_runs.append(
-                RunHandle(handle_owner, run_id, (args,), _validate_context=worker._validate_execution_context)
-            )
+            python_runs.append(RunHandle(handle_owner, run_id, (args,)))
             assert (
                 lib.aclrtMemcpyAsync(ctypes.addressof(current_host[2]), nbytes, current_device[2], nbytes, 2, stream)
                 == 0
@@ -167,13 +166,13 @@ def _run(arch, runtime, device, depth, borrowed):
                 handle = python_runs[-1]
                 keepalive = handle._keepalive
                 for operation in (handle.wait, handle.result):
-                    with pytest.raises(RuntimeError, match="context validation failed"):
+                    with pytest.raises(ExecutionContextRefused, match="context validation failed"):
                         operation()
                     assert not handle._terminal and not handle._wait_in_progress
                     assert handle._run_id == len(runs) and handle._keepalive is keepalive
                     assert len(handle_owner._chip_runs) == len(runs)
                     assert not handle_owner._source_context_failed
-                with pytest.raises(RuntimeError, match="context validation failed"):
+                with pytest.raises(ExecutionContextRefused, match="context validation failed"):
                     worker.finalize()
                 assert worker.initialized
                 assert runs[-1].launched
