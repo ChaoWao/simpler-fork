@@ -318,10 +318,11 @@ TEST(ChipRunLaneJoinedLaunchTest, ContextMismatchCloseKeepsTheActiveLaneRetryabl
     int caller;
     ChipRun run = worker.submit_chip_run(1, host_args(), CallConfig{}, nullptr, 0, &caller);
     context_rc = PTO_RUNTIME_ERR_INVALID_STATE;
-    EXPECT_THROW(worker.finalize(), std::runtime_error);
-    EXPECT_THROW(worker.close_chip_run_lane(), std::runtime_error);
-    EXPECT_THROW(run.done(), std::runtime_error);
-    EXPECT_THROW(run.wait_until(ChipRun::Deadline::max()), std::runtime_error);
+    EXPECT_THROW(worker.finalize(), ExecutionContextRefused);
+    EXPECT_THROW(worker.close_chip_run_lane(), ExecutionContextRefused);
+    EXPECT_THROW(run.done(), ExecutionContextRefused);
+    EXPECT_THROW(run.wait_until(ChipRun::Deadline::max()), ExecutionContextRefused);
+    EXPECT_FALSE(run.lane_poisoned());
     EXPECT_EQ(g_events, (Events{"prepare0", "launch0"}));
     EXPECT_TRUE(worker.initialized());
     EXPECT_TRUE(run.launched());
@@ -364,9 +365,9 @@ TEST(ChipRunLaneJoinedLaunchTest, NativeContextMismatchDoesNotConsumeThePhaseTok
     const auto run = worker.prepare_native_run(1, &args, CallConfig{}, PipelineSlotLease{0, 0, 1});
     worker.launch_native_run(run);
     context_rc = PTO_RUNTIME_ERR_INVALID_STATE;
-    EXPECT_THROW(worker.poll_native_run(run), std::runtime_error);
-    EXPECT_THROW(worker.wait_native_run(run), std::runtime_error);
-    EXPECT_THROW(worker.finalize_native_run(run), std::runtime_error);
+    EXPECT_THROW(worker.poll_native_run(run), ExecutionContextRefused);
+    EXPECT_THROW(worker.wait_native_run(run), ExecutionContextRefused);
+    EXPECT_THROW(worker.finalize_native_run(run), ExecutionContextRefused);
     EXPECT_EQ(g_events, (Events{"prepare0", "launch0"}));
     context_rc = 0;
     worker.finalize_native_run(run);
@@ -386,7 +387,14 @@ TEST(ChipRunLaneJoinedLaunchTest, FailedOwnerDestructionDetachesHandlesWithoutRe
     ChipRun run = worker->submit_chip_run(1, host_args(), CallConfig{});
     context_rc = PTO_RUNTIME_ERR_INVALID_STATE;
     worker.reset();
-    EXPECT_THROW(run.wait_until(ChipRun::Deadline::max()), std::runtime_error);
+    try {
+        run.wait_until(ChipRun::Deadline::max());
+        FAIL() << "a detached run must report terminal failure";
+    } catch (const ExecutionContextRefused &) {
+        FAIL() << "a destroyed owner cannot restore the execution context";
+    } catch (const std::runtime_error &error) {
+        EXPECT_NE(std::string(error.what()).find("chip run lane is poisoned"), std::string::npos);
+    }
     EXPECT_TRUE(run.lane_poisoned());
     EXPECT_EQ(g_events, (Events{"prepare0", "launch0"}));
 }

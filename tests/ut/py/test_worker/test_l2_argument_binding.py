@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 from simpler.buffer import AccessMode, Buffer, mint_owner_instance_id, wrap_device_malloc, wrap_fork_inherited
-from simpler.task_interface import CallConfig, DataType, TaskArgs, Tensor, TensorArgType
+from simpler.task_interface import CallConfig, DataType, ExecutionContextRefused, TaskArgs, Tensor, TensorArgType
 from simpler.worker import Worker, _Lifecycle
 
 
@@ -27,7 +27,6 @@ def l2():
     frees = []
     impl = SimpleNamespace(
         _submit_chip_run_direct=lambda cid, args, cfg: calls.append(args) or object(),
-        _validate_execution_context=lambda: None,
     )
     worker._chip_worker = SimpleNamespace(_impl=impl, free=frees.append)
     worker._lifecycle = _Lifecycle.READY
@@ -456,22 +455,21 @@ def test_wrong_context_wait_preserves_the_run_and_source_use(l2, operation):
 
     def validate():
         if not current[0]:
-            raise RuntimeError("execution context validation failed")
+            raise ExecutionContextRefused("execution context validation failed")
 
     def wait(timeout):
-        waits.append(timeout)
         validate()
+        waits.append(timeout)
         return True
 
     impl = worker._chip_worker._impl
-    impl._validate_execution_context = validate
     impl._submit_chip_run_direct = lambda *_args: SimpleNamespace(wait=wait, done=lambda: True)
     backing = Buffer.wrap(address=0x8000, nbytes=64, location=worker.device_location)
     handle = worker._submit_l2_locked(3, arguments(backing), CallConfig())
     run_id = handle._run_id
     keepalive = handle._keepalive
     for _ in range(2):
-        with pytest.raises(RuntimeError, match="context validation failed"):
+        with pytest.raises(ExecutionContextRefused, match="context validation failed"):
             getattr(handle, operation)()
         assert not handle._terminal and not handle._wait_in_progress
         assert handle._run_id == run_id and handle._keepalive is keepalive
@@ -490,9 +488,10 @@ def test_wrong_context_wait_preserves_the_run_and_source_use(l2, operation):
     assert backing.closed
 
 
-def test_valid_context_device_failure_remains_terminal_and_retains_source(l2):
+@pytest.mark.parametrize("message", ["device execution failed", "execution context validation failed"])
+def test_valid_context_device_failure_remains_terminal_and_retains_source(l2, message):
     worker, _, _ = l2
-    failure = RuntimeError("device execution failed")
+    failure = RuntimeError(message)
     waits = []
 
     def wait(timeout):
@@ -500,7 +499,6 @@ def test_valid_context_device_failure_remains_terminal_and_retains_source(l2):
         raise failure
 
     impl = worker._chip_worker._impl
-    impl._validate_execution_context = lambda: None
     impl._submit_chip_run_direct = lambda *_args: SimpleNamespace(wait=wait)
     backing = Buffer.wrap(address=0x8000, nbytes=64, location=worker.device_location)
     handle = worker._submit_l2_locked(3, arguments(backing), CallConfig())

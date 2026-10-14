@@ -1087,7 +1087,7 @@ void ChipWorker::close_chip_run_lane() {
 void ChipWorker::validate_execution_context() {
     if (device_ctx_ == nullptr || validate_execution_context_fn_ == nullptr) return;
     const int rc = validate_execution_context_fn_(device_ctx_);
-    if (rc != 0) throw std::runtime_error("execution context validation failed with code " + std::to_string(rc));
+    if (rc != 0) throw ExecutionContextRefused("execution context validation failed with code " + std::to_string(rc));
 }
 
 void ChipWorker::abandon_after_failed_teardown(std::exception_ptr error) noexcept {

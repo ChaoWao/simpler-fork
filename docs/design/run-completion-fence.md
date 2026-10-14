@@ -107,7 +107,12 @@ supplies its own config. Generation is forwarded to the native init validation;
 this argument alone does not provide public Worker generation or Buffer binding.
 
 Before lane progress or native phase mutation, current-context validation rejects
-a mismatched RTS context. Restoration permits retry with the existing run handle.
+a mismatched RTS context with `ExecutionContextRefused`, a `std::runtime_error`
+subclass translated to the Python `RuntimeError` subclass of the same name.
+The classification reaches `RunHandle.wait`/`result` without a separate Python
+preflight callback; refusal preserves waiter retry and run references. Restoration
+permits retry with the existing run handle. Other native wait errors remain
+terminal; the C ABI validation status codes are unchanged.
 A failed borrowed initialization explicitly closes before destroying the runner;
 if close fails, it retains the context, library and storage for `finalize`, and
 refuses reinitialization. Successful rollback leaves an uninitialized worker that
