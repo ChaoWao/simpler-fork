@@ -16,6 +16,7 @@ subprocess per runtime so each gets a clean CANN context. See docs/testing.md.
 
 from __future__ import annotations
 
+import argparse
 import faulthandler
 import hashlib
 import json
@@ -142,6 +143,12 @@ def pytest_addoption(parser):
         help="Manual test handling: exclude (default), include, only",
     )
     parser.addoption("--runtime", action="store", default=None, help="Only run tests for this runtime")
+    parser.addoption(
+        "--resource-child",
+        action="store_true",
+        default=False,
+        help=argparse.SUPPRESS,
+    )
     parser.addoption(
         "--level",
         action="store",
@@ -774,7 +781,10 @@ class _ResourceJob(typing.NamedTuple):
     kind: str  # "l3" or "standalone"
     nodeid: str
     label: str  # class name for "l3", function name for "standalone"
-    runtime: str
+    # ``None`` for a standalone function that declares no runtime: it is
+    # runtime-agnostic, so its child is narrowed by nodeid alone and carries no
+    # ``--runtime``.
+    runtime: str | None
     device_count: int
 
 
@@ -801,9 +811,11 @@ def _collect_resource_jobs(items, platform, manual_mode="exclude"):
         ``device_count`` is the max across the class's platform-matching
         cases selected by ``manual_mode``.
       - ``standalone``: one per non-class pytest function that declares its
-        resource needs via ``@pytest.mark.device_count(n)`` +
-        ``@pytest.mark.runtime("...")`` (and optional
-        ``@pytest.mark.platforms([...])``).
+        resource needs via ``@pytest.mark.device_count(n)`` (and optional
+        ``@pytest.mark.runtime("...")`` / ``@pytest.mark.platforms([...])``).
+        A function that names no runtime is runtime-agnostic: it gets the
+        same devices and the same isolation, and its child carries no
+        ``--runtime``.
 
     Both are dispatched through the same ``parallel_scheduler.run_jobs``
     bin-pack, so merging them reduces the dispatcher to a single phase in
@@ -837,7 +849,9 @@ def _collect_resource_jobs(items, platform, manual_mode="exclude"):
             )
     jobs.extend(l3_by_nodeid.values())
 
-    # Standalone pytest functions with device_count + runtime markers.
+    # Standalone pytest functions with a device_count marker. ``runtime`` is
+    # optional: a test that names no runtime needs the same dedicated devices
+    # and the same subprocess isolation as one that does.
     standalone_by_nodeid: dict[str, _ResourceJob] = {}
     for item in items:
         if any(m.name == "skip" for m in item.iter_markers()):
@@ -848,8 +862,7 @@ def _collect_resource_jobs(items, platform, manual_mode="exclude"):
         if dev_marker is None:
             continue
         rt_marker = item.get_closest_marker("runtime")
-        if rt_marker is None or not rt_marker.args:
-            continue
+        runtime = rt_marker.args[0] if rt_marker is not None and rt_marker.args else None
         platforms_marker = item.get_closest_marker("platforms")
         if platforms_marker and platform and platform not in platforms_marker.args[0]:
             continue
@@ -858,12 +871,38 @@ def _collect_resource_jobs(items, platform, manual_mode="exclude"):
             kind="standalone",
             nodeid=item.nodeid,
             label=item.name,
-            runtime=rt_marker.args[0],
+            runtime=runtime,
             device_count=dev_count,
         )
     jobs.extend(standalone_by_nodeid.values())
 
     return jobs
+
+
+def _collect_unclaimed_items(items, resource_specs, l2_runtimes):
+    """Return the selected items neither the Resource nor the L2 phase runs.
+
+    The two phases select by marker and by SceneTestCase runtime, so their
+    union is not all of ``items``. The difference is what the dispatcher would
+    otherwise drop: collected and selected, reported in neither the "passed"
+    nor the "skipped" count, and therefore invisible.
+    """
+    claimed = {spec.nodeid for spec in resource_specs}
+    runtimes = set(l2_runtimes)
+    unclaimed = []
+    for item in items:
+        cls = getattr(item, "cls", None)
+        if (
+            cls is not None
+            and getattr(cls, "_st_runtime", None) in runtimes
+            and _item_scene_level(item) == SceneTestLevel.CHIP
+        ):
+            # An L2 SceneTestCase its runtime's subprocess re-collects.
+            continue
+        if item.nodeid in claimed:
+            continue
+        unclaimed.append(item)
+    return unclaimed
 
 
 def _strip_value_options(args, options):
@@ -927,11 +966,15 @@ def _resource_child_command(spec, device_ids, platform, manual_mode, cfg):
         "-m",
         "pytest",
         spec.nodeid,
-        "--runtime",
-        spec.runtime,
+        # This child is one job the parent already scheduled. Without the flag
+        # a runtime-less job carries no option that distinguishes it, and the
+        # child would schedule itself again.
+        "--resource-child",
         "--device",
         _ps.format_device_range(device_ids),
     ]
+    if spec.runtime is not None:
+        command.extend(["--runtime", spec.runtime])
     if spec.kind == "l3":
         command.extend(["--level", "3"])
     if platform:
@@ -1148,13 +1191,15 @@ def _emit_resource_failure_summary(
 
 
 def _dispatch_test_phases(session, resource_specs):  # noqa: PLR0912
-    """Run Resource → L2 phases.
+    """Run Resource → L2 → leftover phases.
 
     The Resource phase dispatches every item that needs a dedicated
     device-allocating subprocess — L3 ``SceneTestCase`` classes *and*
-    standalone functions marked with ``@pytest.mark.device_count`` +
-    ``@pytest.mark.runtime``. They share the same ``run_jobs`` bin-pack
-    and fail-fast gate, so they are one phase, not two.
+    standalone functions marked with ``@pytest.mark.device_count``. They
+    share the same ``run_jobs`` bin-pack and fail-fast gate, so they are one
+    phase, not two. The L2 phase then runs one subprocess per SceneTestCase
+    runtime, and the leftover phase runs what neither claimed, in this
+    process, so that every selected item is accounted for.
 
     ``resource_specs`` is pre-collected by ``pytest_runtestloop`` (which
     already has to inspect the list to decide whether to dispatch) so
@@ -1178,7 +1223,8 @@ def _dispatch_test_phases(session, resource_specs):  # noqa: PLR0912
     if resource_specs:
         jobs = []
         for spec in resource_specs:
-            label = f"{spec.kind} {spec.label} (rt={spec.runtime}, dev={spec.device_count})"
+            runtime_label = spec.runtime if spec.runtime is not None else "any"
+            label = f"{spec.kind} {spec.label} (rt={runtime_label}, dev={spec.device_count})"
 
             def _build(ids, _spec=spec):
                 # Narrow the child to the specific nodeid, not the inherited
@@ -1313,23 +1359,62 @@ def _dispatch_test_phases(session, resource_specs):  # noqa: PLR0912
             emit_annotations=False,
             heading="Resource phase failed recap",
         )
+    phases_failed = resource_failed or l2_failed
 
-    session.testsfailed = 1 if (resource_failed or l2_failed) else 0
-    if not (resource_failed or l2_failed):
+    # ----- Phase 3: everything the first two phases do not claim -----
+    # Neither phase runs an item by walking ``session.items``: Resource matches
+    # a device_count marker, L2 matches a SceneTestCase runtime. An item that
+    # is neither — a plain ``requires_hardware`` function, say — belongs to no
+    # phase, and running it here is what keeps "selected" and "run" the same
+    # set. This process has only forked subprocesses up to this point, so it is
+    # the clean one; anything needing its own is a Resource job by marker.
+    #
+    # It runs last so an earlier phase's recap is already on the log when a
+    # stop or a maxfail raises out of this loop and skips everything below.
+    leftover = _collect_unclaimed_items(session.items, resource_specs, l2_runtimes)
+    leftover_failed = False
+    if leftover and not (phases_failed and fail_fast):
+        print(f"\nLeftover phase: {len(leftover)} item(s) in this process", flush=True)
+        before = session.testsfailed
+        try:
+            for index, item in enumerate(leftover):
+                nextitem = leftover[index + 1] if index + 1 < len(leftover) else None
+                item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+                # Both conditions raise in pytest's own loop, and the exit
+                # status is the only thing that reports a stop: it leaves the
+                # remaining items unrun with nothing failed to deduce it from.
+                if session.shouldfail:
+                    raise session.Failed(session.shouldfail)
+                if session.shouldstop:
+                    raise session.Interrupted(session.shouldstop)
+        finally:
+            leftover_failed = session.testsfailed > before
+
+    failed = phases_failed or leftover_failed
+    session.testsfailed = 1 if failed else 0
+    if not failed:
         session.testscollected = sum(1 for _ in session.items)
     return True  # returning True prevents default runtestloop
 
 
 def pytest_runtestloop(session):
-    """Dispatch Resource + L2 phases unless caller is already in child mode.
+    """Dispatch Resource + L2 + leftover phases unless caller is in child mode.
 
-    Child mode (runtime-filtered runs, L2/L3 level-filtered runs, or
-    --collect-only) skips the dispatcher and falls through to pytest's
-    default runtestloop. Level 4 network1 selection is not child mode; it still
-    uses the Resource dispatcher.
+    Child mode (a Resource child, runtime-filtered runs, L2/L3 level-filtered
+    runs, or --collect-only) skips the dispatcher and falls through to
+    pytest's default runtestloop. Level 4 network1 selection is not child
+    mode; it still uses the Resource dispatcher.
     """
     runtime_filter = session.config.getoption("--runtime")
     level_filter = session.config.getoption("--level")
+
+    # One job the parent already scheduled. A runtime-less job carries no other
+    # option that says so, and a parent narrowed to that same single item is
+    # otherwise indistinguishable from its own child — which would run the test
+    # in this process instead of scheduling it, enforcing no device_count and
+    # providing none of the isolation the phase exists for.
+    if session.config.getoption("--resource-child"):
+        return
 
     # Child mode: if the caller filters by runtime, or by the SceneTestCase
     # levels the dispatcher itself uses for children, it wants direct control.
