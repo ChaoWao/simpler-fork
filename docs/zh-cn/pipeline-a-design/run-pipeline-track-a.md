@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-核对时间：2026-10-15T09:12:47.768178+00:00。主线基线：`b74b5f27b4c1d161aab3998c5d9dd8489308e4c1`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+核对时间：2026-10-15T09:17:33.093639+00:00。主线基线：`b74b5f27b4c1d161aab3998c5d9dd8489308e4c1`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
 
 本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](README.md#archive-boundary)，不能作为当前待办。
 
@@ -118,3 +118,5 @@ DFX 与 workload 组合可以在职责和写入范围清楚时并行；依赖整
 ### 自动准入的下一步
 
 默认无需depth配置；内部按复用、可控增长、可等待回收和不可满足分流。旧显式配置兼容、启动定长表改造、准备阶段未知需求及主机积压控制尚待具体设计。当前不能宣称main已自动根据资源背压；见[现行方案](review/p4-qwen-grant-composition-decision.md)。
+
+DFX当前失败已按八类机制核对，最终提交需逐项闭合：[失败与候选修复清单](README.md#archive-boundary)。其中预算固定开销与未释放记录分开判断；候选修改不等于测试通过。
