@@ -14,9 +14,9 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 ## 当前状态边界
 
 - 步骤一有界验收，步骤二 #2447/#2456，步骤三 #2471/#2511/#2568，以及可配置资源容量 #2571 已合入。
-- 默认自动资源准入仍在设计：不要求调用者配置多个 depth；复用/可安全增长时接受，存在明确释放来源时等待，不可满足或停止未知时明确失败/隔离。当前代码不等于已实现该目标。
-- 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。新作者草案尚未通过manager评审，不收作已批准设计。
-- #2588 DFX 已批准实施但尚未Ready；当前1d707f440仍有CI失败与未知停止bank回收审查阻塞。CI状态为快照，最新状态见[PR](https://github.com/hw-native-sys/simpler/pull/2588)。
+- 默认自动资源准入完整设计已审，待具体实施批准：不要求调用者配置多个 depth；复用/可安全增长时接受，存在明确释放来源时等待，不可满足或停止未知时明确失败/隔离。当前代码不等于已实现该目标。
+- 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。[具体实施合同](review/p4-auto-resource-admission-decision.md)和[收口评审](review/p4-auto-resource-admission-manager-review-r21.md)已经归档，尚未获实施批准。
+- #2588 DFX 已批准实施但尚未Ready；当前d8d9182b6补齐失败日志输出，新CI在途；HBG收尾及TMR提前入队失败尚未闭合。CI状态为快照，最新状态见[PR](https://github.com/hw-native-sys/simpler/pull/2588)。
 - 外部作者在[#2429](https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862)进行当前main多请求Qwen组合验收，与自动准入设计并行。
 - 历史合同中“是否批准”“待合入”等文字属于当时决策记录，不是当前用户待办；以本索引和路线表辨别阶段。固定形状vLLM eager、动态请求范围、capture/replay及最终性能报告不是当前已交付能力。
 
@@ -42,6 +42,11 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 - [P4 重启：DEVICE tensor 连续异步调用](review/p4-device-chain-decision.md)
 - [普通异步：解除固定 2/3 套资源限制](review/p4-dynamic-run-resources-decision.md)
 - [普通异步：默认按资源准入与背压](review/p4-qwen-grant-composition-decision.md)
+
+### 默认自动准入（已审，待实施批准）
+
+- [完整实施合同](review/p4-auto-resource-admission-decision.md)
+- [设计收口评审及勘误](review/p4-auto-resource-admission-manager-review-r21.md)
 
 ### DFX完整接线（已批准，PR尚未完成）
 
