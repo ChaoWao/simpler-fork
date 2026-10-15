@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-15T21:05:09.335065+00:00",
+  "exported_at": "2026-10-15T21:30:12.821927+00:00",
   "source_main": "cc6c4d51f79e98af5ef07829e3ca71c36f752a43",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "53a4da81ab555e2f232c91a39926e9c4ef67ef388971d9973ea729670d8a08f6",
-      "export_sha256": "f85d61dcc29a4ce2ee4653de80fc7799b626f8ee6721e14a5392b8fca74fd99c",
+      "source_sha256": "20a2c9859c76267679d05efdc47907f1d9bc986c492731e5d495f9c2ee74b129",
+      "export_sha256": "d67741d120959318f5376e55d1d3bb6800f207dc5c3571924d540bd6c4f21db9",
       "source_main": "cc6c4d51f79e98af5ef07829e3ca71c36f752a43"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "48746b09137465c889a1b440d0b2e0028c115697819095d1c37f3fbd20fed551",
-      "export_sha256": "0377d3c4e3396eadab635233f34d93d60faf9ddca78303bfacbf71ab92d3d56b",
+      "source_sha256": "2488026998582ece99a1408fcec3ccb9144bfb515fb9adb2da3ebffa3fe95689",
+      "export_sha256": "fca25594b0850f3eb0c88b1b67e00bb2482867aff8caef1055ed21ce9624efd5",
       "source_main": "cc6c4d51f79e98af5ef07829e3ca71c36f752a43"
     },
     {
@@ -115,6 +115,13 @@
       "source_main": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b"
     },
     {
+      "file": "review/dfx-a5-task-args-capture-decision.md",
+      "source_document": ".docs/review/dfx-a5-task-args-capture-decision.md",
+      "source_sha256": "184bccc37e0c6ba65dbf8dc25740ac46fca5ac6d15e2307814b14fcc1d50b8ef",
+      "export_sha256": "e7a4cd575ab642465dad3d9ddcde3835336a45594513497d72e316a3ede17d02",
+      "source_main": "cc6c4d51f79e98af5ef07829e3ca71c36f752a43"
+    },
+    {
       "file": "review/dynamic-registration-once-decision.md",
       "source_document": ".docs/review/dynamic-registration-once-decision.md",
       "source_sha256": "c72a32fbb17d9de514f661754d55141a2cc27ba6d98c8c51cbb4b65001c1fc1b",
@@ -186,8 +193,7 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md",
     "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 13
+  "last_changed_omitted_local_link_count": 10
 }
