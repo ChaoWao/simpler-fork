@@ -1,0 +1,228 @@
+{
+  "published": "2026-10-15",
+  "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
+  "source_root": ".docs",
+  "scope": "curated design snapshot; source status baselines remain explicit",
+  "files": [
+    {
+      "path": "cpu-npu-shared-memory.md",
+      "source_sha256": "b20bb5616b40d2a5a056f528e75b742ab095e851461fdf6edd196dda004f7697",
+      "published_sha256": "db9df28f68574ecfc3212d4db2df6fe0584b25864747ca19d78ee766e450479b"
+    },
+    {
+      "path": "cpu-npu-shared-memory/domain-member-vs-attachment.md",
+      "source_sha256": "e3df07370a6e30eeb21ac7696986a80022834e7e5a3b395c5a38dcc956a0eb75",
+      "published_sha256": "e8d43fcad24160e261c8b602bfb461eaa99ef003a19f656c8ee097844f8430e3"
+    },
+    {
+      "path": "cpu-npu-shared-memory/domain-membership.md",
+      "source_sha256": "dc565702d9b43fb3a3383a3bfc2ea2661c024659022abf4718d2520291a7f07e",
+      "published_sha256": "505bfee3605d537ba8476c4db8d06515f791fb4bf445f60fc499237ac6cc0233"
+    },
+    {
+      "path": "cpu-npu-shared-memory/hardware-constraints.md",
+      "source_sha256": "6c3db9f958bc35819c343bff27192953a46fdf3672a98aa3a86b3baf6be0261e",
+      "published_sha256": "35bf9482e11e8cad156555e3fdea3ffbbb42d467971b10b985d6d4af9f472b54"
+    },
+    {
+      "path": "cpu-npu-shared-memory/w2-w5-inversion.md",
+      "source_sha256": "77ad86a86b21d152283cd74aca221b2335296a003b69131fa53e8c05d7652185",
+      "published_sha256": "b2e7806c094723a6da5f31217e8665ac4e13b9ac08a81876f550ced0765f449f"
+    },
+    {
+      "path": "cpu-npu-shared-memory/work-breakdown.md",
+      "source_sha256": "217966fc61be0a68fb4a01f39b9330ef9aa1cb6e9cec0f720be5c15c9c0c6842",
+      "published_sha256": "f0060f426a2784316ad48460b0835b874d4265a40f7c5d0dd0b831683dd0ac63"
+    },
+    {
+      "path": "feature_roadmap.md",
+      "source_sha256": "76fc959f962eb151d98a19cb222849ce8aee99cd134601d31f157e5462f05fd6",
+      "published_sha256": "6e069ebdb6f4df5647bd5bd1d5144b4a9b6b23a17d0ab7916e7e8e867b17dc00"
+    },
+    {
+      "path": "goal-coverage.md",
+      "source_sha256": "0100fbcaca573f598c0bee4e88bb7d3a39794869f4644dab657ca383fadf14ad",
+      "published_sha256": "ca9d3cdd8428bde1b813be2349c98fc33475a05fe627d2e87eb5b0f7b09aafa5"
+    },
+    {
+      "path": "l3l4.md",
+      "source_sha256": "5c446349ddaaa10dbfb0cd3598daee280e1013f35ac2c4e4f9dfeee1034ef40f",
+      "published_sha256": "e89680e3b6ea5f38e708b7af42f836492157b116b35d91f9f4dfdca577c2cc6c"
+    },
+    {
+      "path": "l3l4/cluster-comm.md",
+      "source_sha256": "7683142881bfb8f4328dd8c322e4f05b225da5a8bfee452f9d448d42bb386fd2",
+      "published_sha256": "457768ee6e530af41781a392fddfd2eed391a9b79e3227f74c5493d2ce61c155"
+    },
+    {
+      "path": "l3l4/inventory.md",
+      "source_sha256": "7ab185a2f546bbcee68775389313e561b66ceabd8603e2ab12c7b14fe785f998",
+      "published_sha256": "9dfd2cd92a4d4852eb20c2058767d3874ca2ee8a6c852247bf08cd7a5c4a7b2c"
+    },
+    {
+      "path": "l3l4/lazy-init.md",
+      "source_sha256": "bf6ee3a113079aa72d4ae85ba0ea5e1eb089a6cc0bffe71d8d3bbbec12ce8128",
+      "published_sha256": "8a5fda75836790040f3d37a6ea1bb8204b4c6991a70a6ab8054f4cba717b9bf4"
+    },
+    {
+      "path": "l3l4/memory-kinds.md",
+      "source_sha256": "045da3998e223deff1da773c13f41cb1d78d6d2d98e76d1292732be8814b8f65",
+      "published_sha256": "ac15a6465a24ebd7396cf649b622b2753367edab97eaed08bfda5d365ac06236"
+    },
+    {
+      "path": "l3l4/remote-startup.md",
+      "source_sha256": "612c836320ae8419abd915d836154d936184e125e57207f4e8926d5438b7e89e",
+      "published_sha256": "75b8f98a5863427338ef58e77e31e8156882e535b8220c12398c2860badec6a3"
+    },
+    {
+      "path": "l3l4/scheduling.md",
+      "source_sha256": "d5ed34f4bf8725298d0dca8979f1be6b62297e62d519c5f15967aeb1c20dfcb6",
+      "published_sha256": "3f69176c8037f848cca078fe3b87f5435d577a566eefe8d0b703d997bcc7551d"
+    },
+    {
+      "path": "logical-physical-separation.md",
+      "source_sha256": "a508eaa4a76beccdb0e91ac2c983e9b3d9c21a88e18d28e98ea89374cf8bd9c3",
+      "published_sha256": "c96a5230c3a2ae76fad68443fd6604c4af18fa4ce85a6e9405f16ab42336a25e"
+    },
+    {
+      "path": "roadmap.html",
+      "source_sha256": "658e0204005583e3908ac521fae6d6eb4b84ff5658cf3f9eb667aa6185fac6a1",
+      "published_sha256": "1afda1da6af3715c7ff63bd27372b6997c875ea745d82853614daed1386f6098"
+    },
+    {
+      "path": "track-boundaries.md",
+      "source_sha256": "5bb7c175036cb9a5f87a6e7c44185e55136db2885cf47641def1eaa7771ab439",
+      "published_sha256": "f6a7eea34a677a4143cf9914896cbb07b3e32e0176d4f472eb887100b1ba4b21"
+    },
+    {
+      "path": "work-items.md",
+      "source_sha256": "1221186cbed5f53cc397cb0265976147afaf5a4943cb1ea468459df54412c001",
+      "published_sha256": "788cdd4b484069a6a30b586cc37215a418f7065d617b5531232ba30b87e3d9c1"
+    },
+    {
+      "path": "worker-memory-model.md",
+      "source_sha256": "52708594aa445d26a562667a6b90f3f191bc3b05ae96d2c5d7326b495198026e",
+      "published_sha256": "1d19964fed46b2aef9991728cedb172e13105c26042508863bd5630a8959e788"
+    },
+    {
+      "path": "worker-memory-model/access-retirement-contract.md",
+      "source_sha256": "bd55a439a7ff9185da6f84d635e3f0c3adf9b24b0b123b29eea7e02df17305e4",
+      "published_sha256": "8e429b9ff1f4a474ee47dfec39ff98cb3081eb458d4d4fdce2c3c2a494232342"
+    },
+    {
+      "path": "worker-memory-model/backend-matrix.md",
+      "source_sha256": "842bee264fe2479e7e261a2a984a0e96347187a24cbc3597f53e82c1126885c3",
+      "published_sha256": "47c83345752014788fd884fc18cf4549450a13d2b01e823942810711942f7bff"
+    },
+    {
+      "path": "worker-memory-model/bufferhandle-abi.md",
+      "source_sha256": "71d4d386907bd9a2411a9c586b3b1c08ae9b4908057d2d2f957d58616202727d",
+      "published_sha256": "3f08a715054498de1713966ee33b9bc4331054b47c8bdaa3461c4350bf6efc61"
+    },
+    {
+      "path": "worker-memory-model/graph-execution-contract.md",
+      "source_sha256": "3fc6caab344b5bef5cf756d3ebb7d7608073bafc7257b6bff68f4acfdac1c340",
+      "published_sha256": "08c251bff4b66eedb8335f66386ed5d3c3162db33aa3e9528b9395c857963d84"
+    },
+    {
+      "path": "worker-memory-model/p1b-corrected-design.md",
+      "source_sha256": "4696cce4055469b4de4e10a6bb49e49c61a4a47523341cfdf3c779a7875f9ee8",
+      "published_sha256": "09229189b5dba2beb92ecbc2ebdf587601d258c1aa632cd76094f5e0267113f1"
+    },
+    {
+      "path": "worker-memory-model/p1b-review-findings.md",
+      "source_sha256": "d3892b8ec3da9fb9052e53de0ce59cc9cd7d0d0b816f605a0844489433155763",
+      "published_sha256": "543417ed86f0def2f8f1c6a3edd4bcc641c6bd4c19f541409aa1dfe2a425ac48"
+    },
+    {
+      "path": "worker-memory-model/user-surface.md",
+      "source_sha256": "63bc08f34a8919de63dc909e31f2b8c79464366a274f31891eaa86b43425a868",
+      "published_sha256": "e12c0e0a650bff95ce74e28ac87607123e90a4fa74d37bcaf4e8b475b01f18fd"
+    },
+    {
+      "path": "review/2026-09-28-cross-plan-lessons.md",
+      "source_sha256": "3119c847d0d99995e7cb1ecca0ab4d0fdbfde86daf316eddab60fae7331878c2",
+      "published_sha256": "5ff88fa38b0e2c49862a5e3576c1b64e7af62586635b8dbbc642eb10d0dcf1a1"
+    },
+    {
+      "path": "review/pr-2096.md",
+      "source_sha256": "32cd2e34d64793cbe2c893525997a643fc223fbc7463dd92e37537b035b19f12",
+      "published_sha256": "b0fa26fe2b42b9c21471666a9ff7f7625e5f789b193332872b7301b530ac454a"
+    },
+    {
+      "path": "w2-p1b-endpoint-convergence.md",
+      "source_sha256": "fcd6a00da512eba7d6d077531e006cd0299d09ba7405243fc8eb2a86328c9cd0",
+      "published_sha256": "f992092b4c04147e96ad25bed67da2e193e6c1ae8e294d53e9d22c0e294243bc"
+    }
+  ],
+  "omitted_local_references": [
+    "../../hw-native-sys/docs-kernel-mode/argument-design-evidence.md",
+    "../../hw-native-sys/docs-kernel-mode/argument-domain-policy.md",
+    "../../hw-native-sys/docs-kernel-mode/argument-mapping-contract.md",
+    "../../hw-native-sys/docs-kernel-mode/endpoint-access-contract.md",
+    "../../hw-native-sys/docs-kernel-mode/kernel-mode-prepare-submit-design.md",
+    "../../hw-native-sys/docs-kernel-mode/runtime-design-principles.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/dfx-continuous-collection-matrix.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/dfx-run-identity-verification-plan.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-redesign.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-track-a.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/runtime-design-principles.md",
+    "../.claude/worktrees/pipeline-a-manager/.docs/workspace-memory-principles.md",
+    "../KNOWN_ISSUES.md",
+    "P0.2/c-design.md",
+    "P0.2/done-followup.md",
+    "P0.2/done.md",
+    "check-dep-closure.py",
+    "check-single-owner.py",
+    "deleted-closed-branches.md",
+    "dfx/c2a-hierarchical-trace.md",
+    "dfx/host-swimlane-delivered.md",
+    "dfx/host-swimlane.md",
+    "dfx/l3-l2-thread-topology.html",
+    "docs-kernel-mode/kernel-mode-memory.html",
+    "docs-kernel-mode/kernel-mode-plan.html",
+    "done-P0.1.md",
+    "goal-sources.json",
+    "hbg-requirements.html",
+    "maintainer-loop-prompt.md",
+    "others-ref/host-trace-log-design/README.md",
+    "others-ref/host-trace-log-design/host-trace-span-naming.md",
+    "others-ref/host-trace-log-design/log-design.md",
+    "others-ref/host-trace-log-design/trace-and-log-requirements.md",
+    "others-ref/memory-model.md",
+    "others-ref/worker-async-pipeline-landing.md",
+    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md",
+    "others-ref/worker-async-pipeline/contracts.md",
+    "others-ref/worker-async-pipeline/implementation-plan.md",
+    "others-ref/worker-async-pipeline/implementation-record.md",
+    "others-ref/worker-async-pipeline/qwen-integration.md",
+    "others-ref/worker-async-pipeline/trace-v1.md",
+    "review/2026-08-11-code-vs-design-audit.md",
+    "review/p0.2-design.md",
+    "review/pr-2474.md",
+    "review/pr-2475.md",
+    "runtime-v2-hbg.md",
+    "runtime-v2-hbg/graph-execution.md",
+    "tasks/README.md",
+    "tasks/g2-design.md",
+    "tasks/task-device-addr-guard2.md",
+    "tasks/task-p0.2a-admission-fence.md",
+    "tasks/task-p0.2b1-fake-chip-harness.md",
+    "tasks/task-p0.2b2-eligibility-hook.md",
+    "tasks/task-p0.2c-cancellation-journal.md",
+    "tasks/task-p0.2cd-teardown-convergence.md",
+    "tasks/task-p0.3-daemon-send-isolation.md",
+    "tasks/task-p0.3-deadline-hardening.md",
+    "tasks/task-p0.3-zero-residual-regression.md",
+    "tasks/task-p1a-close-merge-gates.md",
+    "tasks/task-public-python-tracing-api.md",
+    "tasks/task-scenetest-singleton-alias.md"
+  ],
+  "publication_processing": [
+    "snapshot notices and reading index",
+    "relative links resolved or labelled as local-only references",
+    "personal identifiers removed",
+    "historical ABORT poison claim explicitly superseded",
+    "Markdown formatting normalized for repository hooks"
+  ]
+}
