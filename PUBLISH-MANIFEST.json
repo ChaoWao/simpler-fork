@@ -494,6 +494,13 @@
       "source_sha256": "fc8495d4a475421cd17aee1df7d2da1774ffc371d73a9b99343c27afac925bf7",
       "published_sha256": "fc8495d4a475421cd17aee1df7d2da1774ffc371d73a9b99343c27afac925bf7",
       "bytes": 10657
+    },
+    {
+      "path": "PUBLISHING.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
+      "published_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
+      "bytes": 1319
     }
   ]
 }
