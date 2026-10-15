@@ -30,7 +30,7 @@
 
 [PR #2589](https://github.com/hw-native-sys/simpler/pull/2589) `27098ab9` 待 review/CI：direct L2 Worker 直接持有原 `_ChipWorker`，移除中间公开 ChipWorker 的重复 registry/lock；共同初始化 helper 处理日志、binary paths 和 options。公开兼容入口与 chip child 仍保留 wrapper，本笔不声称 K2b 完成。下一步收口 child 内部接入（含通信缓存）与共同参数 materialization，之后 K2c。
 
-首版验证（`1a113d50`）：Python UT 3270 passed / 91 skipped；A2/A3、A5 sim 15/11 场景；task-submit 17 个场景与 44 项 caller/lifecycle 通过；final head 重建后 280 passed / 16 skipped。未重跑完整上板 sweep，没有 AIV；A5 仅仿真。见[记录](reviews/direct-native-chip-worker/REPORT.md)。 修订 `27098ab9` 补迁 9 份 white-box 场景测试，覆盖 register/run/unregister、lease 具名参数和 HBG `_impl`；原报错先复现再通过，受影响 A2/A3 sim 19 passed / 8 skipped、A5 sim 14 passed、task-submit 上板 31 passed / 1 skipped，最终提交重建后 110 项相关 UT 通过。原 CI 的 macOS L3 orphan-child 断言单独跟踪；新版全部场景 CI 已通过，macOS Python UT 通过。08:50 UTC 时 16/17 项 CI 通过，仅 macOS C++ UT 仍运行，不把未定因观察当作已修复。
+首版验证（`1a113d50`）：Python UT 3270 passed / 91 skipped；A2/A3、A5 sim 15/11 场景；task-submit 17 个场景与 44 项 caller/lifecycle 通过；final head 重建后 280 passed / 16 skipped。未重跑完整上板 sweep，没有 AIV；A5 仅仿真。见[记录](reviews/direct-native-chip-worker/REPORT.md)。 修订 `27098ab9` 补迁 9 份 white-box 场景测试，覆盖 register/run/unregister、lease 具名参数和 HBG `_impl`；原报错先复现再通过，受影响 A2/A3 sim 19 passed / 8 skipped、A5 sim 14 passed、task-submit 上板 31 passed / 1 skipped，最终提交重建后 110 项相关 UT 通过。原 CI 的 macOS L3 orphan-child 断言单独跟踪；新版全部场景 CI 已通过，macOS Python UT 通过。最终 run 38706012077 的 17 项 CI 全通过；不把未定因观察当作已修复。
 
 本轮按入口、准备、launch、错误恢复和退休读取主线；没有重新宣称全路线验收。[核查与下一 PR 范围](reviews/kernel-eager-main-e0a5e9a.md)给出源码符号和测试门槛；[AIV 现场规划](aiv-evidence-plan.md)独立保留，不继续扩大主动复现矩阵。
 

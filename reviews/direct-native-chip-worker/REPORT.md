@@ -67,3 +67,9 @@ Final-head evidence: [build](../../LOCAL-EVIDENCE.md#artifact-5c9839daad9c), [11
 [Run 38706012077](https://github.com/hw-native-sys/simpler/actions/runs/38706012077), head 27098ab9, checked at 2026-10-15 08:50 UTC: 16 of 17 CI jobs succeed. All four simulation jobs and both ordinary onboard jobs succeed, as do hardware UT, network, DeepSeek and profiling smoke. macOS Python unit-test step succeeds, so the original orphan-child failure did not recur in this run. The only pending job is macOS UT's C++ build/run step; no remaining red is reported. This checkpoint is not a claim that the pending job passed or that the orphan observation's root cause is fixed.
 
 CodeRabbit thread PRRT_kwDORCBKLM6srUiL was replied to and resolved; [reply](https://github.com/hw-native-sys/simpler/pull/2589#discussion_r4280711180).
+
+### Final CI result
+
+Run 38706012077 completed successfully for 27098ab9: all 17 CI jobs pass, including all scene jobs and macOS C++ UT. The earlier pending checkpoint above is historical; the final result supersedes its pending status. macOS Python passed in the same run; the earlier orphan observation remains unclassified rather than retroactively declared fixed.
+
+Final macOS job log confirms the orphan test PASSED, Python 3248 passed / 21 skipped / 92 deselected, and 318 C++ tests passed. Raw CI logs are retained locally under ci/ and excluded from the design backup.

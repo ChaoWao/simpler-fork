@@ -18,3 +18,5 @@ The new code changes only direct L2 construction and initialization delegation; 
 The migration covers all nine white-box files, including HBG paths that the failed CI sequence had not yet reached. Original complete CI log and canceled job logs are retained outside the published snapshot.
 
 Updated-head checkpoint (27098ab9, 2026-10-15 08:50 UTC): all affected scene jobs pass; macOS Python UT step succeeds, Ubuntu UT job succeeds. Only macOS C++ UT remains running. The original macOS symptom is not reproduced, not declared fixed.
+
+Final result: run 38706012077 succeeds on 27098ab9, all 17 CI jobs pass, including macOS C++ UT. The previous checkpoint is retained as chronology, not current pending work.
