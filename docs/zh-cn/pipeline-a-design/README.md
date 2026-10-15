@@ -16,7 +16,7 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 - 步骤一有界验收，步骤二 #2447/#2456，步骤三 #2471/#2511/#2568，以及可配置资源容量 #2571 已合入。
 - 默认自动资源准入完整设计已审，待具体实施批准：不要求调用者配置多个 depth；复用/可安全增长时接受，存在明确释放来源时等待，不可满足或停止未知时明确失败/隔离。当前代码不等于已实现该目标。
 - 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。[具体实施合同](review/p4-auto-resource-admission-decision.md)和[收口评审](review/p4-auto-resource-admission-manager-review-r21.md)已经归档，尚未获实施批准。
-- #2588 DFX 已批准实施，当前654ce5d7d未Ready。CI为11成功、1跳过、4失败、3取消；TMR验收的读写参数声明错误已定位，A3 PMU零计数及A5逐任务采集仍需修复。最新状态见[PR](https://github.com/hw-native-sys/simpler/pull/2588)。
+- #2588 DFX 已批准实施，当前da5c742d7未Ready、CI在途。经理要求恢复TMR消费前快照的严格验收；A3 PMU零计数未解决，A5采集协议仍在设计复审。原作者继续修复。最新状态见[PR](https://github.com/hw-native-sys/simpler/pull/2588)。
 - 外部作者在[#2429](https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862)进行当前main多请求Qwen组合验收，与自动准入设计并行。
 - 历史合同中“是否批准”“待合入”等文字属于当时决策记录，不是当前用户待办；以本索引和路线表辨别阶段。固定形状vLLM eager、动态请求范围、capture/replay及最终性能报告不是当前已交付能力。
 
