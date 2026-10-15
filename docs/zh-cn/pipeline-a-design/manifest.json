@@ -1,0 +1,152 @@
+{
+  "exported_at": "2026-10-15T08:24:49.137543+00:00",
+  "source_main": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
+  "documents": [
+    {
+      "file": "runtime-design-principles.md",
+      "source_document": ".docs/runtime-design-principles.md",
+      "source_sha256": "8e27a8713dab042ebfee05e652a5194ec50c17564efe2dc4c1f3add86fb26c1e",
+      "export_sha256": "cdb2910cd4632fc69bb607fe934303f291e1218e24f2223e8cd50d0f72b5e189"
+    },
+    {
+      "file": "run-pipeline-track-a.md",
+      "source_document": ".docs/run-pipeline-track-a.md",
+      "source_sha256": "a14e57400e43c82cc252348b35610cf36f3da22b745eea3cc4569befc9ce8ee2",
+      "export_sha256": "dab76e20259da27fd398db64152f2baaf979bb4615822e37ff542f0d1a1c784a"
+    },
+    {
+      "file": "run-pipeline-track-a.html",
+      "source_document": ".docs/run-pipeline-track-a.html",
+      "source_sha256": "72264e2a6cbde8a06e0a5a8b0790726e89dc3cd2b22bdd32c32a0764e81ae6ad",
+      "export_sha256": "8ff46bc003d6c2f27ac70cd36f6d906097a826de732ca073ee85281bdee3a596"
+    },
+    {
+      "file": "memory-current-state.html",
+      "source_document": ".docs/memory-current-state.html",
+      "source_sha256": "984ad919899e4ed847d9054d77f7652662ebbab7baf327930ffd1b8e404d3b8e",
+      "export_sha256": "9be46f4020d30f51bc2baab0bc1037347f6dab03265e5d2548982683a7c77b28"
+    },
+    {
+      "file": "run-pipeline-redesign.md",
+      "source_document": ".docs/run-pipeline-redesign.md",
+      "source_sha256": "eae1ae6006268a84acd1fa8a6db7c9da4eda511d3e87b06c1dd33b889d2eb5f5",
+      "export_sha256": "d861b6e0cb3df959b13ba9f214e540a9e221cc897e33c227ba52e891012b2a2c"
+    },
+    {
+      "file": "run-pipeline-redesign.html",
+      "source_document": ".docs/run-pipeline-redesign.html",
+      "source_sha256": "741180f0401cdb0c2345679f58330ca6c7e4f3240857bed031e331f22453bbb0",
+      "export_sha256": "54dd1e31247330aae0b7f08a2be2c8f81d88bcf1444701d1fc7f8ca9a4649573"
+    },
+    {
+      "file": "workspace-memory-principles.md",
+      "source_document": ".docs/workspace-memory-principles.md",
+      "source_sha256": "d659df2dec19191c2439517f6d2a66409e0984ceb177517d918d2fe45befeb3d",
+      "export_sha256": "294b9955eaea08ad0e51d1d84dbcfc6aefe9eaa08f9e26730580ae931d246abb"
+    },
+    {
+      "file": "dfx-continuous-collection-matrix.md",
+      "source_document": ".docs/dfx-continuous-collection-matrix.md",
+      "source_sha256": "34b2dd73dab9efbf80b3e47dbe19443965a455868abf055fc40cb8b0e6fb57c5",
+      "export_sha256": "0a526cc512df41e5eb7e82b0559f9f8134a7be2ff7cc41961e749a7af1df25cc"
+    },
+    {
+      "file": "review/stream-architecture-user-contract.md",
+      "source_document": ".docs/review/stream-architecture-user-contract.md",
+      "source_sha256": "0ea6da37184e426ff06d5ea8313d3d5c69a121b8e78852b380271959fc048a09",
+      "export_sha256": "25d8e759f0a3a1d4bea691a920d6c25b33c42a7c02edeca47230fc5c5340b8d2"
+    },
+    {
+      "file": "review/p4-device-chain-decision.md",
+      "source_document": ".docs/review/p4-device-chain-decision.md",
+      "source_sha256": "6a685c98c6862617f96c5bfa8642cb62847e9c3e4c7a77aab5ba42ee9944d08b",
+      "export_sha256": "4c324ab0ed6671c4f90625d89b4f219b96c53961117209ba41cb779cdded607b"
+    },
+    {
+      "file": "review/p4-dynamic-run-resources-decision.md",
+      "source_document": ".docs/review/p4-dynamic-run-resources-decision.md",
+      "source_sha256": "c085ff3fd7191e0308d0f04e13a3a55ea1368ebe6eb90db0642c730006aa15f4",
+      "export_sha256": "f7c3bf74c8f3e1e366249166dd4b67ed335c5c06734e5fdd4d7fb3eae98e5c3b"
+    },
+    {
+      "file": "review/p4-qwen-grant-composition-decision.md",
+      "source_document": ".docs/review/p4-qwen-grant-composition-decision.md",
+      "source_sha256": "5af85bc17eee602a61c3c6c73356fa8acdb71c001cefd457e541468f62972014",
+      "export_sha256": "7d277d669bf9195cdfec05649d7c20f333c2a23bbd72a63c991bfb231fdfb779"
+    },
+    {
+      "file": "review/dfx-joined-launch-complete-decision.md",
+      "source_document": ".docs/review/dfx-joined-launch-complete-decision.md",
+      "source_sha256": "857f3d58cde5112a36356642be09a31faffa6001a1d7f5b0e3a3a0a10be70292",
+      "export_sha256": "19ce5291b0b72156ffc391b60f949aca0e2259de4218d2d36627c5a3080637db"
+    },
+    {
+      "file": "review/dfx-joined-launch-complete-design.md",
+      "source_document": ".docs/review/dfx-joined-launch-complete-design.md",
+      "source_sha256": "918c8fd9af4067ac012bfd8b3bfa9a32a90f24d4946bfd0acdcde2a39da69703",
+      "export_sha256": "d515db47fc5ac8c845ed8a8680daf21ecf4fedc59af7c7f23a1231bf2b72e1b8"
+    },
+    {
+      "file": "review/dynamic-registration-once-decision.md",
+      "source_document": ".docs/review/dynamic-registration-once-decision.md",
+      "source_sha256": "c72a32fbb17d9de514f661754d55141a2cc27ba6d98c8c51cbb4b65001c1fc1b",
+      "export_sha256": "7771960f7ebc48a71fb9f67178df43f534d1ce9f21ea0e74647ecc6f7e2bbce2"
+    },
+    {
+      "file": "review/dynamic-invocation-launch-decision.md",
+      "source_document": ".docs/review/dynamic-invocation-launch-decision.md",
+      "source_sha256": "2810c6a69920475c6a3e20db6b5efab306b7e5256ed0150737a686e20324fb71",
+      "export_sha256": "5f58be7118ed31daf1418f73ae3c276d6c3f243702ed25aa5d86fb73f1312978"
+    },
+    {
+      "file": "review/dynamic-warm-prefix-cache-decision.md",
+      "source_document": ".docs/review/dynamic-warm-prefix-cache-decision.md",
+      "source_sha256": "23deb368a4d1cb9ba15c40e2834a70c917151e792dfac23172c53e43435c08f9",
+      "export_sha256": "aab1ca4988fc858acddb0b9fdaa41b0f2970b4e6c3e0738bf372622af043a85a"
+    },
+    {
+      "file": "review/dynamic-hbg-scheduler-retention-decision.md",
+      "source_document": ".docs/review/dynamic-hbg-scheduler-retention-decision.md",
+      "source_sha256": "d44e2f99018b7a587c9c55f211654c702e8668ffb54573414d63021568d59a8e",
+      "export_sha256": "f5d331aa70783cf8d270fe242588805c3215bd06cddbfe6e99b94790826bfa41"
+    },
+    {
+      "file": "review/memory-default-management-decision.md",
+      "source_document": ".docs/review/memory-default-management-decision.md",
+      "source_sha256": "4910b6de93ea95cb4f4cd1aafe754c3f4119c48f5c522e7b7790c15e1ff138c5",
+      "export_sha256": "0063ec089d34afc1997328a35c1e390611e9e9af791b83a864b07324e2e51a5e"
+    },
+    {
+      "file": "review/memory-local-l3-default-management-decision.md",
+      "source_document": ".docs/review/memory-local-l3-default-management-decision.md",
+      "source_sha256": "296b205a098c38bd43d30f7e169fb546386058f5b4abcd3adeea4e1d5c5949f6",
+      "export_sha256": "31ccb9f0a690b0e7776704fd6f42ed9eb34c6ddfc306a8f011649b80a1e8e761"
+    },
+    {
+      "file": "review/memory-graph-kernelargs-decision.md",
+      "source_document": ".docs/review/memory-graph-kernelargs-decision.md",
+      "source_sha256": "5fd5daee424fa2737a4f1abcdea89dafa214fae4a51054d793fcfe6a1b007dcf",
+      "export_sha256": "bcaeba5db168b9bd32a977fa4680758e64a7ee8fbed441f47e8c5b9d127c6356"
+    },
+    {
+      "file": "review/ordinary-async-acceptance-and-cost-map.md",
+      "source_document": ".docs/review/ordinary-async-acceptance-and-cost-map.md",
+      "source_sha256": "9de362174fba8d03b8136095ae73eb9be2abd4431bdb3555b7239ef19f73d094",
+      "export_sha256": "cbce7efd472a8940ef5524af2db7458be5ed0a8913195751cee0beba7e7eb5a5"
+    },
+    {
+      "file": "review/ordinary-async-acceptance-manager-review.md",
+      "source_document": ".docs/review/ordinary-async-acceptance-manager-review.md",
+      "source_sha256": "2d9464e2e85d8e963f83291bb3223c415406a6f39cb98213e40b28493bcc64ad",
+      "export_sha256": "79c469848efe535976b80e68578d5d8cff46268ba83d2406cbe397e0cf5948e9"
+    }
+  ],
+  "transformations": [
+    "local paths anonymized",
+    "links made portable; unavailable local evidence points to archive boundary",
+    "historical2571 wording corrected in workspace classification",
+    "archive-status banner added",
+    "Markdown layout normalized for repository lint; empty table headers labelled"
+  ],
+  "omitted_local_link_count": 28
+}
