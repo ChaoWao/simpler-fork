@@ -82,6 +82,14 @@
 
 引用文档：[reviews/leased-context-validation/REPORT.md](reviews/leased-context-validation/REPORT.md)。材料未收录。
 
+<a id="artifact-0f63c78ec0c1"></a>
+
+## 0f63c78ec0c1
+
+原引用：`a5sim.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-10aac7945a64"></a>
 
 ## 10aac7945a64
@@ -226,6 +234,22 @@
 
 引用文档：[reviews/context-state-preflight-final/REPORT.md](reviews/context-state-preflight-final/REPORT.md)。材料未收录。
 
+<a id="artifact-2519d3f65c8e"></a>
+
+## 2519d3f65c8e
+
+原引用：`red.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
+<a id="artifact-25e661e6321a"></a>
+
+## 25e661e6321a
+
+原引用：`caller/run.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-2718c7b0d65a"></a>
 
 ## 2718c7b0d65a
@@ -249,6 +273,14 @@
 原引用：`probes/probe_m_op_timeout_clamp.py`
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md)。材料未收录。
+
+<a id="artifact-2e1ef5364794"></a>
+
+## 2e1ef5364794
+
+原引用：`a3sim.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
 <a id="artifact-2eaae16ff28b"></a>
 
@@ -410,6 +442,14 @@
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
 
+<a id="artifact-4b8d79c7a14d"></a>
+
+## 4b8d79c7a14d
+
+原引用：`hooks.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-4ba5fb967d29"></a>
 
 ## 4ba5fb967d29
@@ -441,6 +481,14 @@
 原引用：`cmake.log`
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
+
+<a id="artifact-52354f9701ce"></a>
+
+## 52354f9701ce
+
+原引用：`review/p4-auto-resource-admission-manager-review-r11.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-54669faff63e"></a>
 
@@ -546,14 +594,6 @@
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
 
-<a id="artifact-66d45c29f26f"></a>
-
-## 66d45c29f26f
-
-原引用：`review/pr2588-1d707-manager-review.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-66f20318fa41"></a>
 
 ## 66f20318fa41
@@ -657,6 +697,14 @@
 原引用：`r2-red.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-8df2cb816793"></a>
+
+## 8df2cb816793
+
+原引用：`final-tests.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
 <a id="artifact-91b61fecb97f"></a>
 
@@ -858,6 +906,14 @@
 
 引用文档：[reviews/publication-contract-main-2d366151.md](reviews/publication-contract-main-2d366151.md)。材料未收录。
 
+<a id="artifact-b7a62adc362f"></a>
+
+## b7a62adc362f
+
+原引用：`green.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-b8877159573e"></a>
 
 ## b8877159573e
@@ -866,6 +922,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
 
+<a id="artifact-bc28526ab2a0"></a>
+
+## bc28526ab2a0
+
+原引用：`final-build.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-bfb72bdaae37"></a>
 
 ## bfb72bdaae37
@@ -873,6 +937,14 @@
 原引用：`r2-scenes/run.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-c0554c48c89f"></a>
+
+## c0554c48c89f
+
+原引用：`focused.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
 <a id="artifact-c0d33ae30802"></a>
 
@@ -938,6 +1010,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md)。材料未收录。
 
+<a id="artifact-c9dfe79fe95f"></a>
+
+## c9dfe79fe95f
+
+原引用：`pyut.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
 <a id="artifact-cba3aeb03a54"></a>
 
 ## cba3aeb03a54
@@ -961,14 +1041,6 @@
 原引用：`r2-precommit.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
-
-<a id="artifact-ced785d23303"></a>
-
-## ced785d23303
-
-原引用：`review/p4-auto-resource-admission-manager-review-r2.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-d03e5863da08"></a>
 
@@ -1010,6 +1082,14 @@
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
 
+<a id="artifact-d47b11f96638"></a>
+
+## d47b11f96638
+
+原引用：`review/pr2588-1d707-ci-repair-coverage.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
+
 <a id="artifact-d49186164148"></a>
 
 ## d49186164148
@@ -1033,6 +1113,14 @@
 原引用：`s2-main-d49730f3/cpp.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
+
+<a id="artifact-d574458de2a1"></a>
+
+## d574458de2a1
+
+原引用：`hbg/run.log`
+
+引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
 <a id="artifact-d679a9a33f9f"></a>
 
@@ -1105,6 +1193,14 @@
 原引用：`s2-main-d49730f3/sim-a2a3.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
+
+<a id="artifact-e54c58191632"></a>
+
+## e54c58191632
+
+原引用：`review/pr2588-raw-bank-wip-review.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-e9af7bab9363"></a>
 

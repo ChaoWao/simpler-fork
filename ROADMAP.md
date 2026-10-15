@@ -22,15 +22,14 @@
 
 ## 1. 现在做什么
 
-**2026-10-15 / main `11eb5d2c9`：#2587 已合入；K2a 已结项，正在交付 K2b。**
+**2026-10-15 / main `a8c682a32`：#2589 已合入，K2a 已结项；K2b 继续推进 child 内部接入。**
 
-[PR #2587](https://github.com/hw-native-sys/simpler/pull/2587) 已合入 `11eb5d2c9`（验证 head `51961a02`）：native 环境身份包含 process、incarnation、context generation、device 与 owned/borrowed 策略；source 创建、descriptor 和提交接入验证同一绑定。成功清理失效，失败保留供重试；不以 Python READY 或 device ordinal 替代环境身份。既有 runner 验证 RTS current context，逻辑身份不探测外部 reset、不证明指针归属。
+#2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
-首轮 `430d5f4d` 验证：3261 Python UT、319 C++ targets、A2/A3 与 A5 相关 sim 13/10 项；task-submit device 0 的 44 项 caller/lifecycle 和 7 项 HBG readiness 全通过。修订 `51961a02` 补齐前期成功回滚的身份清除，六个负例先失败后通过；最终重建后 240 项相关 Python、319 C++ targets 与 hooks 通过。两轮证据按 head 分开，见[证据](reviews/context-bound-buffer-source/REPORT.md)。K2b 仍需内部 adapter/materialization 收口；之后 K2c 完整 public borrowed eager，再进入 capture/replay。#2584 的历史证据仍见[原记录](reviews/leased-context-validation/REPORT.md)。
+[PR #2593](https://github.com/hw-native-sys/simpler/pull/2593) `149c8997` 待 review/CI：把 legacy base-communicator 的控制句柄从公开 wrapper 的动态属性移到 chip serve loop，通过 init 返回值与 alloc/release 的显式参数传递。物理 communicator、缓存与 teardown 仍归 native runtime。此笔只解除一处真实 wrapper 状态依赖，child 其余原生调用与共同 materialization 随后继续；K2b 尚未完成。
 
-[PR #2589](https://github.com/hw-native-sys/simpler/pull/2589) `27098ab9` 待 review/CI：direct L2 Worker 直接持有原 `_ChipWorker`，移除中间公开 ChipWorker 的重复 registry/lock；共同初始化 helper 处理日志、binary paths 和 options。公开兼容入口与 chip child 仍保留 wrapper，本笔不声称 K2b 完成。下一步收口 child 内部接入（含通信缓存）与共同参数 materialization，之后 K2c。
+本笔验证：完整 Python UT 3275 passed / 91 skipped；最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
 
-首版验证（`1a113d50`）：Python UT 3270 passed / 91 skipped；A2/A3、A5 sim 15/11 场景；task-submit 17 个场景与 44 项 caller/lifecycle 通过；final head 重建后 280 passed / 16 skipped。未重跑完整上板 sweep，没有 AIV；A5 仅仿真。见[记录](reviews/direct-native-chip-worker/REPORT.md)。 修订 `27098ab9` 补迁 9 份 white-box 场景测试，覆盖 register/run/unregister、lease 具名参数和 HBG `_impl`；原报错先复现再通过，受影响 A2/A3 sim 19 passed / 8 skipped、A5 sim 14 passed、task-submit 上板 31 passed / 1 skipped，最终提交重建后 110 项相关 UT 通过。原 CI 的 macOS L3 orphan-child 断言单独跟踪；新版全部场景 CI 已通过，macOS Python UT 通过。最终 run 38706012077 的 17 项 CI 全通过；不把未定因观察当作已修复。
 
 本轮按入口、准备、launch、错误恢复和退休读取主线；没有重新宣称全路线验收。[核查与下一 PR 范围](reviews/kernel-eager-main-e0a5e9a.md)给出源码符号和测试门槛；[AIV 现场规划](aiv-evidence-plan.md)独立保留，不继续扩大主动复现矩阵。
 
@@ -203,7 +202,7 @@ S2 同步合同退出要求 TMR/HBG program 回归、两架构的发布失败和
 共同 native 执行、失败清理、caller lane 和 borrowed ChipWorker 已由 #2557/#2561/#2567/#2572/#2578 交付。#2580/#2581/#2582 已合入；#2584 已合入，完成汇聚校验入口和 native 内存保护；K2a 结项。
 
 1. **K2a：共同拒绝与失败合同。** native/binding 保持可机器判断的环境拒绝分类，公开层消费同一判定；拒绝保留状态，真实设备失败发布终态，partial/unknown 保留。#2581 已替换 callback；#2582 已闭合 Python submit/注册/close 的状态承诺边界；#2584 已收口共同 lease 校验并补齐 native 内存保护，K2a 结项，下一步 K2b。
-2. **K2b：环境/generation/source 与内部接入。** #2587 环境/source 已合入；#2589 direct L2 原生接入待合入，随后收口 child/materialization。目标仍是同一生命周期绑定 RTS identity、进程、context generation、source；收口 Worker → 原 `_ChipWorker`/lane 接入和共同 materialization。公开 ChipWorker 兼容；旧 init C ABI 留适配，不再造执行入口。
+2. **K2b：环境/generation/source 与内部接入。** #2587 环境/source 与 #2589 direct L2 已合入；#2593 child 控制句柄待合入，随后收口 child 原生调用/materialization。目标仍是同一生命周期绑定 RTS identity、进程、context generation、source；收口 Worker → 原 `_ChipWorker`/lane 接入和共同 materialization。公开 ChipWorker 兼容；旧 init C ABI 留适配，不再造执行入口。
 3. **K2c：公开调用与 eager 验收。** 同一 Worker.init/submit 接 owned/borrowed 和 caller 顺序；真实 public Buffer/Tensor/TaskArgs → RunHandle 通过 TMR/HBG、A2/A3/A5 的寿命、失败、跨流与 Program 回归；框架后台队列另须证明有序 native 发射。
 4. **S3：可并行 module owner 与能力合同。** 集中 loader、required/conditional 与版本化最小能力查询；不迁移全 API 函数表。K2 可先消费现有 loader；C2 必须消费已验收的模块/代码保活。
 5. **K2c 通过后进入 C1→C2→C3→C4。** C1 沿实际 producer/device reader 完成 ABI 与异步闭包；C2 同时接图资源与 S3 引用；两 runtime 的 replay 和完整产品矩阵继续必交付。
