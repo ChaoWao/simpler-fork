@@ -16,3 +16,5 @@ Run 38702273946, head 1a113d50. Logs read directly through gh; raw logs stay loc
 The new code changes only direct L2 construction and initialization delegation; the orphan scenario starts Worker(level=3) host children. The local Linux orphan case passes, which cannot qualify macOS behavior. Revised-head CI is the next check, not proof of a fix in this PR.
 
 The migration covers all nine white-box files, including HBG paths that the failed CI sequence had not yet reached. Original complete CI log and canceled job logs are retained outside the published snapshot.
+
+Updated-head checkpoint (27098ab9, 2026-10-15 08:50 UTC): all affected scene jobs pass; macOS Python UT step succeeds, Ubuntu UT job succeeds. Only macOS C++ UT remains running. The original macOS symptom is not reproduced, not declared fixed.

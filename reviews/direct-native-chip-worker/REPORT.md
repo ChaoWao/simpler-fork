@@ -61,3 +61,9 @@ Final head `27098ab9a168a647b45ed2fc3d9b0e3038ebffe5`. The intermediate 83200862
 Scene/sim/hardware evidence above ran on the scene-migration working tree before the amend; the subsequent change only replaces this UT fixture/import. They are validation of that product content, not new board executions on the final SHA. The final SHA is rebuilt and the focused tests rerun; no full Python or hardware sweep is re-attributed to it.
 
 Final-head evidence: [build](../../LOCAL-EVIDENCE.md#artifact-5c9839daad9c), [110 related tests](../../LOCAL-EVIDENCE.md#artifact-ed9c93316455), [all PR-file hooks](../../LOCAL-EVIDENCE.md#artifact-0c4ae882e3b0).
+
+### Updated-head CI checkpoint
+
+[Run 38706012077](https://github.com/hw-native-sys/simpler/actions/runs/38706012077), head 27098ab9, checked at 2026-10-15 08:50 UTC: 16 of 17 CI jobs succeed. All four simulation jobs and both ordinary onboard jobs succeed, as do hardware UT, network, DeepSeek and profiling smoke. macOS Python unit-test step succeeds, so the original orphan-child failure did not recur in this run. The only pending job is macOS UT's C++ build/run step; no remaining red is reported. This checkpoint is not a claim that the pending job passed or that the orphan observation's root cause is fixed.
+
+CodeRabbit thread PRRT_kwDORCBKLM6srUiL was replied to and resolved; [reply](https://github.com/hw-native-sys/simpler/pull/2589#discussion_r4280711180).

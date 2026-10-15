@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "4c2466a6c5d4291c9fa452f58c4496861b17f0f4bcee7e4dc338a38ceaeb6514",
-      "published_sha256": "bb652fb806ed1a8a9859fb303d3b0285dca66ffbb9b4d7c49dd8d74491a758aa",
-      "bytes": 50207
+      "source_sha256": "7082e7e0ff7cfb3cdac3c1afcd7aafaaa04f2ff94632d4a8d36b003ae131d5bd",
+      "published_sha256": "f2f921fb7af51b041563f0ff846b58833b32fb84c8633aae816f6818b35acabe",
+      "bytes": 50348
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "73a5cb7bf341e6e3f4925d59057ea6ef3264932872c94fb75d4e65cb11a4e547",
-      "published_sha256": "96feec2f3944ac89cb1a6861f2e91a784c8f67d9d2e9f006699919a33b42225a",
-      "bytes": 65555
+      "source_sha256": "40d5c8008725f3e50686546f0bce5a73bd87bf4bf74d8e5b3bcda8534769ec7a",
+      "published_sha256": "ec6d75218c0204cbf8be3767e51e835174a4ca96c845f24d22770f5b609f3b14",
+      "bytes": 65696
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "72264e2a6cbde8a06e0a5a8b0790726e89dc3cd2b22bdd32c32a0764e81ae6ad",
-      "published_sha256": "0be4d144b60f4ed454d6a390cb127625a2ac5c7b0158228225021053fe5f8a26",
-      "bytes": 40127
+      "source_sha256": "b01d0023e24bc4e68e7529797348bae7f51dd5db8275a4fd03cb3e15e1bea92e",
+      "published_sha256": "0018dc4e9ef9062456f83ecbd749d177eb9d7e28d855ef1ffa9a67a82a0e1850",
+      "bytes": 40117
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "a14e57400e43c82cc252348b35610cf36f3da22b745eea3cc4569befc9ce8ee2",
-      "published_sha256": "afbea8e4178beb5309226de30a207882bc3fcd9be2f2d8affd1d3f83c64e2c12",
-      "bytes": 14730
+      "source_sha256": "89e5fec20f8a9bef40b9a27352b1799c0d764bf392bf890a0ced67940c1ff274",
+      "published_sha256": "f764d8e47cd408497941925258cfbc933f30d43363bc07a5d9ccc0a41262ac0d",
+      "bytes": 14744
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -344,16 +344,16 @@
     {
       "path": "reviews/direct-native-chip-worker/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "f79ed1d454bdfc91de2a93ff74deafebd368057a51503a483f90e92b83c9f5a8",
-      "published_sha256": "37e94121dfe061a070dffe559f85de82813cc72f8fdc0f02b0499ef0a59e9139",
-      "bytes": 7248
+      "source_sha256": "500056ec9887c286d6eb25778dce9a7ad7df55bdc9814f16d0ba6c3892048a5d",
+      "published_sha256": "881644ffc064101242d8f92df21009e7254d500616f59466238d8d3b37e3e77d",
+      "bytes": 8018
     },
     {
       "path": "reviews/direct-native-chip-worker/ci-triage.md",
       "source_collection": "kernel-design",
-      "source_sha256": "71fb034b5e1ed2f2da63fe2e28d84ac6f82c89f272f7184918e105b89fdbb322",
-      "published_sha256": "71fb034b5e1ed2f2da63fe2e28d84ac6f82c89f272f7184918e105b89fdbb322",
-      "bytes": 1444
+      "source_sha256": "44d13175f8987dad84871e9e0bc1f9ca4a170cbc7cf3c2090b9535164f052570",
+      "published_sha256": "44d13175f8987dad84871e9e0bc1f9ca4a170cbc7cf3c2090b9535164f052570",
+      "bytes": 1689
     },
     {
       "path": "reviews/hbg-validation-log-sink/REPORT.md",

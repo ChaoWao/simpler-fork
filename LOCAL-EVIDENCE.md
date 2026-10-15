@@ -962,6 +962,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-ced785d23303"></a>
+
+## ced785d23303
+
+原引用：`review/p4-auto-resource-admission-manager-review-r2.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-d03e5863da08"></a>
 
 ## d03e5863da08
