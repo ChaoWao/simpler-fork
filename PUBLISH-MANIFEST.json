@@ -13,11 +13,18 @@
       "bytes": 13697
     },
     {
+      "path": "PUBLISHING.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
+      "published_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
+      "bytes": 1319
+    },
+    {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "c2d95482bb6bb40a6467713d0b5b581a9119d1518cae4d37b42421cc05a48809",
-      "published_sha256": "2c763427483ff0d096eee8873442ae936dbe9fff6d8d01188c7589eae6c41972",
-      "bytes": 49797
+      "source_sha256": "4c2466a6c5d4291c9fa452f58c4496861b17f0f4bcee7e4dc338a38ceaeb6514",
+      "published_sha256": "bb652fb806ed1a8a9859fb303d3b0285dca66ffbb9b4d7c49dd8d74491a758aa",
+      "bytes": 50207
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -57,9 +64,9 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "001176a30ec555b861e1f97497f09717832051aacb3278d45dbb3a7665477b99",
-      "published_sha256": "3ecf0846f72cef05c076e7906ed5270d3b6d97af8b6ad429c5c098e59855522e",
-      "bytes": 64704
+      "source_sha256": "dbd60f7a74e69ec2be7c5c8bfbb5a08408667bc7c6a685e1392b9c59c62f2dc1",
+      "published_sha256": "f83fabbddbf213c6166003e3328cf63b53e0896a4f30bcb38543b58fe93b8cf0",
+      "bytes": 64737
     },
     {
       "path": "endpoint-access-contract.md",
@@ -71,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "458d4713cb1c528eef4e4f0a1d7e033a84f9f62803af7a846e751de54dc559a6",
-      "published_sha256": "452870b5b3800fb3f943e00e2e7f095e16f786fdfd3b77b2a30cd2be08a945b7",
-      "bytes": 23084
+      "source_sha256": "c7433260c111ca7f416a83d6aeff47dc072e5475ce4799b38a4782d9256e2e52",
+      "published_sha256": "16988e2ecff6a01682052ec066e3cc32288bb982c69fcf3c213bd780fd518006",
+      "bytes": 23106
     },
     {
       "path": "kernel-mode-design.md",
@@ -92,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "2e2cbd54417bacc59521dcfdebd8d385e14458306af99212b2fa9580905736f4",
-      "published_sha256": "94dae1a14b1f414d6aaa79b03e4f5163a584ced3af1adb9f26d383cfc5ff5ca1",
-      "bytes": 65112
+      "source_sha256": "73a5cb7bf341e6e3f4925d59057ea6ef3264932872c94fb75d4e65cb11a4e547",
+      "published_sha256": "96feec2f3944ac89cb1a6861f2e91a784c8f67d9d2e9f006699919a33b42225a",
+      "bytes": 65555
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -197,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "2f3711926a35dda44d2c2bb0312b44c9a86995d2cd3e5d0d7b1774c2f1165096",
-      "published_sha256": "20bce9fdd76a2eb03fb263c00e732a48c2ee6b6748312c7b16b1b499263e5e50",
-      "bytes": 39608
+      "source_sha256": "72264e2a6cbde8a06e0a5a8b0790726e89dc3cd2b22bdd32c32a0764e81ae6ad",
+      "published_sha256": "0be4d144b60f4ed454d6a390cb127625a2ac5c7b0158228225021053fe5f8a26",
+      "bytes": 40127
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "1cb741de46a8030b2f1ff4eed7528abe058fe5adc6e07cb13788631acb51b1ef",
-      "published_sha256": "3f6b18d5960c8ab7dee04670a2088bb4512a4ee65829fc151fbfd371ba6708e2",
-      "bytes": 14548
+      "source_sha256": "a14e57400e43c82cc252348b35610cf36f3da22b745eea3cc4569befc9ce8ee2",
+      "published_sha256": "afbea8e4178beb5309226de30a207882bc3fcd9be2f2d8affd1d3f83c64e2c12",
+      "bytes": 14730
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -337,9 +344,16 @@
     {
       "path": "reviews/direct-native-chip-worker/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "967e34a1ec0810c10cfd53808657094654720b3d9218f262f924ca7912277c2a",
-      "published_sha256": "f787d509bbc02175260543b3ab262aa841de0d8303adac2749fe571ef0d2b3af",
-      "bytes": 3271
+      "source_sha256": "f79ed1d454bdfc91de2a93ff74deafebd368057a51503a483f90e92b83c9f5a8",
+      "published_sha256": "37e94121dfe061a070dffe559f85de82813cc72f8fdc0f02b0499ef0a59e9139",
+      "bytes": 7248
+    },
+    {
+      "path": "reviews/direct-native-chip-worker/ci-triage.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "71fb034b5e1ed2f2da63fe2e28d84ac6f82c89f272f7184918e105b89fdbb322",
+      "published_sha256": "71fb034b5e1ed2f2da63fe2e28d84ac6f82c89f272f7184918e105b89fdbb322",
+      "bytes": 1444
     },
     {
       "path": "reviews/hbg-validation-log-sink/REPORT.md",
@@ -494,13 +508,6 @@
       "source_sha256": "fc8495d4a475421cd17aee1df7d2da1774ffc371d73a9b99343c27afac925bf7",
       "published_sha256": "fc8495d4a475421cd17aee1df7d2da1774ffc371d73a9b99343c27afac925bf7",
       "bytes": 10657
-    },
-    {
-      "path": "PUBLISHING.md",
-      "source_collection": "kernel-design",
-      "source_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
-      "published_sha256": "b3782acca79ed7567b08209b4117ee3c9133269eac038ec0e9e573fc725409d0",
-      "bytes": 1319
     }
   ]
 }

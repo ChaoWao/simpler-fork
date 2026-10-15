@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-15 / main `11eb5d2c9`：#2587 已合入，K2a 已结项；[PR #2589](https://github.com/hw-native-sys/simpler/pull/2589) `1a113d50` 待 review/CI。** 本笔移除 direct L2 内部的公开 ChipWorker 包装层；K2b 的 child/materialization 收口与 K2c 仍待后续。验证见[记录](reviews/direct-native-chip-worker/REPORT.md)，历史证据不改挂。
+**2026-10-15 / main `11eb5d2c9`：#2587 已合入，K2a 已结项；[PR #2589](https://github.com/hw-native-sys/simpler/pull/2589) `27098ab9` 待 review/CI。** 本笔移除 direct L2 内部的公开 ChipWorker 包装层；K2b 的 child/materialization 收口与 K2c 仍待后续。验证见[记录](reviews/direct-native-chip-worker/REPORT.md)，历史证据不改挂。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -53,7 +53,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 
 
 当前 #2587 已合入：native 记录 process、非重复 incarnation、context generation、device 与 owned/borrowed 策略；source 的 wrap/descriptor/acquire 比较同一 native 身份。成功 teardown 清除，失败 rollback/teardown 保留供 cleanup retry。当前 RTS identity 仍由既有 runner 判定，不能把逻辑 generation 当 RTS reset 探测器或地址所有权证明。公开 source provider 仍是 Program Worker。此笔没有收口所有内部 adapter，也没有开放 public borrowed init；K2b 尚未完成。
-#2589 待合入：direct L2 Worker 直接持有 `_ChipWorker`，既有 Worker registry、operation lease、imports、source uses 和 close journal 继续负责原有状态。公开兼容 ChipWorker 和 forked chip child 仍走 wrapper。`_initialize_chip_runtime` 仅共用日志/路径/原生 init 参数转换，不另建 executor 或生命周期 owner。下一笔沿真实 child 生产消费者收口通信缓存与内部接入，再统一 materialization；不把两笔机械合成大 PR。
+#2589（修订 `27098ab9`）待合入：direct L2 Worker 直接持有 `_ChipWorker`，既有 Worker registry、operation lease、imports、source uses 和 close journal 继续负责原有状态。公开兼容 ChipWorker 和 forked chip child 仍走 wrapper。`_initialize_chip_runtime` 仅共用日志/路径/原生 init 参数转换，不另建 executor 或生命周期 owner。下一笔沿真实 child 生产消费者收口通信缓存与内部接入，再统一 materialization；不把两笔机械合成大 PR。
 
 在原 Worker/ChipWorker 的生命周期中建立一份环境绑定，关联 RTS context identity、进程、非零逻辑 context generation 与 owned/borrowed 权限。所有环境使用和 source attachment 都验证同一份绑定。设备 ordinal 只是选择信息，不能作为外部地址授权。
 

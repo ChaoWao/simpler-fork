@@ -31,3 +31,33 @@ The broad suites ran on the final product working-tree content before commit; th
 ## Next
 
 Merge review decides this PR. Then consolidate chip-child native access/communication-cache ownership and shared materialization in bounded PRs; complete K2c before capture/replay. Existing AIV investigation remains independent and unclassified.
+
+## Revision 2 — scene-consumer migration
+
+Head `83200862e3809b1583c1cf6a594722e1d312ba2f`, same base `11eb5d2c9`. Combined PR: 23 files, +417/−223. The original validation above did not exercise all white-box scene consumers; initial CI correctly caught that omission.
+
+Nine `tests/st/` files obtained the real native object through Worker but still called wrapper registration/run/unregistration methods, a differently ordered lease signature, or `_impl`. They now use existing native entries and named slot_id/generation fields. No native compatibility aliases were added. Both concurrent-prepare accesses and the HBG lifecycle prepare signature are covered, rather than stopping at the first AttributeError. A one-off audit checked 182 direct native attribute accesses in scene tests against the actual binding; none are missing. Existing scene tests are the committed regression barrier.
+
+The initializer restores the sim-context registry and dispatcher facts and annotates bins with the existing RuntimeBinaries class under TYPE_CHECKING. There is no runtime dependency/import or new protocol class.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Exact reported failure | 1 failed before, 1 passed after | [red](../../LOCAL-EVIDENCE.md#artifact-84d761448113), [green](../../LOCAL-EVIDENCE.md#artifact-646279f1e8de) |
+| A2/A3 affected sim groups | 19 passed, 8 skipped | [log](../../LOCAL-EVIDENCE.md#artifact-c51dcfc3bcb5) |
+| A5 affected sim groups | 14 passed | [log](../../LOCAL-EVIDENCE.md#artifact-22c96cf4477f) |
+| A2/A3 affected hardware groups | HBG 20 passed / 1 skipped; TMR 11 passed | [log](../../LOCAL-EVIDENCE.md#artifact-bfb72bdaae37) |
+| Related Python UT | 110 passed | [log](../../LOCAL-EVIDENCE.md#artifact-78c62d85b387) |
+| Final committed head | Rebuilt; 110 passed | [build](../../LOCAL-EVIDENCE.md#artifact-1529c58b9c3e), [tests](../../LOCAL-EVIDENCE.md#artifact-1f7bc9ae9271) |
+| Hooks | Passed after Ruff formatted the extended lease call | [log](../../LOCAL-EVIDENCE.md#artifact-ce499c6856e7) |
+
+Hardware uses task-submit `task_20261015_012247_40805628180`, device 2, with [independent occupancy](../../LOCAL-EVIDENCE.md#artifact-45eb212f16ce) and [Ascend logs](../../LOCAL-EVIDENCE.md#artifact-9b72348d3df9). The missing-entry registration arm intentionally triggers the observed 507018 and passes; no unexpected AIV was observed. Onboard includes all four concurrent-prepare stress arms and native lifecycle. Simulation skips hardware-only paths. Neither this nor the initial run is a full onboard sweep.
+
+Initial CI failure logs and all canceled siblings were read. See [triage](ci-triage.md). The independent macOS host-child exit failure is not fixed or dismissed as flaky; Linux rerun passes and revised-head CI must validate it. CodeRabbit discussion 4280523840 is addressed by this migration; its reply and resolution are recorded on the PR.
+
+### Final revision and validation scope
+
+Final head `27098ab9a168a647b45ed2fc3d9b0e3038ebffe5`. The intermediate 83200862 CI stopped at Pyright because the option-forwarding test still used SimpleNamespace for the newly typed RuntimeBinaries parameter. The local initial hook rerun selected only revision-edited files, not all PR files; rerunning the full 23-file PR hook set reproduced this exact error. The fixture now constructs the actual RuntimeBinaries class, all 23-file hooks pass, and 110 related tests pass.
+
+Scene/sim/hardware evidence above ran on the scene-migration working tree before the amend; the subsequent change only replaces this UT fixture/import. They are validation of that product content, not new board executions on the final SHA. The final SHA is rebuilt and the focused tests rerun; no full Python or hardware sweep is re-attributed to it.
+
+Final-head evidence: [build](../../LOCAL-EVIDENCE.md#artifact-5c9839daad9c), [110 related tests](../../LOCAL-EVIDENCE.md#artifact-ed9c93316455), [all PR-file hooks](../../LOCAL-EVIDENCE.md#artifact-0c4ae882e3b0).
