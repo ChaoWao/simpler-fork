@@ -482,14 +482,6 @@
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
 
-<a id="artifact-52354f9701ce"></a>
-
-## 52354f9701ce
-
-原引用：`review/p4-auto-resource-admission-manager-review-r11.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-54669faff63e"></a>
 
 ## 54669faff63e
@@ -497,6 +489,14 @@
 原引用：`backup/20260918-doc-consolidation/kernel-mode-prepare-submit-design.md`
 
 引用文档：[kernel-mode-prepare-submit-design.md](kernel-mode-prepare-submit-design.md), [kernel-mode-unified-design.html](kernel-mode-unified-design.html)。材料未收录。
+
+<a id="artifact-5578ed4934fb"></a>
+
+## 5578ed4934fb
+
+原引用：`review/pr2588-d5b-manager-review.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-5692483316ec"></a>
 
@@ -922,6 +922,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
 
+<a id="artifact-b8dad08aa6c9"></a>
+
+## b8dad08aa6c9
+
+原引用：`review/p4-auto-resource-admission-manager-review-r18.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-bc28526ab2a0"></a>
 
 ## bc28526ab2a0
@@ -1193,14 +1201,6 @@
 原引用：`s2-main-d49730f3/sim-a2a3.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
-
-<a id="artifact-e54c58191632"></a>
-
-## e54c58191632
-
-原引用：`review/pr2588-raw-bank-wip-review.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-e9af7bab9363"></a>
 

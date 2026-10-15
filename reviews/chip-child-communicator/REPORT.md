@@ -15,7 +15,7 @@ A failed or zero-handle initialization publishes no new control value. A cold lo
 | Check | Result | Evidence |
 | --- | --- | --- |
 | New control cases before/after | 5 failed against dynamic-attribute coupling; 5 passed after | [red](../../LOCAL-EVIDENCE.md#artifact-2519d3f65c8e), [green](../../LOCAL-EVIDENCE.md#artifact-b7a62adc362f) |
-| Full Python UT | 3275 passed, 91 skipped | [log](../../LOCAL-EVIDENCE.md#artifact-c9dfe79fe95f) |
+| Full Python UT (Linux, initial head) | 3275 passed, 91 skipped | [log](../../LOCAL-EVIDENCE.md#artifact-c9dfe79fe95f) |
 | Focused host/control suites | 253 passed, including cold-loop isolation | [log](../../LOCAL-EVIDENCE.md#artifact-c0554c48c89f) |
 | A2/A3 simulation | 4 communication scene items passed | [log](../../LOCAL-EVIDENCE.md#artifact-2e1ef5364794) |
 | A5 simulation | 3 communication scene items passed | [log](../../LOCAL-EVIDENCE.md#artifact-0f63c78ec0c1) |
@@ -33,3 +33,15 @@ The new host-only tests invoke actual request parsing and control handlers with 
 ## Next
 
 Review/CI for this PR, then move child execution from the compatibility wrapper to the existing native binding and consolidate materialization in bounded changes. K2c public borrowed eager still precedes capture/replay. Historical #2589 evidence remains pinned to its own heads.
+
+## Review revision: shared-memory sizing (2026-10-15)
+
+Current revision `25be88ec68d65960bb974ecea4d75c68c42bdacd`, rebased onto main `cc6c4d51` (three commits after the original base). The API source inventory remains pinned to `a8c682a32`; rebase does not relabel that audit.
+
+The original macOS CI run 38725582799 fails five new control cases at the unbounded init-request payload assignment. Shared-memory capacity may exceed the requested payload length. Ubuntu's Python stage passes 3265 tests; its later C++ build is canceled by matrix fail-fast, not an independently identified UT failure. These facts were checked against both raw job logs.
+
+The init payload write uses an explicit end offset. The five control scenarios now each run with native-sized and 16 KiB-rounded real shared-memory allocations, exercising the real request handlers. On Linux before the fix, the rounded cases reproduce the exact ValueError (5 failed / 5 passed). After the fix, the focused suite passes 258 cases. The domain-control diagnostic also names successful CTRL_COMM_INIT, avoiding the obsolete bootstrap_context name and allocation-only prefix. No protocol, native ownership or admission rule changes.
+
+Local validation is Linux-only. Actual macOS coverage must come from the new CI revision; the initial hardware/simulator evidence above belongs to `149c8997`, not this revision. Raw revision logs remain local.
+
+Final committed revision rebuilt successfully; full Linux Python UT: **3283 passed, 91 skipped**, one existing PyTorch read-only-buffer warning, 142.99 seconds. All four PR files pass hooks after rebase. New CI run 38738767777 has passed pre-commit; macOS UT was queued at the last query. This is not an all-green CI claim.

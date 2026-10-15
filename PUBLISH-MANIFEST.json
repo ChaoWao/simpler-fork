@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "8812e77e85221c00192e38c78923cca4dda59d8b67950b40415d875890e1e4df",
-      "published_sha256": "683e47c98ecfa4660821e75648ae9f74968789d850cff0f741f8802bd026c373",
-      "bytes": 49227
+      "source_sha256": "dce4d71289cd5a8df1ab592b4c8843ccf029a3a27a1b2ea3d1a90aefc395c30c",
+      "published_sha256": "88a9b72a4d9331f4c7aa8e6de8ad2be770b08b7689e395709e053fed75863739",
+      "bytes": 49560
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -64,8 +64,8 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "7cfa9ecd9c7d5d0d7ade321feff25e807a03dde6c0afab9c0082f08383be55b8",
-      "published_sha256": "8148c18816a3fd03db2b142b8c7c4b445c51e9557f9d352ceae3dc64a65b88a8",
+      "source_sha256": "8ac3f21e62fd4f4107a9e87e32b0a889687313d4c3aad5a92b41f99ba54a2633",
+      "published_sha256": "123cd2f6e941fc9cc5a7efd2a6cff9eda0689147328c97bf3b1e2db5e4b6c811",
       "bytes": 65195
     },
     {
@@ -78,8 +78,8 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "3438e1d4159e81e318f385b80333464913a3b11b694ed23c45a6c360edcfa326",
-      "published_sha256": "d8961a60d225da3e42009ee4cb35ad4a84f298360672f5b20ede8c9d9540e644",
+      "source_sha256": "ed0377ec4ce282d0ed746d240a0fe94ee14e07214fd485015e4c52b1c7ed0522",
+      "published_sha256": "f77e2a70dd6e2628503f66a9acd4c0458914a521e2f1c50e86b483297fc92f54",
       "bytes": 23509
     },
     {
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "b83a933c0127e4e3acb4b19cff61fda4bc183192b534d7aaa7fd27e77fa003de",
-      "published_sha256": "7734b8748701634faf4d4f646ee9c1ecb13a063fe174f268395abef65ef7ceb0",
-      "bytes": 64498
+      "source_sha256": "788616f2bbb60bd7d35c108ae0d5bbdf0a94d723b72aeb966038d55572a3a664",
+      "published_sha256": "120e3560e16a2cea9e0bda0c5dd8e12a2b4d9309e8b221694721683286f8cf94",
+      "bytes": 64870
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "6a5b52d9da932acfa5c7fd95b818c0fdef7fb27e22c03dde9ff00bc6a1f59f96",
-      "published_sha256": "d1ba929753ffd832bd61f1499bc1ea5fbb606a274bc3603c69ee78ac6da0ddb4",
-      "bytes": 41660
+      "source_sha256": "0c03441cde8946c18a1c199d0f0eb0c596151ad6a76fab29cdd693ce38732c2c",
+      "published_sha256": "857d4afea48967a76ba7f4d34f2bd3b2a25428e713edcfcdc26a8580a59e5a39",
+      "bytes": 42297
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "06646bf1214f30731339beba6b00c758fd89cc6e96210e6b4a6ba2f96a7bfda9",
-      "published_sha256": "597105737be64a7874cb2c6c5f39a7830ba34a9ba793e9d3f466148f0cb28d03",
-      "bytes": 16134
+      "source_sha256": "066cd95e2527c12006abc7ac00eb27b592f3693fcc2eb8b99f23365083e4b5f4",
+      "published_sha256": "3cb2b31789a49306db186d4533ef8287f562e9830f75c8f17feb800217b56f70",
+      "bytes": 16550
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -302,9 +302,9 @@
     {
       "path": "reviews/chip-child-communicator/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "952f81bf47f89d618f4f71546db21c3e494b09d2231037305b631d5b943eb8b6",
-      "published_sha256": "14c42786c5a731a126ee046d99d00d355e8f9f714933e958f78156390688dbb6",
-      "bytes": 3897
+      "source_sha256": "9266256a5ef22b59f090ce58ad2e93f3c77c26949a6336852fe916e21c7e2456",
+      "published_sha256": "f2c385949d5592659070b14153ea9a7b8f1bff7d8b6b94246323f46ac2270bdc",
+      "bytes": 5652
     },
     {
       "path": "reviews/cleanup-wait-poison/REPORT.md",

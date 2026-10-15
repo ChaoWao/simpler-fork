@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-15 / main `a8c682a32`：#2589 已合入；[PR #2593](https://github.com/hw-native-sys/simpler/pull/2593) `149c8997` 待 review/CI。** 本笔把 legacy communicator 的控制句柄移到 child serve loop，不依赖公开 wrapper 的动态属性。K2b 的 child 原生调用/materialization 与 K2c 仍待后续，不能把本笔写成整体收口完成。验证见[记录](reviews/chip-child-communicator/REPORT.md)。
+**2026-10-15 / main `a8c682a32`：#2589 已合入；[PR #2593](https://github.com/hw-native-sys/simpler/pull/2593) `25be88ec` 待 review/CI。** 本笔把 legacy communicator 的控制句柄移到 child serve loop，不依赖公开 wrapper 的动态属性。K2b 的 child 原生调用/materialization 与 K2c 仍待后续，不能把本笔写成整体收口完成。验证见[记录](reviews/chip-child-communicator/REPORT.md)。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 

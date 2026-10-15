@@ -26,9 +26,11 @@
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
-[PR #2593](https://github.com/hw-native-sys/simpler/pull/2593) `149c8997` 待 review/CI：把 legacy base-communicator 的控制句柄从公开 wrapper 的动态属性移到 chip serve loop，通过 init 返回值与 alloc/release 的显式参数传递。物理 communicator、缓存与 teardown 仍归 native runtime。此笔只解除一处真实 wrapper 状态依赖，child 其余原生调用与共同 materialization 随后继续；K2b 尚未完成。
+[PR #2593](https://github.com/hw-native-sys/simpler/pull/2593) `25be88ec` 待 review/CI：把 legacy base-communicator 的控制句柄从公开 wrapper 的动态属性移到 chip serve loop，通过 init 返回值与 alloc/release 的显式参数传递。物理 communicator、缓存与 teardown 仍归 native runtime。此笔只解除一处真实 wrapper 状态依赖，child 其余原生调用与共同 materialization 随后继续；K2b 尚未完成。
 
-本笔验证：完整 Python UT 3275 passed / 91 skipped；最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
+初版 `149c8997` 的 Linux 验证：完整 Python UT 3275 passed / 91 skipped；初版最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
+
+本次 review 修订已 rebase 到 main `cc6c4d51`；API 源码图仍保留 `a8c682a32` 的固定审查快照。修订补全 SharedMemory 写入边界，并以精确大小/16 KiB 对齐的真实共享内存覆盖相同控制路径；macOS 结果单独看 CI，不把 Linux 通过当作跨平台验证。
 
 
 本轮按入口、准备、launch、错误恢复和退休读取主线；没有重新宣称全路线验收。[核查与下一 PR 范围](reviews/kernel-eager-main-e0a5e9a.md)给出源码符号和测试门槛；[AIV 现场规划](aiv-evidence-plan.md)独立保留，不继续扩大主动复现矩阵。
