@@ -90,12 +90,13 @@ import cloudpickle
 from _task_interface import (  # pyright: ignore[reportMissingImports]
     HOST_STRACE_ENABLED,
     MAX_REGISTERED_CALLABLE_IDS,
-    PTO_PIPELINE_MAX_DEPTH,
     RUNTIME_ENV_RING_COUNT,
     WorkerType,
     _emit_host_span,
     _mailbox_load_i32,
+    _mailbox_load_u64,
     _mailbox_store_i32,
+    _mailbox_store_u64,
     _read_control_copy_request,
     _region_vmm_granularity,
     _set_host_span_level_prefix,
@@ -271,7 +272,11 @@ from .task_interface import (
     MAILBOX_OFF_ERROR_MSG,
     MAILBOX_OFF_TEARDOWN_REPORT,
     MAILBOX_PREPARATION_DISPOSITION_VALUES,
-    MAILBOX_SIZE,
+    MAILBOX_REQUEST_FRAME_OFFSETS,
+    MAILBOX_REQUEST_FRAMES,
+    MAILBOX_RUN_ENTRY_OFFSETS,
+    MAILBOX_RUN_ENTRY_STRIDE,
+    MAILBOX_RUN_ENTRY_TABLE_OFFSET,
     MAILBOX_STATE_VALUES,
     MAILBOX_TASK_PROTOCOL_VERSION,
     PROV_NOT_LIVE,
@@ -298,6 +303,7 @@ from .task_interface import (
     _start_host_log_writer,
     _validate_host_control_access,
     _Worker,
+    mailbox_size,
 )
 from .teardown_report import (
     TeardownReport,
@@ -365,35 +371,50 @@ _OFF_TASK_ARGS_BLOB = _OFF_TASK_CALLABLE_HASH + CALLABLE_HASH_DIGEST_BYTES
 # MAILBOX_ARGS_CAPACITY mirrors the C++ constexpr in worker_manager.h so the
 # Python reader can bounds-check incoming args blobs. Source-of-truth for the
 # constants on the right is the nanobind binding (cannot drift).
-# Mirrors MAILBOX_OFF_ACCEPTED / MAILBOX_TASK_ACCEPTED: launch acceptance is a
-# sticky word rather than a MailboxState, because a state carrying it is lost
-# whenever the child reaches TASK_DONE between two parent polls. The parent
-# clears it when it publishes the next task frame.
-_OFF_ACCEPTED = MAILBOX_FRAME_SIZE - MAILBOX_ERROR_MSG_SIZE - 8
-_TASK_ACCEPTED = 1
-_OFF_PREPARATION_DISPOSITION = _OFF_ACCEPTED + 4
-# The parent resets the disposition word to NONE when it claims a frame, so a
-# child never publishes it: staging reports VALIDATED_ONLY or NATIVE_PREPARED
+# The parent resets the disposition word to NONE when it allocates an entry, so
+# a child never publishes it: staging reports VALIDATED_ONLY or NATIVE_PREPARED
 # and nothing else. Declared so the wire check below covers the whole enum.
 _DISPOSITION_NONE = 0
 _VALIDATED_ONLY = 1
 _NATIVE_PREPARED = 2
-_OFF_FRAME_PROTOCOL = _OFF_ACCEPTED - 40
-_OFF_FRAME_RUN_ID = _OFF_ACCEPTED - 32
-_OFF_FRAME_SLOT_ID = _OFF_ACCEPTED - 24
-_OFF_FRAME_GENERATION = _OFF_ACCEPTED - 16
-_OFF_FRAME_DISPATCH_ID = _OFF_ACCEPTED - 8
-_OFF_FRAME_TASK_SLOT = _OFF_ACCEPTED - 48
-_OFF_FRAME_GROUP_INDEX = _OFF_ACCEPTED - 56
-_OFF_FRAME_GROUP_SIZE = _OFF_ACCEPTED - 64
-_TASK_PROTOCOL_VERSION = 6
+_TASK_ACCEPTED = 1
+_TASK_PROTOCOL_VERSION = 7
+
+# A request frame's own header: which run-state entry this payload belongs to,
+# that entry's generation, and this frame's generation — which the child echoes
+# into the entry to say the blob is copied and the frame is the parent's again.
+_OFF_FRAME_ENTRY_INDEX = MAILBOX_FRAME_SIZE - MAILBOX_ERROR_MSG_SIZE - 32
+_OFF_FRAME_ENTRY_GENERATION = MAILBOX_FRAME_SIZE - MAILBOX_ERROR_MSG_SIZE - 24
+_OFF_FRAME_GENERATION = MAILBOX_FRAME_SIZE - MAILBOX_ERROR_MSG_SIZE - 16
+
+# Field offsets inside one MailboxRunEntry. A run's whole cross-process state
+# lives here, for its whole life: the 64 KiB request frame that delivered the
+# payload goes back as soon as the blob is copied out, which is why the
+# acceptance word the *device* writes cannot live there.
+_OFF_ENTRY_STATE = 0
+_OFF_ENTRY_ERROR = 4
+_OFF_ENTRY_ACCEPTED = 8
+_OFF_ENTRY_PREPARATION_DISPOSITION = 12
+_OFF_ENTRY_GENERATION = 16
+_OFF_ENTRY_FRAME_CONSUMED_GENERATION = 24
+_OFF_ENTRY_RUN_EPOCH = 32
+_OFF_ENTRY_PROTOCOL = 40
+_OFF_ENTRY_RUN_ID = 48
+_OFF_ENTRY_SLOT_ID = 56
+_OFF_ENTRY_LEASE_GENERATION = 64
+_OFF_ENTRY_DISPATCH_ID = 72
+_OFF_ENTRY_TASK_SLOT = 80
+_OFF_ENTRY_GROUP_INDEX = 88
+_OFF_ENTRY_GROUP_SIZE = 96
+_OFF_ENTRY_ERROR_TEXT = 104
+_ENTRY_BYTES = _OFF_ENTRY_ERROR_TEXT + MAILBOX_ERROR_MSG_SIZE
 # Mirrors MAILBOX_OFF_SHUTDOWN / MAILBOX_SHUTDOWN_REQUESTED: termination is a
 # sticky one-way word on the control frame, not a MailboxState. _OFF_STATE has
 # three writers (parent CONTROL_REQUEST, child CONTROL_DONE, C++
 # return-to-IDLE), any of which overwrites a _SHUTDOWN store; only a
 # terminating parent writes this word, 0 -> 1, and nothing clears it. The word
 # is reserved on every frame so a task-args blob can never reach it.
-_OFF_SHUTDOWN = _OFF_ACCEPTED - 72
+_OFF_SHUTDOWN = MAILBOX_FRAME_SIZE - MAILBOX_ERROR_MSG_SIZE - 80
 _SHUTDOWN_REQUESTED = 1
 # The chip child's teardown observation. Like the shutdown word it is reserved
 # on every frame so a task-args blob can never reach it, and it is a record
@@ -426,7 +447,6 @@ _TASK_LAUNCHED = 9
 _TASK_FAILED = 10
 _ACTIVATE = 11
 _PREPARE_READY = 12
-_TASK_FRAME_COUNT = PTO_PIPELINE_MAX_DEPTH
 
 
 def _assert_mailbox_wire_constants() -> None:
@@ -494,7 +514,45 @@ def _assert_mailbox_wire_constants() -> None:
         "MAILBOX_OFF_TEARDOWN_REPORT": (_OFF_TEARDOWN_REPORT, MAILBOX_OFF_TEARDOWN_REPORT),
         "MAILBOX_ARGS_CAPACITY": (_MAILBOX_ARGS_CAPACITY, MAILBOX_ARGS_CAPACITY),
         "MAILBOX_TASK_PROTOCOL_VERSION": (_TASK_PROTOCOL_VERSION, MAILBOX_TASK_PROTOCOL_VERSION),
+        # The run-state entry's fields, against `offsetof` on the C++ struct.
+        # These are the words this child writes into the parent's address
+        # space, so a field placed differently is a store landing on another
+        # field in a live process.
+        "entry.state": (_OFF_ENTRY_STATE, MAILBOX_RUN_ENTRY_OFFSETS["state"]),
+        "entry.error": (_OFF_ENTRY_ERROR, MAILBOX_RUN_ENTRY_OFFSETS["error"]),
+        "entry.accepted": (_OFF_ENTRY_ACCEPTED, MAILBOX_RUN_ENTRY_OFFSETS["accepted"]),
+        "entry.preparation_disposition": (
+            _OFF_ENTRY_PREPARATION_DISPOSITION,
+            MAILBOX_RUN_ENTRY_OFFSETS["preparation_disposition"],
+        ),
+        "entry.entry_generation": (_OFF_ENTRY_GENERATION, MAILBOX_RUN_ENTRY_OFFSETS["entry_generation"]),
+        "entry.frame_consumed_generation": (
+            _OFF_ENTRY_FRAME_CONSUMED_GENERATION,
+            MAILBOX_RUN_ENTRY_OFFSETS["frame_consumed_generation"],
+        ),
+        "entry.run_epoch": (_OFF_ENTRY_RUN_EPOCH, MAILBOX_RUN_ENTRY_OFFSETS["run_epoch"]),
+        "entry.protocol": (_OFF_ENTRY_PROTOCOL, MAILBOX_RUN_ENTRY_OFFSETS["protocol"]),
+        "entry.run_id": (_OFF_ENTRY_RUN_ID, MAILBOX_RUN_ENTRY_OFFSETS["run_id"]),
+        "entry.slot_id": (_OFF_ENTRY_SLOT_ID, MAILBOX_RUN_ENTRY_OFFSETS["slot_id"]),
+        "entry.generation": (_OFF_ENTRY_LEASE_GENERATION, MAILBOX_RUN_ENTRY_OFFSETS["generation"]),
+        "entry.dispatch_id": (_OFF_ENTRY_DISPATCH_ID, MAILBOX_RUN_ENTRY_OFFSETS["dispatch_id"]),
+        "entry.task_slot": (_OFF_ENTRY_TASK_SLOT, MAILBOX_RUN_ENTRY_OFFSETS["task_slot"]),
+        "entry.group_index": (_OFF_ENTRY_GROUP_INDEX, MAILBOX_RUN_ENTRY_OFFSETS["group_index"]),
+        "entry.group_size": (_OFF_ENTRY_GROUP_SIZE, MAILBOX_RUN_ENTRY_OFFSETS["group_size"]),
+        "entry.error_text": (_OFF_ENTRY_ERROR_TEXT, MAILBOX_RUN_ENTRY_OFFSETS["error_text"]),
+        # And the request frame's header, which binds a payload to its entry.
+        "frame.entry_index": (_OFF_FRAME_ENTRY_INDEX, MAILBOX_REQUEST_FRAME_OFFSETS["entry_index"]),
+        "frame.entry_generation": (
+            _OFF_FRAME_ENTRY_GENERATION,
+            MAILBOX_REQUEST_FRAME_OFFSETS["entry_generation"],
+        ),
+        "frame.frame_generation": (_OFF_FRAME_GENERATION, MAILBOX_REQUEST_FRAME_OFFSETS["frame_generation"]),
     }
+    if _ENTRY_BYTES > MAILBOX_RUN_ENTRY_STRIDE:
+        raise RuntimeError(
+            f"a run-state entry needs {_ENTRY_BYTES} bytes but the stride between them is "
+            f"{MAILBOX_RUN_ENTRY_STRIDE}; one entry's error text would overwrite the next entry's state"
+        )
     drifted = sorted(f"{key}: python={mine} c++={theirs}" for key, (mine, theirs) in layout.items() if mine != theirs)
     if drifted:
         raise RuntimeError(
@@ -505,41 +563,20 @@ def _assert_mailbox_wire_constants() -> None:
 _assert_mailbox_wire_constants()
 
 
-def _local_task_frame_count(platform: str, _runtime: str, pipeline_depth: int, joins_native_launches: bool) -> int:
-    """How many task frames this endpoint uses: one per run its child may hold.
-
-    Bounded by the frames the mailbox is laid out for, which is the same
-    compile-time ceiling the granted depth is clamped to.
-
-    A second frame is what a successor occupies while the run ahead of it is
-    still live, and the two routes that have one reach it differently. a2a3's
-    endpoint stages a successor behind an active run whatever the launch depth,
-    so its count follows the resource sets the child granted. Every other route
-    negotiates a second frame only where that child can actually order one
-    submission behind another: ``joins_native_launches`` is the child's own
-    resolved answer, its runtime's published capability met with the launch
-    depth requested and the sets granted, so a route that cannot join keeps the
-    single-frame path rather than staging a frame whose run could never launch.
-    """
-    if pipeline_depth >= 2 and (platform == "a2a3" or joins_native_launches):
-        return min(int(pipeline_depth), _TASK_FRAME_COUNT)
-    return 1
+def _local_run_resource_set_count(pipeline_depth: int) -> int:
+    """Return the resource-set grant resolved by the initialized child."""
+    if pipeline_depth < 1:
+        raise ValueError("a chip worker must grant at least one run-resource set")
+    return int(pipeline_depth)
 
 
 # `Orchestrator::configure_pipeline_depth` takes the budget as a uint32_t.
-_PENDING_RUN_DEPTH_MAX = 2**32 - 1
+_UINT32_MAX = 2**32 - 1
 
 # What a Worker requests when `pipeline_depth` is unset. Two is what every backend granted before
 # the key existed, so an unconfigured Worker keeps today's capacity and commits no third set —
 # raising a runtime's published maximum must not move this.
 _DEFAULT_PIPELINE_DEPTH_REQUEST = 2
-
-# Onboard platforms whose `host_build_graph` publishes a third run-resource set. A request above
-# the default is carried only to one of these; anywhere else the child is asked for the default.
-# Membership here decides what is *asked for*, never what is granted: the child answers with what
-# its module declared, and `_granted_chip_pipeline_depth` fails startup when an explicit request
-# got less than it asked for.
-_THREE_SET_PLATFORMS = frozenset({"a2a3", "a5"})
 
 
 def _validated_pending_run_depth(config: dict, level: int) -> int:
@@ -558,8 +595,8 @@ def _validated_pending_run_depth(config: dict, level: int) -> int:
         raise ValueError(f"Worker pending_run_depth must be an int, got {type(value).__name__}")
     if value < 0:
         raise ValueError(f"Worker pending_run_depth must be >= 0, got {value}")
-    if value > _PENDING_RUN_DEPTH_MAX:
-        raise ValueError(f"Worker pending_run_depth must be <= {_PENDING_RUN_DEPTH_MAX}, got {value}")
+    if value > _UINT32_MAX:
+        raise ValueError(f"Worker pending_run_depth must be <= {_UINT32_MAX}, got {value}")
     return value
 
 
@@ -572,10 +609,11 @@ def _validated_launch_depth(config: dict, level: int) -> int:
     predecessor is still executing; the device still runs one operator at a time, ordered by a
     queued wait for the predecessor's whole-operator completion boundary.
 
-    Bounded by ``PTO_PIPELINE_MAX_DEPTH`` rather than by an arbitrary number: a launched run holds
-    its pipeline slot for its whole lifetime, so the slot count is the real ceiling. Refused on a
-    level < 3 Worker for the same reason ``pending_run_depth`` is — the runs being ordered are the
-    chip child's, and a Worker below the admission FIFO owns neither.
+    Not bounded by any fixed number here: a launched run holds its run-resource set for its whole
+    lifetime, so what bounds it is the grant, and the grant is checked against the child's own
+    answer once that child publishes it. Refused on a level < 3 Worker for the same reason
+    ``pending_run_depth`` is — the runs being ordered are the chip child's, and a Worker below the
+    admission FIFO owns neither.
     """
     if "launch_depth" not in config:
         return 1
@@ -587,23 +625,19 @@ def _validated_launch_depth(config: dict, level: int) -> int:
         raise ValueError(f"Worker launch_depth must be an int, got {type(value).__name__}")
     if value < 1:
         raise ValueError(f"Worker launch_depth must be >= 1, got {value}")
-    if value > PTO_PIPELINE_MAX_DEPTH:
-        raise ValueError(f"Worker launch_depth must be <= {PTO_PIPELINE_MAX_DEPTH}, got {value}")
     return value
 
 
 def _validated_pipeline_depth(config: dict, level: int) -> int:
     """How many native run-resource sets this Worker requests, validated before any side effect.
 
-    One set holds everything a run owns while it is in flight — its parameters, arena bank, graph
-    definition, scheduler state, host staging, result region and completion events — so this is
-    what bounds how many runs may be prepared and accepted by the device at once. The default
-    request is two, which is what every backend granted before this key existed; a larger request
-    is honoured only where the child publishes support for it, and is refused rather than silently
+    This count bounds concurrent runs and is carried across the C++ uint32 ABI. It is not a byte
+    budget for the resources each set may allocate. The default remains two; a larger request is
+    honoured only where the child publishes support for it, and is refused rather than silently
     reduced.
 
-    It is a count, not a byte budget: a set commits its storage on the first run that holds it,
-    sized by that run's own layout.
+    Mailbox tables, runner tables and native run storage are sized to the grant during startup.
+    Device workspace bytes have a separate budget and allocation path.
     """
     if "pipeline_depth" not in config:
         return _DEFAULT_PIPELINE_DEPTH_REQUEST
@@ -615,8 +649,8 @@ def _validated_pipeline_depth(config: dict, level: int) -> int:
         raise ValueError(f"Worker pipeline_depth must be an int, got {type(value).__name__}")
     if value < 1:
         raise ValueError(f"Worker pipeline_depth must be >= 1, got {value}")
-    if value > PTO_PIPELINE_MAX_DEPTH:
-        raise ValueError(f"Worker pipeline_depth must be <= {PTO_PIPELINE_MAX_DEPTH}, got {value}")
+    if value > _UINT32_MAX:
+        raise ValueError(f"Worker pipeline_depth must be <= {_UINT32_MAX}, got {value}")
     return value
 
 
@@ -2183,39 +2217,118 @@ def _read_task_digest(buf) -> bytes:
     return bytes(buf[_OFF_TASK_CALLABLE_HASH : _OFF_TASK_CALLABLE_HASH + CALLABLE_HASH_DIGEST_BYTES])
 
 
-def _read_task_frame_identity(buf: memoryview) -> tuple[int, int, int, int, int, int, int, int]:
-    """Read the versioned parent-run identity from one task-frame trailer."""
+def _read_request_frame_header(buf: memoryview) -> tuple[int, int, int]:
+    """Read one request frame's header: ``(entry index, entry generation, frame generation)``.
+
+    This is what binds a payload to the run it belongs to. The child checks the entry generation
+    against the entry itself before acting on anything in the frame, so a frame left over from a
+    previous occupant of that entry is refused rather than executed under the new identity.
+    """
     return (
-        struct.unpack_from("=Q", buf, _OFF_FRAME_PROTOCOL)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_RUN_ID)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_SLOT_ID)[0],
+        struct.unpack_from("=Q", buf, _OFF_FRAME_ENTRY_INDEX)[0],
+        struct.unpack_from("=Q", buf, _OFF_FRAME_ENTRY_GENERATION)[0],
         struct.unpack_from("=Q", buf, _OFF_FRAME_GENERATION)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_DISPATCH_ID)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_TASK_SLOT)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_GROUP_INDEX)[0],
-        struct.unpack_from("=Q", buf, _OFF_FRAME_GROUP_SIZE)[0],
     )
 
 
-def _publish_native_promotion(frame_addr: int, frame_buf: memoryview, identity: tuple, disposition: int) -> bool:
+def _read_run_entry_identity(buf: memoryview) -> tuple[int, int, int, int, int, int, int, int]:
+    """Read the versioned parent-run identity from one run-state entry."""
+    return (
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_PROTOCOL)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_RUN_ID)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_SLOT_ID)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_LEASE_GENERATION)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_DISPATCH_ID)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_TASK_SLOT)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_GROUP_INDEX)[0],
+        struct.unpack_from("=Q", buf, _OFF_ENTRY_GROUP_SIZE)[0],
+    )
+
+
+def _write_error_fields(buf, code: int, msg: str, code_offset: int, message_offset: int) -> None:
+    """Write an error code and NUL-terminated, zero-padded UTF-8 message."""
+    struct.pack_into("i", buf, code_offset, code)
+    encoded = msg.encode("utf-8", "replace")
+    n = min(len(encoded), MAILBOX_ERROR_MSG_SIZE - 1)
+    buf[message_offset : message_offset + n] = encoded[:n]
+    buf[message_offset + n : message_offset + MAILBOX_ERROR_MSG_SIZE] = b"\x00" * (MAILBOX_ERROR_MSG_SIZE - n)
+
+
+def _write_entry_error(buf: memoryview, code: int, msg: str = "") -> None:
+    """Write an error pair into one run-state entry before its terminal state."""
+    _write_error_fields(buf, code, msg, _OFF_ENTRY_ERROR, _OFF_ENTRY_ERROR_TEXT)
+
+
+def _publish_native_promotion(entry_addr: int, entry_buf: memoryview, identity: tuple, disposition: int) -> bool:
     """Publish a staged run's promotion to native preparation, writing only the disposition word.
 
-    The state word is the parent's handoff: the parent takes a staged frame by compare-exchanging
+    The state word is the parent's handoff: the parent takes a staged run by compare-exchanging
     ``_FRAME_STAGED`` to ``_ACTIVATE``, and that command is lost if anyone else stores over it. So
     this writes the disposition alone — the endpoint reads it on every staged poll — and the only
     transition of the state word out of ``_FRAME_STAGED`` remains the parent's exchange. Reading
     the state word here and storing it back would not exclude that exchange; not writing it does.
 
     The disposition word has a single writer, this child, and its one reader takes it only while
-    the frame is staged under the identity it checks, so a write that lands after the parent's
+    the run is staged under the identity it checks, so a write that lands after the parent's
     exchange is never read. Returns whether the promotion was published.
     """
     if disposition != _NATIVE_PREPARED:
         return False
-    if _read_task_frame_identity(frame_buf) != identity:
+    if _read_run_entry_identity(entry_buf) != identity:
         return False
-    _mailbox_store_i32(frame_addr + _OFF_PREPARATION_DISPOSITION, disposition)
+    _mailbox_store_i32(entry_addr + _OFF_ENTRY_PREPARATION_DISPOSITION, disposition)
     return True
+
+
+class _RequestHeaderInvalid(Exception):
+    """A request frame header no publication into this endpoint could have written.
+
+    Distinct from a *stale* header, and the distinction decides who answers for it.
+
+    A stale header is a legal race: the parent released the entry and, in the same step, reclaimed
+    the frame from its own record, so the header still names a real entry at a generation that has
+    moved on. Nothing waits on it — the parent's reclamation is its own evidence — so the child
+    returns the frame and touches no entry.
+
+    An invalid header is one that could not have been published at all: an entry index outside this
+    endpoint's table, or an even generation, which publication never writes. The child therefore
+    cannot name the run the frame belongs to, which leaves it no entry it may publish into and no
+    successor it may charge; and the parent, holding a record that still looks live, has no
+    reclamation of its own to make. So neither side can resolve it locally, and the bounded outcome
+    is this endpoint's own stop: every run it still holds gets a terminal under one reason, and no
+    run of a different identity is written to at all.
+    """
+
+
+def _return_request_frame(frame_addr: int, entry_addr: int, frame_generation: int) -> None:
+    """Hand one request frame back to the parent, having copied its payload out.
+
+    The frame's own state word first and the consumption ACK last. The parent treats that ACK
+    alone as permission to refill the frame, so every store this side makes must precede it: an
+    ``_IDLE`` landing after the parent has published the next payload erases a ``_TASK_READY``,
+    and the task it carried is then never served and its run never terminates. Both stores are
+    release stores, so whoever observes the ACK observes the ``_IDLE`` before it.
+
+    A level, not a pulse: the parent compares this value with the generation of the frame it
+    published, so an echo it does not see on one poll it sees on the next.
+    """
+    _mailbox_store_i32(frame_addr + _OFF_STATE, _IDLE)
+    _mailbox_store_u64(entry_addr + _OFF_ENTRY_FRAME_CONSUMED_GENERATION, frame_generation)
+
+
+def _abandon_request_frame(frame_addr: int) -> None:
+    """Stop re-reading a frame this side may not acknowledge, claiming no entry at all.
+
+    The header is the only thing identifying the frame's owner, so when it does not name a live
+    occupant this side has nothing it may publish: the ACK would be a store into whichever run
+    holds that entry now, and an error report would be charged to it. Resetting the frame's own
+    state word is this side's whole obligation.
+
+    Whether anybody is still waiting afterwards is not this function's claim — it depends on which
+    of the two cases :class:`_RequestHeaderInvalid` describes the caller is in, and the caller
+    decides that before calling.
+    """
+    _mailbox_store_i32(frame_addr + _OFF_STATE, _IDLE)
 
 
 def _config_diagnostics_any(cfg: CallConfig) -> bool:
@@ -2362,6 +2475,20 @@ def _mailbox_addr(shm: SharedMemory) -> int:
     return ctypes.addressof(ctypes.c_char.from_buffer(buf))
 
 
+def _mailbox_extent(shm: SharedMemory) -> int:
+    """Bytes reachable from ``_mailbox_addr(shm)``.
+
+    Read off the mapping rather than recomputed from the grant: the C++
+    registration checks the grant's entry table against this number, so a
+    size derived from the grant would make the check compare the claim with
+    itself. ``shm.buf`` is the mapping ``_mailbox_addr`` takes its address
+    from, so its length is the extent that address is good for.
+    """
+    buf = shm.buf
+    assert buf is not None
+    return buf.nbytes
+
+
 def _require_matching_pids(shms: list[SharedMemory], pids: list[int], kind: str) -> None:
     """Guard the shm/pid pairing the C++ liveness check depends on.
 
@@ -2403,14 +2530,7 @@ def _write_error(buf, code: int, msg: str = "") -> None:
     NUL-terminated content. On success (code=0) callers may pass an empty
     message; the region is zero-padded.
     """
-    struct.pack_into("i", buf, _OFF_ERROR, code)
-    encoded = msg.encode("utf-8", "replace")
-    n = min(len(encoded), MAILBOX_ERROR_MSG_SIZE - 1)
-    start = MAILBOX_OFF_ERROR_MSG
-    buf[start : start + n] = encoded[:n]
-    # Zero-pad the remaining bytes so stale content from a previous dispatch
-    # never leaks into the current error report.
-    buf[start + n : start + MAILBOX_ERROR_MSG_SIZE] = b"\x00" * (MAILBOX_ERROR_MSG_SIZE - n)
+    _write_error_fields(buf, code, msg, _OFF_ERROR, MAILBOX_OFF_ERROR_MSG)
 
 
 def _read_error_msg(buf) -> str:
@@ -2479,12 +2599,18 @@ def _run_mailbox_loop(
     chip processes all reach the parent through this one loop, differing only
     in what they do with a task and which control sub-commands they accept.
 
-    `handle_task(task_buf)` and `handle_control(sub_cmd)` each return an
-    ``(error_code, message)`` pair and are responsible for catching their own
+    `handle_task(frame_buf, entry_buf)` and `handle_control(sub_cmd)` each return
+    an ``(error_code, message)`` pair and are responsible for catching their own
     exceptions, because the message wording is what the parent re-raises and
-    only the caller knows its own context. The pair is published to the
-    mailbox error region *before* the DONE state, so the parent never observes
-    completion without the matching error report.
+    only the caller knows its own context. The pair is published to the run's
+    own entry *before* its DONE state, so the parent never observes completion
+    without the matching error report.
+
+    One outstanding run at a time — that is this loop's contract, and it is why a
+    child that may hold several uses the staged loop instead. The transport is
+    still the split one: a submission arrives on a request frame, the payload is
+    read out of it, and everything about the run is published into the run-state
+    entry that frame's header names.
 
     `on_shutdown()` runs on SHUTDOWN before the loop exits, for children that
     own a nested Worker; per-child resource teardown that must survive an
@@ -2503,10 +2629,58 @@ def _run_mailbox_loop(
     parent_pid = os.getppid()
     liveness_countdown = _PARENT_LIVENESS_POLL_INTERVAL
     shutdown_addr = _buffer_field_addr(buf, _OFF_SHUTDOWN)
-    # `buf` is a whole mailbox: a base frame followed by the task frames, so
-    # frame 1 always exists.
-    task_buf = buf[MAILBOX_FRAME_SIZE : 2 * MAILBOX_FRAME_SIZE]
-    task_state_addr = _buffer_field_addr(task_buf, _OFF_STATE)
+    mailbox_addr = _buffer_field_addr(buf, 0)
+    # Both pools. A request frame carries one submission's bytes; the run-state
+    # entry its header names carries the run.
+    frame_bufs = [
+        buf[(1 + index) * MAILBOX_FRAME_SIZE : (2 + index) * MAILBOX_FRAME_SIZE]
+        for index in range(MAILBOX_REQUEST_FRAMES)
+    ]
+    frame_addrs = [mailbox_addr + (1 + index) * MAILBOX_FRAME_SIZE for index in range(MAILBOX_REQUEST_FRAMES)]
+    # What this mapping can address, which is this loop's whole interest in the count: it holds one
+    # run, so the grant does not bound it, but an index past the table is a store past the end of
+    # the shared region.
+    live_entry_count = (len(buf) - MAILBOX_RUN_ENTRY_TABLE_OFFSET) // MAILBOX_RUN_ENTRY_STRIDE
+
+    def serve_one_request(frame_index: int) -> None:
+        """Run the submission on `frame_index` and publish it into its own entry."""
+        frame_buf = frame_bufs[frame_index]
+        frame_addr = frame_addrs[frame_index]
+        entry_index, entry_generation, frame_generation = _read_request_frame_header(frame_buf)
+        if entry_index >= live_entry_count or entry_generation % 2 == 0:
+            # Checked before the index is used to compute an address: an out-of-range header would
+            # otherwise store into whatever follows the entry table in this mapping, and an even
+            # generation names no publication at all.
+            _abandon_request_frame(frame_addr)
+            raise _RequestHeaderInvalid(
+                f"request frame {frame_index} names entry {entry_index} at generation "
+                f"{entry_generation}, which no publication into this endpoint's {live_entry_count} "
+                f"entries could have written"
+            )
+        entry_addr = mailbox_addr + MAILBOX_RUN_ENTRY_TABLE_OFFSET + entry_index * MAILBOX_RUN_ENTRY_STRIDE
+        live_generation = _mailbox_load_u64(entry_addr + _OFF_ENTRY_GENERATION)
+        if live_generation != entry_generation:
+            # A frame left over from a previous occupant of that entry. The entry now belongs to
+            # another run, so nothing in it is read, written or acknowledged.
+            _abandon_request_frame(frame_addr)
+            return
+        entry_buf = buf[
+            MAILBOX_RUN_ENTRY_TABLE_OFFSET + entry_index * MAILBOX_RUN_ENTRY_STRIDE : MAILBOX_RUN_ENTRY_TABLE_OFFSET
+            + (entry_index + 1) * MAILBOX_RUN_ENTRY_STRIDE
+        ]
+        try:
+            code, msg = handle_task(frame_buf, entry_buf)
+            # The payload is consumed, so the frame is the parent's again — before this run's own
+            # result is published, because the two are independent and because the terminal state
+            # is this side's last access to the entry the ACK is written through.
+            _return_request_frame(frame_addr, entry_addr, frame_generation)
+            # rc and text first, the terminal state last: the parent is the
+            # entry's sole accessor from the instant it observes that state.
+            _write_entry_error(entry_buf, code, msg)
+            _mailbox_store_i32(entry_addr + _OFF_ENTRY_STATE, _TASK_DONE if code == 0 else _TASK_FAILED)
+        finally:
+            entry_buf.release()
+
     try:
         while True:
             state = _mailbox_load_i32(state_addr)
@@ -2514,10 +2688,24 @@ def _run_mailbox_loop(
                 if on_shutdown is not None:
                     on_shutdown()
                 break
-            if _mailbox_load_i32(task_state_addr) == _TASK_READY:
-                code, msg = handle_task(task_buf)
-                _write_error(task_buf, code, msg)
-                _mailbox_store_i32(task_state_addr, _TASK_DONE)
+            served = False
+            for frame_index in range(MAILBOX_REQUEST_FRAMES):
+                if _mailbox_load_i32(frame_addrs[frame_index] + _OFF_STATE) in (_TASK_READY, _PREPARE_READY):
+                    try:
+                        serve_one_request(frame_index)
+                    except _RequestHeaderInvalid as header_error:
+                        # Bounded and endpoint-wide: this loop cannot attribute the header to a run
+                        # and will not charge it to one. Stopping is what gives the parent a
+                        # terminal for everything it still holds. See _RequestHeaderInvalid.
+                        _write_error(buf, 1, f"{str(header_error)}")
+                        _mailbox_store_i32(_buffer_field_addr(buf, _OFF_SHUTDOWN), _SHUTDOWN_REQUESTED)
+                        if on_shutdown is not None:
+                            on_shutdown()
+                        return
+                    served = True
+                    break
+            if served:
+                pass
             elif state == _CONTROL_REQUEST:
                 sub_cmd = struct.unpack_from("Q", buf, _OFF_CALLABLE)[0]
                 code, msg = handle_control(int(sub_cmd))
@@ -2537,8 +2725,8 @@ def _run_mailbox_loop(
                             on_shutdown()
                         break
     finally:
-        if task_buf is not None:
-            task_buf.release()
+        for frame_buf in frame_bufs:
+            frame_buf.release()
 
 
 def _sub_worker_loop(
@@ -2558,7 +2746,7 @@ def _sub_worker_loop(
     # SUB is a Python host process: no device VA is ever valid here.
     import_registry = ImportRegistry(ImportContext(deployment=HOST_CPU))
 
-    def handle_task(task_buf) -> tuple[int, str]:
+    def handle_task(task_buf, _entry_buf) -> tuple[int, str]:
         digest = _read_task_digest(task_buf)
         cid = identity_table.get(digest)
         fn = registry.get(int(cid)) if cid is not None else None
@@ -3194,7 +3382,7 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
     chip_runtime: str = "",
     on_task_done_success=None,
     prepared: set[int] | None = None,
-    task_frame_count: int = 1,
+    granted_sets: int = 1,
     chip_rank: int | None = None,
     provider_region_store: ProviderRegionStore,
 ) -> None:
@@ -3278,10 +3466,13 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                 return 1, msg or f"chip_process dev={device_id}: diagnostic Host log flush failed"
         return code, msg
 
-    def handle_task(task_buf) -> tuple[int, str]:
+    def handle_task(task_buf, entry_buf) -> tuple[int, str]:
         task_addr = ctypes.addressof(ctypes.c_char.from_buffer(task_buf))
+        entry_addr = ctypes.addressof(ctypes.c_char.from_buffer(entry_buf))
         digest = _read_task_digest(task_buf)
-        frame_identity = _read_task_frame_identity(task_buf)
+        # The run's identity is the entry's, not the frame's: the frame carries
+        # only the payload and the header that binds it to this entry.
+        frame_identity = _read_run_entry_identity(entry_buf)
         cid = identity_table.get(digest)
 
         code = 0
@@ -3326,7 +3517,7 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                 cid,
                 chip_args,
                 cfg,
-                task_addr + _OFF_ACCEPTED,
+                entry_addr + _OFF_ENTRY_ACCEPTED,
                 _TASK_ACCEPTED,
                 pipeline_slot,
                 pipeline_generation,
@@ -3553,67 +3744,113 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                     _mailbox_store_i32(_buffer_field_addr(buf, _OFF_SHUTDOWN), _SHUTDOWN_REQUESTED)
         return code, msg
 
-    # The frames this endpoint actually negotiated, never the mailbox's compile-time width: a
-    # child granted fewer sets than the layout allows must not poll — or answer on — a frame its
-    # parent will never publish to.
-    live_frame_count = max(1, min(int(task_frame_count), _TASK_FRAME_COUNT))
+    # One run-state entry per run this endpoint may hold, plus the hand-offs in
+    # flight: `M = granted + K`. Never the mailbox's compile-time width — a child
+    # granted fewer sets than some other endpoint must not poll, or answer on, an
+    # entry its parent will never publish to.
+    live_entry_count = max(1, int(granted_sets)) + MAILBOX_REQUEST_FRAMES
 
-    def run_staged_frame_loop() -> None:  # noqa: PLR0912, PLR0915 -- one progress owner drives control and every task frame
+    def run_staged_frame_loop() -> None:  # noqa: PLR0912, PLR0915 -- one progress owner drives control and every run
+        # Two pools, with different lifetimes. A request frame carries one
+        # submission's bytes and goes back as soon as they are copied out; a
+        # run-state entry carries the run itself, for as long as it lives.
         frame_bufs = [
             buf[(1 + index) * MAILBOX_FRAME_SIZE : (2 + index) * MAILBOX_FRAME_SIZE]
-            for index in range(live_frame_count)
+            for index in range(MAILBOX_REQUEST_FRAMES)
         ]
-        frame_addrs = [mailbox_addr + (1 + index) * MAILBOX_FRAME_SIZE for index in range(live_frame_count)]
+        frame_addrs = [mailbox_addr + (1 + index) * MAILBOX_FRAME_SIZE for index in range(MAILBOX_REQUEST_FRAMES)]
+        entry_bufs = [
+            buf[
+                MAILBOX_RUN_ENTRY_TABLE_OFFSET + index * MAILBOX_RUN_ENTRY_STRIDE : MAILBOX_RUN_ENTRY_TABLE_OFFSET
+                + (index + 1) * MAILBOX_RUN_ENTRY_STRIDE
+            ]
+            for index in range(live_entry_count)
+        ]
+        entry_addrs = [
+            mailbox_addr + MAILBOX_RUN_ENTRY_TABLE_OFFSET + index * MAILBOX_RUN_ENTRY_STRIDE
+            for index in range(live_entry_count)
+        ]
 
         @dataclass
-        class _StagedFrame:
+        class _StagedRun:
             index: int
-            frame_buf: memoryview
-            frame_addr: int
+            entry_buf: memoryview
+            entry_addr: int
+            entry_generation: int
             identity: tuple[int, int, int, int, int, int, int, int]
             cid: int
             config: CallConfig
             provenance: _DispatchProvenance
             activated: bool
+            digest: bytes
             chip_run: Any = None
             launched_published: bool = False
             published_disposition: int = _DISPOSITION_NONE
 
-        staged_frames: dict[int, _StagedFrame] = {}
+        staged_runs: dict[int, _StagedRun] = {}
 
         def task_frame_references_digest(digest: bytes) -> bool:
-            live_states = (_TASK_READY, _PREPARE_READY, _ACTIVATE, _FRAME_STAGED, _TASK_LAUNCHED)
-            for index, frame_buf in enumerate(frame_bufs):
-                if _mailbox_load_i32(frame_addrs[index] + _OFF_STATE) not in live_states:
-                    continue
-                if _read_task_digest(frame_buf) == digest:
-                    return True
-            return False
+            # A live run's digest, from this side's own record of it: the frame
+            # that carried the bytes may already be back with the parent, so the
+            # payload is no longer where it could be re-read.
+            return any(staged.digest == digest for staged in staged_runs.values())
 
-        def fail_frame(frame: _StagedFrame, message: str) -> None:
-            _write_error(frame.frame_buf, 1, message)
-            _mailbox_store_i32(frame.frame_addr + _OFF_STATE, _TASK_FAILED)
+        def fail_run(staged: _StagedRun, message: str) -> None:
+            _write_entry_error(staged.entry_buf, 1, message)
+            _mailbox_store_i32(staged.entry_addr + _OFF_ENTRY_STATE, _TASK_FAILED)
 
-        def stage_frame(index: int, initial_state: int) -> _StagedFrame | None:
-            frame_buf = frame_bufs[index]
-            frame_addr = frame_addrs[index]
+        def release_request_frame(frame_index: int, entry_addr: int, frame_generation: int) -> None:
+            """Say the payload is copied, which hands this frame back to the parent.
+
+            Published before anything slow — the preparation below can take as long as it likes
+            without holding 64 KiB of transport that nothing needs any more. See
+            :func:`_return_request_frame` for the store order this depends on.
+            """
+            _return_request_frame(frame_addrs[frame_index], entry_addr, frame_generation)
+
+        def stage_request(frame_index: int, frame_state: int) -> _StagedRun | None:
+            """Take one hand-off: verify it, copy the payload out, and give the frame back."""
+            frame_buf = frame_bufs[frame_index]
+            frame_addr = frame_addrs[frame_index]
+            # Bounds and identity decide whether this side may publish into that entry at all, so
+            # both are settled before it claims any right to, and outside the handler below: a
+            # header it cannot attribute is not a failure it may report against a run.
+            entry_index, entry_generation, frame_generation = _read_request_frame_header(frame_buf)
+            if entry_index >= live_entry_count or entry_generation % 2 == 0:
+                _abandon_request_frame(frame_addr)
+                raise _RequestHeaderInvalid(
+                    f"request frame {frame_index} names entry {entry_index} at generation "
+                    f"{entry_generation}, which no publication into this endpoint's {live_entry_count} "
+                    f"entries could have written"
+                )
+            # The entry's generation. It is what distinguishes this run from any later occupant of
+            # the same entry, so a frame left over from a previous one is refused rather than acted
+            # on under the new identity — and refused silently, because the parent reclaimed that
+            # frame from its own record when it released the entry.
+            live_generation = _mailbox_load_u64(entry_addrs[entry_index] + _OFF_ENTRY_GENERATION)
+            if live_generation != entry_generation:
+                _abandon_request_frame(frame_addr)
+                return None
+            entry_buf = entry_bufs[entry_index]
+            entry_addr = entry_addrs[entry_index]
             try:
-                identity = _read_task_frame_identity(frame_buf)
+                identity = _read_run_entry_identity(entry_buf)
                 protocol, run_id, slot_id, generation, dispatch_id, _task_slot, _group_index, _group_size = identity
                 pipeline_slot, pipeline_reserved, pipeline_generation = _PIPELINE_LEASE_FMT.unpack_from(
                     frame_buf, _OFF_PIPELINE_LEASE
                 )
                 if protocol != _TASK_PROTOCOL_VERSION:
-                    raise RuntimeError(f"unsupported task frame protocol {protocol}")
+                    raise RuntimeError(f"unsupported task protocol {protocol}")
                 if run_id == 0 or generation == 0 or dispatch_id == 0:
-                    raise RuntimeError(f"invalid task frame identity {identity}")
-                if slot_id != index or pipeline_slot != index:
+                    raise RuntimeError(f"invalid run identity {identity}")
+                if slot_id != pipeline_slot:
                     raise RuntimeError(
-                        f"task frame {index} does not own pipeline slot (identity={slot_id}, lease={pipeline_slot})"
+                        f"run-state entry {entry_index} and its payload disagree about the resource set "
+                        f"(identity={slot_id}, lease={pipeline_slot})"
                     )
                 if pipeline_reserved != 0 or pipeline_generation != generation:
                     raise RuntimeError(
-                        "task frame pipeline lease does not match its identity "
+                        "payload pipeline lease does not match its run identity "
                         f"(reserved={pipeline_reserved}, lease_generation={pipeline_generation}, "
                         f"identity_generation={generation})"
                     )
@@ -3624,63 +3861,77 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                     raise RuntimeError(f"callable hash {_format_digest(digest)} not registered")
                 if cid not in prepared:
                     raise RuntimeError(
-                        f"cid {cid} not prepared before task frame publication (register via _CTRL_PREPARE first)"
+                        f"cid {cid} not prepared before task publication (register via _CTRL_PREPARE first)"
                     )
                 staged_config, staged_provenance = read_task_config(frame_buf, identity, digest)
-                return _StagedFrame(
-                    index=index,
-                    frame_buf=frame_buf,
-                    frame_addr=frame_addr,
+                # The args blob is the last thing read out of the frame, and the
+                # only thing that still needs it.
+                args = read_args_from_blob(frame_addrs[frame_index] + _OFF_TASK_ARGS_BLOB, _MAILBOX_ARGS_CAPACITY)
+                staged = _StagedRun(
+                    index=entry_index,
+                    entry_buf=entry_buf,
+                    entry_addr=entry_addr,
+                    entry_generation=entry_generation,
                     identity=identity,
                     cid=int(cid),
                     config=staged_config,
                     provenance=staged_provenance,
-                    activated=initial_state in (_TASK_READY, _ACTIVATE),
+                    activated=frame_state in (_TASK_READY, _ACTIVATE),
+                    digest=digest,
                 )
+                staged.pending_args = args  # type: ignore[attr-defined]
             except Exception as e:  # noqa: BLE001
-                _write_error(frame_buf, 1, _format_exc(f"chip_process dev={device_id} frame={index}", e))
-                _mailbox_store_i32(frame_addr + _OFF_STATE, _TASK_FAILED)
+                message = _format_exc(f"chip_process dev={device_id} frame={frame_index}", e)
+                # Reached only with the entry's identity already established, so this run is this
+                # side's to report. Every access to the frame completes before the terminal state,
+                # and the ACK is the last of them: the parent may free and refill both the frame
+                # and the entry the instant it observes that state, so a store made afterwards
+                # lands in a live successor's payload or identity.
+                release_request_frame(frame_index, entry_addr, frame_generation)
+                _write_entry_error(entry_buf, 1, message)
+                _mailbox_store_i32(entry_addr + _OFF_ENTRY_STATE, _TASK_FAILED)
                 return None
+            release_request_frame(frame_index, entry_addr, frame_generation)
+            return staged
 
-        def submit_frame(frame: _StagedFrame) -> None:
-            _protocol, run_id, slot_id, generation, dispatch_id, _task_slot, _group_index, _group_size = frame.identity
-            # The frame carries the wire blob; the runtime reads the chip POD. The bytes decode
-            # once into the wire TaskArgs, whose tensors resolve to local bases (map-once, cached
-            # by canonical identity) and rebuild at those bases, as the non-pipelined task path
-            # does. The lane copies the args into its own storage, so this POD need not outlive
-            # the call.
-            args_ptr = frame.frame_addr + _OFF_TASK_ARGS_BLOB
-            args = read_args_from_blob(args_ptr, _MAILBOX_ARGS_CAPACITY)
-            _validate_host_control_access(registry.get(frame.cid), args)
+        def submit_run(staged: _StagedRun) -> None:
+            _protocol, run_id, slot_id, generation, dispatch_id, _task_slot, _group_index, _group_size = staged.identity
+            # The bytes were decoded into the wire TaskArgs while the frame was still held; those
+            # tensors resolve to local bases (map-once, cached by canonical identity) and rebuild
+            # at those bases, as the non-pipelined task path does. The lane copies the args into
+            # its own storage, so this POD need not outlive the call.
+            args = staged.pending_args  # type: ignore[attr-defined]
+            _validate_host_control_access(registry.get(staged.cid), args)
             resolved = import_registry.materialize_args(args)
             chip_args = materialize_task_args(args, resolved)
-            if frame.config.output_prefix:
+            if staged.config.output_prefix:
                 _bind_host_log_session_directory()
-            frame.chip_run = cw._impl._submit_chip_run_materialized(
-                frame.cid,
+            staged.chip_run = cw._impl._submit_chip_run_materialized(
+                staged.cid,
                 chip_args,
-                frame.config,
+                staged.config,
                 slot_id,
                 generation,
                 run_id,
                 dispatch_id,
-                frame.frame_addr + _OFF_ACCEPTED,
+                staged.entry_addr + _OFF_ENTRY_ACCEPTED,
                 _TASK_ACCEPTED,
                 False,
-                **frame.provenance._asdict(),
+                **staged.provenance._asdict(),
             )
-            raw_disposition = frame.chip_run.preparation_disposition
+            staged.pending_args = None  # type: ignore[attr-defined]
+            raw_disposition = staged.chip_run.preparation_disposition
             disposition = int(getattr(raw_disposition, "value", raw_disposition))
             if disposition not in (_VALIDATED_ONLY, _NATIVE_PREPARED):
                 raise RuntimeError(f"chip run lane returned invalid preparation disposition {disposition}")
-            _mailbox_store_i32(frame.frame_addr + _OFF_PREPARATION_DISPOSITION, disposition)
-            _write_error(frame.frame_buf, 0, "")
-            _mailbox_store_i32(frame.frame_addr + _OFF_STATE, _FRAME_STAGED)
-            frame.published_disposition = disposition
-            if frame.activated:
-                frame.chip_run.activate()
+            _mailbox_store_i32(staged.entry_addr + _OFF_ENTRY_PREPARATION_DISPOSITION, disposition)
+            _write_entry_error(staged.entry_buf, 0, "")
+            _mailbox_store_i32(staged.entry_addr + _OFF_ENTRY_STATE, _FRAME_STAGED)
+            staged.published_disposition = disposition
+            if staged.activated:
+                staged.chip_run.activate()
 
-        def republish_native_preparation(frame: _StagedFrame) -> None:
+        def republish_native_preparation(staged: _StagedRun) -> None:
             """Publish a staged run's preparation once it becomes native, not only when it staged.
 
             A run staged behind a predecessor that has not launched yet cannot be prepared beside
@@ -3691,14 +3942,14 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
             Only the disposition word is written; the state word belongs to the parent's exchange.
             See :func:`_publish_native_promotion`.
             """
-            if frame.published_disposition != _VALIDATED_ONLY:
+            if staged.published_disposition != _VALIDATED_ONLY:
                 return
-            raw = frame.chip_run.preparation_disposition
+            raw = staged.chip_run.preparation_disposition
             disposition = int(getattr(raw, "value", raw))
-            if _publish_native_promotion(frame.frame_addr, frame.frame_buf, frame.identity, disposition):
-                frame.published_disposition = disposition
+            if _publish_native_promotion(staged.entry_addr, staged.entry_buf, staged.identity, disposition):
+                staged.published_disposition = disposition
 
-        def publish_completed_frame(staged: _StagedFrame) -> tuple[int, str]:
+        def publish_completed_run(staged: _StagedRun) -> tuple[int, str]:
             code = 0
             msg = ""
             try:
@@ -3713,12 +3964,15 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                     code = 1
                     msg = _format_exc(f"chip_process dev={device_id}: task completion hook", e)
             code, msg = finish_task_logging(staged.config, code, msg)
-            _write_error(staged.frame_buf, code, msg)
+            # rc and text first, the terminal state last: from the instant the parent observes
+            # that state it is the entry's sole accessor, so everything it will read has to be
+            # in place before the store that hands it over. This is the child's final access.
+            _write_entry_error(staged.entry_buf, code, msg)
             _mailbox_store_i32(
-                staged.frame_addr + _OFF_STATE,
+                staged.entry_addr + _OFF_ENTRY_STATE,
                 _TASK_DONE if code == 0 else _TASK_FAILED,
             )
-            staged_frames.pop(staged.index, None)
+            staged_runs.pop(staged.index, None)
             return code, msg
 
         parent_pid = os.getppid()
@@ -3733,7 +3987,7 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                 if control_state == _CONTROL_REQUEST:
                     sub_cmd = struct.unpack_from("Q", buf, _OFF_CALLABLE)[0]
                     registry_control = sub_cmd in (_CTRL_PREPARE, _CTRL_REGISTER, _CTRL_UNREGISTER)
-                    defer_control = registry_control and bool(staged_frames)
+                    defer_control = registry_control and bool(staged_runs)
                     if sub_cmd == _CTRL_UNREGISTER:
                         defer_control = defer_control or task_frame_references_digest(_read_control_digest(buf))
                     if not defer_control:
@@ -3755,109 +4009,127 @@ def _run_chip_main_loop(  # noqa: PLR0913, PLR0915 -- fork-child entry: every de
                             )
                             break
 
-                new_frames: list[_StagedFrame] = []
-                for index in range(live_frame_count):
-                    frame_state = _mailbox_load_i32(frame_addrs[index] + _OFF_STATE)
-                    staged = staged_frames.get(index)
-                    if staged is None:
-                        if frame_state in (_TASK_READY, _PREPARE_READY, _ACTIVATE):
-                            staged = stage_frame(index, frame_state)
-                            if staged is not None:
-                                new_frames.append(staged)
-                        continue
-                    if frame_state == _ACTIVATE and not staged.activated:
-                        if _read_task_frame_identity(staged.frame_buf) != staged.identity:
-                            stale_message = f"chip_process dev={device_id}: stale activation identity"
-                            try:
-                                staged.chip_run.abandon()
-                            except Exception as e:  # noqa: BLE001
-                                stale_message += "; " + _format_exc("chip run abandonment", e)
-                                shutdown_message = stale_message
-                                break
-                            fail_frame(staged, stale_message)
-                            staged_frames.pop(index, None)
-                            continue
+                new_runs: list[_StagedRun] = []
+                invalid_header: str | None = None
+                for frame_index in range(MAILBOX_REQUEST_FRAMES):
+                    frame_state = _mailbox_load_i32(frame_addrs[frame_index] + _OFF_STATE)
+                    if frame_state in (_TASK_READY, _PREPARE_READY, _ACTIVATE):
                         try:
-                            staged.chip_run.activate()
-                            staged.activated = True
-                        except Exception as e:  # noqa: BLE001
-                            shutdown_message = _format_exc(f"chip_process dev={device_id}: native activation", e)
+                            staged = stage_request(frame_index, frame_state)
+                        except _RequestHeaderInvalid as header_error:
+                            invalid_header = f"chip_process dev={device_id}: {header_error}"
                             break
-                else:
-                    for staged in sorted(new_frames, key=lambda frame: frame.identity[4]):
-                        try:
-                            submit_frame(staged)
-                        except Exception as e:  # noqa: BLE001
-                            fail_frame(staged, _format_exc(f"chip_process dev={device_id}: chip run submit", e))
-                        else:
-                            staged_frames[staged.index] = staged
+                        if staged is not None:
+                            new_runs.append(staged)
+                if invalid_header is not None:
+                    # Bounded and endpoint-wide: this side cannot attribute the header to a run and
+                    # will not charge it to one, so it stops and the close below gives every run it
+                    # still holds a terminal under this one reason. See _RequestHeaderInvalid.
+                    shutdown_message = invalid_header
+                    break
 
-                    stop_progress = False
-                    for staged in sorted(staged_frames.values(), key=lambda frame: frame.identity[4]):
+                broke_on_activation = False
+                for staged in list(staged_runs.values()):
+                    entry_state = _mailbox_load_i32(staged.entry_addr + _OFF_ENTRY_STATE)
+                    if entry_state != _ACTIVATE or staged.activated:
+                        continue
+                    if _read_run_entry_identity(staged.entry_buf) != staged.identity:
+                        stale_message = f"chip_process dev={device_id}: stale activation identity"
                         try:
-                            republish_native_preparation(staged)
-                            if staged.chip_run.launched and not staged.launched_published:
-                                _mailbox_store_i32(staged.frame_addr + _OFF_STATE, _TASK_LAUNCHED)
-                                staged.launched_published = True
-                                continue
-                            run_complete = bool(staged.chip_run.done())
-                            if not run_complete and staged.chip_run.launched and not staged.launched_published:
-                                _mailbox_store_i32(staged.frame_addr + _OFF_STATE, _TASK_LAUNCHED)
-                                staged.launched_published = True
-                            if not run_complete:
-                                continue
-
-                            code, msg = publish_completed_frame(staged)
-                            if code != 0 and staged.chip_run.lane_poisoned:
-                                shutdown_message = msg
-                                stop_progress = True
-                                break
+                            staged.chip_run.abandon()
                         except Exception as e:  # noqa: BLE001
-                            shutdown_message = _format_exc(f"chip_process dev={device_id}: chip run progress", e)
+                            stale_message += "; " + _format_exc("chip run abandonment", e)
+                            shutdown_message = stale_message
+                            broke_on_activation = True
+                            break
+                        fail_run(staged, stale_message)
+                        staged_runs.pop(staged.index, None)
+                        continue
+                    try:
+                        staged.chip_run.activate()
+                        staged.activated = True
+                    except Exception as e:  # noqa: BLE001
+                        shutdown_message = _format_exc(f"chip_process dev={device_id}: native activation", e)
+                        broke_on_activation = True
+                        break
+                if broke_on_activation:
+                    break
+
+                for staged in sorted(new_runs, key=lambda run: run.identity[4]):
+                    try:
+                        submit_run(staged)
+                    except Exception as e:  # noqa: BLE001
+                        fail_run(staged, _format_exc(f"chip_process dev={device_id}: chip run submit", e))
+                    else:
+                        staged_runs[staged.index] = staged
+
+                stop_progress = False
+                for staged in sorted(staged_runs.values(), key=lambda run: run.identity[4]):
+                    try:
+                        republish_native_preparation(staged)
+                        if staged.chip_run.launched and not staged.launched_published:
+                            _mailbox_store_i32(staged.entry_addr + _OFF_ENTRY_STATE, _TASK_LAUNCHED)
+                            staged.launched_published = True
+                            continue
+                        run_complete = bool(staged.chip_run.done())
+                        if not run_complete and staged.chip_run.launched and not staged.launched_published:
+                            _mailbox_store_i32(staged.entry_addr + _OFF_ENTRY_STATE, _TASK_LAUNCHED)
+                            staged.launched_published = True
+                        if not run_complete:
+                            continue
+
+                        code, msg = publish_completed_run(staged)
+                        if code != 0 and staged.chip_run.lane_poisoned:
+                            shutdown_message = msg
                             stop_progress = True
                             break
-                    if not stop_progress:
-                        liveness_countdown -= 1
-                        if liveness_countdown <= 0:
-                            liveness_countdown = _PARENT_LIVENESS_POLL_INTERVAL
-                            if os.getppid() != parent_pid:
-                                shutdown_message = f"chip_process dev={device_id}: parent exited"
-                                break
-                        continue
-                break
+                    except Exception as e:  # noqa: BLE001
+                        shutdown_message = _format_exc(f"chip_process dev={device_id}: chip run progress", e)
+                        stop_progress = True
+                        break
+                if stop_progress:
+                    break
+                liveness_countdown -= 1
+                if liveness_countdown <= 0:
+                    liveness_countdown = _PARENT_LIVENESS_POLL_INTERVAL
+                    if os.getppid() != parent_pid:
+                        shutdown_message = f"chip_process dev={device_id}: parent exited"
+                        break
         finally:
             try:
                 cw._impl._close_chip_run_lane()
             except Exception as e:  # noqa: BLE001
                 shutdown_message += "; " + _format_exc("chip run lane close", e)
-            for staged in list(staged_frames.values()):
-                # Progressing one run can retire another before its mailbox is visited.
+            for staged in list(staged_runs.values()):
+                # Progressing one run can retire another before its entry is visited.
                 # Launched runs retain their own outcome after the lane is drained;
                 # unlaunched runs may only have been abandoned by close.
                 try:
                     if staged.chip_run.launched and staged.chip_run.done():
-                        publish_completed_frame(staged)
+                        publish_completed_run(staged)
                         continue
                 except Exception as e:  # noqa: BLE001
-                    fail_frame(staged, _format_exc(f"chip_process dev={device_id}: chip run completion", e))
+                    fail_run(staged, _format_exc(f"chip_process dev={device_id}: chip run completion", e))
                     continue
-                fail_frame(staged, shutdown_message)
-            for index, frame_buf in enumerate(frame_bufs):
-                frame_state_addr = frame_addrs[index] + _OFF_STATE
-                if _mailbox_load_i32(frame_state_addr) in (
-                    _TASK_READY,
-                    _PREPARE_READY,
-                    _ACTIVATE,
-                    _FRAME_STAGED,
-                    _TASK_LAUNCHED,
-                ):
-                    _write_error(frame_buf, 1, shutdown_message)
-                    _mailbox_store_i32(frame_state_addr, _TASK_FAILED)
+                fail_run(staged, shutdown_message)
+            for index, entry_buf in enumerate(entry_bufs):
+                entry_state_addr = entry_addrs[index] + _OFF_ENTRY_STATE
+                # Occupancy is the generation's answer, not the state's: an entry the parent has
+                # published but this side has not staged yet still reads `_IDLE`, and sweeping by
+                # state alone would leave exactly those runs with no terminal and the parent
+                # waiting on them for ever. Odd means occupied.
+                if _mailbox_load_u64(entry_addrs[index] + _OFF_ENTRY_GENERATION) % 2 == 0:
+                    continue
+                if _mailbox_load_i32(entry_state_addr) not in (_TASK_DONE, _TASK_FAILED):
+                    _write_entry_error(entry_buf, 1, shutdown_message)
+                    _mailbox_store_i32(entry_state_addr, _TASK_FAILED)
+            for entry_buf in entry_bufs:
+                entry_buf.release()
             for frame_buf in frame_bufs:
                 frame_buf.release()
 
     try:
-        if task_frame_count >= 2:
+        if granted_sets >= 2:
             run_staged_frame_loop()
         else:
             _run_mailbox_loop(buf, state_addr, handle_task=handle_task, handle_control=handle_control)
@@ -3972,15 +4244,10 @@ def _chip_process_loop(  # noqa: PLR0913 -- fork-child entry: all context (bins,
     # per-rank host-side stream sync budget only covers actual op execution
     # rather than absorbing peer-rank init skew.
     #
-    # The frame count is decided here, by the side that knows: only an
-    # initialized ChipWorker can answer whether its runtime joins native
-    # launches, and the parent must publish to exactly the frames this loop
-    # polls. So both numbers cross as this child's own answer rather than being
-    # derived twice — see `_read_chip_startup_grants` for the word they cross in.
-    task_frame_count = _local_task_frame_count(
-        platform, runtime, int(cw.pipeline_depth), bool(cw.supports_joined_native_launch)
-    )
-    _PIPELINE_LEASE_FMT.pack_into(buf, _OFF_PIPELINE_LEASE, int(cw.pipeline_depth), task_frame_count, 0)
+    # The child publishes the resolved runtime depth and the grant that sizes
+    # its run-state entries. Request frames have a fixed, independent count.
+    granted_sets = _local_run_resource_set_count(int(cw.pipeline_depth))
+    _PIPELINE_LEASE_FMT.pack_into(buf, _OFF_PIPELINE_LEASE, int(cw.pipeline_depth), granted_sets, 0)
     _mailbox_store_i32(state_addr, _INIT_READY)
     sys.stderr.write(f"[chip_process pid={os.getpid()} dev={device_id}] ready\n")
     sys.stderr.flush()
@@ -3999,7 +4266,7 @@ def _chip_process_loop(  # noqa: PLR0913 -- fork-child entry: all context (bins,
             chip_platform=platform,
             chip_runtime=runtime,
             prepared=prepared,
-            task_frame_count=task_frame_count,
+            granted_sets=granted_sets,
             chip_rank=chip_rank,
             provider_region_store=provider_region_store,
         )
@@ -4171,7 +4438,7 @@ def _child_worker_loop(
     state_addr = _buffer_field_addr(buf, _OFF_STATE)
     global_comm_inits: dict[str, GlobalCommInitCommand] = {}
 
-    def handle_task(task_buf) -> tuple[int, str]:
+    def handle_task(task_buf, _entry_buf) -> tuple[int, str]:
         digest = _read_task_digest(task_buf)
         cid = identity_table.get(digest)
         orch_fn = registry.get(int(cid)) if cid is not None else None
@@ -5288,6 +5555,13 @@ class Worker:
             config, int(level)
         )
         self._pipeline_depth_requested_explicitly = "pipeline_depth" in config
+        # The grant every mailbox this Worker creates is sized for. A region holds
+        # one control frame, a fixed pool of request frames, and one run-state
+        # entry per run a child could be asked to hold plus the hand-offs in
+        # flight. Sized from the request because the grant is a child's answer
+        # and never exceeds it, so a region sized here always reaches whatever
+        # that child then publishes.
+        self._mailbox_granted_sets = int(self._pipeline_depth_request)
         # Per-startup bookkeeping consumed by the rollback path: PIDs the barrier
         # already reaped (must not be re-SIGKILLed — the PID may be reused) and
         # PIDs that reached their serve loop (READY → asked to close gracefully
@@ -5378,7 +5652,7 @@ class Worker:
         # until that child publishes what it granted, because only an
         # initialized ChipWorker knows whether its runtime joins native
         # launches; this side publishes to exactly these frames.
-        self._chip_task_frame_counts: list[int] = []
+        self._chip_run_resource_set_counts: list[int] = []
         # Teardown observations copied out of each reaped chip child's mailbox,
         # keyed by that child's pid. Absent means the child never reaped, which
         # is a different answer from an uncommitted record.
@@ -8631,9 +8905,17 @@ class Worker:
                 "this Worker owns chip children, whose workspace cannot be checked before shutdown"
             )
 
-        # 1. Allocate sub-worker mailboxes (unified layout, MAILBOX_SIZE each).
+        # 1. Allocate sub-worker mailboxes: a control frame, the request frames,
+        #    and one run-state entry per run this Worker could ever ask a child to
+        #    hold plus the hand-offs in flight. Sized from the request rather than
+        #    from a grant — the grant is published by a child that does not exist
+        #    until the fork below, and it is never above what was asked for, so
+        #    the region a request sizes always reaches it. Only the entry table
+        #    grows with the grant, so a deeper context costs a few hundred bytes
+        #    per run rather than another 64 KiB frame.
+        mailbox_bytes = mailbox_size(self._mailbox_granted_sets)
         for i in range(n_sub):
-            shm = SharedMemory(create=True, size=MAILBOX_SIZE, name=_shm_name(self._shm_token, f"sub-{i}"))
+            shm = SharedMemory(create=True, size=mailbox_bytes, name=_shm_name(self._shm_token, f"sub-{i}"))
             assert shm.buf is not None
             _mailbox_store_i32(_buffer_field_addr(shm.buf, _OFF_STATE), _IDLE)
             self._sub_shms.append(shm)
@@ -8654,16 +8936,16 @@ class Worker:
             # barrier — the bins object is just a Python value passed through.
             self._l3_bins = binaries
 
-            # Allocate chip mailboxes (unified layout, MAILBOX_SIZE each).
+            # Allocate chip mailboxes, sized the same way.
             for i, _dev_id in enumerate(device_ids):
-                shm = SharedMemory(create=True, size=MAILBOX_SIZE, name=_shm_name(self._shm_token, f"chip-{i}"))
+                shm = SharedMemory(create=True, size=mailbox_bytes, name=_shm_name(self._shm_token, f"chip-{i}"))
                 assert shm.buf is not None
                 _mailbox_store_i32(_buffer_field_addr(shm.buf, _OFF_STATE), _IDLE)
                 self._chip_shms.append(shm)
 
         # 3. Allocate next-level Worker child mailboxes (L4+ only).
         for i, _inner in enumerate(self._next_level_workers):
-            shm = SharedMemory(create=True, size=MAILBOX_SIZE, name=_shm_name(self._shm_token, f"next-{i}"))
+            shm = SharedMemory(create=True, size=mailbox_bytes, name=_shm_name(self._shm_token, f"next-{i}"))
             assert shm.buf is not None
             _mailbox_store_i32(_buffer_field_addr(shm.buf, _OFF_STATE), _IDLE)
             self._next_level_shms.append(shm)
@@ -8911,9 +9193,9 @@ class Worker:
             # documented in issue #897.  A chip that fails or dies during init
             # raises here rather than spinning forever.
             self._await_children_ready(self._chip_shms, self._chip_pids, "chip", deadline)
-            chip_depths, chip_frame_counts = self._read_chip_startup_grants()
+            chip_depths, chip_grants = self._read_chip_startup_grants()
             direct_chip_pipeline_depth = self._granted_chip_pipeline_depth(chip_depths)
-            self._chip_task_frame_counts = self._granted_chip_task_frame_counts(chip_frame_counts, chip_depths)
+            self._chip_run_resource_set_counts = self._granted_chip_run_resource_sets(chip_grants, chip_depths)
 
         # Fork next-level Worker children (L4+ with Worker children).
         # Each child process eagerly inits the inner Worker, which forks its own
@@ -9010,25 +9292,23 @@ class Worker:
         # is this Worker's logical admission bound, with 0 deriving it from the first;
         # `_launch_depth` bounds how many of those runs may have device work launched at once, and
         # cannot exceed the slot capability because a launched run holds its slot until it ends.
-        # Nor the frames its endpoints negotiated: a launched successor occupies a task frame of
-        # its own for as long as it is live, so a single-frame endpoint carries one launched run
-        # whatever depth was requested. A route with no local chip child negotiates no frames and
-        # is bounded by the slot capability alone.
+        # Nor the run-resource grant at any chip endpoint. The fixed request-frame
+        # pool only carries hand-offs and does not limit live runs.
         dw.configure_pipeline_depth(
             direct_chip_pipeline_depth,
             self._pending_run_depth,
-            min([self._launch_depth, direct_chip_pipeline_depth, *self._chip_task_frame_counts]),
+            min([self._launch_depth, direct_chip_pipeline_depth, *self._chip_run_resource_set_counts]),
         )
 
         # Register chip workers as NEXT_LEVEL (L3). The child pid lets the C++
         # endpoint fail a dispatch whose child died instead of spinning on a
-        # mailbox that can no longer be completed. The frame count is the one its
-        # child published and polls, so the parent never writes to a frame the
-        # child is not reading.
+        # mailbox that can no longer be completed. The grant is the child
+        # resource-set count, and it travels with the extent of the region this
+        # process mapped for it, which is what the C++ side checks it against.
         if device_ids:
             _require_matching_pids(self._chip_shms, self._chip_pids, "chip")
-            for shm, pid, task_frame_count in zip(self._chip_shms, self._chip_pids, self._chip_task_frame_counts):
-                dw.add_next_level_worker(_mailbox_addr(shm), pid, task_frame_count)
+            for shm, pid, granted_sets in zip(self._chip_shms, self._chip_pids, self._chip_run_resource_set_counts):
+                dw.add_next_level_worker(_mailbox_addr(shm), _mailbox_extent(shm), pid, granted_sets)
 
         # Register Worker children as NEXT_LEVEL (L4+)
         if self._next_level_shms and not hasattr(dw, "add_next_level_worker_at"):
@@ -9036,11 +9316,11 @@ class Worker:
         _require_matching_pids(self._next_level_shms, self._next_level_pids, "next_level")
         for idx, shm in enumerate(self._next_level_shms):
             worker_id = self._next_level_worker_ids[idx]
-            dw.add_next_level_worker_at(worker_id, _mailbox_addr(shm), self._next_level_pids[idx])
+            dw.add_next_level_worker_at(worker_id, _mailbox_addr(shm), _mailbox_extent(shm), self._next_level_pids[idx])
 
         _require_matching_pids(self._sub_shms, self._sub_pids, "sub")
         for shm, pid in zip(self._sub_shms, self._sub_pids):
-            dw.add_sub_worker(_mailbox_addr(shm), pid)
+            dw.add_sub_worker(_mailbox_addr(shm), _mailbox_extent(shm), pid)
 
         # Start Scheduler + WorkerThreads (C++ threads start here, after fork)
         dw.init()
@@ -12301,10 +12581,10 @@ class Worker:
         negotiated depth two, one active plus one prepared run are permitted and
         a third submission blocks before invoking its graph callback; where a
         backend publishes depth one, the *second* submission already blocks
-        there. Every onboard runtime publishes at least two sets, and both
-        ``host_build_graph`` backends publish ``PTO_PIPELINE_MAX_DEPTH`` so an
-        explicit ``pipeline_depth`` can raise a supported configuration above
-        the standing default of two.
+        there. Every onboard runtime publishes at least two sets, and all four
+        publish no upper limit of their own, so an explicit ``pipeline_depth``
+        raises a supported configuration to whatever it asks for — the grant is
+        the request, and every per-run resource is built to it at startup.
 
         Admission is separate from reaching the device. A prepared successor's
         device work waits for its predecessor unless this Worker was configured
@@ -12555,8 +12835,11 @@ class Worker:
         continue when an explicit request is larger: nothing here can resize those pools, so a
         caller who asked for three runs in flight would otherwise get two with no way to tell.
         """
-        if any(depth <= 0 or depth > PTO_PIPELINE_MAX_DEPTH for depth in per_child):
-            raise RuntimeError(f"chip worker published invalid pipeline depths: {per_child}")
+        if any(depth <= 0 or depth > self._mailbox_granted_sets for depth in per_child):
+            raise RuntimeError(
+                f"chip worker published invalid pipeline depths: {per_child}; this Worker requested "
+                f"{self._mailbox_granted_sets} and a grant can never exceed the request"
+            )
         granted = min(per_child)
         if self._pipeline_depth_requested_explicitly and granted < self._pipeline_depth_request:
             raise RuntimeError(
@@ -12567,61 +12850,52 @@ class Worker:
         return granted
 
     def _read_chip_startup_grants(self) -> tuple[list[int], list[int]]:
-        """What each chip child published at INIT_READY: the sets it granted and the frames it polls.
+        """Read each chip child's resolved depth and run-resource grant.
 
         INIT_READY repurposes the base frame's lease word as startup metadata — slot_id carries the
-        child's depth advertisement and the field a task-frame lease keeps reserved carries the task
-        frame count it negotiated. Task frames are separate regions, so a dispatch lease keeps its
-        own meaning and its reserved-must-be-zero check.
+        child's depth advertisement; the reserved field carries its resource-set grant. Request
+        frames are separate regions, so a dispatch lease keeps its own meaning.
         """
         depths: list[int] = []
-        frame_counts: list[int] = []
+        grants: list[int] = []
         for shm in self._chip_shms:
             buf = shm.buf
             assert buf is not None
-            granted_depth, granted_frames, _spare = _PIPELINE_LEASE_FMT.unpack_from(buf, _OFF_PIPELINE_LEASE)
+            granted_depth, granted_sets, _spare = _PIPELINE_LEASE_FMT.unpack_from(buf, _OFF_PIPELINE_LEASE)
             depths.append(granted_depth)
-            frame_counts.append(granted_frames)
-        return depths, frame_counts
+            grants.append(granted_sets)
+        return depths, grants
 
-    def _granted_chip_task_frame_counts(self, per_child: list[int], depths: list[int]) -> list[int]:
-        """Each chip child's negotiated task-frame count, or a startup failure.
-
-        The child decides it: only an initialized ChipWorker can answer whether its runtime joins
-        native launches, and this side publishes to exactly the frames that child polls. So this
-        validates rather than re-derives — a count above the mailbox layout, above the sets that
-        child granted, or below one would have the parent and the child disagree about which
-        frames exist, and a frame the child never polls is a dispatch that never completes.
-        """
+    def _granted_chip_run_resource_sets(self, per_child: list[int], depths: list[int]) -> list[int]:
+        """Validate each child grant against its resolved depth and mailbox allocation."""
         if len(per_child) != len(depths):
-            raise RuntimeError(f"chip workers published {len(per_child)} frame counts for {len(depths)} depths")
+            raise RuntimeError(f"chip workers published {len(per_child)} resource grants for {len(depths)} depths")
+        mailbox_grant = self._mailbox_granted_sets
         invalid = [
             (count, depth)
             for count, depth in zip(per_child, depths)
-            if count < 1 or count > _TASK_FRAME_COUNT or count > depth
+            if count < 1 or count > mailbox_grant or count > depth
         ]
         if invalid:
             raise RuntimeError(
-                f"chip worker published invalid task frame counts (count, granted depth): {invalid}; "
-                f"the mailbox is laid out for {_TASK_FRAME_COUNT}"
+                f"chip worker published invalid run-resource counts (count, granted depth): {invalid}; "
+                f"this mailbox was created for {mailbox_grant} granted set(s)"
             )
         return list(per_child)
 
     def _pipeline_depth_scope_refusal(self) -> str | None:
-        """Why this Worker cannot be granted more than the default capacity, or None when it can.
+        """Why this Worker cannot carry a larger capacity request, or None when it can.
 
-        The supported shape is the one the contract names: a level-3 root driving exactly one
-        local chip endpoint on an onboard host_build_graph platform that declares three sets —
-        a2a3 and a5 — with nothing else in the tree. Every other provenance keeps the default,
-        because no third set is negotiated or validated for it in this step: a deeper level,
-        sub-workers sharing this admission, a second endpoint, a simulated platform, another
-        runtime.
+        What remains is a question about who owns the admission FIFO, not about which backend can
+        serve how many sets. Every runtime declares no limit of its own, every per-run resource is
+        built to the grant at startup, and each endpoint's mailbox is sized to the request — so the
+        platform, the runtime, the number of local endpoints and the presence of sub-workers no
+        longer decide what can be granted.
 
         This gate decides only whether the larger request is *carried* to the child. Whether the
         child could serve it is a separate answer, and an explicit request is never silently
         reduced: `_granted_chip_pipeline_depth` compares the grant against the explicit request
-        and fails startup when the child granted fewer. So a listed platform whose module declared
-        two makes `init()` raise, not serve two quietly.
+        and fails startup when the child granted fewer.
 
         Being a *root* is a property of this Worker's own startup, not of its level. A level-3
         Worker is a legal child of a level-4 parent, and a remote or MPI session initializes the
@@ -12638,23 +12912,12 @@ class Worker:
             return "this Worker is initialized by another startup, so it is not the root of its tree"
         if int(self.level) != 3:
             return f"level {int(self.level)} is not the level-3 root this capacity is negotiated for"
-        platform = str(self._config.get("platform", ""))
-        if platform not in _THREE_SET_PLATFORMS:
-            return f"platform {platform!r} is not one of the onboard platforms that declare three sets"
-        runtime = str(self._config.get("runtime", ""))
-        if runtime != "host_build_graph":
-            return f"runtime {runtime!r} is not host_build_graph"
-        device_ids = list(self._config.get("device_ids", []) or [])
-        if len(device_ids) != 1:
-            return f"{len(device_ids)} local chip endpoint(s), not one"
-        if int(self._config.get("num_sub_workers", 0) or 0) != 0:
-            return "sub-workers share this Worker's admission"
         return None
 
     def _requested_chip_pipeline_depth(self) -> int:
         """The capacity this Worker asks each chip child for.
 
-        A request above the default is carried only where this step supports three runs in flight;
+        A request above the default is carried wherever this Worker owns its own admission;
         anywhere else the child is asked for the default, so it grants exactly what it always did.
         An explicit request outside that scope is refused rather than quietly reduced — the caller
         is told at startup, before any set is committed.
@@ -12668,9 +12931,8 @@ class Worker:
         if self._pipeline_depth_requested_explicitly:
             raise RuntimeError(
                 f"Worker pipeline_depth={requested} is not supported by this configuration: {refusal}. "
-                f"Three run-resource sets are negotiated for a level-3 Worker that is the root of its own "
-                f"startup, on onboard {'/'.join(sorted(_THREE_SET_PLATFORMS))} host_build_graph, with one local "
-                f"chip endpoint and no other children."
+                f"A capacity above the default of {_DEFAULT_PIPELINE_DEPTH_REQUEST} is negotiated by the "
+                f"level-3 Worker that is the root of its own startup."
             )
         return _DEFAULT_PIPELINE_DEPTH_REQUEST
 

@@ -45,7 +45,6 @@ from simpler.callable_identity import (
 from simpler.task_interface import (
     MAILBOX_ERROR_MSG_SIZE,
     MAILBOX_OFF_ERROR_MSG,
-    MAILBOX_SIZE,
     ChipCallable,
     DataType,
     TaskArgs,
@@ -64,8 +63,11 @@ from simpler.worker import (
     Worker,
     _buffer_field_addr,
     _mailbox_addr,
+    _mailbox_extent,
     _mailbox_load_i32,
+    _mailbox_load_u64,
     _mailbox_store_i32,
+    _mailbox_store_u64,
     _pack_py_callable_payload,
 )
 from simpler.worker_level import WorkerLevel
@@ -250,21 +252,21 @@ def test_chip_process_loop_inits_runs_and_finalizes(monkeypatch):
             events.append(("finalize",))
 
     def fake_run_chip_main_loop(
-        cw, *_args, chip_platform, chip_runtime, prepared=None, task_frame_count=1, chip_rank=None, **_kwargs
+        cw, *_args, chip_platform, chip_runtime, prepared=None, granted_sets=1, chip_rank=None, **_kwargs
     ):
         assert chip_rank is None
         depth, frames, _spare = worker_mod._PIPELINE_LEASE_FMT.unpack_from(_args[0], worker_mod._OFF_PIPELINE_LEASE)
         published_depths.append(depth)
-        published_frame_counts.append(task_frame_count)
-        # The parent registers the endpoint from this word, so the count the loop polls and the
-        # count published for the parent are the same number.
-        assert frames == task_frame_count
+        published_frame_counts.append(granted_sets)
+        # The parent registers the endpoint from this word, so the count the loop's entry table is
+        # built to and the count published for the parent are the same number.
+        assert frames == granted_sets
         events.append(("main_loop", cw, chip_platform, chip_runtime))
 
     monkeypatch.setattr(worker_mod, "ChipWorker", FakeChipWorker)
     monkeypatch.setattr(worker_mod, "_run_chip_main_loop", fake_run_chip_main_loop)
 
-    shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+    shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
     try:
         assert shm.buf is not None
         worker_mod._chip_process_loop(
@@ -295,28 +297,33 @@ def test_chip_process_loop_inits_runs_and_finalizes(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    ("launch_depth", "configured", "expected_frames"),
+    ("launch_depth", "configured"),
     [
         # The native entry is reached only above depth one, so the default route configures
-        # nothing on the ChipWorker and publishes the single-frame serial contract.
-        (1, [], 1),
+        # nothing on the ChipWorker.
+        (1, []),
         # At depth two the child configures its own ChipWorker before init — the only place the
-        # request and the runtime's resolved capability meet — and publishes the second frame.
-        (2, [2], 2),
+        # request and the runtime's resolved capability meet.
+        (2, [2]),
     ],
 )
-def test_chip_child_configures_its_launch_depth_through_the_native_entry(
-    monkeypatch, launch_depth, configured, expected_frames
-):
-    """a5 TMR's frame count follows the capability the child resolved, through the native entry.
+def test_chip_child_configures_its_launch_depth_through_the_native_entry(monkeypatch, launch_depth, configured):
+    """The launch budget reaches the ChipWorker; the grant the child publishes does not follow it.
 
     ``ChipWorker.configure_launch_depth`` is the only configuration route below the public
     Worker — it is bound for direct callers as well — so this covers both: the public route's
     child arrives here, and a caller driving a ``ChipWorker`` itself reaches the same entry with
-    the same effect on the negotiated frame count.
+    the same effect.
+
+    The grant is the second half, and the two rows are what make it a claim rather than a
+    coincidence. Whatever launch budget the child was started with, the sets it publishes are the
+    depth its ``ChipWorker`` resolved — a run-resource count, which request frames are separate
+    from and which the launch budget does not clip. A child that still derived its grant from the
+    launch budget would satisfy the configure half above and fail the publication below.
     """
     configured_depths: list[int] = []
-    published_frame_counts: list[int] = []
+    published_depths: list[int] = []
+    published_sets: list[int] = []
 
     class FakeChipWorker:
         pipeline_depth = 2
@@ -331,17 +338,19 @@ def test_chip_child_configures_its_launch_depth_through_the_native_entry(
         def finalize(self) -> None:
             pass
 
-    def fake_run_chip_main_loop(cw, *_args, task_frame_count=1, **_kwargs):
+    def fake_run_chip_main_loop(cw, *_args, granted_sets=1, **_kwargs):
         del cw
-        depth, frames, _spare = worker_mod._PIPELINE_LEASE_FMT.unpack_from(_args[0], worker_mod._OFF_PIPELINE_LEASE)
-        del depth
-        published_frame_counts.append(task_frame_count)
-        assert frames == task_frame_count
+        depth, sets, _spare = worker_mod._PIPELINE_LEASE_FMT.unpack_from(_args[0], worker_mod._OFF_PIPELINE_LEASE)
+        published_depths.append(depth)
+        published_sets.append(granted_sets)
+        # The loop is handed the same number the lease carries, so the parent and the child
+        # cannot disagree about how many sets exist.
+        assert sets == granted_sets
 
     monkeypatch.setattr(worker_mod, "ChipWorker", FakeChipWorker)
     monkeypatch.setattr(worker_mod, "_run_chip_main_loop", fake_run_chip_main_loop)
 
-    shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+    shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
     try:
         assert shm.buf is not None
         worker_mod._chip_process_loop(
@@ -363,7 +372,11 @@ def test_chip_child_configures_its_launch_depth_through_the_native_entry(
         shm.unlink()
 
     assert configured_depths == configured
-    assert published_frame_counts == [expected_frames]
+    assert published_depths == [FakeChipWorker.pipeline_depth]
+    assert published_sets == [FakeChipWorker.pipeline_depth], (
+        f"a child started at launch_depth={launch_depth} published {published_sets} run-resource sets rather "
+        f"than the {FakeChipWorker.pipeline_depth} its ChipWorker resolved"
+    )
 
 
 def _dummy_l2_domain(domain_id: int):
@@ -668,29 +681,24 @@ def test_teardown_chip_process_resources_ignores_released_and_keeps_each_step_on
     assert store.state is ProviderRegionStoreState.CLOSED
 
 
-@pytest.mark.parametrize(
-    ("platform", "runtime", "depth", "joins", "expected"),
-    [
-        ("a2a3", "host_build_graph", 2, False, 2),
-        ("a2a3", "host_build_graph", 1, False, 1),
-        ("a2a3", "tensormap_and_ringbuffer", 2, False, 2),
-        # Every other route negotiates a successor frame only where the child resolved that it
-        # can order one native submission behind another. Depth alone does not, and the runtime
-        # name does not either: both a5 runtimes grant two resource sets and both now join, so
-        # the same runtime appears here under each answer.
-        ("a5", "host_build_graph", 2, True, 2),
-        ("a5", "host_build_graph", 2, False, 1),
-        ("a5", "tensormap_and_ringbuffer", 2, True, 2),
-        ("a5", "tensormap_and_ringbuffer", 2, False, 1),
-        ("a5sim", "tensormap_and_ringbuffer", 2, False, 1),
-        ("a2a3sim", "host_build_graph", 2, False, 1),
-        # A joining route still cannot use a frame the granted sets do not back.
-        ("a5", "host_build_graph", 1, True, 1),
-        ("a5", "tensormap_and_ringbuffer", 1, True, 1),
-    ],
-)
-def test_local_task_frame_count_follows_a2a3_depth_or_a_resolved_join(platform, runtime, depth, joins, expected):
-    assert worker_mod._local_task_frame_count(platform, runtime, depth, joins) == expected
+@pytest.mark.parametrize("depth", [1, 2, 3, 8, 64, 1024])
+def test_a_chip_child_grants_the_depth_it_resolved(depth):
+    """The grant is the resolved depth, on every route.
+
+    It used to be conditional: a route that could not order one native submission behind another
+    was handed a single set however wide the request, because the count also stood for the task
+    frames a successor would occupy. Those are two separate numbers now — request frames are a
+    fixed pool that carries hand-offs, and this count sizes the run-state entries a run holds —
+    so joining and granting are no longer the same question, and nothing about the platform or
+    the runtime enters this answer.
+    """
+    assert worker_mod._local_run_resource_set_count(depth) == depth
+
+
+def test_a_grant_below_one_set_is_refused_rather_than_published():
+    """There is no such thing as a chip child that can hold no run at all."""
+    with pytest.raises(ValueError, match="at least one run-resource set"):
+        worker_mod._local_run_resource_set_count(0)
 
 
 @pytest.mark.parametrize("level", [1, 2])
@@ -719,44 +727,45 @@ def test_launch_depth_comes_from_each_workers_own_config():
 
 
 @pytest.mark.parametrize(
-    ("frame_counts", "depths"),
+    ("resource_counts", "depths"),
     [
-        # Below one: no frame at all to publish a dispatch into.
+        # Below one: no run-resource set at all to publish a dispatch into.
         ([0], [2]),
-        # Above the sets that child granted, so the extra frame has no resources behind it.
+        # Above the sets that child granted, so the extra run has no resources behind it.
         ([3], [2]),
-        # Above the frames the mailbox is laid out for, so the extra frame is past the region.
-        ([worker_mod._TASK_FRAME_COUNT + 1], [worker_mod._TASK_FRAME_COUNT + 1]),
+        # Above the grant this Worker's mailbox was created for, so the extra run has no
+        # run-state entry behind it.
+        ([worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST + 1], [worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST + 1]),
         # One child's answer missing entirely.
         ([2], [2, 2]),
     ],
 )
-def test_a_chip_published_frame_count_the_parent_cannot_honour_fails_startup(frame_counts, depths):
-    """A frame count that does not reconcile is a startup error, not a quietly clamped one.
+def test_a_chip_published_run_resource_count_the_parent_cannot_honour_fails_startup(resource_counts, depths):
+    """A granted-set count that does not reconcile is a startup error, not a quietly clamped one.
 
-    The parent publishes dispatches into exactly the frames its child polls, so a disagreement
-    about how many exist is a dispatch written where nothing reads it — which presents as a run
-    that never completes rather than as an error. Refusing at startup is what keeps that from
-    being the symptom.
+    The parent sizes its run-state entry table from this number and admits exactly the runs it
+    covers, so a disagreement about how many sets exist is a dispatch published into an entry the
+    child never polls — which presents as a run that never completes rather than as an error.
+    Refusing at startup is what keeps that from being the symptom.
     """
     worker = Worker(level=3, device_ids=[0], num_sub_workers=0, platform="a5", runtime="host_build_graph")
-    with pytest.raises(RuntimeError, match="task frame counts|frame counts for"):
-        worker._granted_chip_task_frame_counts(frame_counts, depths)
+    with pytest.raises(RuntimeError, match="invalid run-resource counts|resource grants for"):
+        worker._granted_chip_run_resource_sets(resource_counts, depths)
 
 
-def test_a_reconciled_chip_frame_count_is_taken_as_published():
-    """Each child's own count, in its own order: two children may negotiate differently."""
+def test_a_reconciled_chip_resource_grant_is_taken_as_published():
+    """Each child's own grant, in its own order: two children may resolve different depths."""
     worker = Worker(level=3, device_ids=[0, 1], num_sub_workers=0, platform="a5", runtime="host_build_graph")
-    assert worker._granted_chip_task_frame_counts([2, 1], [2, 2]) == [2, 1]
+    assert worker._granted_chip_run_resource_sets([2, 1], [2, 2]) == [2, 1]
 
 
-def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypatch):
+def test_start_hierarchical_passes_each_chip_its_published_resource_grant(monkeypatch):
     class FakeParentWorker:
         def __init__(self) -> None:
             self.configured_depths: list[int] = []
             self.configured_pending_depths: list[int] = []
             self.configured_launch_depths: list[int] = []
-            self.next_level_calls: list[tuple[int, int, int]] = []
+            self.next_level_calls: list[tuple[int, int, int, int]] = []
             self.initialized = False
 
         def configure_pipeline_depth(self, depth: int, pending_depth: int = 0, launch_depth: int = 1) -> None:
@@ -767,8 +776,8 @@ def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypa
             self.configured_pending_depths.append(int(pending_depth))
             self.configured_launch_depths.append(int(launch_depth))
 
-        def add_next_level_worker(self, mailbox_addr: int, pid: int, task_frame_count: int) -> None:
-            self.next_level_calls.append((int(mailbox_addr), int(pid), int(task_frame_count)))
+        def add_next_level_worker(self, mailbox_addr: int, mailbox_bytes: int, pid: int, granted_sets: int) -> None:
+            self.next_level_calls.append((int(mailbox_addr), int(mailbox_bytes), int(pid), int(granted_sets)))
 
         def init(self) -> None:
             self.initialized = True
@@ -783,7 +792,10 @@ def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypa
         platform="a2a3",
         runtime="host_build_graph",
     )
-    worker._chip_shms = [SharedMemory(create=True, size=MAILBOX_SIZE) for _ in range(2)]
+    worker._chip_shms = [
+        SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
+        for _ in range(2)
+    ]
     worker._l3_bins = "bins"
     fake_parent = FakeParentWorker()
     worker._worker = cast(Any, fake_parent)
@@ -794,12 +806,12 @@ def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypa
     def fake_await_children_ready(shms, _pids, kind: str, _deadline: float) -> None:
         if kind != "chip":
             return
-        # What the child publishes at INIT_READY: the sets it granted, and the task frames it
-        # will poll. The parent takes the frame count from here rather than deriving it, so a
-        # child that negotiated one frame is registered with one.
-        for shm, depth, frames in zip(shms, (2, 1), (2, 1)):
+        # What the child publishes at INIT_READY: its resolved depth and the run-resource sets it
+        # granted. The parent takes the grant from here rather than deriving it, so a child that
+        # resolved one set is registered with one.
+        for shm, depth, granted_sets in zip(shms, (2, 1), (2, 1)):
             assert shm.buf is not None
-            worker_mod._PIPELINE_LEASE_FMT.pack_into(shm.buf, worker_mod._OFF_PIPELINE_LEASE, depth, frames, 0)
+            worker_mod._PIPELINE_LEASE_FMT.pack_into(shm.buf, worker_mod._OFF_PIPELINE_LEASE, depth, granted_sets, 0)
 
     def fake_fork() -> int:
         startup_events.append(("fork",))
@@ -816,6 +828,9 @@ def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypa
     monkeypatch.setattr(worker_mod, "_start_host_log_writer", lambda: startup_events.append(("writer",)))
     monkeypatch.setattr(worker, "_await_children_ready", fake_await_children_ready)
     monkeypatch.setattr(worker_mod, "Orchestrator", lambda native, owner: (native, owner))
+    # Read before the teardown below unmaps them: this is what each registration has to declare,
+    # and it is not the size that was asked for — macOS rounds a POSIX shm mapping up to a page.
+    mapped_extents = [shm.buf.nbytes for shm in worker._chip_shms if shm.buf is not None]
     try:
         worker._start_hierarchical()
     finally:
@@ -825,10 +840,17 @@ def test_start_hierarchical_passes_each_chip_its_negotiated_frame_count(monkeypa
 
     assert fake_parent.configured_depths == [1]
     assert fake_parent.configured_pending_depths == [0]
-    # One launched run: the default launch depth, and no more than the frames the narrower
-    # child negotiated could carry anyway.
+    # One launched run: the default launch depth, and no more than the grant the narrower child
+    # published could hold anyway.
     assert fake_parent.configured_launch_depths == [1]
-    assert [call[1:] for call in fake_parent.next_level_calls] == [(12001, 2), (12002, 1)]
+    assert [call[2:] for call in fake_parent.next_level_calls] == [(12001, 2), (12002, 1)]
+    # Each registration carries the extent of the region this process actually mapped, not the one
+    # the grant it publishes would imply: the C++ side checks the second against the first, so a
+    # child that granted two sets is still registered against the whole mapping.
+    assert [call[1] for call in fake_parent.next_level_calls] == mapped_extents
+    assert all(
+        extent >= worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST) for extent in mapped_extents
+    )
     assert fake_parent.initialized
     assert startup_events[0] == ("log", 60, True)
     assert startup_events[1:] == [("fork",), ("fork",), ("writer",)]
@@ -850,7 +872,7 @@ def test_start_hierarchical_seeds_the_logger_when_the_process_owns_no_chips(monk
         def configure_pipeline_depth(self, depth: int, pending_depth: int = 0, launch_depth: int = 1) -> None:
             pass
 
-        def add_sub_worker(self, _mailbox_addr: int, pid: int) -> None:
+        def add_sub_worker(self, _mailbox_addr: int, _mailbox_bytes: int, pid: int) -> None:
             self.sub_workers.append(pid)
 
         def init(self) -> None:
@@ -866,7 +888,9 @@ def test_start_hierarchical_seeds_the_logger_when_the_process_owns_no_chips(monk
         platform="a2a3",
         runtime="host_build_graph",
     )
-    worker._sub_shms = [SharedMemory(create=True, size=MAILBOX_SIZE)]
+    worker._sub_shms = [
+        SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
+    ]
     worker._worker = cast(Any, FakeParentWorker())
     worker._startup_deadline = time.monotonic() + 5.0
     startup_events: list[tuple] = []
@@ -1021,7 +1045,7 @@ class _FakeNativeRunImpl:
         slot = int(token.slot_id)
         accepted_addr = int(token.accepted_addr)
         accepted_value = int(token.accepted_value)
-        state_addr = int(accepted_addr) - worker_mod._OFF_ACCEPTED
+        state_addr = int(accepted_addr) - worker_mod._OFF_ENTRY_ACCEPTED + worker_mod._OFF_ENTRY_STATE
         self.events.append(
             (
                 "launch_enter",
@@ -1039,7 +1063,7 @@ class _FakeNativeRunImpl:
 
     def _poll_native_run(self, token) -> bool:
         slot = int(token.slot_id)
-        state_addr = int(token.accepted_addr) - worker_mod._OFF_ACCEPTED
+        state_addr = int(token.accepted_addr) - worker_mod._OFF_ENTRY_ACCEPTED + worker_mod._OFF_ENTRY_STATE
         self.poll_states.append((slot, _mailbox_load_i32(state_addr)))
         error = self.poll_errors.get((slot, int(token.generation)))
         if error is not None:
@@ -1268,7 +1292,7 @@ class _TwoFrameLoopHarness:
         supports_concurrent_native_prepare: bool = False,
         chip_runtime: str = "",
     ) -> None:
-        self.shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+        self.shm = SharedMemory(create=True, size=worker_mod.mailbox_size(2))
         self.buf = cast(memoryview, self.shm.buf)
         assert self.buf is not None
         self.mailbox_addr = _mailbox_addr(self.shm)
@@ -1285,6 +1309,8 @@ class _TwoFrameLoopHarness:
             return value
 
         self.digest = bytes([0x42]) * worker_mod.CALLABLE_HASH_DIGEST_BYTES
+        self._frame_generation = 0
+        self._entry_generations: dict[int, int] = {}
         self.cw = _FakeTwoFrameChipWorker(supports_concurrent_native_prepare=supports_concurrent_native_prepare)
         self.registry = {7: object()}
         self.identity_table = {self.digest: 7}
@@ -1307,25 +1333,32 @@ class _TwoFrameLoopHarness:
                 "chip_platform": "a2a3",
                 "chip_runtime": chip_runtime,
                 "prepared": self.prepared,
-                "task_frame_count": 2,
+                "granted_sets": 2,
                 "provider_region_store": _chip_loop_provider_region_store(chip_platform="a2a3"),
             },
         )
         self._mailbox_load_patch = patch.object(worker_mod, "_mailbox_load_i32", observed_mailbox_load)
         self._mailbox_load_patch.start()
 
-    def _frame_offset(self, index: int) -> int:
-        return (1 + index) * worker_mod.MAILBOX_FRAME_SIZE
+    def _frame_offset(self, frame_index: int) -> int:
+        return (1 + frame_index) * worker_mod.MAILBOX_FRAME_SIZE
+
+    def _entry_offset(self, index: int) -> int:
+        return worker_mod.MAILBOX_RUN_ENTRY_TABLE_OFFSET + index * worker_mod.MAILBOX_RUN_ENTRY_STRIDE
 
     def state_addr(self, index: int) -> int:
-        return self.mailbox_addr + self._frame_offset(index) + _OFF_STATE
+        """A run's state lives in its entry; `index` names the entry, not a frame."""
+        return self.mailbox_addr + self._entry_offset(index) + worker_mod._OFF_ENTRY_STATE
+
+    def frame_state_addr(self, frame_index: int) -> int:
+        return self.mailbox_addr + self._frame_offset(frame_index) + _OFF_STATE
 
     def accepted_addr(self, index: int) -> int:
-        return self.mailbox_addr + self._frame_offset(index) + worker_mod._OFF_ACCEPTED
+        return self.mailbox_addr + self._entry_offset(index) + worker_mod._OFF_ENTRY_ACCEPTED
 
     def preparation_disposition(self, index: int) -> int:
         return _mailbox_load_i32(
-            self.mailbox_addr + self._frame_offset(index) + worker_mod._OFF_PREPARATION_DISPOSITION
+            self.mailbox_addr + self._entry_offset(index) + worker_mod._OFF_ENTRY_PREPARATION_DISPOSITION
         )
 
     def publish(
@@ -1340,8 +1373,41 @@ class _TwoFrameLoopHarness:
         task_slot: Optional[int] = None,
         group_index: int = 0,
         group_size: int = 1,
+        frame_index: Optional[int] = None,
     ) -> None:
-        offset = self._frame_offset(index)
+        """Publish one submission exactly as the parent endpoint does.
+
+        The entry first — its identity and its odd generation — then the request frame carrying
+        the payload and the header that binds it to that entry, and the frame's state word last,
+        which releases every byte written above it. `index` names the run-state entry; the frame
+        it travels on defaults to the matching one of the fixed request pool.
+        """
+        frame_index = index % worker_mod.MAILBOX_REQUEST_FRAMES if frame_index is None else frame_index
+        entry_generation = 2 * (index + 1) + 1
+        self._entry_generations[index] = entry_generation
+        entry_addr = self.mailbox_addr + self._entry_offset(index)
+        entry_off = self._entry_offset(index)
+        entry = self.buf[entry_off : entry_off + worker_mod.MAILBOX_RUN_ENTRY_STRIDE]
+        try:
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_PROTOCOL, worker_mod._TASK_PROTOCOL_VERSION)
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_RUN_ID, 5)
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_SLOT_ID, index)
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_LEASE_GENERATION, generation)
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_DISPATCH_ID, dispatch_id)
+            struct.pack_into(
+                "=Q", entry, worker_mod._OFF_ENTRY_TASK_SLOT, dispatch_id if task_slot is None else task_slot
+            )
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_GROUP_INDEX, group_index)
+            struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_GROUP_SIZE, group_size)
+            struct.pack_into("=i", entry, worker_mod._OFF_ENTRY_PREPARATION_DISPOSITION, 0)
+        finally:
+            entry.release()
+        _mailbox_store_i32(self.accepted_addr(index), 0)
+        _mailbox_store_u64(entry_addr + worker_mod._OFF_ENTRY_FRAME_CONSUMED_GENERATION, 0)
+        _mailbox_store_i32(self.state_addr(index), worker_mod._IDLE)
+        _mailbox_store_u64(entry_addr + worker_mod._OFF_ENTRY_GENERATION, entry_generation)
+
+        offset = self._frame_offset(frame_index)
         frame = self.buf[offset : offset + worker_mod.MAILBOX_FRAME_SIZE]
         try:
             frame[worker_mod._OFF_TASK_CALLABLE_HASH : worker_mod._OFF_TASK_ARGS_BLOB] = self.digest
@@ -1352,20 +1418,13 @@ class _TwoFrameLoopHarness:
             output_prefix = b"/tmp/simpler-test" if diagnostics or chip_swimlane else b""
             worker_mod._CFG_FMT.pack_into(frame, worker_mod._OFF_CONFIG, *cfg_values, output_prefix)
             worker_mod._PIPELINE_LEASE_FMT.pack_into(frame, worker_mod._OFF_PIPELINE_LEASE, index, 0, generation)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_PROTOCOL, worker_mod._TASK_PROTOCOL_VERSION)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_RUN_ID, 5)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_SLOT_ID, index)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GENERATION, generation)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_DISPATCH_ID, dispatch_id)
-            struct.pack_into(
-                "=Q", frame, worker_mod._OFF_FRAME_TASK_SLOT, dispatch_id if task_slot is None else task_slot
-            )
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GROUP_INDEX, group_index)
-            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GROUP_SIZE, group_size)
+            self._frame_generation += 1
+            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_ENTRY_INDEX, index)
+            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_ENTRY_GENERATION, entry_generation)
+            struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GENERATION, self._frame_generation)
         finally:
             frame.release()
-        _mailbox_store_i32(self.accepted_addr(index), 0)
-        _mailbox_store_i32(self.state_addr(index), state)
+        _mailbox_store_i32(self.frame_state_addr(frame_index), state)
 
     def wait_state(self, index: int, expected: int) -> None:
         deadline = time.monotonic() + 5.0
@@ -1518,7 +1577,9 @@ def test_two_frame_success_survives_successor_poison_during_recursive_progress(m
         assert not harness.thread.is_alive()
         assert _mailbox_load_i32(harness.state_addr(0)) == worker_mod._TASK_DONE
         assert _mailbox_load_i32(harness.state_addr(1)) == worker_mod._TASK_FAILED
-        offset = harness._frame_offset(1) + MAILBOX_OFF_ERROR_MSG
+        # The terminal report lives on the run-state entry, not the frame: the frame carried only
+        # the payload and went back to the parent long before this run finished.
+        offset = harness._entry_offset(1) + worker_mod._OFF_ENTRY_ERROR_TEXT
         message = bytes(harness.buf[offset : offset + worker_mod.MAILBOX_ERROR_MSG_SIZE])
         assert b"successor finalize failed" in message
     finally:
@@ -2022,8 +2083,10 @@ def test_two_frame_stale_activation_finalizes_backend_prepared_successor_once():
         harness.wait_state(1, worker_mod._FRAME_STAGED)
         assert harness.cw._impl.prepared[1].is_set()
 
-        frame_offset = harness._frame_offset(1)
-        struct.pack_into("=Q", harness.buf, frame_offset + worker_mod._OFF_FRAME_DISPATCH_ID, 99)
+        # Identity is the entry's, so a stale activation is forged there: the child rechecks the
+        # entry it staged under before it activates, and the frame no longer exists to it.
+        entry_offset = harness._entry_offset(1)
+        struct.pack_into("=Q", harness.buf, entry_offset + worker_mod._OFF_ENTRY_DISPATCH_ID, 99)
         _mailbox_store_i32(harness.state_addr(1), worker_mod._ACTIVATE)
         harness.wait_state(1, worker_mod._TASK_FAILED)
         assert not harness.cw._impl.launched[1].is_set()
@@ -3094,12 +3157,12 @@ class TestLifecycle:
             hw.close()
 
     def test_broadcast_control_all_timeout_reports_failed_child(self):
-        shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+        shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
         dw = _Worker(3)
         try:
             assert shm.buf is not None
             _mailbox_store_i32(_buffer_field_addr(shm.buf, _OFF_STATE), _IDLE)
-            dw.add_sub_worker(_mailbox_addr(shm))
+            dw.add_sub_worker(_mailbox_addr(shm), _mailbox_extent(shm))
             dw.init()
             results = dw.broadcast_control_all(
                 WorkerType.SUB,
@@ -3118,7 +3181,7 @@ class TestLifecycle:
 
     def test_broadcast_control_all_selected_pool_routing(self):
         def make_mailbox():
-            shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+            shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
             assert shm.buf is not None
             _mailbox_store_i32(_buffer_field_addr(shm.buf, _OFF_STATE), _IDLE)
             return shm
@@ -3131,8 +3194,8 @@ class TestLifecycle:
             next_shm = make_mailbox()
             dw = _Worker(3)
             try:
-                dw.add_sub_worker(_mailbox_addr(sub_shm))
-                dw.add_next_level_worker(_mailbox_addr(next_shm))
+                dw.add_sub_worker(_mailbox_addr(sub_shm), _mailbox_extent(sub_shm))
+                dw.add_next_level_worker(_mailbox_addr(next_shm), _mailbox_extent(next_shm))
                 dw.init()
                 results = dw.broadcast_control_all(
                     selected_type,
@@ -6269,7 +6332,7 @@ class TestUnreclaimedDeviceStateIsNeverSilent:
                 return 0xC7, 0xB000
 
             cw._impl.comm_alloc_domain_windows = committed
-            mailbox = memoryview(bytearray(MAILBOX_SIZE))
+            mailbox = memoryview(bytearray(worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST)))
             for offset, shm_name in (
                 (worker_mod._OFF_ARGS, request.name),
                 (worker_mod._OFF_ARGS + worker_mod._CTRL_SHM_NAME_BYTES, reply.name),
@@ -6306,7 +6369,7 @@ class TestUnreclaimedDeviceStateIsNeverSilent:
 
             cw = cast(Any, SimpleNamespace(_impl=SimpleNamespace()))
             cw._impl.comm_alloc_domain_windows = committed_then_failed
-            mailbox = memoryview(bytearray(MAILBOX_SIZE))
+            mailbox = memoryview(bytearray(worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST)))
             for offset, shm_name in (
                 (worker_mod._OFF_ARGS, request.name),
                 (worker_mod._OFF_ARGS + worker_mod._CTRL_SHM_NAME_BYTES, reply.name),
@@ -8161,10 +8224,9 @@ class TestChipMainLoopDigestRegister:
 
     @staticmethod
     def _build_mailbox():
-        from simpler.task_interface import MAILBOX_SIZE  # noqa: PLC0415
         from simpler.worker import _IDLE, _OFF_STATE, _buffer_field_addr, _mailbox_store_i32  # noqa: PLC0415
 
-        shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+        shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
         buf = shm.buf
         assert buf is not None
         # Loop reads the state field via a raw address (atomic_int32 in C++),
@@ -8507,15 +8569,37 @@ def test_a_failed_diagnostic_sidecar_write_fails_the_task_not_the_loop(tmp_path)
     # while output_prefix itself stays a directory the host log setter accepts.
     (tmp_path / "rank0").write_text("")
 
-    shm = SharedMemory(create=True, size=MAILBOX_SIZE)
+    shm = SharedMemory(create=True, size=worker_mod.mailbox_size(worker_mod._DEFAULT_PIPELINE_DEPTH_REQUEST))
     buf = shm.buf
     assert buf is not None
     mailbox_addr = _mailbox_addr(shm)
     state_addr = mailbox_addr + _OFF_STATE
     frame_state_addr = mailbox_addr + worker_mod.MAILBOX_FRAME_SIZE + _OFF_STATE
+    entry_offset = worker_mod.MAILBOX_RUN_ENTRY_TABLE_OFFSET
+    entry_addr = mailbox_addr + entry_offset
+    entry_generation = 3
     _mailbox_store_i32(state_addr, worker_mod._IDLE)
 
     digest = bytes([0x42]) * worker_mod.CALLABLE_HASH_DIGEST_BYTES
+    # The run's identity goes on its run-state entry, the payload on a request frame, and the
+    # frame's header is what binds the two. Published in that order, state word last.
+    entry = buf[entry_offset : entry_offset + worker_mod.MAILBOX_RUN_ENTRY_STRIDE]
+    try:
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_PROTOCOL, worker_mod._TASK_PROTOCOL_VERSION)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_RUN_ID, 5)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_SLOT_ID, 0)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_LEASE_GENERATION, 11)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_DISPATCH_ID, 1)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_TASK_SLOT, 3)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_GROUP_INDEX, 0)
+        struct.pack_into("=Q", entry, worker_mod._OFF_ENTRY_GROUP_SIZE, 1)
+    finally:
+        entry.release()
+    _mailbox_store_i32(entry_addr + worker_mod._OFF_ENTRY_ACCEPTED, 0)
+    _mailbox_store_u64(entry_addr + worker_mod._OFF_ENTRY_FRAME_CONSUMED_GENERATION, 0)
+    _mailbox_store_i32(entry_addr + worker_mod._OFF_ENTRY_STATE, worker_mod._IDLE)
+    _mailbox_store_u64(entry_addr + worker_mod._OFF_ENTRY_GENERATION, entry_generation)
+
     frame = buf[worker_mod.MAILBOX_FRAME_SIZE : 2 * worker_mod.MAILBOX_FRAME_SIZE]
     try:
         frame[worker_mod._OFF_TASK_CALLABLE_HASH : worker_mod._OFF_TASK_ARGS_BLOB] = digest
@@ -8524,14 +8608,9 @@ def test_a_failed_diagnostic_sidecar_write_fails_the_task_not_the_loop(tmp_path)
         cfg_values[1] = 4  # enable_chip_swimlane
         worker_mod._CFG_FMT.pack_into(frame, worker_mod._OFF_CONFIG, *cfg_values, str(tmp_path).encode())
         worker_mod._PIPELINE_LEASE_FMT.pack_into(frame, worker_mod._OFF_PIPELINE_LEASE, 0, 0, 11)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_PROTOCOL, worker_mod._TASK_PROTOCOL_VERSION)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_RUN_ID, 5)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_SLOT_ID, 0)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GENERATION, 11)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_DISPATCH_ID, 1)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_TASK_SLOT, 3)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GROUP_INDEX, 0)
-        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GROUP_SIZE, 1)
+        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_ENTRY_INDEX, 0)
+        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_ENTRY_GENERATION, entry_generation)
+        struct.pack_into("=Q", frame, worker_mod._OFF_FRAME_GENERATION, 1)
     finally:
         frame.release()
 
@@ -8561,16 +8640,29 @@ def test_a_failed_diagnostic_sidecar_write_fails_the_task_not_the_loop(tmp_path)
         _mailbox_store_i32(frame_state_addr, worker_mod._TASK_READY)
         thread.start()
         deadline = time.monotonic() + 5.0
-        while _mailbox_load_i32(frame_state_addr) != worker_mod._TASK_DONE:
-            assert time.monotonic() < deadline, "loop exited without publishing TASK_DONE"
+        # The run terminates on its entry. The frame comes back before that and is reusable, so
+        # waiting on the frame's own word would be waiting on transport, not on this run.
+        while _mailbox_load_i32(entry_addr + worker_mod._OFF_ENTRY_STATE) != worker_mod._TASK_FAILED:
+            assert time.monotonic() < deadline, "loop exited without publishing a terminal state"
             time.sleep(0.001)
+        # The ACK is the child's last access to the frame, so observing it means every store into
+        # the frame has already landed.
+        assert _mailbox_load_u64(entry_addr + worker_mod._OFF_ENTRY_FRAME_CONSUMED_GENERATION) == 1, (
+            "the request frame was not handed back"
+        )
+        assert _mailbox_load_i32(frame_state_addr) == worker_mod._IDLE
 
-        task_frame = buf[worker_mod.MAILBOX_FRAME_SIZE : 2 * worker_mod.MAILBOX_FRAME_SIZE]
+        entry = buf[entry_offset : entry_offset + worker_mod.MAILBOX_RUN_ENTRY_STRIDE]
         try:
-            error_code = struct.unpack_from("i", task_frame, worker_mod._OFF_ERROR)[0]
-            raw = bytes(task_frame[MAILBOX_OFF_ERROR_MSG : MAILBOX_OFF_ERROR_MSG + MAILBOX_ERROR_MSG_SIZE])
+            error_code = struct.unpack_from("i", entry, worker_mod._OFF_ENTRY_ERROR)[0]
+            raw = bytes(
+                entry[
+                    worker_mod._OFF_ENTRY_ERROR_TEXT : worker_mod._OFF_ENTRY_ERROR_TEXT
+                    + worker_mod.MAILBOX_ERROR_MSG_SIZE
+                ]
+            )
         finally:
-            task_frame.release()
+            entry.release()
         assert error_code == 1
         assert raw.split(b"\x00", 1)[0].decode("utf-8", "replace").startswith("chip_process dev=0")
         assert not (tmp_path / "rank0" / "d0").exists()

@@ -210,8 +210,15 @@ struct RetainedRunsFixture {
         set_chip_swimlane_enabled(true);
         set_platform_chip_swimlane_base(reinterpret_cast<uint64_t>(shm()));
         set_platform_chip_swimlane_aicore_rotation_table(0);
+        // Taken by epoch, then armed — the order the runner uses. A bank is held by whichever
+        // epoch acquired it, and `run_close` resolves the one to read back from that mapping, so
+        // arming an index the collector never handed out leaves the run with no bank and its
+        // close with no terminal to prove completion from. Arming alone was enough only while the
+        // caller named the index at close.
+        const int bank = collector.acquire_run_terminal_bank(epoch);
+        ASSERT_GE(bank, 0) << "no terminal bank was free for epoch " << epoch;
         set_platform_chip_swimlane_run_terminal_bank(
-            reinterpret_cast<uint64_t>(collector.arm_run_terminal_bank(/*bank_index=*/0, epoch))
+            reinterpret_cast<uint64_t>(collector.arm_run_terminal_bank(static_cast<uint32_t>(bank), epoch))
         );
         chip_swimlane_aicpu_init(num_aicore);
     }
@@ -234,7 +241,7 @@ struct RetainedRunsFixture {
     /** Close the device side of a run, then hand the run to the writer. */
     void close(uint64_t epoch, const int *cores, int core_num, int thread_idx = 0) {
         chip_swimlane_aicpu_flush(thread_idx, cores, core_num);
-        collector.run_close(epoch, /*bank_index=*/0, /*device_execution_complete=*/true);
+        collector.run_close(epoch, /*device_execution_complete=*/true);
     }
 
     /**
@@ -246,7 +253,7 @@ struct RetainedRunsFixture {
     void close_through_boundary(uint64_t epoch, const int *cores, int core_num, PublishHostState &&publish) {
         chip_swimlane_aicpu_flush(/*thread_idx=*/0, cores, core_num);
         simpler::dfx::runs::close_run_boundary(
-            collector, epoch, /*bank_index=*/0, /*device_execution_complete=*/true,
+            collector, epoch, /*device_execution_complete=*/true, /*device_producers_stopped=*/false,
             std::forward<PublishHostState>(publish)
         );
     }
@@ -387,7 +394,7 @@ TEST(ChipSwimlaneRetainedRunsTest, PredecessorRecordsSurviveSuccessorAdmission) 
     fx.dispatch(/*core_id=*/0, 6);
     chip_swimlane_aicpu_flush(0, cores, 1);
     // The successor is admitted before the predecessor is sealed.
-    fx.collector.run_close(kFirst, 0, true);
+    fx.collector.run_close(kFirst, true);
     fx.begin(kSecond);
     fx.dispatch(/*core_id=*/0, 2);
     fx.close(kSecond, cores, 1);
@@ -619,7 +626,7 @@ TEST(ChipSwimlaneRetainedRunsTest, OneQueuesTrafficDoesNotDischargeAnother) {
     fx.dispatch(/*core_id=*/1, 5);
     chip_swimlane_aicpu_flush(/*thread_idx=*/0, &all_cores[0], 1);
     chip_swimlane_aicpu_flush(/*thread_idx=*/1, &all_cores[1], 1);
-    fx.collector.run_close(kEpoch, 0, true);
+    fx.collector.run_close(kEpoch, true);
 
     ASSERT_TRUE(fx.wait_for_files(1));
     const auto files = published_files(fx.dir.path());
@@ -643,7 +650,7 @@ TEST(ChipSwimlaneRetainedRunsTest, RunWithoutTerminalStillPublishesAndReleasesIt
     chip_swimlane_aicpu_flush(0, cores, 1);
     // device_execution_complete = false: the recovery path, where the bank says
     // nothing about this run.
-    fx.collector.run_close(kEpoch, 0, /*device_execution_complete=*/false);
+    fx.collector.run_close(kEpoch, /*device_execution_complete=*/false);
 
     ASSERT_TRUE(fx.wait_for_files(1));
     const std::string body = read_file(published_files(fx.dir.path())[0]);
@@ -662,6 +669,34 @@ TEST(ChipSwimlaneRetainedRunsTest, RunWithoutTerminalStillPublishesAndReleasesIt
     const auto stats = fx.collector.retained_run_stats_for_test();
     EXPECT_EQ(stats.open_slots, 0u);
     EXPECT_FALSE(stats.fatal);
+}
+
+// The same failed run, with the producer-stop proof its simulated device can
+// give: the snapshot is still not read — the run never reached its terminal
+// publication — but the bank goes back instead of being withdrawn, because
+// nothing can be writing into it. A retained close has to agree with the
+// non-retaining one here, since the capacity it consumes is the same table.
+TEST(ChipSwimlaneRetainedRunsTest, AFailedRunWhoseProducersStoppedReturnsItsBankUnread) {
+    RetainedRunsFixture fx("stoppedproducers", /*cores=*/1, /*threads=*/1);
+    const int cores[] = {0};
+    constexpr uint64_t kEpoch = 9311;
+
+    fx.begin(kEpoch);
+    fx.dispatch(/*core_id=*/0, 2);
+    chip_swimlane_aicpu_flush(0, cores, 1);
+    ASSERT_GE(fx.collector.run_terminal_bank_of(kEpoch), 0) << "this run never held a bank to settle";
+
+    fx.collector.run_close(kEpoch, /*device_execution_complete=*/false, /*device_producers_stopped=*/true);
+
+    EXPECT_EQ(fx.collector.run_terminal_bank_of(kEpoch), -1) << "a settled run still holds its bank";
+    EXPECT_EQ(fx.collector.quarantined_run_terminal_banks(), 0)
+        << "a failure with its producers proved stopped withdrew the bank anyway";
+    // Unread, not reported as this run's accounting: the artifact still carries
+    // the incomplete verdict a run that never finished must carry.
+    ASSERT_TRUE(fx.wait_for_files(1));
+    const std::string body = read_file(published_files(fx.dir.path())[0]);
+    EXPECT_NE(body.find("\"processing_complete\": false"), std::string::npos) << body.substr(0, 400);
+    EXPECT_NE(body.find("partial_cut_unknown"), std::string::npos);
 }
 
 // A publication that cannot happen must not be silently forgotten: no file, an
@@ -886,7 +921,7 @@ TEST(ChipSwimlaneRetainedRunsTest, AFailedPreparationLeavesNothingReadyAndRetrie
     ASSERT_TRUE(collector.run_begin(2, root.str(), ChipSwimlaneLevel::TASK_TIMING, nullptr, 0, false));
     EXPECT_EQ(artifact_dirs(), 1) << "the retry did not reserve its own directory";
 
-    collector.run_close(2, /*bank_index=*/0, /*device_execution_complete=*/true);
+    collector.run_close(2, /*device_execution_complete=*/true);
 
     // Both exits twice. The first pair publishes and stops admitting; the
     // second finds the watermark already set and the resources already gone.
@@ -1194,7 +1229,7 @@ TEST(ChipSwimlaneRetainedRunsTest, CloseDefersQuarantinedStorageUntilReadersAreJ
     // reference released. `finish_retained_runs` is still called, because that
     // is what production does, but its flush returns on the fatal — so the
     // verdict is awaited directly.
-    rs.collector.run_close(kEpoch, /*bank_index=*/0, /*device_execution_complete=*/true);
+    rs.collector.run_close(kEpoch, /*device_execution_complete=*/true);
     rs.collector.finish_retained_runs();
     ASSERT_TRUE(rs.wait_for_deferred_release()) << "the unprovable seal never reached a quarantine verdict";
 
