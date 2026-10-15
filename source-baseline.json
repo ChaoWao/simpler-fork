@@ -1,0 +1,237 @@
+{
+  "commit": "2085182ad83b4385e0f1e5a492dd305fe701506b",
+  "entries": [
+    {
+      "id": "kernel-events",
+      "path": "src/common/platform/include/host/kernel_execution_state.h",
+      "symbol": "KernelEventKind",
+      "quote": "AicoreStart, /* aicpu → aicore fork */",
+      "line_hint": 93,
+      "claim": "五事件链；AicoreStart 在 AICPU launch 之前，record/wait 不跨捕获边界。"
+    },
+    {
+      "id": "kernel-stub",
+      "path": "src/common/platform/onboard/host/c_api_shared.cpp",
+      "symbol": "simpler_kernel_mode_supported",
+      "quote": "int simpler_kernel_mode_supported(DeviceContextHandle) { return 0; }",
+      "line_hint": 1440,
+      "claim": "当前尚未交付 kernel launch；同文件 simpler_kernel_mode_launch 返回 INVALID_STATE。"
+    },
+    {
+      "id": "orchestrator-admission",
+      "path": "src/common/hierarchical/orchestrator.cpp",
+      "symbol": "Orchestrator::begin_run",
+      "quote": "lease = pipeline_slots_.try_acquire(admission_depth_);",
+      "line_hint": 80,
+      "claim": "父 run admission 在 begin_run，不是单由 lane 决定。"
+    },
+    {
+      "id": "orchestrator-fifo",
+      "path": "src/common/hierarchical/orchestrator.cpp",
+      "symbol": "Orchestrator::activate_fifo_head",
+      "quote": "if (active_run_id_ != INVALID_RUN_ID || run_fifo_.empty()) return;",
+      "line_hint": 187,
+      "claim": "当前父 run 执行权受 active_run_id_ 限制。"
+    },
+    {
+      "id": "lane-leased",
+      "path": "src/common/worker/chip_run_lane.cpp",
+      "symbol": "ChipRunLane",
+      "quote": "chip run lane capacity exceeded before native preparation",
+      "line_hint": 387,
+      "claim": "leased overload 容量满抛错；direct overload 的 drain 不能替代它的说明。"
+    },
+    {
+      "id": "worker-predecessor",
+      "path": "src/common/worker/chip_worker.cpp",
+      "symbol": "prepare_native_run",
+      "quote": "prepare_native_run requires an active predecessor before staging a successor",
+      "line_hint": 754,
+      "claim": "prepare 的前驱限制仍是现状约束。"
+    },
+    {
+      "id": "stream-owner",
+      "path": "src/common/platform/include/host/run_stream_pair.h",
+      "symbol": "RunStreamPair",
+      "quote": "if (owner_ != nullptr) return PTO_RUNTIME_ERR_INTERNAL;",
+      "line_hint": 81,
+      "claim": "ensure 依赖 idle；单一 owner 与 image instruction-cache 都不能忽略。"
+    },
+    {
+      "id": "completion-verdict",
+      "path": "src/common/platform/onboard/host/device_runner_base.cpp",
+      "symbol": "DeviceRunnerBase::wait_run_fence",
+      "quote": "Completion is settled above; this reads the device's verdict on the work",
+      "line_hint": 2547,
+      "claim": "事件完成后仍同步整流读 verdict，P2 正常 drain 未因已有 fence 自动交付。"
+    },
+    {
+      "id": "fault-notification",
+      "path": "src/common/platform/onboard/host/device_runner_base.cpp",
+      "symbol": "DeviceRunnerBase::ensure_device_initialized",
+      "quote": "is a reporting channel today, and nothing decides a run from it.",
+      "line_hint": 709,
+      "claim": "通知 owner 是已合入基础，还不是每 run 健康裁决。"
+    },
+    {
+      "id": "tmr-contract",
+      "path": "src/a2a3/runtime/tensormap_and_ringbuffer/host/runtime_maker.cpp",
+      "symbol": "build_kernel_pipeline_contract_impl",
+      "quote": "{PTO_PIPELINE_GM_HEAP, PTO_PIPELINE_DEVICE_SCRATCH, sizes.total_heap}",
+      "line_hint": 503,
+      "claim": "TMR task args 与三块 scratch 分开；六个 contract entry 不是完整 capacity manifest。"
+    },
+    {
+      "id": "hbg-contract",
+      "path": "src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp",
+      "symbol": "get_pipeline_contract",
+      "quote": "{PTO_PIPELINE_GM_HEAP, PTO_PIPELINE_HOST_PER_RUN, 0}",
+      "line_hint": 121,
+      "claim": "HBG host-populated GM_HEAP / RUNTIME_IMAGE 已按 HOST_PER_RUN、depth 2 分 bank。"
+    },
+    {
+      "id": "hbg-orchestration",
+      "path": "src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp",
+      "symbol": "run_host_orchestration",
+      "quote": "int32_t run_host_orchestration(",
+      "line_hint": 626,
+      "claim": "Host 构图是已有 program prepare 路径；不是设计新发明的 banking。"
+    },
+    {
+      "id": "hbg-bytes",
+      "path": "src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp",
+      "symbol": "HostPhaseKind::BindArenaH2d",
+      "quote": "const uint64_t upload_bytes = copied_bytes + image_bytes;",
+      "line_hint": 960,
+      "claim": "真实传输量含 copied_bytes 与 compacted image_bytes；不可用 arena capacity 代替。"
+    },
+    {
+      "id": "hbg-prefix",
+      "path": "src/common/host_build_graph/runtime.h",
+      "symbol": "HostOnlyState",
+      "quote": "return sizeof(DeviceRuntimeLaunchDesc);",
+      "line_hint": 419,
+      "claim": "HBG 采用 #2315 的显式 dev descriptor；host_ 不上传，descriptor 成员不因此具有相同寿命。"
+    },
+    {
+      "id": "sync-publish",
+      "path": "src/common/platform/onboard/host/device_runner_helpers.cpp",
+      "symbol": "KernelArgsHelper::init_runtime_args",
+      "quote": "int rc = rtMemcpy(args.runtime_args, runtime_size, &host_runtime, runtime_size, RT_MEMCPY_HOST_TO_DEVICE);",
+      "line_hint": 110,
+      "claim": "当前 metadata 发布同步；本文件 HBG whole-Runtime 注释已落后于实际 copy-size。"
+    },
+    {
+      "id": "tmr-layout",
+      "path": "src/a2a3/runtime/tensormap_and_ringbuffer/runtime/runtime.h",
+      "symbol": "DeviceRuntimeLaunchDesc",
+      "quote": "Handshake workers[RUNTIME_MAX_WORKER];",
+      "line_hint": 151,
+      "claim": "Device prefix 含握手，整段 publish 与在飞握手有写冲突。"
+    },
+    {
+      "id": "tmr-core-reader",
+      "path": "src/a2a3/runtime/tensormap_and_ringbuffer/aicore/aicore_executor.cpp",
+      "symbol": "aicore_execute",
+      "quote": "dcci(my_hank, SINGLE_CACHE_LINE, CACHELINE_OUT);",
+      "line_hint": 83,
+      "claim": "AICore 从 runtime->dev.workers 取握手并整 cache line 写回。"
+    },
+    {
+      "id": "tmr-cpu-reader",
+      "path": "src/a2a3/runtime/tensormap_and_ringbuffer/aicpu/aicpu_executor.cpp",
+      "symbol": "pre_handshake_init",
+      "quote": "cache_invalidate_range(runtime, sizeof(runtime->dev));",
+      "line_hint": 1035,
+      "claim": "AICPU 使用相同 Runtime device prefix；ABI 拆分须改 reader 与 invalidate。"
+    },
+    {
+      "id": "tmr-orch-args",
+      "path": "src/a2a3/runtime/tensormap_and_ringbuffer/aicpu/aicpu_executor.cpp",
+      "symbol": "get_orch_args",
+      "quote": "orch_args_cached_.create_from_entry_storage(runtime->get_orch_args());",
+      "line_hint": 595,
+      "claim": "本次编排参数通过 Runtime 指针读取，不是每个 scalar 都冻结在 AICPU blob 中。"
+    },
+    {
+      "id": "aicpu-envelope",
+      "path": "src/common/platform/onboard/host/device_runner_base.cpp",
+      "symbol": "DeviceRunnerBase::launch_aicpu_kernel",
+      "quote": "return load_aicpu_op_.LaunchBuiltInOp(stream, k_args, sizeof(KernelArgs), aicpu_num, kernel_name);",
+      "line_hint": 1783,
+      "claim": "按值 blob 与其中指针所指内容需分开审计。"
+    },
+    {
+      "id": "aicore-envelope",
+      "path": "src/common/platform/onboard/host/device_runner_base.cpp",
+      "symbol": "DeviceRunnerBase::launch_aicore_kernel",
+      "quote": "AicoreLaunchArgs args{};",
+      "line_hint": 2140,
+      "claim": "当前 program AICore 参数按本次 launch 值传递，含 enable_profiling_flag。"
+    },
+    {
+      "id": "kernel-cold-args",
+      "path": "src/common/platform/onboard/host/kernel_persistent_args.cpp",
+      "symbol": "PersistentKernelArgs::prepare_once",
+      "quote": "device_k_args_ = reinterpret_cast<KernelArgs *>(device_args);",
+      "line_hint": 66,
+      "claim": "Kernel 冷资源仍有 device args，不能把 program 路径改变推广到所有类。"
+    },
+    {
+      "id": "pmu-table",
+      "path": "src/a2a3/platform/onboard/host/device_runner.cpp",
+      "symbol": "DeviceRunner::ensure_aicore_reg_table",
+      "quote": "execution->kernel_args.args.pmu_reg_addrs = dfx.pmu_enabled ? aicore_pmu_reg_table_dev_ : 0;",
+      "line_hint": 327,
+      "claim": "PMU 表已常驻，per-call enable/0 地址仍变化；cleanup 只清本次字段。"
+    },
+    {
+      "id": "timeout-contract",
+      "path": "src/common/platform/include/host/runtime_timeout_config.h",
+      "symbol": "validate_runtime_timeout_order",
+      "quote": "constexpr int32_t RUNTIME_TIMEOUT_SCHEDULER_ARMING_GUARD_MS = 1500;",
+      "line_hint": 32,
+      "claim": "三层时限与 arming guard；RuntimeTimeoutConfig 是配置载体。"
+    },
+    {
+      "id": "timeout-effective",
+      "path": "src/common/platform/onboard/host/device_runner_base.cpp",
+      "symbol": "DeviceRunnerBase::configure_aicore_op_timeout",
+      "quote": "int rc = aclrtSetOpExecuteTimeOutV2(timeout_config_.op_execute_timeout_us, &actual_timeout);",
+      "line_hint": 683,
+      "claim": "当前 actual 仅记录日志；生效值层级仍需核实和校验。"
+    },
+    {
+      "id": "hbg-copy-size",
+      "path": "src/common/host_build_graph/shared/runtime.cpp",
+      "symbol": "runtime_device_copy_size",
+      "quote": "size_t runtime_device_copy_size(const Runtime &) { return Runtime::device_image_bytes(); }",
+      "line_hint": 136,
+      "claim": "HBG copy-size 实际返回前缀长度；不能采用调用点陈旧的 whole-object 注释。"
+    },
+    {
+      "id": "dfx-cache-reset",
+      "path": "src/common/platform/shared/aicpu/chip_swimlane_collector_aicpu.cpp",
+      "symbol": "set_chip_swimlane_enabled",
+      "quote": "all phase-writer state must be invalidated at this common entry point.",
+      "line_hint": 123,
+      "claim": "每次 launch 包括 disabled 路径都失效 writer 缓存；不等于清空未消费队列。"
+    },
+    {
+      "id": "kernel-freeze",
+      "path": "src/common/platform/include/host/kernel_entry_validation.h",
+      "symbol": "kernel_arena_change_is_forbidden",
+      "quote": "if (requested_size == 0) return cached_size != 0;",
+      "line_hint": 47,
+      "claim": "冻结引用不仅限制增长，还禁止 zero-size 请求释放已捕获地址；全批预检须在修改前。"
+    },
+    {
+      "id": "ci-timeout",
+      "path": ".github/workflows/_st-npu-a2a3.yml",
+      "symbol": "SIMPLER_OP_EXECUTE_TIMEOUT_US",
+      "quote": "SIMPLER_OP_EXECUTE_TIMEOUT_US: \"3000000\"",
+      "line_hint": 36,
+      "claim": "此基线 CI 请求是 3s；Probe M 原始 2s CI 标签错误。"
+    }
+  ]
+}

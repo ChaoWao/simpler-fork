@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Kernel mode 的可执行路线：当前工作、并行边界、依赖、代码范围与每阶段验收。"><title>Kernel mode · ROADMAP</title><style>
+:root{--ink:#233b35;--muted:#637871;--paper:#f4f6f3;--line:#d5e0da;--green:#227259;--nav:240px;scroll-behavior:smooth;scroll-padding-top:24px}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.85 system-ui,-apple-system,"Segoe UI","Noto Sans CJK SC",sans-serif}a{color:var(--green);text-underline-offset:3px}a:focus-visible,button:focus-visible{outline:3px solid #a68426;outline-offset:4px}nav{position:fixed;inset:0 auto 0 0;width:var(--nav);padding:30px 20px;background:#18362e;color:#fff;overflow:auto}nav .brand{font-size:11px;color:#a9d0bd;letter-spacing:.15em}nav h2{font-size:25px;line-height:1.45;margin:15px 0 25px}nav a{display:block;color:#c9dcd1;text-decoration:none;font-size:13px;padding:9px 8px;border-radius:6px;margin:3px 0}nav a:hover,nav a.active{background:#305647;color:#fff}nav .other{margin-top:28px;padding-top:17px;border-top:1px solid #3d5d50}main{margin-left:var(--nav);padding:40px 44px 70px;max-width:1610px}header{padding-bottom:30px;border-bottom:1px solid var(--line)}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.15em;color:var(--green)}h1{font-size:clamp(30px,3.8vw,50px);letter-spacing:-.045em;line-height:1.3;margin:20px 0}.intro{font-size:18px;max-width:880px;color:#516e62}.meta{font-size:12px;color:var(--muted);margin-top:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px}.print{font:inherit;font-size:12px;cursor:pointer;border:1px solid var(--line);border-radius:6px;background:white;padding:7px 12px;color:var(--ink)}.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:27px 0 0}.card{background:#fff;border:1px solid var(--line);padding:20px;border-radius:10px}.card b{display:block;font-size:18px;margin:6px 0}.card p{font-size:13px;margin:5px 0;color:var(--muted)}.tag{font-size:11px;font-weight:700;color:var(--green)}.card.current{border-color:#458268;background:#edf5ef}section{padding-top:40px;padding-bottom:25px;border-bottom:1px solid var(--line)}h2{font-size:27px;line-height:1.4;letter-spacing:-.02em;margin:0 0 22px}h3{font-size:19px;line-height:1.5;margin:28px 0 12px}p{margin:14px 0}ul,ol{padding-left:24px}li{margin:9px 0}.table-scroll{overflow:auto;margin:20px 0;border:1px solid var(--line);border-radius:9px;background:#fff}table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px;line-height:1.75}th,td{padding:14px 16px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#eaf0eb;font-size:12px}tr:last-child td{border-bottom:0}td:first-child{font-weight:600;min-width:140px}#section-3 table{min-width:1050px}#section-3 td:first-child{width:170px}#section-3 td:nth-child(2){min-width:190px}code{font:12px/1.6 ui-monospace,monospace;background:#e7eee7;padding:2px 4px;border-radius:4px;overflow-wrap:anywhere}pre{overflow:auto;background:#eaf0eb;border:1px solid var(--line);padding:20px;border-radius:10px}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal;font-size:13px}figure{margin:22px 0}.dependency{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}.diagram-scroll{overflow:auto}svg{width:100%;min-width:960px;height:auto;display:block}svg text{fill:#39564a;font-size:14px}svg .name{font-weight:700;font-size:17px}svg .status{font-size:12px;fill:#647c70}svg .annotation{font-size:13px;fill:#61756c}.edge{stroke:#658278;stroke-width:2;fill:none;marker-end:url(#arrow)}svg rect{stroke-width:1.3}svg .external{fill:#edf0f5;stroke:#9bacc4}svg .now{fill:#e5f2e8;stroke:#458268}svg .future{fill:#f4f5f3;stroke:#a6b6aa}svg .capture{fill:#fbf2df;stroke:#c4ad79}svg a:hover rect{stroke:#274f3d;stroke-width:2.5}figcaption{font-size:12px;color:var(--muted);padding:13px 20px;border-top:1px solid var(--line)}footer{font-size:12px;color:var(--muted);padding-top:28px}.skip{position:absolute;left:260px;top:-100px}.skip:focus{top:10px;padding:8px;background:white;z-index:10}
+@media(max-width:1000px){:root{--nav:205px}main{padding:30px 25px 50px}nav{padding:25px 14px}.summary{grid-template-columns:1fr}.card{padding:15px 20px}.card b{font-size:17px}}
+@media(max-width:700px){nav{position:static;width:auto;padding:18px 20px}nav h2{font-size:20px;margin:8px 0}nav .toc{display:flex;gap:4px;overflow:auto}nav .toc a{white-space:nowrap;font-size:12px}nav .other{display:none}main{margin:0;padding:26px 18px 45px}h2{font-size:23px}section{padding-top:30px}.skip{left:10px}.summary{gap:10px}}
+@media print{@page{size:A4 landscape;margin:13mm}nav,.print,.skip{display:none}main{margin:0;padding:0;max-width:none}body{background:white;font-size:11px}h1{font-size:30px}h2{font-size:22px}.summary{grid-template-columns:repeat(3,1fr)}.table-scroll,.diagram-scroll{overflow:visible}table,#section-3 table{min-width:0;font-size:10px}td,th{padding:8px}svg{min-width:0}.dependency,.card{break-inside:avoid}h2,h3{break-after:avoid}a{color:inherit}section{padding-top:22px}pre{font-size:10px}}
+</style></head>
+<body><a class="skip" href="#section-1">跳到当前下一步</a>
+<nav aria-label="路线导航"><div class="brand">SIMPLER / DELIVERY MAP</div><h2>Kernel mode<br>实施路线</h2><div class="toc"><a href="#section-1">1. 现在做什么</a><a href="#section-2">2. 依赖关系</a><a href="#section-3">3. 总交付表</a><a href="#section-4">4. A：我们接收什么，不重复实现什么</a><a href="#section-5">5. S1 / S2：现在与 A 并行的工作</a><a href="#section-6">6. K1 / K2：把 kernel eager 做完整</a><a href="#section-7">7. C1 / C2：建立可重放的命令与资源合同</a><a href="#section-8">8. C3 / C4：TMR 和 HBG 都必须走到终点</a><a href="#section-9">9. 已有工作怎样计入进度</a><a href="#section-10">10. 如何维护这份路线</a><a href="#section-11">2026-10-08：当前接线与剩余问题</a></div><div class="other"><a href="runtime-design-principles.md">设计原则：判断依据 ↗</a><a href="ROADMAP.md">Markdown 内容源 ↗</a><a href="kernel-mode-unified-design.html">目标架构与调用流程 ↗</a><a href="references/pipeline-a/run-pipeline-track-a.html#roadmap">Pipeline A 路线 ↗</a></div></nav>
+<main id="roadmap"><header><div class="top"><span class="eyebrow">一条主线 · 一组并行基础 · 明确的验收门</span><button class="print" type="button" onclick="window.print()">打印 / 保存 PDF</button></div><h1>现在做什么，<br>做完后进入哪一步。</h1><p class="intro">Pipeline A → Kernel eager → Capture / Replay。把每一步落到修改范围、前置条件和可观察的完成标准；TMR 与 HBG 都走到同一个终点。</p><div class="summary"><article class="card current"><span class="tag">现在 / K1 → K2</span><b>K2a 合同 → K2b 环境 → K2c eager</b><p>#2584 已合入，K2a 完成。#2587 环境/source 已合入；#2589 direct L2 待合入，child/materialization 随后。S3 并行，为 C2 提供 module owner。</p></article><article class="card"><span class="tag">消费已交付的执行基础</span><b>A + S2 → K1 → K2</b><p>同一 Worker、参数与执行器；环境/generation、caller 顺序、拒绝与寿命闭合后验收 eager。</p></article><article class="card"><span class="tag">后续必交付</span><b>C1 → C2 → C3 → C4</b><p>设备闭包、图所有权、双 runtime replay，再完成换参、多图、DFX 和故障验收。</p></article></div><p class="meta">当前接线：2026-10-15 · #2587 已合入 11eb5d2c9；源码审查快照固定 11eb5d2c9 / #2589 1a113d50 待合入 · 历史验证保留各自基线<br>本页为本地规划资料；生产接口与完整验收分别记账。</p><p class="callout">旧 kernel launch 入口仍拒绝、supported=0。主线共同 native API 已接 caller 顺序，Worker 公开接入与完整 eager 验收尚待完成。AIV 取证独立推进，不以重复复现替代主线任务。<a href="kernel-eager-open-work.md">剩余问题与验证边界</a> · <a href="aiv-evidence-plan.md">AIV 现场规划</a>。</p></header>
+<section id="section-1"><h2>1. 现在做什么</h2><p><strong>2026-10-15 / main <code>11eb5d2c9</code>：#2587 已合入；K2a 已结项，正在交付 K2b。</strong></p>
+<p><a href="https://github.com/hw-native-sys/simpler/pull/2587">PR #2587</a> 已合入 <code>11eb5d2c9</code>（验证 head <code>51961a02</code>）：native 环境身份包含 process、incarnation、context generation、device 与 owned/borrowed 策略；source 创建、descriptor 和提交接入验证同一绑定。成功清理失效，失败保留供重试；不以 Python READY 或 device ordinal 替代环境身份。既有 runner 验证 RTS current context，逻辑身份不探测外部 reset、不证明指针归属。</p>
+<p>首轮 <code>430d5f4d</code> 验证：3261 Python UT、319 C++ targets、A2/A3 与 A5 相关 sim 13/10 项；task-submit device 0 的 44 项 caller/lifecycle 和 7 项 HBG readiness 全通过。修订 <code>51961a02</code> 补齐前期成功回滚的身份清除，六个负例先失败后通过；最终重建后 240 项相关 Python、319 C++ targets 与 hooks 通过。两轮证据按 head 分开，见<a href="reviews/context-bound-buffer-source/REPORT.md">证据</a>。K2b 仍需内部 adapter/materialization 收口；之后 K2c 完整 public borrowed eager，再进入 capture/replay。#2584 的历史证据仍见<a href="reviews/leased-context-validation/REPORT.md">原记录</a>。</p>
+<p><a href="https://github.com/hw-native-sys/simpler/pull/2589">PR #2589</a> <code>1a113d50</code> 待 review/CI：direct L2 Worker 直接持有原 <code>_ChipWorker</code>，移除中间公开 ChipWorker 的重复 registry/lock；共同初始化 helper 处理日志、binary paths 和 options。公开兼容入口与 chip child 仍保留 wrapper，本笔不声称 K2b 完成。下一步收口 child 内部接入（含通信缓存）与共同参数 materialization，之后 K2c。</p>
+<p>本笔 Python UT 3270 passed / 91 skipped；A2/A3、A5 sim 15/11 场景；task-submit 17 个场景与 44 项 caller/lifecycle 通过；final head 重建后 280 passed / 16 skipped。未重跑完整上板 sweep，没有 AIV；A5 仅仿真。见<a href="reviews/direct-native-chip-worker/REPORT.md">记录</a>。</p>
+<p>本轮按入口、准备、launch、错误恢复和退休读取主线；没有重新宣称全路线验收。<a href="reviews/kernel-eager-main-e0a5e9a.md">核查与下一 PR 范围</a>给出源码符号和测试门槛；<a href="aiv-evidence-plan.md">AIV 现场规划</a>独立保留，不继续扩大主动复现矩阵。</p>
+<p><strong><a href="https://github.com/hw-native-sys/simpler/pull/2557">PR #2557</a> 已合入 main <code>55eb52246</code></strong>（原审阅 head <code>26d8abc3</code>，验证基线 <code>600540064</code>）：本次执行持有实际 stream 绑定，Program 两架构消费；借用 context 出错不做全设备同步。公开 kernel launch 仍关闭。8 个真实库桩探针、313 个 C++ 目标、3039 个 Python 用例、两套普通 sim sweep 通过；单独叠加 #2536 DFX 的 A2/A3 常规全量上板通过，本轮无 AIV。这不是 kernel eager 已验收。见<a href="reviews/run-execution-streams/REPORT.md">交付与验证记录</a>。</p>
+<p><strong><a href="https://github.com/hw-native-sys/simpler/pull/2561">PR #2561</a> 已合入 <code>5f4f9525d</code>：A2/A3 cleanup 在 discharge 之后读取 poison。</strong> 真实库 RTS 桩负对照在 TMR/HBG 均失败，A5 对照通过；旧值会在失败隔离之后仍选择正常退役分支。此修复不声称解决 AIV 或开放 kernel eager。见<a href="reviews/cleanup-wait-poison/REPORT.md">验证记录</a>。#2536 DFX 也已合入（<code>86e77362</code>），后续板测直接使用主线诊断。</p>
+<p>当前 <strong>caller fork/join + native eager</strong> 复用已有 native prepare/launch/poll/wait/finalize：A2/A3 仍使用带代码代际保护的 run stream pair，A5 借用 context 的私有双流。caller → AICPU → AICore 为入口链；AICPU 等 CoreDone 后才 record CpuDone，caller 等 CpuDone 后 record Tail。已有两份 kernel 完成事件继续唯一地证明执行完成，新增三个按 slot 懒分配事件只负责 caller 顺序与等待消费证明。</p>
+<p>PR #2567 验证（原始 head 见记录）：真实 runner 桩四组合通过；A2/A3 TMR/HBG 各四次实际调用通过（caller H2D → launch → caller D2H，轮换两条 caller stream）。Worker 公开接线、context generation 消费、地址/handle 保留和完整业务验收还未交付。此处不把 native 冒烟通过写成 K2 完成。详见<a href="reviews/kernel-caller-order/REPORT.md">本轮记录</a>。Pipeline A 的其他扩展仍可并行。</p>
+<p>已合入的 #2572 沿用原 run handle、slot generation、borrow、join、poll/wait/finalize。带 caller 的 direct submit 在 admission/prepare 前拒绝 capture；可 join 就立即入队，否则 drain 前驱后普通 launch；失败在返回前抛出。Host output copy-back 仍需要 wait/finalize。普通无 caller 提交保持既有 prepared-successor 行为。该 PR 只交付内部共同适配层，测试使用 owned ChipWorker；已合入 #2578 将这条路径用于外部 RTS context。公开 Worker 仍未交付。见<a href="reviews/chip-caller-submission/REPORT.md">本轮证据</a>。</p>
+<p>先读<a href="runtime-design-principles.md">设计原则</a>，再按下面的依赖实施。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>工作线</th>
+<th>当前下一步</th>
+<th>完成后解锁什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipeline A 共同基础</td>
+<td>#2411/#2419/#2426 的初始交付后，#2446 DEVICE、#2449 多 worker、#2481 A5 HBG、#2491 A5 TMR、#2514 受限泳道及 #2532 结果保留均已合入</td>
+<td>按各自已批准范围消费；不要求三份容量等后续扩展先完成</td>
+</tr>
+<tr>
+<td>我们当前推进</td>
+<td><strong>#2580 → K2a 共同拒绝合同 → K2b 环境/generation/内部接入 → K2c public Worker eager；原 native caller 与 borrowed ChipWorker 已交付</strong></td>
+<td>公开入口消费同一执行、错误与保活合同；U2b/Remote 非前置</td>
+</tr>
+<tr>
+<td>API 模块收口</td>
+<td><strong>S3 module owner / required-conditional profile / 最小能力查询，可与 K2 并行，C2 前完成</strong></td>
+<td>图、callable 和 run 持有正确模块寿命；不另建执行器或全 API get_api 表</td>
+</tr>
+<tr>
+<td>Kernel eager 验收</td>
+<td><strong>caller 前序写入 → TMR/HBG kernel → caller 后序读取，保留错误与寿命合同</strong></td>
+<td>K2 通过才标记可用；A 的 HOST staging 证明不能覆盖借用 Device tensor</td>
+</tr>
+<tr>
+<td>Kernel eager 通过后</td>
+<td><strong>C1 设备闭包 → C2 图所有权 → C3 双 runtime replay → C4 完整验收</strong></td>
+<td>不重新执行 host 编排的、可正确重复运行的捕获图</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>当前代码状态：</strong> HBG publication（#2342 / #2353）与 descriptor seam（<a href="https://github.com/hw-native-sys/simpler/pull/2358">#2358</a>）均已合入，不再列为本地待交付功能。#2360 的接口范围澄清也已合入 <code>c0d2c52b</code>。descriptor 发布保护 <a href="https://github.com/hw-native-sys/simpler/pull/2367">#2367</a> 已合入 <code>eeedcaa4</code>，审阅 head <code>964d3a73</code>。两架构真实 launch 拒绝探针已进仓库并接入 onboard UT。完整回归、审阅补充验证与合入状态分别记录，规划材料仍留本地。</p>
+<p>原 descriptor 本地提交 <code>e6cd39d4</code> → PR head <code>7220dd01</code> → merge <code>4e14364f</code>。代码与日志保留在<a href="reviews/descriptor-main-0dbf12ae.md">迁移验证</a>。原本地分支和更早的 image 实验均为历史记录，不重复叠加。路线图、HTML 和规划证据继续只保存在本地。</p>
+<p>S1 已以 <code>Runtime { dev; host_; }</code> 落地主线；S2 以该布局为起点，保留现有 host lease 接口。S2 不修改 A 的 lane / fence / drain，合并时与 A 共享的上下文、release 接口要对齐。</p></section>
+<section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 775" role="img" aria-labelledby="dependency-title dependency-desc">
+<title id="dependency-title">API 收口与 kernel eager、capture 的统一依赖图</title>
+<desc id="dependency-desc">共同基础已交付；2580之后按K2a拒绝合同、K2b环境代际、K2c公开eager验收推进。S3模块所有权可并行，C2同时依赖C1与S3。之后C3双runtime replay和C4完整验收，参数与Remote沿U路线推进。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#658278"/></marker></defs>
+<g class="edge">
+<path d="M135 130V210"/><path d="M80 130H5V452H20"/>
+<path d="M250 266H290"/><path d="M520 266H560"/><path d="M840 266H880"/>
+<path d="M1030 322V358H405V400"/>
+<path d="M520 453H560"/><path d="M840 453H880"/>
+<path d="M135 506V548H700V506"/><path d="M1030 506V598"/>
+</g>
+<a href="#section-1"><rect x="20" y="20" width="1160" height="110" rx="12" class="external"/><text x="42" y="52" class="name">已交付基础：Pipeline A 批准范围 + S1/S2 + native eager 接线</text><text x="42" y="82">共同 prepare/launch/完成/退休；#2572 caller lane；#2578 borrowed ChipWorker</text><text x="42" y="110" class="status">公开 Worker / generation 仍未交付；不宣告 Pipeline A 全部完成</text></a>
+<a href="#section-6"><rect x="20" y="210" width="230" height="112" rx="12" class="future"/><text x="38" y="242" class="name">#2580 · handle 保护</text><text x="38" y="270">Python wait/result 拒绝</text><text x="38" y="297" class="status">已合入 · 等待拒绝可恢复</text></a>
+<a href="#section-6"><rect x="290" y="210" width="230" height="112" rx="12" class="future"/><text x="308" y="242" class="name">K2a · 已交付</text><text x="308" y="270">operation lease 汇聚</text><text x="308" y="297" class="status">native → binding → Python</text></a>
+<a href="#section-6"><rect x="560" y="210" width="280" height="112" rx="12" class="future"/><text x="578" y="242" class="name">K2b · #2589 待合入</text><text x="578" y="270">generation / source / adapter</text><text x="578" y="297" class="status">统一入口，不另建 executor</text></a>
+<a href="#section-6"><rect x="880" y="210" width="300" height="112" rx="12" class="future"/><text x="898" y="242" class="name">K2c · public Worker eager</text><text x="898" y="270">同一 init/submit + caller 顺序</text><text x="898" y="297" class="status">两 runtime / 两架构完整验收</text></a>
+<text x="595" y="385" class="annotation">K2c 验收之后开始 capture 生产接线</text>
+<a href="#section-6"><rect x="20" y="400" width="230" height="106" rx="12" class="future"/><text x="38" y="432" class="name">S3 · 可并行</text><text x="38" y="459">module owner / 能力合同</text><text x="38" y="487" class="status">C2 验收前必须完成</text></a>
+<a href="#section-7"><rect x="290" y="400" width="230" height="106" rx="12" class="capture"/><text x="308" y="432" class="name">C1 · 设备闭包</text><text x="308" y="459">ABI / async publish / reset</text><text x="308" y="487" class="status">五事件链与失败隔离</text></a>
+<a href="#section-7"><rect x="560" y="400" width="280" height="106" rx="12" class="capture"/><text x="578" y="432" class="name">C2 · 图资源所有权</text><text x="578" y="459">source / bank / event / code</text><text x="578" y="487" class="status">依赖 C1 + S3</text></a>
+<a href="#section-8"><rect x="880" y="400" width="300" height="106" rx="12" class="capture"/><text x="898" y="432" class="name">C3 · 双 runtime replay</text><text x="898" y="459">TMR reset / HBG restore</text><text x="898" y="487" class="status">共同 owner 后可并行实现</text></a>
+<text x="158" y="575" class="annotation">S3 提供模块/代码寿命；不阻止 K2 / C1 开始</text>
+<a href="#section-6"><rect x="20" y="598" width="820" height="110" rx="12" class="external"/><text x="42" y="632" class="name">U1b / U2b / U3 / U4 · 原参数与资源路线</text><text x="42" y="662">Buffer/import、Program IO、Remote/transport、统一关闭各归原阶段</text><text x="42" y="691" class="status">不整体重写 façade，不要求完整 Remote 先于 kernel eager</text></a>
+<a href="#section-8"><rect x="880" y="598" width="300" height="110" rx="12" class="capture"/><text x="898" y="632" class="name">C4 · 完整交付门</text><text x="898" y="662">换参 / 多图 / DFX / 故障</text><text x="898" y="691" class="status">容量、关闭与实际收益</text></a>
+<text x="22" y="748" class="annotation">同一执行器；每次 eager 准备/提交一次；没有 PreparedCall/cache 或 kernel 后缀 API 副本</text>
+</svg></div><figcaption>这是原路线的细分与职责归属。节点可点击；细分 PR 范围与审查映射见 kernel-eager-open-work.md。</figcaption></figure>
+<p>S1、S2 已完成；Pipeline A 的批准首步已交付，可开始 K1 接入。<strong>K1 消费当前已验收的共同机制；不宣告 A 的全部后端已完成。借用 Device tensor 的寿命和故障处理由 K1/K2 补齐，C1 仍以 kernel eager 验收为前提。</strong> 文档、协议审计和定向探针可以提前做，生产接线按图中的依赖推进。S3 不阻止 K2/C1 开始，C2 的图/代码/module 保活验收依赖 S3；U2b/Remote 各按真实复制与网络消费者交付，不阻塞 K2。</p>
+<p>不为 kernel 接入再要求 A 完成更深 mailbox、所有性能优化或 DFX 连续会话。A 可沿用诊断 run 的双向独占保护；最终 kernel/capture 的 DFX 能力仍须在 C4 完成交付，不能由这条过渡规则豁免。</p></section>
+<section id="section-3"><h2>3. 总交付表</h2><div class="table-scroll"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>可验收交付物</th>
+<th>前置</th>
+<th>当前状态 / 对应事项</th>
+<th>退出条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A · 共同执行基础</strong></td>
+<td>Program 的自然排队、逐 run 结果和安全退休</td>
+<td>Pipeline A 内部 P1/P2/P3</td>
+<td><strong>基础与后续受限扩展已交付</strong>：初始 #2411/#2419/#2426，随后 #2446/#2449/#2481/#2491/#2514/#2532；范围以 Pipeline A 看板及对应合同为准，不能概括为所有模式均开放</td>
+<td>native 与 L3 均有两个真实 LAUNCHED，持续补位、错误归属和回收正确</td>
+</tr>
+<tr>
+<td><strong>S1 · device image 边界</strong></td>
+<td>HBG 明确的 device descriptor；host tail 不上传</td>
+<td>可独立推进</td>
+<td><strong>已验收</strong>：#2309 缩短上传；<a href="https://github.com/hw-native-sys/simpler/pull/2315">#2315</a> / <a href="https://github.com/hw-native-sys/simpler/issues/2312">#2312</a> 的显式 descriptor 已合入；<a href="reviews/pr2315-26165696.md">验证记录</a></td>
+<td>两架构及 A5 legacy 的 reader / cache 范围正确；真实 onboard 验收</td>
+</tr>
+<tr>
+<td><strong>S2 · 单次准备／发布分离</strong></td>
+<td>本次构图产物留在执行上下文；metadata 发布可单独提交</td>
+<td>S1 的布局收口；与 A 并行</td>
+<td><strong>已完成同步合同验收；#2372 已合入 <code>767618b3</code></strong>；#2342 / #2353 的 HBG 发布、#2358 的公共 descriptor seam、#2367 的覆盖拒绝与 launch 检查。初始 seam 调用相邻；#2432 已将发布后移，#2438 仅跳过相同 TMR 配置前缀；异步保活另属 C1</td>
+<td>Program 仍每次构图，输出、get/set 副作用、错误、copy-back 与 release 不回退</td>
+</tr>
+<tr>
+<td><strong>S3 · 动态模块与能力合同</strong></td>
+<td>module owner、版本化最小能力声明、兼容 loader profile</td>
+<td>已有 ChipWorker loader；可与 K2 并行</td>
+<td><strong>计划已确定，未交付</strong>：集中 dlopen/dlsym 与 DSO 寿命；保留原执行 C symbols，不新增全 API get_api 表；收口 R5</td>
+<td>run/有效 callable/graph/replay 最后引用退出前不 unload；缺失能力查询不推定 borrowed/capture；C2 前完成</td>
+</tr>
+<tr>
+<td><strong>K1 · 借用环境与参数</strong></td>
+<td>Kernel 接入共同执行层，无 tensor staging 和设备所有权</td>
+<td>A + S2</td>
+<td><strong>native 准备/环境/caller 已交付，公开接入待完成</strong>：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 仍待 K2b/c。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 <a href="kernel-eager-open-work.md">当前记录</a></td>
+<td>TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过</td>
+</tr>
+<tr>
+<td><strong>K2 · caller 顺序与框架接入</strong></td>
+<td>Native 和框架可用的 kernel eager</td>
+<td>K1</td>
+<td><strong>正在交付</strong>：#2567 native caller 链已合入；#2572/#2578 已接 caller lane 与借用初始化；#2580 → K2a/b/c 闭合共同拒绝、环境代际与公开入口。完整验收未完成；具体范围见 <a href="kernel-eager-open-work.md">融合后的细分步骤</a>；重启核查保留原基线</td>
+<td>caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过</td>
+</tr>
+<tr>
+<td><strong>C1 · 可捕获设备闭包</strong></td>
+<td>异步发布、独立握手复位、两侧完成、device 错误门</td>
+<td>K2 + S2</td>
+<td><strong>目标协议已有，生产实现未验收</strong></td>
+<td>真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行</td>
+</tr>
+<tr>
+<td><strong>C2 · 图资源所有权</strong></td>
+<td>capture wrapper、generation、bank/event/source 的图引用</td>
+<td>C1 + S3</td>
+<td><strong>待实现</strong></td>
+<td>每图 cold-path 预检；module/code 与 bank/event/source 均由图保活；失败/销毁无悬空引用</td>
+</tr>
+<tr>
+<td><strong>C3 · TMR 与 HBG replay</strong></td>
+<td>两种 runtime 的真实 executor 可重复运行</td>
+<td>C2</td>
+<td><strong>仅有原语与局部实验，端到端待实现</strong></td>
+<td>TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确</td>
+</tr>
+<tr>
+<td><strong>C4 · 完整产品验收</strong></td>
+<td>换参、多图、DFX、超时/故障、关闭与容量完整行为</td>
+<td>C3</td>
+<td><strong>未完成；是必交付阶段</strong></td>
+<td>下文验收矩阵全通过，不能只以单图普通模式宣布完成</td>
+</tr>
+</tbody>
+</table></div>
+<p>除已链接的条目，其余阶段是本设计定义的待交付工作，<strong>没有据此创建或修改远端 Issue</strong>。<a href="https://github.com/hw-native-sys/simpler/issues/2270">#2270</a> 已关闭，<a href="https://github.com/hw-native-sys/simpler/pull/2285">#2285</a> 已关闭且未合入，不继续用其旧 reuse 验收代表 S2。</p></section>
+<section id="section-4"><h2>4. A：我们接收什么，不重复实现什么</h2><p>Pipeline A 的<a href="references/pipeline-a/run-pipeline-track-a.html#roadmap">路线入口</a>是其自身阶段和分工的依据。这里只定义后续 kernel 的接收门槛。</p>
+<p>当前权威目录为 <code>pipeline-a-manager/.docs</code>；旧 temporal 目录不再用于判断进度。主线已交接至 <a href="https://github.com/hw-native-sys/simpler/issues/2429">#2429</a>，manager 保留跟踪与独立分析。其<a href="references/pipeline-a/review/mainline-independent-next-step.md">下一步建议</a>要求先闭合同域串行执行归属、A→device tensor→B→C 和提交/完成/退休边界。K1 接入应复用这套合同，不因 program/kernel 各有私有 stream 就推定跨入口有序；与接手方协调实现归属，避免平行 runner 或重复开发。Qwen 基线是业务证据，不替代设备链与寿命验收。</p>
+<ul>
+<li><strong>执行</strong>：native 三道门和 L3 两道门都已接通。两个真实 LAUNCHED，不是一个执行加一个 prepared。</li>
+<li><strong>顺序</strong>：保留父 run 的全部 dispatch 顺序，同 callable 的 host 构图串行；host get/set 的就绪和冲突合同不因 device FIFO 而消失。</li>
+<li><strong>完成</strong>：逐 run 双流边界、业务终态、设备健康分别判定。正常 drain 不等待后继整条流；a5 HBG legacy 有明确覆盖或受限策略。</li>
+<li><strong>退休</strong>：DMA、kernel、copy-back、outstanding event wait 的最后使用者分别记账。partial enqueue 和未证明静止的故障不能提前释放资源。</li>
+</ul>
+<p>当前已合入的 fence、终态、输入／回拷／释放接口分别提供基础。<strong><a href="https://github.com/hw-native-sys/simpler/pull/2298">#2298</a> 终态记录不等于 <a href="https://github.com/hw-native-sys/simpler/issues/2267">#2267</a> 已完成，<a href="https://github.com/hw-native-sys/simpler/pull/2303">#2303</a> callback owner 也不等于健康消费者已完成。</strong> Kernel 继承这套状态和退休机制，不再建第二套 runner。</p></section>
+<section id="section-5"><h2>5. S1 / S2：现在与 A 并行的工作</h2><h3>S1：device image 布局已收口</h3>
+<p><strong>已合入：<a href="https://github.com/hw-native-sys/simpler/pull/2315">#2315</a>，提交 <code>2085182a</code>。</strong> HBG 采用 <code>Runtime { DeviceRuntimeLaunchDesc dev; HostOnlyState host_; }</code>；device reader 使用 <code>dev</code>，复制与三处 cache invalidate 以 descriptor 大小为界，const/mutable tensor lease 接口保留。</p>
+<h1>2309 已交付减少 <strong>34,048 B/run</strong> 的上传；#2315 将既有边界表达为明确类型，不能重复计算节省。合入前审阅 <code>26165696</code>：本地相关 C++ 用例 <strong>44/44</strong>；两架构 Runtime/上传大小、对齐和 11 个公开 device 字段偏移保持不变；GitHub A2/A3、A5 onboard 检查全部通过。详见<a href="reviews/pr2315-26165696.md">完整审阅</a>。</h1>
+<p>对应原则 7/11/13：host-only 不进 device 描述、复制范围明确、owner 不变。本阶段保留每槽 handshake、prepare 上传时机与准入。<code>dev</code> 内仍混有参数、常量与握手，<strong>S1 完成不代表共享 workspace、异步 publication 或 replay 已交付</strong>；这些仍按后续协议分别推进。</p>
+<h3>S2：一次调用内，先准备，再发布</h3>
+<h4>已合入的同步接口及当前使用边界</h4>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>已合入实现</th>
+<th>当前使用边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HBG compact execution image</td>
+<td>#2342：slot grow-only staging、host-only pending record、bind 后 publish</td>
+<td>源保活到同步复制返回</td>
+</tr>
+<tr>
+<td>Graph Definition / A5 resident scheduler</td>
+<td>#2353：同一个 pending record，Definition → scheduler → image 发布</td>
+<td>device owner 不变；A5 legacy 无独立 scheduler region</td>
+</tr>
+<tr>
+<td>TMR/HBG Runtime descriptor</td>
+<td>#2358：<code>prepare_runtime_args</code> 建立值快照，<code>publish_runtime_args</code> 同步消费</td>
+<td>唯一生产调用点紧邻调用；#2367 已加入独立 launch 发布状态检查，没有中间 Runtime 修改</td>
+</tr>
+<tr>
+<td>HBG trace 和失败</td>
+<td>owner 检查、逐项失败即停止、消费整条 pending record</td>
+<td>不允许覆盖未发布的 HBG bind</td>
+</tr>
+<tr>
+<td>Descriptor 失败和寿命</td>
+<td>copy 错误清空 run view，保留 slot；source 成功／失败均消费</td>
+<td>pending 时拒绝 re-prepare，保留旧源和目的；两架构 launch 检查本次 Published 状态</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>确定实现：一个 HBG pending publication，一次调用准备、一次发布。</strong> prerequisites 按 Definition → resident scheduler 的顺序保存，最后才发布 execution image；没有 Definition 或 resident scheduler 时省略对应区域。记录可含借用的 slot source 和自行持有的 host source，两者都必须活到同步复制返回。准备失败清除部分记录；未消费的记录不能被 rebind 覆盖；失败发布不能重试为同一次成功调用。</p>
+<h4>当前 program 调用链（均已合入）</h4>
+<pre><code class="language-text">Program Worker / ChipRunLane（沿用主线 admission）
+  → simpler_prepare_run
+      → bind_callable_to_runtime_impl
+          → tensor 输入 staging、host-view window、合法 get/set
+          → HBG 每次 host orchestration
+          → prepare Definition / A5 scheduler / compact image
+          → 保存本次 pending publication，关闭 host-view
+      → publish_run_image_impl
+          → Definition H2D → A5 scheduler H2D → execution image H2D
+          → 记录实际 GraphUpload / ArenaH2d → 消费 pending record
+      → prepare_execution（以下两步紧邻执行）
+          → prepare_runtime_args：slot 目的地址 + descriptor 值快照
+          → publish_runtime_args：同步 descriptor H2D
+  → 原有 launch / 完成判定 / copy-back / DFX / release
+</code></pre>
+<p>TMR 不做 HBG host 构图，其 <code>publish_run_image_impl</code> 仍是 no-op；公共 descriptor 快照／发布同时服务两种 runtime。TMR 的冷路径 arena 初始化不因这个 no-op 消失。</p>
+<p><strong>#2358 是准备性的接口边界。</strong> 当前 <code>init_runtime_args_with_metadata</code> 在 prepare 成功后立即 publish；没有生产中的晚修改窗口需要快照保护。单测修改 host Runtime 后仍上传旧值证明了接口性质，不证明生产正在利用该窗口。每次 host allocation 与 CPU copy 的开销已经发生；异步／capture 尚未获得收益。</p>
+<p>S2 要求同步 source 存活到复制返回，以及未发布覆盖拒绝和基于本次发布结果的 launch 检查，#2367 已补齐后两项。K1 接入时可以使用已有内部接口，仍须保留全部 owner；C1 改成异步复制时才扩展 source 寿命到 DMA 完成。不得把 C1 的异步要求倒置为 S2 的退出门。prepare 的非空目的指针不等于已发布：#2367 对漏调用也明确拒绝。</p>
+<p>Kernel eager 的目标是 adapter 经共同准备／发布层，再接 caller 的设备顺序；<strong>这些改动没有接通 kernel launch</strong>。C1 才把发布改成受支持的异步流内命令，C2 再建立图对 source 的长期引用；当前 slot loan 和同步 source owner 不能直接延长为 capture 寿命。</p>
+<h4>已合入：descriptor 发布保护</h4>
+<p><a href="https://github.com/hw-native-sys/simpler/pull/2367">#2367</a>（合入 <code>eeedcaa4</code>）在现有 <code>KernelArgsHelper</code> 内记录 descriptor 状态：未发布时拒绝 re-prepare 且保留原源和目的；同步复制成功才可 launch；release、失败、fresh prepare 撤销旧成功状态。两架构 launch 入口在任何 stream 创建／DFX arming／kernel 入队前检查，拒绝保留 prepared owner，不 poison device。</p>
+<p>本项只保护 descriptor，HBG image 和 late DFX 保留各自的返回码路径；上传时机仍在 prepare 内，不改变重叠或准入。它完成前述“未发布覆盖策略与 descriptor launch 检查”的主线实现，<strong>没有交付异步源保活或独立调度窗口</strong>；两者不是本次同步合同的性能收益。</p>
+<p>C++ 163/163、helper 22 用例、ASan、两套 sim 和 A2/A3 onboard sweep 均通过；四种真实 host launch 入口的拒绝探针及移除 guard 的负对照也通过预期判据。本地未测 A5 真机；审阅 head <code>964d3a73</code> 的 <a href="https://github.com/hw-native-sys/simpler/actions/runs/35434816191">CI</a> 已通过两架构 onboard UT、scene sweep、sim 与 packaging，不据此宣告 A5 legacy 专项验收。详见<a href="reviews/publication-contract-main-2d366151.md">本地实现及证据</a>。</p>
+<h4>验证归属与下一步</h4>
+<ul>
+<li><strong>已合入 HBG</strong>：#2353 的审阅 head <code>7fb6d1df</code> 通过 GitHub 两架构 onboard、sim、UT；最终 <code>a1b78b2a</code> 只补文档和 parser 注释，再合入 <code>0dbf12ae</code>。不把这份 CI 当成本地 descriptor 的验证。</li>
+<li><strong>历史双提交栈</strong>：<code>fd5bd5a1</code> 的 C++ 161/161、两套 sim、A2/A3 onboard 等结果保留在<a href="reviews/s2-main-d49730f3.md">旧验证记录</a>。它们不冒充这次基线的测试。</li>
+<li><strong>Descriptor 本地验证 <code>e6cd39d4</code></strong>：C++ <strong>163/163</strong>、生产 helper <strong>12/12</strong>（含 ASan）、两套 sim 和 A2/A3 onboard 正常 sweep 均通过。独立构建、故障／寿命测试和 program 回归见<a href="reviews/descriptor-main-0dbf12ae.md">本次记录</a>。本机仅 A2/A3，历史本地结果未覆盖 A5 onboard；#2358 的 <code>7220dd01</code> 已通过两架构 onboard、sim、UT 的 CI。受控性能和 A5 legacy 的明确专项覆盖未由本页宣告。模拟器传 host Runtime 指针，不经过 onboard descriptor H2D，只能作为原 program 回归。</li>
+</ul>
+<p>以下是 <code>eeedcaa4</code> 时的历史接收核查（当前状态见文首），见 <a href="reviews/s2-pipeline-a-acceptance-eeedcaa4.md">S2 / Pipeline A 接收记录</a>。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>接收项</th>
+<th>当前结论</th>
+<th>下一步归属</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2：HBG 单次准备／同步发布、descriptor gate</td>
+<td>生产机制已合入；本地补齐普通→GRAPH legacy→MIX legacy→普通及各发布位置失败后的恢复验证</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2372">#2372</a> 已合入 <code>767618b3</code>；同步合同收口</td>
+</tr>
+<tr>
+<td>A：正常 drain 不依赖整流 sync</td>
+<td><code>wait_run_fence</code> 仍调用 <code>sync_stream_pair</code>；#2354 仅记录健康证据</td>
+<td>P2 消费者、drain／退休接线与 A5 legacy 终态证明</td>
+</tr>
+<tr>
+<td>A：native／Worker 连续入队</td>
+<td><code>active_native_run_</code> 与 <code>activate_fifo_head</code> 仍只允许单 active</td>
+<td>P4 / P5；保持原工作线所有权</td>
+</tr>
+<tr>
+<td>K1 / K2：共同执行 adapter 与 caller 顺序</td>
+<td>kernel launch 仍为拒绝 stub</td>
+<td>A 与 S2 验收后接通；不另造 runner</td>
+</tr>
+<tr>
+<td>C1：异步 source 与设备复位闭包</td>
+<td>未交付</td>
+<td>kernel eager 之后；不反向阻塞 S2 同步验收</td>
+</tr>
+</tbody>
+</table></div>
+<p>本地提交 <code>7da788ef</code> 只改一个测试文件，166/166 C++ targets、两架构 HBG 48 用例和 ASan/leak 均通过；负对照证明能抓住漏登记 scheduler source 与漏写 legacy 模式。这组测试经 <a href="https://github.com/hw-native-sys/simpler/pull/2372">#2372</a> 合入 <code>767618b3</code>，S2 同步验收完成。A 与 S2 均通过接收门槛后进入 K1；既不重做 HBG publication，也不把 host 发布验证当成 A5 legacy 的设备完成证明。</p>
+<h4>开销与验收</h4>
+<ul>
+<li>
+<h1>2342 / #2353 的 compact image 继续复用 slot staging，不复制旧分支的大图 vector。</h1>
+</li>
+<li>已合入的 Definition 借用既有 retained staging；A5 scheduler vector 转移所有权，避免第二次大块 host 拷贝。</li>
+<li>公共 descriptor 为建立不可变边界，新增一次 <strong>descriptor 大小的 CPU copy 和 host allocation / run</strong>；没有减少 H2D 字节，也没有据此宣称加速。</li>
+<li>保留每次 HBG 编排、tensor get/set 副作用、bank 绑定、输出回拷和原有 device allocation owner。发布失败不撤销之前的 tensor 副作用。</li>
+<li>本地验证结果与限制见<a href="reviews/descriptor-main-0dbf12ae.md">descriptor 验证记录</a>。旧分支的实验只作参考，不充当迁移后已通过的证据。</li>
+</ul>
+<p><strong>DFX 计时口径：</strong> #2353 的 <code>graph_upload</code> 仅计 publication copy；Definition 打包／绑定不在 <code>host_orch + graph_upload + arena_h2d</code> 中。三段之和是部分成本，旧新计时不能直接比较，更不能据此宣布 host 加速。公共 descriptor 仍在 <code>chip.run.prepare_execution</code> 范围内。</p>
+<p>S2 同步合同退出要求 TMR/HBG program 回归、两架构的发布失败和同步 source 寿命正确，A5 host 发布覆盖 resident 与 legacy。设备 legacy 终态归 A/P2，异步 source 归 C1。性能只有在提出收益主张时另做同口径测量，不将它变成准备性 seam 的新增退出门。<strong>S2 的同步边界完成，也不等于 kernel eager、共享 handshake ABI 或 capture 完成。</strong></p></section>
+<section id="section-6"><h2>6. K1 / K2：把 kernel eager 做完整</h2><h3>当前交付顺序（2026-10-15，融合 API 层次审查）</h3>
+<p>共同 native 执行、失败清理、caller lane 和 borrowed ChipWorker 已由 #2557/#2561/#2567/#2572/#2578 交付。#2580/#2581/#2582 已合入；#2584 已合入，完成汇聚校验入口和 native 内存保护；K2a 结项。</p>
+<ol>
+<li><strong>K2a：共同拒绝与失败合同。</strong> native/binding 保持可机器判断的环境拒绝分类，公开层消费同一判定；拒绝保留状态，真实设备失败发布终态，partial/unknown 保留。#2581 已替换 callback；#2582 已闭合 Python submit/注册/close 的状态承诺边界；#2584 已收口共同 lease 校验并补齐 native 内存保护，K2a 结项，下一步 K2b。</li>
+<li><strong>K2b：环境/generation/source 与内部接入。</strong> #2587 环境/source 已合入；#2589 direct L2 原生接入待合入，随后收口 child/materialization。目标仍是同一生命周期绑定 RTS identity、进程、context generation、source；收口 Worker → 原 <code>_ChipWorker</code>/lane 接入和共同 materialization。公开 ChipWorker 兼容；旧 init C ABI 留适配，不再造执行入口。</li>
+<li><strong>K2c：公开调用与 eager 验收。</strong> 同一 Worker.init/submit 接 owned/borrowed 和 caller 顺序；真实 public Buffer/Tensor/TaskArgs → RunHandle 通过 TMR/HBG、A2/A3/A5 的寿命、失败、跨流与 Program 回归；框架后台队列另须证明有序 native 发射。</li>
+<li><strong>S3：可并行 module owner 与能力合同。</strong> 集中 loader、required/conditional 与版本化最小能力查询；不迁移全 API 函数表。K2 可先消费现有 loader；C2 必须消费已验收的模块/代码保活。</li>
+<li><strong>K2c 通过后进入 C1→C2→C3→C4。</strong> C1 沿实际 producer/device reader 完成 ABI 与异步闭包；C2 同时接图资源与 S3 引用；两 runtime 的 replay 和完整产品矩阵继续必交付。</li>
+</ol>
+<p>详细 PR 边界、拒绝矩阵与 R1–R7 的唯一阶段映射在 <a href="kernel-eager-open-work.md">kernel-eager-open-work</a>。本页只维护全路线状态；<a href="current-api-layers.html">API 层次图</a>生成相同映射，不另设一条重构路线。Buffer/IO/Remote façade 委托分别归 U1b/U2b/U3/U4；不做一次性 Worker 重写，不扩大 Pipeline A，不引入 PreparedCall/cache。</p>
+<h3>K1：借用设备与 caller device 地址</h3>
+<p><strong>改哪里</strong>：kernel 初始化/关闭入口、运行模式检查、参数绑定、共同执行层的 adapter。复用 <a href="https://github.com/hw-native-sys/simpler/pull/2176">#2176</a>/#2177 的资源基础，按当前代码补缺口。</p>
+<ul>
+<li>Program 保留 DeviceOwner、tensor staging / copy-back 和 future；kernel 借用外部 context/device 和 tensor 地址。两者进入同一内部提交层，不要求 program 绕经 public kernel API。</li>
+<li>内部 stream、arena、metadata 由 runtime 管理；caller 不必逐项分配。Kernel 不接管设备 reset，不在析构时隐式 teardown。</li>
+<li>每次调用重新准备并提交一次。注册、容量和代码 generation 在冷路径建立；旧引用仍在时不原地销毁。</li>
+<li>PyPTO→simpler host 数据按单次 API 值语义交付，返回后不借读调用方 host 容器；HOST/NONE 控制 Tensor 与 Program H2D 参数绑定分开。Callable 通过 handle 持有，共用注册/显式 unregister 生命周期；有效 handle 与未退休调用不得自动淘汰。</li>
+<li>HBG host 构图只能读取合法的 host 控制信息，不能解引用 caller device 地址。依赖 host get/set 的 callable 必须有明确的 kernel 参数合同；不满足时在发布前拒绝，不能偷偷搬 tensor。原 program 的合法 get/set 能力保留。</li>
+</ul>
+<p>退出条件：原 host 控制容器在 API 返回后修改／销毁不影响已提交执行；两 runtime、两架构的 device 参数路径正确；输出地址由 caller 提供并正确写入；无额外 tensor H2D/D2H；错误输入不留下半发布调用；显式 close / 失败保留资源不影响 caller 环境。</p>
+<h4>当前并行工作：统一已有参数合同</h4>
+<p>2026-09-27 确定对外只有 Buffer 与 Tensor；<code>AddressSpace</code> 仅 HOST/DEVICE，本次 transfer 在 TaskArgs 参数项；不新增 Tensor/ChipTensor 权限字段，复用 Buffer/import grant 与 tag/signature；Remote 与 H2D/D2H 共用源/目的、完成与使用保留。#2444 <code>1761d130</code> 是混合枚举的历史实现，不能继续作为目标；保留已有用例迁移并按 U1 修订。</p>
+<p>当前顺序：已交付的统一参数与 #2501 HOST 消费 → K1 借用设备的共同调用准备 → caller 顺序与 kernel eager 验收。U2b Program IO 记录整理暂缓，U3 Remote 与后续 U4 仍独立跟踪；它们不作为本次 kernel 接线的前置。每条生产复制路径必须当场闭合寿命，不能留待 U4。详见 <a href="argument-domain-policy.md">统一设计</a>、<a href="endpoint-access-contract.md">复制细节</a>、<a href="simpler-argument-design.html">参数 HTML</a>。</p>
+<p>L2 复用已有 Worker 的 TaskArgs<Tensor> → materialize 路径；外部指针在源侧包装成借用 Buffer，以 Tensor(buffer, ...) 建 view，Worker 在 submit 内检查接入。ChipTensor 退为内部 ABI/兼容适配，不增加第二套公开构造合同。先贯通参数项请求与全调用预检，再交付 HOST 消费、HBG/TMR 的共同绑定及 IO 记录。授权关联留在本次绑定，详细范围和验收见统一设计 §6.1。</p>
+<p>K1/K2 消费 U1/U2 中所需能力，不等待全部 Remote 后端。Capture 的图保留依赖 C2，普通 host RPC 不因统一接口就变得可捕获。以上为设计计划，不宣称实现/验收已完成。</p></section>
+<section id="section-7"><h2>7. C1 / C2：建立可重放的命令与资源合同</h2><h3>C1：发布、复位、执行形成设备闭包</h3>
+<p><strong>改哪里</strong>：host serializer / enqueue、Runtime device ABI、AICPU/AICore reader 与 reset/cache 协议。沿用 A 的结果与健康通道，增加 replay 所需的 device 身份和错误门。</p>
+<p>确定的目标布局：默认两个 publication bank；独立、按 cache line 隔离的 handshake；可共享 scratch 一份；reset 范围外的 DomainControl。HBG 逐调用 image/heap 仍按真实内容隔离，不把它们都当共享 scratch。</p>
+<pre><code class="language-text">publication：Root + 本图 bank 上次 SerialTail（若有）→ async publish → Ready
+caller：    前次 SerialTail + 本次 Ready → fault gate / reset → Start
+AICPU：     wait Start → AicoreStart → launch CPU → wait AicoreDone → AicpuDone
+AICore：    wait AicoreStart → launch Core → AicoreDone
+caller：    wait AicpuDone → SerialTail
+</code></pre>
+<p>沿用主线五事件链 caller ↔ AICPU ↔ AICore；AicoreStart 必须在 AICPU launch 之前 record。PrepareTail 已删除，prepare 不发布捕获外 tail。</p>
+<p>先交付布局与两侧 reset/read 协议，再接异步发布和闭包；各步独立回归，不把整个 capture 功能塞进同一 PR。Reset 必须早于本次 AICore startup report，不能放到较晚启动的 AICPU 中擦掉该报告。</p>
+<p>退出条件：实际 executor 的 B 发布与 A 执行重叠而不覆盖握手；两侧读取相同参数版本；检查每次异步 API 返回值。同步 memcpy 被拒绝（原语观测 107030）时不能继续生成缺失 publication 的图。受控 fault 在 Done 前发布，后继不得执行错误输入；挂死/后端异步错误由继承的健康和有界超时处理，不能指望卡在 Done 后面的 fault gate 自救。</p>
+<h3>C2：graph owner 与捕获局部依赖</h3>
+<p><strong>改哪里</strong>：capture wrapper、资源 generation、bank/event 引用和关闭路径。Cold path 做注册、容量预留、必要 host 工作；图保留不可变 source、code、Definition、bank、event 和 tensor 使用引用。</p>
+<p>每张图 capture 前检查执行域静止；建立本图 Root 与 <code>last_use[bank]</code>。本图首次使用 bank 只依赖 Root，不等待捕获外旧 Done；后续使用等待本图上次 Done。这里的 Done 指五事件链的 SerialTail；所有侧流在 CaptureEnd 前按链式依赖 join。Replay 的 Root 通过执行域顺序排在前图/eager 完整完成后。</p>
+<p>退出条件：捕获内无隐式扩容、注册和同步发布；每张图首次 bank 使用合法；原 host 临时对象释放后 replay 仍有有效 source；捕获失败、图销毁、换 generation、destroy/free 失败和未完成执行均有正确的 owner。Graph owner 不等于可重复 submit 的 host 准备对象。</p></section>
+<section id="section-8"><h2>8. C3 / C4：TMR 和 HBG 都必须走到终点</h2><h3>C3：真实 executor replay</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>runtime</th>
+<th>Replay 每次做什么</th>
+<th>必须证明的性质</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TMR</td>
+<td>发布本次输入 → reset scheduler/runtime → device orchestration → 执行</td>
+<td>上次 task/ring/error 状态不污染本次；不回到 host 重编排</td>
+</tr>
+<tr>
+<td>HBG</td>
+<td>发布/恢复 pristine image、必要 heap 内容 → attach → 执行</td>
+<td>恢复所有被消费的状态；bank 地址、rebase、内嵌 descriptor、保留 slice 正确</td>
+</tr>
+</tbody>
+</table></div>
+<p>HBG 一次调用必须在提交前形成完整可执行计划，不在中途回 host 依赖设备结果后再续发；业务确需 host 决策时由调用方显式拆调用。MTP 的持久状态作为外部 INOUT 保留，不能随 workspace reset。</p>
+<p>两条实现可在 C2 之后并行，最终共同验收。HBG eager 的 host 每次填充 bank 本来就正确；capture 缺的是 replay restore，不能从 eager 正确推定 replay 正确。C3 先交付固定地址绑定的完整循环，再进入 C4 的图更新与多图集成；后者仍是确定方案的一部分。</p>
+<p>退出条件：同地址输入内容持续变化，TMR/HBG 每次结果独立校验；重复 replay 后 host orchestration 计数不增加；不同大小/拓扑、cold/warm、bank 轮转和失败路径均正确。普通算子探针通过不替代真实 executor。</p>
+<h3>C4：完整能力的交付门</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>验收组</th>
+<th>交付与退出条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>显式换参</td>
+<td>图外不可变版本 → 稳定 device slot → 图内 slot 到 bank；HBG 重建必要内嵌参数/拓扑。整批预检预算；部分更新失败时图不能 replay</td>
+</tr>
+<tr>
+<td>多图与定序</td>
+<td>多 bucket、不同节点数、少于 bank 数、非整倍数、图/eager 交替、跨流显式桥接、局部销毁和重捕；逐次结果正确</td>
+</tr>
+<tr>
+<td>DFX</td>
+<td>接续 A 的 collector 身份/保活；device 每次执行产生独立序号，replay 不靠 host run_id 自增。验证开关切换、PMU、swimlane、args_dump、dep-gen 的已声明输出语义；不在 replay 重跑 host-only 导出逻辑</td>
+</tr>
+<tr>
+<td>故障与超时</td>
+<td>fault-before-Done、后继拒绝、event record 失败、挂死及迟到通知。沿用 RuntimeTimeoutConfig 的有效超时层级，合法排队时间不能当作执行超时；不增设独立随意 deadline</td>
+</tr>
+<tr>
+<td>容量与关闭</td>
+<td>publication banks、图槽、host/device 版本、staging、events 分别计费。超限在发布前拒绝；最后 DMA / kernel / graph / consumer 使用者完成后才回收；close 失败可按所有权合同处理</td>
+</tr>
+<tr>
+<td>实际收益</td>
+<td>对比 program / kernel eager / replay 的结果、host 时间、真实 DMA 字节/区间、设备空档和完整吞吐/长尾；不把插桩合入当作性能提升</td>
+</tr>
+</tbody>
+</table></div>
+<p>默认两个 bank 的提前发布窗口只有 <strong>B−1 = 1</strong>；加大 host 在途数不会增加该窗口。图事件先采用每图独占的明确预算 <code>1 + 6 × 节点数</code>（五个执行链事件 + 每节点 Ready + 每图 Root），再加 eager/adapter 的同时存活事件；本路线不以未经完整验收的跨图 event 共享作为正确性基础。</p></section>
+<section id="section-9"><h2>9. 已有工作怎样计入进度</h2><div class="table-scroll"><table>
+<thead>
+<tr>
+<th>已有事项</th>
+<th>为本路线提供什么</th>
+<th>还不能据此宣称什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2176">#2176</a> / <a href="https://github.com/hw-native-sys/simpler/pull/2177">#2177</a> 已合入</td>
+<td>持久资源与 kernel 初始化的部分基础</td>
+<td>K1/K2 已完成，或已有 capture</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2277">#2277</a> 已合入</td>
+<td>context-owned 寄存器表</td>
+<td>所有 DFX 字段都可冻结。旧设计里 PMU 表逐 run 分配的代码事实已过时</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2297">#2297</a> 已合入</td>
+<td>AICore 参数改为 launch 传值</td>
+<td>所指 Runtime/image 可提前释放。旧“更新 device KernelArgs 就能改 AICore 参数”的论证不能沿用</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2295">#2295</a> 已合入</td>
+<td>输入 staging、输出回拷、binding release 的独立接口</td>
+<td>S2 metadata 发布已抽离，或正常 drain 已去掉整流同步</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2298">#2298</a> 已合入</td>
+<td>每 run 终态，当前与同步结果旁路核对</td>
+<td>A/P2 完成</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2307">#2307</a> 已合入</td>
+<td>prepare_execution 直接计时</td>
+<td>已得到新基线或已有收益</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2309">#2309</a> 已合入；<a href="https://github.com/hw-native-sys/simpler/pull/2315">#2315</a> 已合入</td>
+<td>HBG 缩短复制与显式 descriptor 均已完成</td>
+<td>shared handshake、async publication 或 replay restore 已完成</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2293">#2293</a> / <a href="https://github.com/hw-native-sys/simpler/pull/2313">#2313</a> 已合入</td>
+<td>部分 DFX 身份与 swimlane buffer 保留/归还</td>
+<td>C4 连续采集和 replay 身份验收已完成</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2303">#2303</a> / <a href="https://github.com/hw-native-sys/simpler/pull/2321">#2321</a> 已在固定 main</td>
+<td>进程级 fault callback owner；dep-gen 按 run 归属及保留未发布 buffer</td>
+<td>无整流同步的健康消费者、capture DFX 已交付</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2270">#2270</a> CLOSED；<a href="https://github.com/hw-native-sys/simpler/pull/2285">#2285</a> CLOSED 未合入</td>
+<td>旧实验与反例可作证据</td>
+<td>可复用 PreparedCall 是当前交付目标</td>
+</tr>
+</tbody>
+</table></div></section>
+<section id="section-10"><h2>10. 如何维护这份路线</h2><ul>
+<li>状态只有“待实现 / 部分完成 / 待验收 / 已验收”；PR 的 OPEN / MERGED 是另一个维度。完成阶段时填写实际验收证据，不只换一个颜色。</li>
+<li>一份实现 PR 交付一个可回归的边界。准入、借用参数、device ABI、capture owner、replay restore 分开提交；跨 host/device 必须一起改变的协议读写两侧放在同一个完整改动中。</li>
+<li>路线从能力出发，现有 Issue/PR 仅作映射；没有匹配项时再立对应范围，不能为已有 PR 恢复已撤销的设计。</li>
+<li>本 Markdown 是路线内容源，HTML 与它同次更新；协议解释留在设计正文，历史论证和撤回结论留在实验/审阅记录。</li>
+</ul>
+<p><strong>最近的交付顺序：S1/S2 与 A 受限首步已交付 → K1 主线接入 → K2 caller 顺序验收 → C1 → C2 → C3（TMR/HBG）→ C4。</strong></p>
+<h3>2026-09-29 合入与构建阻塞更新</h3>
+<h1>2482 已合入 main <code>fcbf4f1d</code>，源登记/自动接入的已验证 head 仍为 <code>a938898b</code>，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</h1>
+<p>推进时发现 main <code>92a14e4e7</code>（#2483）无法构建 A5：boundary-wait discharge 错误分支仍调用单参数 <code>emit_device_dep_gen_graph</code>。先提交独立 <a href="https://github.com/hw-native-sys/simpler/pull/2484">#2484</a> <code>82af70f5</code>，补本次 epoch 与 false 完成判定。完整 editable/runtime 构建和三个 A5 DepGen C++ 单测目标通过；本机为 A2/A3，没有 A5 板测。此 PR 只修构建，未交付新的 TaskArgs 接口；参数入口测试草稿留在本地，尚未通过验证。</p>
+<h3>ChipWorker 共同参数入口：#2486 已合入</h3>
+<p>构建修复 #2484 已合入 main <code>8aae172e5</code>。<a href="https://github.com/hw-native-sys/simpler/pull/2486">#2486</a> 已合入 main <code>22c009811</code>；验证 head 为 <code>cacc1415</code>。它使公开同步 <code>ChipWorker.run</code> 接受同一 <code>TaskArgs&lt;Tensor&gt;</code>，复用快照、ImportRegistry 和 native POD materializer，不引入第二种 Tensor 或执行器。</p>
+<ul>
+<li>接受标量和 canonical row-major HOST/H2D 视图，包含非零 offset；DEVICE descriptor 仍交给拥有 live-source/provenance 合同的 <code>Worker(level=2).submit</code>。HOST/NONE 与非连续 H2D 在 import 前拒绝。旧 POD 入口保留兼容。</li>
+<li>本次导入映射持续到 native 返回及回写完成；bind 失败立即清理，native 调用失败保留并阻止新的公开 run，只有 native finalize 成功后清理，失败则继续保留。公开 run/finalize 串行。此合同只保留映射；调用者仍须保持 backing allocation 有效，不传递 host allocation 所有权。</li>
+<li>验证 head <code>cacc1415</code>：完整构建；Python 2853 passed / 65 skipped；HBG 两架构模拟器各 7 passed，其中新用例经真实 ChipWorker.run 连续提交 6 次。主线旧入口、去快照、失败提前 unmap 三种负对照均命中测试。板测未运行：架构是 A2/A3，但查询时 16 张卡全部有 HBM 占用，空 task-submit 队列不代表设备空闲。</li>
+<li>U1b 不标全部完成；跨消费者/grant、外部 RTS attach、旧公开 POD 的余下迁移仍需单独闭合。U2a 的 HOST/NONE 消费、本地 IO 和 Remote 工作未由本 PR 交付。只提交代码、测试及 API 合同文档，设计资料留本地。</li>
+</ul>
+<h3>U2a 生产预检：HOST/H2D 布局（#2489 已合入）</h3>
+<p>基线 main <code>22c009811</code>。#2486 的 Python 同步入口已限制非连续 H2D，但
+Worker.submit 和旧 POD 入口仍能绕过该限制。四个 binder 都按 numel × element_size
+分配和搬运，却保留 strides/start_offset；因此先在共同原生预检拒绝非连续
+HOST/H2D 和非零原生 start_offset，覆盖 IN/OUT/INOUT。公开 Tensor.byte_offset
+已折算进导入地址，连续子区域仍合法；DEVICE/NONE 的跨步和偏移继续透传。</p>
+<p>本项是 U2a 的生产消费者安全前置；HOST/NONE 消费、HBG 双侧显式传参迁移、
+TMR/core 的访问判定仍需共同交付，不能把本项标为 U2a 完成。</p>
+<p>本项已提交 <a href="https://github.com/hw-native-sys/simpler/pull/2489">#2489</a>，
+head <code>6c319db0</code>，base <code>22c009811</code>，5 文件 +128/−6。两个 HBG/两个 TMR
+真实 binder 目标共 138 项通过；Python 参数测试 45 项通过；HBG readiness
+两种模拟器各 7 项、TMR vector 各 1 项通过。新拒绝测试在修复前两个 HBG
+目标因读取前项故障地址失败，两个 TMR 目标错误放行并发生分配；回归测试已提交。
+当前 16 个设备 HBM 非零，未做本项板上验证。预提交检查全部通过。
+规划文档及 HTML 仍在仓库外，不在 PR 内。下一项是 HOST/NONE 的真实消费
+与 HBG 双侧参数用例迁移，不能只开放 API 而保留隐式跨侧读取。</p>
+<h3>U2a：显式 HOST 消费与消费者迁移（#2501 待审阅）</h3>
+<p>2026-10-07：#2489 已合入；本次以 main <code>01bf24bfa</code> 为基线，提交
+<a href="https://github.com/hw-native-sys/simpler/pull/2501">#2501</a>，head <code>e89204e5</code>。
+本项实现 HOST/NONE 的真实 HBG 消费，移除隐式 DEVICE 主机访问，未改 Pipeline A 的准入与完成机制。</p>
+<ul>
+<li>HBG 在复制任何参数前登记 HOST/NONE 的范围；get/set 仅按 IN/OUT/INOUT 访问。
+  Python 的直接/子进程 chip 入口在解析地址前检查 Buffer grant 能覆盖 callable 方向。</li>
+<li>H2D 产生独立 DEVICE 参数；需要两侧数据就传两个 Tensor。HOST 写入不反向更新已复制的 DEVICE 值。
+  要在 host 使用上次 device 结果，先显式等待与复制，再传入独立 host 参数。</li>
+<li>TMR、device task、graph 参数及 predicate 拒绝 HOST。HOST/NONE 支持有效跨步视图；
+  HOST/H2D 保留连续布局约束；两份 H2D 副本重叠且存在写入时在分配前拒绝，只读重叠允许。</li>
+<li>PA、BGEMM、DSv4 host 元数据、FIFO/early enqueue、拓扑与 readiness 用例随接口共同迁移。
+  本项不引入 PreparedCall、缓存、映射视图或自动 D2H 标签。</li>
+<li>验证：294 个 C++ 测试目标；Python 2907 passed / 57 skipped；A2/A3 sim 69、A5 sim 67；
+  task-submit A2/A3 板上 19 项通过，grant 检查后复测相关 readiness/FIFO 路径也通过。
+  A5 板上和完整大规模 DSv4 尚未运行；日志隔离问题记录在工作树 KNOWN_ISSUES.md。</li>
+</ul>
+<p>本 PR 待审阅，不能标为已合入。后续为 U2b 的本地显式 COPY 与完成/保留合同，
+U3 Remote producer/receiver 的对称升级可并行。Kernel eager 的外部 context/caller 顺序仍需单独接线与验收。
+代码 PR 只含产品代码、API 文档和测试；本节和 HTML 留在仓库外。</p>
+<p>最新依赖修正见 <a href="kernel-eager-open-work.md">Kernel eager 剩余问题与接线顺序</a>。</p></section>
+<section id="section-11"><h2>2026-10-08：当前接线与剩余问题</h2><p>当前状态统一维护在 <a href="kernel-eager-open-work.md">kernel-eager-open-work.md</a>。#2501 已合入；
+Program IO / TensorLease 整理不作为 kernel eager 的前置。当前本地工作是 TMR/HBG 借用设备下的
+共同 prepare/finalize，之后接 caller-stream launch 与公开入口，再做 capture。</p></section>
+<footer>内容源：<a href="ROADMAP.md">ROADMAP.md</a>；由 render-roadmap.py 生成。图、样式与交互离线可用；GitHub 引用需联网。<a href="current-api-layers.html">API 层次审查与阶段映射</a>。<br>历史设计中的旧源码事实不表示当前主线；本页第 9 节列出已经改变的基础。</footer></main>
+<script>const links=[...document.querySelectorAll('.toc a')];if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){for(const link of links)link.classList.toggle('active',link.hash==='#'+entry.target.id);}}},{rootMargin:'-10% 0px -70% 0px'});document.querySelectorAll('section').forEach(section=>observer.observe(section));}</script>
+</body></html>

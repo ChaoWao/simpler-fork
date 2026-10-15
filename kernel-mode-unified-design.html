@@ -1,0 +1,531 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kernel mode · 架构与最终流程</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f7f5;color:#203b33;font:16px/1.8 system-ui,"Noto Sans CJK SC",sans-serif}a{color:#146447}nav{background:#163a30;color:white;padding:16px 5%;display:flex;gap:22px;flex-wrap:wrap}nav a{color:#d6ecdf}main{max-width:1320px;margin:auto;padding:36px 30px}h1{font-size:38px;line-height:1.3}h2{font-size:26px;margin-top:30px}h3{font-size:21px}.lead{font-size:19px;max-width:1000px}.meta,figcaption{color:#557468;font-size:13px}section,figure{margin:30px 0;padding:24px;border:1px solid #cdddD3;border-radius:12px;background:white}section>h2:first-child,figure>h2:first-child{margin-top:0}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}th,td{padding:12px;border:1px solid #d6e1db;vertical-align:top;text-align:left}th{background:#eaf3ee}pre{overflow:auto;background:#edf4ef;padding:18px;border-radius:6px;line-height:1.7}code{font-size:13px;overflow-wrap:anywhere}pre code{overflow-wrap:normal;white-space:pre}.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}.node{border:1px solid #a8c3b5;border-radius:8px;padding:18px;background:#f1f6f2;font-size:14px}.node b{font-size:17px}.program{background:#edf1f9}.kernel{background:#faf1df}.merge{text-align:center;font-size:21px;margin:18px}.pipeline{display:flex;align-items:center;gap:12px;margin:20px 0}.pipeline .node{flex:1}.pipeline>span{font-size:23px}svg{display:block;width:100%;min-width:980px}.lane{font-size:19px;font-weight:bold;fill:#214e3b}.label{font-size:16px;fill:#204734}.note{font-size:16px;fill:#567465}.event{fill:#397b58}.task{fill:#e0efe6;stroke:#6eaa83}footer{margin:30px 0;font-size:13px;color:#5a7268}li{margin:7px 0}.notice{border-left:5px solid #b58d35;padding:15px 20px;background:#fff5dd}a:focus-visible{outline:3px solid #ad822e}button{font:inherit;cursor:pointer;padding:6px 12px;border:1px solid #9dbbaa;border-radius:5px;background:white}@media(max-width:720px){main{padding:20px 12px}.entry-grid{grid-template-columns:1fr}.pipeline{flex-direction:column;align-items:stretch}.pipeline>span{text-align:center;transform:rotate(90deg)}section,figure{padding:16px}h1{font-size:29px}}@media print{nav,button{display:none}main{padding:0;max-width:none}section,figure{break-inside:auto;border:0}table{min-width:0}pre{white-space:pre-wrap}pre code{white-space:pre-wrap}svg{min-width:0}a{color:inherit}body{background:white;font-size:11px}}</style></head><body><nav aria-label="导航"><a href="LOCAL-EVIDENCE.md#artifact-e04379b57cc8">文档入口</a><a href="runtime-design-principles.md">唯一设计原则</a><a href="kernel-mode-roadmap.html">实施路线</a><a href="#current">当前实现</a><a href="#architecture">目标两路调用</a><a href="#chain">五事件链</a><a href="#protocol">完整协议</a><a href="#tmr">TMR 时序</a></nav><main><header><h1>Kernel / Program：共同执行与最终流程</h1><p class="lead">Program 管理设备与 tensor，kernel 借用环境和参数；simpler 负责完整 kernel 执行、workspace 和引用生命周期。</p><p class="meta">实现进度 main eeedcaa4 · descriptor 发布保护 #2367 已合入· 2026-09-19 · 协议历史基线保留原引用。</p><p class="notice">#2367（eeedcaa4）已合入 descriptor 发布状态与 launch 拒绝检查，真实入口探针已纳入 CI。图示是选定的目标协议。当前主线定义五事件并管理 context 资源，kernel launch 仍为拒绝 stub。原语探针通过不等于真实 executor 已验收。</p><button onclick="window.print()">打印 / 保存 PDF</button></header><section id="current"><h2>当前实现：已合入的同步调用链</h2><p class="notice">#2342 / #2353 / #2358 均已合入。Descriptor 的两个调用仍相邻，它是准备性接口边界；快照成本已发生，独立调度与异步 publication 尚未实现。下方另列 kernel / capture 的目标流程。</p>
+<figure><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 630" role="img" aria-labelledby="s2-title s2-desc">
+<title id="s2-title">Program 当前准备与发布链，及 kernel 的接入边界</title>
+<desc id="s2-desc">Program 沿用 Worker 和主线准入，HBG bind 准备多个源，统一 publish 按 Definition、A5 scheduler、image 顺序上传。TMR 跳过 HBG 图发布，两者都经过 descriptor 快照和同步上传，进入原有 launch 与退休。Kernel adapter 当前待接入；Pipeline A 受限首步和 S2 已交付。</desc>
+<defs><marker id="s2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#607b70"/></marker></defs>
+<g fill="none" stroke="#607b70" stroke-width="2" marker-end="url(#s2-arrow)"><path d="M310 75H355"/><path d="M750 75H800"/><path d="M955 122V162H565V205"/><path d="M565 350V390"/><path d="M565 465V520"/><path d="M260 421H355"/></g>
+<g fill="#e6f2e8" stroke="#84aa92"><rect x="30" y="28" width="280" height="94" rx="10"/><rect x="355" y="28" width="395" height="94" rx="10"/><rect x="800" y="28" width="290" height="94" rx="10"/></g>
+<g class="label"><text x="48" y="58">Program Worker / ChipRunLane</text><text x="48" y="87">主线准入 → simpler_prepare_run</text><text x="374" y="58">HBG bind：本次准备</text><text x="374" y="87">输入 staging / host-view / 每次构图</text><text x="819" y="58">Runtime.host_ 待发布记录</text><text x="819" y="87">源已准备；目的地址 owner 不变</text></g>
+<rect x="30" y="205" width="1060" height="145" rx="12" fill="#e6f2e8" stroke="#84aa92"/>
+<text x="50" y="236" class="label">已合入 #2353：publish_run_image_impl 同步消费一次，失败停止后续写入</text>
+<text x="50" y="277" class="label">Definition H2D</text><text x="242" y="277" class="label">→ A5 resident scheduler H2D</text><text x="592" y="277" class="label">→ compact execution image H2D</text>
+<text x="50" y="316" class="note">Definition 借 slot staging；scheduler 移交 host vector；image 沿用 #2342 的 slot staging</text>
+<rect x="30" y="385" width="230" height="78" rx="10" fill="#edf1f9" stroke="#92a6c1"/><text x="47" y="416" class="label">TMR prepare</text><text x="47" y="442" class="note">HBG 图发布为 no-op</text>
+<rect x="355" y="390" width="680" height="75" rx="10" fill="#e6f2e8" stroke="#84aa92"/><text x="375" y="420" class="label">已合入 #2358：descriptor 值快照 → 紧邻同步 H2D</text><text x="375" y="447" class="note">TMR / HBG 共用；仅返回码检查隔开；当前没有中间 host 修改窗口</text>
+<rect x="30" y="520" width="1060" height="75" rx="10" fill="#e6f2e8" stroke="#84aa92"/><text x="50" y="550" class="label">沿用主线 launch → 完成 / verdict → copy-back / DFX → release</text><text x="50" y="577" class="note">Kernel adapter：当前 K1 接入；async publication / reset / graph owner：后续 C1–C2</text>
+</svg></div><figcaption>绿色流程均已合入主线；descriptor 的接口分离尚未转化为独立调度。此图是 program 当前路径，kernel eager 尚未接通。</figcaption></figure><h3>已合入 descriptor seam：谁持有哪份数据</h3>
+<p>prepare 复制本次 device descriptor 的字节，建立独立 host 源；publish 才将它写入既有 slot。快照与后续 host 修改隔离的性质已由单测证明；生产 prepare/publish 紧邻执行，没有中间修改窗口。目的 allocation 的所有者保持不变。</p>
+<div class="pipeline"><div class="node"><b>准备</b><br>检查 / 建立 slot 目的空间<br>快照仅包含 device descriptor<br>不做 metadata H2D</div><span>→</span><div class="node"><b>发布一次</b><br>消费本次快照<br>同步 copy，检查返回值<br>不修改 slot 所有权</div><span>→</span><div class="node"><b>结果</b><br>成功：继续原 launch<br>失败：清空本次 runtime_args<br>两种结果均不保留可重发快照</div></div>
+<p class="notice">该边界增加一次 descriptor 大小的 host allocation 和 CPU copy，不减少 H2D 字节。图中不是整份 launch 配置的冻结点：DFX 在后续 arm 阶段写入 KernelArgs，沿用主线错误检查。指针值快照也不替指针所指资源延长寿命。</p>
+<p>模拟器直接传递 host Runtime，没有走这次 onboard H2D；sim 通过只证明 program 回归。分配／发布失败由生产 helper 的 CPU 桩测试覆盖，实际运行由 onboard 回归覆盖。</p><h4>已合入的同步接口及当前使用边界</h4>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>已合入实现</th>
+<th>当前使用边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HBG compact execution image</td>
+<td>#2342：slot grow-only staging、host-only pending record、bind 后 publish</td>
+<td>源保活到同步复制返回</td>
+</tr>
+<tr>
+<td>Graph Definition / A5 resident scheduler</td>
+<td>#2353：同一个 pending record，Definition → scheduler → image 发布</td>
+<td>device owner 不变；A5 legacy 无独立 scheduler region</td>
+</tr>
+<tr>
+<td>TMR/HBG Runtime descriptor</td>
+<td>#2358：<code>prepare_runtime_args</code> 建立值快照，<code>publish_runtime_args</code> 同步消费</td>
+<td>唯一生产调用点紧邻调用；#2367 已加入独立 launch 发布状态检查，没有中间 Runtime 修改</td>
+</tr>
+<tr>
+<td>HBG trace 和失败</td>
+<td>owner 检查、逐项失败即停止、消费整条 pending record</td>
+<td>不允许覆盖未发布的 HBG bind</td>
+</tr>
+<tr>
+<td>Descriptor 失败和寿命</td>
+<td>copy 错误清空 run view，保留 slot；source 成功／失败均消费</td>
+<td>pending 时拒绝 re-prepare，保留旧源和目的；两架构 launch 检查本次 Published 状态</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>确定实现：一个 HBG pending publication，一次调用准备、一次发布。</strong> prerequisites 按 Definition → resident scheduler 的顺序保存，最后才发布 execution image；没有 Definition 或 resident scheduler 时省略对应区域。记录可含借用的 slot source 和自行持有的 host source，两者都必须活到同步复制返回。准备失败清除部分记录；未消费的记录不能被 rebind 覆盖；失败发布不能重试为同一次成功调用。</p>
+<h4>当前 program 调用链（均已合入）</h4>
+<pre><code class="language-text">Program Worker / ChipRunLane（沿用主线 admission）
+  → simpler_prepare_run
+      → bind_callable_to_runtime_impl
+          → tensor 输入 staging、host-view window、合法 get/set
+          → HBG 每次 host orchestration
+          → prepare Definition / A5 scheduler / compact image
+          → 保存本次 pending publication，关闭 host-view
+      → publish_run_image_impl
+          → Definition H2D → A5 scheduler H2D → execution image H2D
+          → 记录实际 GraphUpload / ArenaH2d → 消费 pending record
+      → prepare_execution（以下两步紧邻执行）
+          → prepare_runtime_args：slot 目的地址 + descriptor 值快照
+          → publish_runtime_args：同步 descriptor H2D
+  → 原有 launch / 完成判定 / copy-back / DFX / release
+</code></pre>
+<p>TMR 不做 HBG host 构图，其 <code>publish_run_image_impl</code> 仍是 no-op；公共 descriptor 快照／发布同时服务两种 runtime。TMR 的冷路径 arena 初始化不因这个 no-op 消失。</p>
+<p><strong>#2358 是准备性的接口边界。</strong> 当前 <code>init_runtime_args_with_metadata</code> 在 prepare 成功后立即 publish；没有生产中的晚修改窗口需要快照保护。单测修改 host Runtime 后仍上传旧值证明了接口性质，不证明生产正在利用该窗口。每次 host allocation 与 CPU copy 的开销已经发生；异步／capture 尚未获得收益。</p>
+<p>S2 要求同步 source 存活到复制返回，以及未发布覆盖拒绝和基于本次发布结果的 launch 检查，#2367 已补齐后两项。K1 接入时可以使用已有内部接口，仍须保留全部 owner；C1 改成异步复制时才扩展 source 寿命到 DMA 完成。不得把 C1 的异步要求倒置为 S2 的退出门。prepare 的非空目的指针不等于已发布：#2367 对漏调用也明确拒绝。</p>
+<p>Kernel eager 的目标是 adapter 经共同准备／发布层，再接 caller 的设备顺序；<strong>这些改动没有接通 kernel launch</strong>。C1 才把发布改成受支持的异步流内命令，C2 再建立图对 source 的长期引用；当前 slot loan 和同步 source owner 不能直接延长为 capture 寿命。</p>
+<h4>已合入：descriptor 发布保护</h4>
+<p><a href="https://github.com/hw-native-sys/simpler/pull/2367">#2367</a>（合入 <code>eeedcaa4</code>）在现有 <code>KernelArgsHelper</code> 内记录 descriptor 状态：未发布时拒绝 re-prepare 且保留原源和目的；同步复制成功才可 launch；release、失败、fresh prepare 撤销旧成功状态。两架构 launch 入口在任何 stream 创建／DFX arming／kernel 入队前检查，拒绝保留 prepared owner，不 poison device。</p>
+<p>本项只保护 descriptor，HBG image 和 late DFX 保留各自的返回码路径；上传时机仍在 prepare 内，不改变重叠或准入。它完成前述“未发布覆盖策略与 descriptor launch 检查”的主线实现，<strong>没有交付异步源保活或独立调度窗口</strong>；两者不是本次同步合同的性能收益。</p>
+<p>C++ 163/163、helper 22 用例、ASan、两套 sim 和 A2/A3 onboard sweep 均通过；四种真实 host launch 入口的拒绝探针及移除 guard 的负对照也通过预期判据。本地未测 A5 真机；审阅 head <code>964d3a73</code> 的 <a href="https://github.com/hw-native-sys/simpler/actions/runs/35434816191">CI</a> 已通过两架构 onboard UT、scene sweep、sim 与 packaging，不据此宣告 A5 legacy 专项验收。详见<a href="reviews/publication-contract-main-2d366151.md">本地实现及证据</a>。</p>
+<h4>验证归属与下一步</h4>
+<ul>
+<li><strong>已合入 HBG</strong>：#2353 的审阅 head <code>7fb6d1df</code> 通过 GitHub 两架构 onboard、sim、UT；最终 <code>a1b78b2a</code> 只补文档和 parser 注释，再合入 <code>0dbf12ae</code>。不把这份 CI 当成本地 descriptor 的验证。</li>
+<li><strong>历史双提交栈</strong>：<code>fd5bd5a1</code> 的 C++ 161/161、两套 sim、A2/A3 onboard 等结果保留在<a href="reviews/s2-main-d49730f3.md">旧验证记录</a>。它们不冒充这次基线的测试。</li>
+<li><strong>Descriptor 本地验证 <code>e6cd39d4</code></strong>：C++ <strong>163/163</strong>、生产 helper <strong>12/12</strong>（含 ASan）、两套 sim 和 A2/A3 onboard 正常 sweep 均通过。独立构建、故障／寿命测试和 program 回归见<a href="reviews/descriptor-main-0dbf12ae.md">本次记录</a>。本机仅 A2/A3，历史本地结果未覆盖 A5 onboard；#2358 的 <code>7220dd01</code> 已通过两架构 onboard、sim、UT 的 CI。受控性能和 A5 legacy 的明确专项覆盖未由本页宣告。模拟器传 host Runtime 指针，不经过 onboard descriptor H2D，只能作为原 program 回归。</li>
+</ul>
+<p>以下是 <code>eeedcaa4</code> 时的历史接收核查（当前状态见文首），见 <a href="reviews/s2-pipeline-a-acceptance-eeedcaa4.md">S2 / Pipeline A 接收记录</a>。</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>接收项</th>
+<th>当前结论</th>
+<th>下一步归属</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S2：HBG 单次准备／同步发布、descriptor gate</td>
+<td>生产机制已合入；本地补齐普通→GRAPH legacy→MIX legacy→普通及各发布位置失败后的恢复验证</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2372">#2372</a> 已合入 <code>767618b3</code>；同步合同收口</td>
+</tr>
+<tr>
+<td>A：正常 drain 不依赖整流 sync</td>
+<td><code>wait_run_fence</code> 仍调用 <code>sync_stream_pair</code>；#2354 仅记录健康证据</td>
+<td>P2 消费者、drain／退休接线与 A5 legacy 终态证明</td>
+</tr>
+<tr>
+<td>A：native／Worker 连续入队</td>
+<td><code>active_native_run_</code> 与 <code>activate_fifo_head</code> 仍只允许单 active</td>
+<td>P4 / P5；保持原工作线所有权</td>
+</tr>
+<tr>
+<td>K1 / K2：共同执行 adapter 与 caller 顺序</td>
+<td>kernel launch 仍为拒绝 stub</td>
+<td>A 与 S2 验收后接通；不另造 runner</td>
+</tr>
+<tr>
+<td>C1：异步 source 与设备复位闭包</td>
+<td>未交付</td>
+<td>kernel eager 之后；不反向阻塞 S2 同步验收</td>
+</tr>
+</tbody>
+</table></div>
+<p>本地提交 <code>7da788ef</code> 只改一个测试文件，166/166 C++ targets、两架构 HBG 48 用例和 ASan/leak 均通过；负对照证明能抓住漏登记 scheduler source 与漏写 legacy 模式。这组测试经 <a href="https://github.com/hw-native-sys/simpler/pull/2372">#2372</a> 合入 <code>767618b3</code>，S2 同步验收完成。A 与 S2 均通过接收门槛后进入 K1；既不重做 HBG publication，也不把 host 发布验证当成 A5 legacy 的设备完成证明。</p>
+<h4>开销与验收</h4>
+<ul>
+<li>
+<h1>2342 / #2353 的 compact image 继续复用 slot staging，不复制旧分支的大图 vector。</h1>
+</li>
+<li>已合入的 Definition 借用既有 retained staging；A5 scheduler vector 转移所有权，避免第二次大块 host 拷贝。</li>
+<li>公共 descriptor 为建立不可变边界，新增一次 <strong>descriptor 大小的 CPU copy 和 host allocation / run</strong>；没有减少 H2D 字节，也没有据此宣称加速。</li>
+<li>保留每次 HBG 编排、tensor get/set 副作用、bank 绑定、输出回拷和原有 device allocation owner。发布失败不撤销之前的 tensor 副作用。</li>
+<li>本地验证结果与限制见<a href="reviews/descriptor-main-0dbf12ae.md">descriptor 验证记录</a>。旧分支的实验只作参考，不充当迁移后已通过的证据。</li>
+</ul>
+<p><strong>DFX 计时口径：</strong> #2353 的 <code>graph_upload</code> 仅计 publication copy；Definition 打包／绑定不在 <code>host_orch + graph_upload + arena_h2d</code> 中。三段之和是部分成本，旧新计时不能直接比较，更不能据此宣布 host 加速。公共 descriptor 仍在 <code>chip.run.prepare_execution</code> 范围内。</p>
+<p>S2 同步合同退出要求 TMR/HBG program 回归、两架构的发布失败和同步 source 寿命正确，A5 host 发布覆盖 resident 与 legacy。设备 legacy 终态归 A/P2，异步 source 归 C1。性能只有在提出收益主张时另做同口径测量，不将它变成准备性 seam 的新增退出门。<strong>S2 的同步边界完成，也不等于 kernel eager、共享 handshake ABI 或 capture 完成。</strong></p></section><figure id="architecture"><h2>Program / Kernel 最终调用流程</h2><p>目标架构；当前 kernel launch 仍为 stub。两条 eager 路径都准备一次、提交一次。</p>
+<div class="entry-grid"><div class="node program"><b>Program 用户</b><br>设备所有权 + tensor 绑定<br>必要输入 staging / 输出 copy-back</div><div class="node kernel"><b>Kernel 用户 / PyPTO</b><br>框架有序队列 → kernel adapter<br>借用 device tensor / caller stream<br>Host 控制值快照</div></div><div class="merge" aria-hidden="true">↘　共同执行入口　↙</div>
+<div class="pipeline"><div class="node"><b>Host 准备</b><br>校验与值快照<br>TMR 参数 / HBG 本次构图</div><span>→</span><div class="node"><b>发布</b><br>async metadata<br>选定 bank + Ready</div><span>→</span><div class="node"><b>设备执行</b><br>fault gate / reset<br>五事件链 + kernel launch</div><span>→</span><div class="node"><b>完成与退休</b><br>双侧完成 / 终态 / 健康<br>最后消费者后回收</div></div>
+<div class="entry-grid"><div class="node program">Program → copy-back / DFX 消费 → future / retire</div><div class="node kernel">Kernel → caller 后序<br>内部记录由消费者完成后 retire</div></div>
+<figcaption>IO 与设备管理位于外层；共享 workspace、代码、发布与双侧生命周期由 simpler 管理。</figcaption></figure><figure id="chain"><h2>执行闭包：五个事件，链式连接</h2><p>对应主线 KernelEventKind 的合同；publication 的 Ready 与图 Root 另计。</p><div class="scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 435" role="img" aria-labelledby="chain-title chain-desc"><title id="chain-title">caller 与 AICPU、AICPU 与 AICore 的五事件链</title><desc id="chain-desc">Caller record Start，AICPU wait 后在 launch 前 record AicoreStart，AICore wait 后 launch 并 record AicoreDone。AICPU launch 后 wait AicoreDone 再 record AicpuDone，caller wait 后 record SerialTail。</desc><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#477b69"/></marker></defs>
+<g stroke="#c0d4cc" stroke-width="2"><path d="M120 90H1240"/><path d="M120 215H1240"/><path d="M120 340H1240"/></g>
+<g class="lane"><text x="15" y="96">caller</text><text x="15" y="221">AICPU</text><text x="15" y="346">AICore</text></g>
+<g fill="none" stroke="#477b69" stroke-width="2" marker-end="url(#arrow)"><path d="M245 90V215"/><path d="M415 215V340"/><path d="M880 340V215"/><path d="M1025 215V90"/></g>
+<g class="event"><circle cx="245" cy="90" r="6"/><circle cx="415" cy="215" r="6"/><circle cx="880" cy="340" r="6"/><circle cx="1025" cy="215" r="6"/><circle cx="1170" cy="90" r="6"/></g>
+<g class="label"><text x="195" y="65">Start</text><text x="340" y="190">AicoreStart</text><text x="811" y="378">AicoreDone</text><text x="950" y="249">AicpuDone</text><text x="1120" y="65">SerialTail</text><text x="180" y="249">wait Start</text><text x="339" y="378">wait AicoreStart</text><text x="795" y="190">wait AicoreDone</text><text x="945" y="126">wait AicpuDone</text></g>
+<g class="task"><rect x="510" y="188" width="245" height="54" rx="8"/><rect x="540" y="313" width="245" height="54" rx="8"/></g><g class="label"><text x="540" y="222">AICPU kernel launch</text><text x="570" y="347">AICore kernel launch</text></g><text x="140" y="418" class="note">AicoreStart 必须早于 AICPU launch；caller 与 AICore 没有直接事件边。</text></svg></div><figcaption>Event 对象常驻不代表 record 可来自捕获外；每条等待都必须有合法来源。</figcaption></figure><section id="protocol"><h2>共同执行协议</h2><p class="meta">唯一内容源：<a href="kernel-mode-prepare-submit-design.md">kernel-mode-prepare-submit-design.md</a></p><p>更新：2026-09-18。<strong>唯一规范：<a href="runtime-design-principles.md">设计原则</a>。实施顺序：<a href="ROADMAP.md">ROADMAP</a>。源码事实：<a href="SOURCE_BASELINE.md">固定 main 2085182a</a>。</strong> 本文给出选定机制与验收边界，不能用目标图冒充已实现代码。<a href="LOCAL-EVIDENCE.md#artifact-54669faff63e">旧版原件</a>保存此前完整推导。</p>
+<p><strong>实现进度补充（2026-09-19）：</strong> main <code>f187c089</code> 已含 #2342 / #2353 的 HBG 统一发布和 #2358 的公共 descriptor seam。Descriptor prepare/publish 在唯一生产调用点仍紧邻，尚无中间 Runtime 修改窗口；快照性质已建立，分配／复制开销已支付，async / capture 未实现。完整状态以 <a href="ROADMAP.md">ROADMAP 的 S2</a> 为准；旧源码约束仍引用固定历史基线。</p>
+<h2 id="protocol-0">0. 已有基础与交付边界</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>已核查主线事实</th>
+<th>对设计的影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>simpler_kernel_mode_supported</code> 返回 0；launch 是拒绝 stub</td>
+<td>Context init/资源准备不等于 kernel eager 可用</td>
+</tr>
+<tr>
+<td><code>KernelEventKind</code> 五事件链，PrepareTail 已删除</td>
+<td>使用 caller ↔ AICPU ↔ AICore；不恢复四事件或 caller 双分叉图</td>
+</tr>
+<tr>
+<td>Orchestrator 仍以 <code>active_run_id_</code> 控制执行父 run，<code>begin_run</code> 获取 admission lease</td>
+<td>只改 lane 不会开放 Python 排队；父 run 的 A→B→C 顺序须保留</td>
+</tr>
+<tr>
+<td>Lane 的 leased overload 容量满时报错，direct overload 可 drain</td>
+<td>不能把 direct overload 的行为当成 Python 的准入逻辑</td>
+</tr>
+<tr>
+<td><code>RunStreamPair::ensure</code> 假定 idle，<code>owner_</code> 是单一 owner；换 core image 涉及 instruction-cache</td>
+<td>不能只删除 prepare/admission guard；并发 owner 与 code/stream generation 要接 Pipeline A</td>
+</tr>
+<tr>
+<td><code>wait_run_fence</code> 完成后仍调用 <code>sync_stream_pair</code> 取得后端 verdict</td>
+<td>#2303 通知 owner 已合入，但正常 drain 和健康消费尚不能算交付</td>
+</tr>
+<tr>
+<td>HBG <code>get_pipeline_contract</code> 已有 HOST_PER_RUN 双 bank；TMR arena 是 DEVICE_SCRATCH</td>
+<td>提前发布沿用已有分类，不给所有资源乘同一个 depth</td>
+</tr>
+<tr>
+<td>HBG #2309 已缩短 device prefix；#2315 的显式 descriptor 已合入</td>
+<td>显式 descriptor 是布局收口，不再重复记同一传输收益</td>
+</tr>
+<tr>
+<td><code>init_runtime_args</code> 仍调用同步 <code>rtMemcpy</code></td>
+<td>S2 先分离准备/发布，C1 必须改成受支持的异步流内 publication</td>
+</tr>
+<tr>
+<td>Program 的 AICore launch 已传本次参数；kernel 冷资源类仍有 device args 存储</td>
+<td>不能用一个旧 <code>device_k_args_</code> 模型描述所有入口；分别审计实际消费者</td>
+</tr>
+<tr>
+<td>PMU 表从 runner 常驻表选择，enable 决定传真实地址还是 0</td>
+<td>撤回“当前每次 prepare 分配、cleanup free 表”的旧事实；逐调用字段仍不可冻结</td>
+</tr>
+</tbody>
+</table></div>
+<p>当前代码约束的出处见源码索引。S1 已完成，S2 可与 A 并行；共同执行接线以 A 验收为前提。不恢复独立 PreparedCall、重复 submit 或跨调用整次 host 结果自动缓存。</p>
+<h2 id="protocol-1">1. 两个入口，一个执行合同</h2>
+<p>以下是目标职责流程，名称是内部职责，不是宣布一套已存在的 public ABI。</p>
+<pre><code class="language-text">Program 用户
+  → program 资源层：设备所有权、tensor 绑定/必要 staging
+  → 本次参数值 + 本次 IO owner ───────────────────┐
+                                               ↓
+Kernel 用户 / PyPTO → 框架有序队列 → kernel adapter
+  → 借用 device tensor / caller stream + host 控制值快照
+                                               ↓
+共同执行层：校验 → 本次 host 准备 → 独立发布 → 有序初始化 → 完整 kernel enqueue
+                                               ↓
+                              本次终态 + 双侧完成 + 健康判定
+                                               ↓
+Program：copy-back / DFX 消费 / future / retire
+Kernel ：caller 后序可继续；内部结果/诊断消费完后 retire
+</code></pre>
+<p>两条 eager 路径每次重新准备、只提交一次。程序资源层不必绕 public kernel API。Simpler 管所有内部执行态 workspace；输入输出、权重、KV/MTP 等业务持久状态通过外部 IN/INOUT 传入。HostTensor 是显式控制值，不是 kernel 偷偷做 tensor staging 的入口；scalar 保留 dtype/位宽/位模式。</p>
+<p>Native enqueue 成功意味着全部依赖已建立；框架队列的 accepted 是另一个阶段。若中途失败，返回失败且保留已经入队的引用，不能假装从未接受设备工作。</p>
+<h2 id="protocol-2">2. 单次准备结果、执行状态与资源</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>对象/职责</th>
+<th>保存内容</th>
+<th>生命周期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Callable / generation</td>
+<td>code、编排入口、签名、常量和容量合同</td>
+<td>有效 handle、执行、graph 的最后引用全部退出后</td>
+</tr>
+<tr>
+<td>本次执行上下文</td>
+<td>参数快照、host 编排产物、重定位信息、DFX device 配置、引用、状态</td>
+<td>一次 prepare/submit；退休不早于全部消费者</td>
+</tr>
+<tr>
+<td>Workspace</td>
+<td>publication bank、握手、scratch、终态/诊断、DomainControl</td>
+<td>按子区实际读写者使用期限复用</td>
+</tr>
+<tr>
+<td>Graph owner</td>
+<td>捕获源、固定地址/shape、节点 bank 绑定、事件及代码引用</td>
+<td>图及其在飞 replay 全部结束后</td>
+</tr>
+</tbody>
+</table></div>
+<p>沿用现有 per-run / PreparedExecution 的承载位置整理职责，不把 <code>Runtime*</code>、CallConfig 或 host-only DFX 直接变成公开准备句柄。API 内借读的 host 内容返回前消费或快照；异步 DMA 读的是 simpler 自己保有的字节。</p>
+<p>HBG 先建立本次 host-view window 和 tensor slice offsets，再做依赖它们的契约检查与构图。每次 fresh 编排保留 get/set、dep-gen 和错误效果。#2285 的 canonical/bound 拆分是历史实验，不是本路线要求的缓存机制。</p>
+<h2 id="protocol-3">3. 资源布局与容量账</h2>
+<p>默认 publication banks B=2，在 attach/generation 时确定；单 bank 必须通过显式容量配置选择，选定后同样不可在已有图下改 B。这是同一个协议的容量参数，不是可选功能路线。改变 bank 数/地址/布局需新 generation 和新图，旧代引用退出前继续保活。</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>区域</th>
+<th>选定份数/上限</th>
+<th>复用边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LaunchState / host-populated execution image</td>
+<td>B 个 publication bank</td>
+<td>此 bank 上次双侧与其他真实读者结束</td>
+</tr>
+<tr>
+<td>TMR gm_heap / gm_sm / runtime_pool scratch</td>
+<td>同一串行执行域通常一份</td>
+<td>前次完整结束后初始化</td>
+</tr>
+<tr>
+<td>HBG GM_HEAP / RUNTIME_IMAGE</td>
+<td>遵守 HOST_PER_RUN，默认双 bank</td>
+<td>不能把 host 生成的逐调用内容误算成一份 scratch</td>
+</tr>
+<tr>
+<td>Handshake / scheduler 控制 scratch</td>
+<td>串行执行域一份，独立 cache line</td>
+<td>双侧最后写回之后；本次 startup report 之前 reset</td>
+</tr>
+<tr>
+<td>DomainControl</td>
+<td>每执行域一份</td>
+<td>不在每次 reset 的 sm_handle/arena/mailbox 内</td>
+</tr>
+<tr>
+<td>终态、结果、DFX record</td>
+<td>按未消费数和容量上限</td>
+<td>device 结束且回拷/collector 等消费者结束</td>
+</tr>
+<tr>
+<td>图可更新稳定槽</td>
+<td>每个需要更新的图节点一槽</td>
+<td>图销毁并且在飞 replay 结束</td>
+</tr>
+<tr>
+<td>Host/device 不可变版本与 staging</td>
+<td>按同时存活版本、在途更新分别预算</td>
+<td>最后 DMA/graph 读者结束；不覆盖仍会被读的源</td>
+</tr>
+<tr>
+<td>Code、寄存器/PMU 表、配置常量</td>
+<td>context/generation 常驻</td>
+<td>所有 handle、run、graph 引用退出</td>
+</tr>
+<tr>
+<td>Event / stream</td>
+<td>分开预算</td>
+<td>排队 wait/record、执行及 graph 引用全部退出</td>
+</tr>
+</tbody>
+</table></div>
+<p>容量配置须明确单位，至少含 <code>publication_banks</code>、<code>publication_bytes_per_bank</code>、scratch/control/result/DFX 字节、<code>graph_update_slot_bytes</code>、<code>device_version_bytes</code>、<code>device_staging_bytes</code>、<code>host_pinned_bytes</code>、<code>max_inflight_submissions</code>、<code>event_budget</code>；这些是<strong>设计字段</strong>，不是声称已有同名 C++ 结构。</p>
+<p>图 g 有 N_g 个节点，U_g 个需要显式原图更新。稳定槽 HBM 为 <code>Σ_g Σ_(i in U_g) aligned(slot_bytes[g,i])</code>。K 张同形图、每图 N 个可更新节点时是 K×N 份，不是 B 份。每类 budget 计入对齐、保留空闲块和仍被引用的旧代块；各类不重叠记账，HBM 总上限覆盖它们之和。Host 版本与 RTS/provider 自有内存另列可见账。</p>
+<p>已有图引用的底层地址冻结；包括 <code>requested_size=0</code> 的释放请求也不能放行。已分配块内的逻辑缩小可保留原地址和 committed size；不能借缩小换块。对所有将改动的区域先整批预检，避免后一块拒绝触发回滚、反而释放前面已被图引用的地址。当前 <code>kernel_arena_change_is_forbidden</code> 已体现 zero-size 与增长的检查，后续协议不能削弱它。</p>
+<p>本协议执行链含五个逻辑事件；publication 增加每节点 Ready，每图增加 Root。当前选择<strong>每图独立预留</strong>：</p>
+<pre><code class="language-text">graph_event_budget = Σ_g (1 + 6 × N_g)
+total_event_budget = graph_event_budget + eager 存活事件 + adapter/其他用途存活事件
+</code></pre>
+<p>主线 context 的五个物理 event 不等于已满足此图预算。Probe D 证明过特定多图共享事件形状，但未证明完整 executor 的并发/销毁合同；本交付先不抵扣共享收益。未来优化若复用物理事件，必须重新证明最近 record 归属及所有 wait/graph 生命周期。</p>
+<p>B−1 是 publication 与执行的重叠窗口；max_inflight 只增加 host 提前准备/入队范围。Probe L 的 1792 次接受不是可移植 RTS 容量常数。Simpler 可在自身预算不足时预先拒绝或背压，<strong>一旦进入 RTS，实测饱和调用可能直接阻塞，没有可依赖的 WouldBlock 返回</strong>。</p>
+<h2 id="protocol-4-publication-workspace">4. Publication、共享 workspace 与五事件链</h2>
+<h3 id="protocol-41-abi">4.1 先改 ABI，再开放覆盖</h3>
+<p>TMR 当前 descriptor 的 workers 是首成员；host memcpy 整个 device prefix，AICPU/AICore 都消费其中握手。AICore 有整条 Handshake cache-line 写回。发布区与独立执行控制区必须分开，使 B 的 publish 不再写 A 的 handshake；同时更新两侧 reader、地址传递、reset 和 cache invalidate 范围。HBG 显式 descriptor 收口也不自动完成这个按寿命拆分。</p>
+<p>不能只删 lane guard 或只移动 memcpy。Launch-time host 清零没有配套 Runtime 上传，不能充当设备 reset。目标 reset 放在设备依赖中，早于所有本次首次读写；不在 AICPU 晚到的入口盲目清 AICore 已写报告。</p>
+<p>两侧参数中的 workspace 地址指向同一 simpler 分配；RTS 对 host launch 参数的值拷贝不管理其二级指针。AICPU envelope 只保留 capture 不变量和稳定地址。<code>runtime_args</code> 指向固定节点 bank，冻结这个指针正是所需行为；tensor/scalar 从 Runtime 参数区读取。真正要移出的，是逐调用变化的 inline enable/有效 buffer 地址等字段，不是把所有 AICPU 数据再搬一次。</p>
+<p>Program 主线已使用本次 AICore launch 参数；kernel 冷资源还保留 device args。实现时逐入口核对，不能沿用已撤回的“两侧都读旧 device_k_args”假设。PMU 表常驻并不使 <code>pmu_reg_addrs = enable ? table : 0</code> 的值恒定；DFX 同样需审计 enable→disabled、初始化失败→0 等分支。当前 AICore 的 <code>AicoreLaunchArgs.enable_profiling_flag</code> 也按值传入：捕获后同样被冻结，不能只改 AICPU envelope 而漏掉另一侧。</p>
+<h3 id="protocol-42">4.2 最终设备顺序</h3>
+<pre><code class="language-text">图入口 caller : 前图/eager 完整结束 → record Root
+publication   : wait Root → wait 本图 bank 上次 SerialTail（若存在）→ async publish → Ready
+caller        : 前次 SerialTail + wait Ready → fault gate / reset → Start
+AICPU         : wait Start → AicoreStart → launch CPU → wait AicoreDone → AicpuDone
+AICore        : wait AicoreStart → launch Core → AicoreDone
+caller        : wait AicpuDone → SerialTail → caller 后序
+</code></pre>
+<p>所有箭头表示流内/事件依赖，CPU launch 和 Core launch 可并发进行。AicoreStart 必须在 CPU launch <strong>之前</strong> record。独立 publication 流保留提前上传窗口；若一律在被前驱完成挡住的 caller 上复制，双 bank 的重叠收益就消失。</p>
+<p>Publication <strong>必须是该平台支持捕获的异步复制，发到纳入闭包的流上，并检查返回值</strong>。不能直接在 capture 里重用同步 <code>init_runtime_args</code>。Probe I/K 实测 sync H2D 返回 107030 后 capture 仍 ACTIVE，合法 async 后续和 CaptureEnd 可成功；忽略错误可能交付一张缺参数发布的图，不是必然“当场毁掉捕获”。</p>
+<h3 id="protocol-43-bank">4.3 每图 bank 依赖</h3>
+<p>每张图建立独立 <code>last_use[bank]</code>。节点 i 使用 <code>i % B</code>：若本图还没有使用此 bank（顺序轮转时 i&lt;B），只依赖 Root；否则 publication 等本图 last_use 的 SerialTail，再将 last_use 更新到本次尾部。</p>
+<p>第一次使用的安全性来自：逐图 capture 前的执行域静止，以及每次 replay 的 Root 被排在域内前图/eager 完整结束后。不能引用 capture 外或另一张图的旧 Done。本图第一个调用也不在图内等待捕获外的 SerialTail；它继承 Root 的入口顺序。跨图顺序由同一 caller stream 的 FIFO 或图外合法桥接建立，不能把外部 event record 偷带成图内 wait。每个 batch bucket 都要付自己的 cold-path 检查和预留成本。Bank 绑定和上述边在捕获时固定。</p>
+<h3 id="protocol-44">4.4 失败、挂死与已排队后继</h3>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>情形</th>
+<th>必须保留的行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>设备可检测 fault</td>
+<td>先写 first-fault，再打开本次结束边界；后继 gate 才能可靠读到 fault</td>
+</tr>
+<tr>
+<td>正常或受控 early-exit</td>
+<td>走共同停机协议，让两侧停止访问；状态明确为成功/失败/跳过</td>
+</tr>
+<tr>
+<td>已入队的后继</td>
+<td>gate 位于前驱双侧完成之后；观察 fault 后不执行业务写入，但仍完成必要停机与终态</td>
+</tr>
+<tr>
+<td>Event wait 成功、launch 失败</td>
+<td>队列已引用 event；不能按“尚未 launch”立即释放</td>
+</tr>
+<tr>
+<td>Kernel 成功提交、event record 失败</td>
+<td>工作可能仍活跃且无完整 fence；保留资源，走有界恢复/隔离</td>
+</tr>
+<tr>
+<td>A 挂死、不发尾部</td>
+<td>B 可能一直堵在 wait，不能声称 B 已执行 Skip；fault gate 不能自行解锁这个环</td>
+</tr>
+<tr>
+<td>只在后端同步/异步通知中显露错误</td>
+<td>通过健康消费者与有界监测处理，不能把 event complete 当作后端成功</td>
+</tr>
+</tbody>
+</table></div>
+<p>DomainControl 的 fault latch 位于每次 reset 重建区之外，保持 sticky；使用 device 递增执行序号区分 replay。Fault-before-completion 是协议不变量。对挂死与迟到后端错误，由 Pipeline A 的健康/终态机制扩展监测；停止新提交，标记未决状态，保留未证明静止的资源。Kernel 不 reset caller 设备，已发生 tensor 写入不能回滚。</p>
+<p>CompletionMonitor 替代每次 whole-stream wait 所承担的外层时限，不新设一个任意 deadline。沿用 <code>RuntimeTimeoutConfig</code> / <code>validate_runtime_timeout_order</code>：scheduler &lt; <strong>实际生效</strong> op-execute &lt; 外层期限，外层还覆盖 scheduler+1500ms 和图特定的 producer window。合法队列等待时间与 device 开始后的执行时限分开；拿不到可靠开始证据时不能把 enqueue 时间当作精确执行起点。Probe M 的量化与“何时真正收割”的未决问题见证据索引，不能只对请求值排序就宣称安全。</p>
+<h2 id="protocol-5-capturereplay">5. Capture、replay 与显式换参</h2>
+<h3 id="protocol-_1">固定绑定</h3>
+<p>Caller 按顺序更新同地址 device tensor 的内容，再 replay；图中无需每次回 host 准备。Host 派生的 metadata/image 用图持有的不可变源，经捕获的 async publication 送往 bank。HBG 每次 restore 被执行消费的 pristine 内容；TMR 每次在 device 重建编排状态。</p>
+<h3 id="protocol-_2">原图更新</h3>
+<p>地址/scalar/shape 的变化若影响 host 派生结果，先重新准备相关数据并检查图兼容性。兼容时按如下顺序更新，超出结构/generation 合同则重建图：</p>
+<pre><code class="language-text">不可变 host/device 版本
+  → 图外：按 caller 顺序 async 写 graph-owned 稳定 device 槽
+  → replay 内：固定槽 → 本次 bank
+  → 初始化与执行
+</code></pre>
+<p>每次异步更新保有自己的不可变源或独立 staging，不覆写前次仍被 DMA 读取的内容；slot 更新与其前后 replay 在执行域排序。整批兼容性和容量先检查，发布中途失败则图进入不可继续使用状态，不能半更新后仍报告成功。</p>
+<p>固定绑定不需要这些额外可更新槽。Device 版本使用 HBM 和 D2D 带宽；不可变 pinned host 版本用 host RAM 和 H2D 带宽。N 个不可变 host 版本可做到没有显式 host 等待，不能把 host 方案一概描述为“必须每轮同步”。固定 graph 源本身由图持有到最后 replay；更新版本在其 DMA 消费完后即可退休。</p>
+<p>HBG 动态输入改变构图时必须重做相关 host 决定，不能只 patch 顶层 args。构图时 <code>set_tensor_data</code> 的效果必须转为图内有序设备写入；未表达的效果在捕获前明确拒绝。禁止一次逻辑调用部分执行后隐式回 host 决策再补任务。Device 动态控制可用谓词/有界计划；否则上层显式拆调用。</p>
+<h2 id="protocol-6-dfx">6. DFX、关闭与保活</h2>
+<p>DFX 分三部分：host-only 报告；每次 device 执行要读取的配置；执行产生并等消费者读取的记录。只捕获第二部分的发布和第三部分的设备行为，不将建图期时间戳冒充每次执行数据。</p>
+<p>寄存器/PMU 表及 buffer 可常驻；逐调用 enable/有效地址由 publication 更新。#2225 的每 launch writer-cache invalidation 是先例：可以逐调用失效 level、指针、thread index，不能据此清除未消费的 record 队列游标。设备执行序号每次递增，host run_id 不足以标识 replay。</p>
+<p>退休检查完整清单：<strong>有效 caller handle、device 两侧执行、DMA、输出回拷、状态读取、DFX consumer、event wait/record、framework callback、captured graph 及其在飞 replay</strong>。一项仍有引用就不能物理回收对应资源。图结束和一次 fence 完成不同；外部 tensor 的 allocator 保活由框架 adapter 接口落实。</p>
+<p>Close 拒绝新工作并处理未决执行；未证明静止时不得 free。借用设备不隐式 reset；destroy/free 失败保留可解释的 owner 状态或显式终止处置，不在析构时偷偷重试未知设备。Generation 改动不能原地替换旧图地址，也不能淘汰仍有效的 callable handle。</p>
+<h2 id="protocol-7">7. 验收矩阵</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>层次</th>
+<th>最低证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Program 回归 / A 接收</td>
+<td>native 和 Worker 路径两个真实 LAUNCHED；父 run 顺序；合法 host get/set；正常 drain 不等后继整流；错误归属与安全退休</td>
+</tr>
+<tr>
+<td>Kernel eager</td>
+<td>TMR/HBG、两架构与声明支持的 legacy；caller 前后序；TQ=0/1；host 值快照；无隐式 tensor staging/reset</td>
+</tr>
+<tr>
+<td>Capture 基础</td>
+<td>五事件链+publication；每图合法 record/wait；异步复制返回值；reset 在首次读写前</td>
+</tr>
+<tr>
+<td>Replay 语义</td>
+<td>TMR 每次 device 编排；HBG 每次 restore 与副作用；重复结果正确；无 host 隐式中途续跑</td>
+</tr>
+<tr>
+<td>更新与容量</td>
+<td>固定绑定、原图换参、交替多图；B=1/2；稳定槽与版本真实占用；不覆写活跃源；超限不破坏有效图</td>
+</tr>
+<tr>
+<td>故障与生命周期</td>
+<td>fault-before-tail、挂死、partial enqueue、record 失败、未决健康、callback 延迟、图销毁与 close 失败</td>
+</tr>
+<tr>
+<td>诊断与性能</td>
+<td>DFX 开关/切换、记录保留、实际执行身份；HBG STRACE 的 bytes/copied/sm；发布重叠、吞吐和长尾</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>普通算子探针不是整套 executor 已通过。</strong> 本轮文档更新没有运行新设备实验。测试所需机制和硬件范围按 ROADMAP 逐阶段交付；不以暂时拒绝尚未支持的能力代替最终验收。</p></section>
+<section id="tmr"><h2>TMR 五事件时序</h2><p class="meta">唯一内容源：<a href="kernel-mode-tmr-flow.md">kernel-mode-tmr-flow.md</a></p><p><strong>依据：<a href="runtime-design-principles.md">设计原则</a>；源码基线：<a href="SOURCE_BASELINE.md">2085182a</a>。</strong> 本文解释时序，不另立原则。旧版四事件 / PrepareTail 方案已归档，不能继续实施。</p>
+<h2 id="tmr-1">1. 已有定义与尚未交付的边界</h2>
+<p><code>kernel_execution_state.h / KernelEventKind</code> 已定义五个 event，context 创建、持有两条内部流和事件资源。<code>c_api_shared.cpp / simpler_kernel_mode_supported</code> 仍返回 0，<code>simpler_kernel_mode_launch</code> 仍拒绝执行。<strong>以下五事件顺序是主线声明的执行合同，不是完整生产 launch 已通过的报告。</strong></p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Event</th>
+<th>record 所在流</th>
+<th>wait 所在流</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start</td>
+<td>caller</td>
+<td>AICPU</td>
+<td>caller 前序接入逻辑算子</td>
+</tr>
+<tr>
+<td>AicoreStart</td>
+<td>AICPU，且在 AICPU launch 之前</td>
+<td>AICore</td>
+<td>允许 AICore 启动并发布 handshake</td>
+</tr>
+<tr>
+<td>AicoreDone</td>
+<td>AICore launch 之后</td>
+<td>AICPU，AICPU launch 之后</td>
+<td>汇入 AICore 的真实结束边界</td>
+</tr>
+<tr>
+<td>AicpuDone</td>
+<td>AICPU launch 与 AicoreDone wait 之后</td>
+<td>caller</td>
+<td>两侧均结束后返回 caller</td>
+</tr>
+<tr>
+<td>SerialTail</td>
+<td>caller 的 AicpuDone wait 之后</td>
+<td>执行域下一调用的串行入口</td>
+<td>caller 可见的整个调用尾部</td>
+</tr>
+</tbody>
+</table></div>
+<p>拓扑固定为 <strong>caller ↔ AICPU ↔ AICore</strong>。Caller 与 AICore 不直接相邻。<code>AicoreStart</code> 若放到 AICPU launch 之后，AICPU 可能正等待 AICore startup report，导致事件永远无法 record。</p>
+<pre><code class="language-text">caller   : 前序 ─ record Start ───────────────────────── wait AicpuDone ─ record SerialTail ─ 后序
+AICPU    :        wait Start ─ record AicoreStart ─ launch CPU ─ wait AicoreDone ─ record AicpuDone
+AICore   :                    wait AicoreStart ─ launch Core ─ record AicoreDone
+</code></pre>
+<p>这张图表示各流中的设备顺序，不要求 host 等待 CPU 结束才提交 Core。实现的 host 发射顺序也必须避免在流头饱和时卡住必要的另一侧发射；Probe L 只测单流，不构成多流活性证明。</p>
+<h2 id="tmr-2-prepare-tail">2. Prepare 不发布捕获外 tail</h2>
+<p><strong>PrepareTail 已删除，不是待定项。</strong> 准备阶段可以注册、预留容量并形成本次 host 结果，但不得 record 一个供后续 capture 内 launch 等待的 tail。</p>
+<p>Event 对象可以常驻；其最近一次 record 与 wait 必须处在合法的同一捕获上下文。等待捕获前的 record 会遭遇 107024。不能因持有同一个 event handle 就认为捕获依赖合法。依据是主线 <code>KernelEventKind</code> 前的注释及 <a href="probes/RESULTS.md">Probe D 等原始记录</a>。</p>
+<h2 id="tmr-3-metadata-publication">3. 加上 metadata publication 的最终目标流程</h2>
+<p>本节是 C1/C2 <strong>待交付协议</strong>。沿用上面的五事件执行链，独立 publication 流添加 Ready；每张图添加 Root。五事件定义不等于所有发布/图资源只需五个物理对象。</p>
+<pre><code class="language-text">图入口 caller : 执行域前序完整结束 → record Root
+publication   : wait Root → [本图 bank 的上次 SerialTail] → async publish(bank) → record Ready
+caller        : 前次 SerialTail + wait Ready → 检查 fault / 初始化共享状态 → record Start
+AICPU         : wait Start → record AicoreStart → launch CPU → wait AicoreDone → record AicpuDone
+AICore        : wait AicoreStart → launch Core → record AicoreDone
+caller        : wait AicpuDone → record SerialTail → caller 后序
+</code></pre>
+<p>Root 只约束 publication 不越过图入口的前序；不会把本图所有后继发布都串到前驱执行后。Bank 有 B 份时，第 i 个节点使用 <code>i % B</code>。本图对 bank 的第一次使用省略方括号中的 wait；之后等本图该 bank 的上次 SerialTail。不能等待另一张图或 capture 前 eager 的 record。跨图及 eager/graph 间由同一执行域的完整顺序保证，capture 前逐图确认静止。本图第一个调用只继承 Root，不在捕获体内等待捕获外 SerialTail；跨 caller stream 的桥接放在图外，图内不引用外部 record。</p>
+<p>默认 B=2 时可有一次后继发布与当前执行重叠。更多 host 在途节点不增加 B−1 的发布窗口。Bank 数在 attach/generation 时固定；改 B 必须重新建图。详细预算、图换参和故障处理见<a href="kernel-mode-prepare-submit-design.md">共同执行协议</a>。</p>
+<h2 id="tmr-4-tmr">4. TMR 每次执行必须做什么</h2>
+<ol>
+<li>Host eager 每次构造本次参数值；capture 只在建图／显式更新时计算这些值。Replay 不重新运行 host 编排。</li>
+<li>将本次 launch state 异步发布到选定 bank；单独保留握手和 DomainControl，不能用整块 Runtime 上传覆盖前驱握手。</li>
+<li>等前次双侧最后使用结束，执行有序初始化。Reset 必须早于本次 AICore 首次 handshake 写入；不能让较晚开始的 AICPU 擦掉它。</li>
+<li>两侧传入同一 workspace 的 device 地址，按照五事件链执行。TMR 在 device 运行编排并重建 scheduler/arena/mailbox 所需状态。</li>
+<li>设备可检测的 first-fault 在结束边界打开之前写入；host 另外判断终态、健康和资源静止，不能把 event 完成当作全部成功。</li>
+</ol>
+<p><strong>当前 ABI 障碍有读写两侧证据：</strong> TMR <code>DeviceRuntimeLaunchDesc</code> 首部含 workers；host 发布覆盖整个 device prefix；AICore 从 <code>runtime-&gt;dev.workers[block_idx]</code> 读取，AICPU 也对同一 Runtime 初始化握手。AICore 的 <code>dcci(my_hank, SINGLE_CACHE_LINE, CACHELINE_OUT)</code> 会写回整条线。独立握手区是设备 ABI 与 cache 协议改造，不是只改 host 指针。当前 launch 中清 host 的 <code>aicore_done</code> 不提供对应 device reset。</p>
+<h2 id="tmr-5-tmr-hbg">5. 不能从 TMR 推到 HBG 的地方</h2>
+<p>TMR 当前 contract 将三个 arena 分类为 DEVICE_SCRATCH；HBG program 的 GM_HEAP/RUNTIME_IMAGE 已经是 HOST_PER_RUN ×2。HBG eager 每次 host 构图填未发布 bank，attach-without-reset 有其正确的前提。HBG replay 没有这次 host 重建，必须 pristine restore 或等价重建，还要保留 <code>set_tensor_data</code> 等设备可见效果。</p>
+<p>因此，两 runtime 共用调用、顺序、owner 与完成协议；TMR device 编排和 HBG host 编排/restore 分别验收。不能把 TMR 的 reset 对整块 HBG image 套用。</p>
+<h2 id="tmr-6">6. 验收与历史</h2>
+<ul>
+<li>正常路径：caller 前后算子、两侧握手和终止、换流、TQ=0/1。</li>
+<li>捕获：每个 record/wait 合法；第一轮与连续 replay；交替多图；首次 bank 不跨 capture 等待。</li>
+<li>失败：wait 成功但 launch 失败、kernel 已入队但 record 失败、两侧任一挂死。队列引用退出之前不能销毁 event。</li>
+<li>最小 reset 区、可见性与跨 task 的真实最后使用者需要 executor 实验；不能用 memset 原语通过代替。</li>
+</ul>
+<p><a href="LOCAL-EVIDENCE.md#artifact-1f983d001087">旧版完整原件</a>仅保存历史假设和当时记录；当前事件数量与时序以本文及固定源码为准。</p></section><footer>规范只维护在 <a href="runtime-design-principles.md">runtime-design-principles.md</a>。实现与证据边界见 <a href="SOURCE_BASELINE.md">源码索引</a>、<a href="kernel-mode-design.md">证据索引</a>。由 render-design.py 生成；不要单独编辑本页结论。</footer></main></body></html>

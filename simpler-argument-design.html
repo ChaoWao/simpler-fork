@@ -1,0 +1,1727 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Simpler · Tensor 管理统一设计</title><style>
+:root{color-scheme:dark;--bg:#0b1320;--panel:#142033;--text:#e4edf7;--muted:#a8bdd3;--line:#30445c;--accent:#77d7c3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.8 system-ui,-apple-system,"Noto Sans CJK SC",sans-serif}a{color:var(--accent);text-underline-offset:3px}aside{position:fixed;inset:0 auto 0 0;width:270px;padding:25px 20px;overflow:auto;background:#101c2c;border-right:1px solid var(--line)}aside a{color:var(--muted);font-size:13px;text-decoration:none}aside ul{padding-left:18px}aside .toc>ul>li>ul{padding-left:12px}aside .toc>ul>li>ul ul{display:none}.navhead{display:block;font-weight:750;color:var(--accent);font-size:16px;margin-top:20px}main{margin-left:270px;max-width:1530px;padding:40px 5vw 80px}header h1{font-size:36px;line-height:1.3}header p{max-width:900px}.eyebrow{font-size:13px;color:var(--accent);letter-spacing:2px}.badge{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:8px;margin:3px;color:var(--muted);font-size:13px}.summary{border-left:4px solid var(--accent);padding:16px 22px;background:var(--panel)}.overview{margin:30px 0}.overview svg{width:100%;min-width:620px}.diagram-scroll{overflow:auto}h1,h2,h3,h4{line-height:1.45;scroll-margin-top:25px}h2{border-top:1px solid var(--line);padding-top:30px;margin-top:40px}h3{color:#b6e1f0;margin-top:28px}.document{margin-top:65px}.document>h1{font-size:30px}.document p{overflow-wrap:anywhere}table{display:block;overflow:auto;width:100%;border-collapse:collapse;font-size:14px;margin:20px 0}th,td{border:1px solid var(--line);padding:11px 14px;text-align:left;vertical-align:top;min-width:130px}th{background:#1b2f46;color:#d3f0e9}tbody tr:nth-child(even){background:#111f30}pre{background:#142337;padding:20px;border:1px solid var(--line);border-radius:10px;overflow:auto;font-size:13px;line-height:1.75}code{font-family:ui-monospace,"Noto Sans Mono",monospace;background:#19283c;border-radius:4px;padding:1px 4px}pre code{padding:0;background:none}blockquote{border-left:3px solid #d3ac65;margin:20px 0;padding:0 18px;color:var(--muted)}li{margin:7px 0}.controls{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}button{border:1px solid var(--line);background:#15263b;color:var(--text);padding:10px 14px;border-radius:7px;cursor:pointer;font:inherit;font-size:13px}button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}.flow ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.flow li{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:10px;margin:0}.flow strong{display:block;color:var(--accent)}.flow span{font-size:14px;color:var(--muted)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pair>div{padding:20px;background:var(--panel);border-radius:10px}.pair pre{margin-bottom:0}.muted{color:var(--muted);font-size:14px}footer{margin-top:60px;border-top:1px solid var(--line);padding-top:20px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:1000px){aside{display:none}main{margin:0;padding:25px}.flow ol{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){header h1{font-size:28px}.flow ol,.pair{grid-template-columns:1fr}}@media print{aside,.controls{display:none}main{margin:0;padding:0}body{background:white;color:black}a{color:#176451}table{font-size:10px}pre{white-space:pre-wrap}.flow[hidden]{display:block!important}.document{page-break-before:always}}
+</style></head><body><aside><a class="navhead" href="#top">Tensor 统一设计</a><a href="#overview">架构与调用流程</a><a class="navhead" href="#design">统一方案</a><div class="toc">
+<ul>
+<li><a href="#design-simpler-tensor-管理统一设计">Simpler Tensor 管理统一设计</a><ul>
+<li><a href="#design-1-总体决定一个公开-tensor一个公开-buffer">1. 总体决定：一个公开 Tensor，一个公开 Buffer</a><ul>
+<li><a href="#design-11-六个正交维度">1.1 六个正交维度</a></li>
+<li><a href="#design-12-对象关系与存储位置">1.2 对象关系与存储位置</a></li>
+<li><a href="#design-13-地址在哪里为什么还要解析">1.3 地址在哪里，为什么还要解析</a></li>
+<li><a href="#design-14-正式构造入口与内部接入">1.4 正式构造入口与内部接入</a></li>
+</ul>
+</li>
+<li><a href="#design-2-访问能力怎么判断一个入口分层证明">2. 访问能力怎么判断：一个入口，分层证明</a><ul>
+<li><a href="#design-21-谁执行谁决定所需能力">2.1 谁执行，谁决定所需能力</a></li>
+<li><a href="#design-22-当前已实现能力与当前策略">2.2 当前已实现能力与当前策略</a></li>
+</ul>
+</li>
+<li><a href="#design-3-l3-到-l2参数和依赖如何流动">3. L3+ 到 L2：参数和依赖如何流动</a><ul>
+<li><a href="#design-31-本地-l3-流程">3.1 本地 L3+ 流程</a></li>
+<li><a href="#design-32-分配者与中间结果不能混为一类">3.2 分配者与中间结果不能混为一类</a></li>
+<li><a href="#design-33-l2-位置搬运方向矩阵">3.3 L2 位置、搬运、方向矩阵</a></li>
+<li><a href="#design-34-用户接口tensor-是视图taskargs-表达本次使用">3.4 用户接口：Tensor 是视图，TaskArgs 表达本次使用</a></li>
+<li><a href="#design-35-几何和-alias-的约束">3.5 几何和 alias 的约束</a></li>
+</ul>
+</li>
+<li><a href="#design-4-remote-进入同一模型而不是第三种-tensor">4. Remote 进入同一模型，而不是第三种 Tensor</a><ul>
+<li><a href="#design-41-先区分两种远端">4.1 先区分两种“远端”</a></li>
+<li><a href="#design-42-五条-remote-数据流">4.2 五条 Remote 数据流</a></li>
+<li><a href="#design-43-remote-wire-与身份迁移">4.3 Remote wire 与身份迁移</a></li>
+<li><a href="#design-44-依赖与授权不在网络边界丢失">4.4 依赖与授权不在网络边界丢失</a></li>
+</ul>
+</li>
+<li><a href="#design-5-映射视图释放与数据可见性">5. 映射视图、释放与数据可见性</a><ul>
+<li><a href="#design-51-统一释放目标与现状迁移">5.1 统一释放目标与现状迁移</a></li>
+<li><a href="#design-52-host-数据pipeline-a-和-capture">5.2 Host 数据、Pipeline A 和 capture</a></li>
+</ul>
+</li>
+<li><a href="#design-6-落地顺序拒绝行为与验收">6. 落地顺序、拒绝行为与验收</a><ul>
+<li><a href="#design-61-实现步骤与-pr-边界2026-09-27">6.1 实现步骤与 PR 边界（2026-09-27）</a></li>
+<li><a href="#design-611-u1a-已合入与-u1b-当前交付">6.1.1 U1a 已合入与 U1b 当前交付</a></li>
+<li><a href="#design-612-u1b-第二笔借用-device-buffer-的现有实现与待修订接口">6.1.2 U1b 第二笔：借用 device Buffer 的现有实现与待修订接口</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#design-2479-先交付-tensorbuffer-的同一构造与检查路径buffertensor-在迁移期仅兼容转发该步骤不依赖新的源-registry现有-buffer-已可使用多个-view-的-alias-判断共享-backing-identity">2479 先交付 Tensor(buffer, ...) 的同一构造与检查路径，buffer.tensor(...) 在迁移期仅兼容转发。该步骤不依赖新的源 registry；现有 Buffer 已可使用。多个 view 的 alias 判断共享 backing identity。</a></li>
+<li><a href="#design-2475-再交付源侧-bufferwrap-登记与目标-attachment-分离worker-在-submit-内验证并接入同-backing-跨-worker-不重新-mint-identityremote-不接受裸-va-伪造本地-buffer必须一次闭合-source-livenessendpointcontext-generation全调用预检在飞失败保留和关闭失效不把方法搬家当作交付">2475 再交付源侧 Buffer.wrap 登记与目标 attachment 分离，Worker 在 submit 内验证并接入；同 backing 跨 Worker 不重新 mint identity，Remote 不接受裸 VA 伪造本地 Buffer。必须一次闭合 source liveness、endpoint/context generation、全调用预检、在飞/失败保留和关闭失效，不把方法搬家当作交付。</a><ul>
+<li><a href="#design-62-错误与资源副作用">6.2 错误与资源副作用</a></li>
+<li><a href="#design-63-必须通过的验收矩阵">6.3 必须通过的验收矩阵</a></li>
+<li><a href="#design-2026-09-29direct-l2-source-registration-的第一种-context-provider">2026-09-29：direct L2 source registration 的第一种 context provider</a></li>
+<li><a href="#design-2026-09-29-合入与构建阻塞更新">2026-09-29 合入与构建阻塞更新</a></li>
+</ul>
+</li>
+<li><a href="#design-2482-已合入-main-fcbf4f1d源登记自动接入的已验证-head-仍为-a938898b不把历史测试移挂到新主线2475-已关闭并由它替代下一项仍是-u1b-的-chipworker-公共参数入口收口跨-workerremote-grant-和外部-rts-context-attach-尚未交付">2482 已合入 main fcbf4f1d，源登记/自动接入的已验证 head 仍为 a938898b，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</a><ul>
+<li><a href="#design-chipworker-共同参数入口2486-已合入">ChipWorker 共同参数入口：#2486 已合入</a></li>
+<li><a href="#design-u2a-生产预检hosth2d-布局2489-已合入">U2a 生产预检：HOST/H2D 布局（#2489 已合入）</a></li>
+<li><a href="#design-u2a显式-host-消费与消费者迁移2501-待审阅">U2a：显式 HOST 消费与消费者迁移（#2501 待审阅）</a><ul>
+<li><a href="#design-2501-ci-修正2026-10-07">#2501 CI 修正（2026-10-07）</a></li>
+</ul>
+</li>
+<li><a href="#design-2026-10-08当前接线与剩余问题">2026-10-08：当前接线与剩余问题</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<a class="navhead" href="#access">跨 endpoint 合同</a><div class="toc">
+<ul>
+<li><a href="#access-跨-endpoint-访问与复制共同合同">跨 endpoint 访问与复制：共同合同</a><ul>
+<li><a href="#access-1-同一种问题不同访问机制">1. 同一种问题，不同访问机制</a></li>
+<li><a href="#access-2-一个内部接口两类结果">2. 一个内部接口，两类结果</a><ul>
+<li><a href="#access-21-请求backend-profile完成机制各司其职">2.1 请求、backend profile、完成机制各司其职</a></li>
+<li><a href="#access-22-公开入口如何归一">2.2 公开入口如何归一</a></li>
+</ul>
+</li>
+<li><a href="#access-3-多段复制的确定流程">3. 多段复制的确定流程</a><ul>
+<li><a href="#access-31-三个完成事实禁止合并成一个布尔值">3.1 三个完成事实，禁止合并成一个布尔值</a></li>
+<li><a href="#access-32-预算与背压">3.2 预算与背压</a></li>
+<li><a href="#access-33-失败取消和重试">3.3 失败、取消和重试</a></li>
+</ul>
+</li>
+<li><a href="#access-4-身份视图和内容各自稳定">4. 身份、视图和内容各自稳定</a></li>
+<li><a href="#access-5-与-pipeline-akernelcapture-的衔接">5. 与 Pipeline A、Kernel、Capture 的衔接</a></li>
+<li><a href="#access-6-实施与验收入口">6. 实施与验收入口</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<a class="navhead" href="#mapping">映射合同</a><div class="toc">
+<ul>
+<li><a href="#mapping-tensor-映射视图合同">Tensor 映射视图合同</a><ul>
+<li><a href="#mapping-1-映射视图独立建模不归入搬运标签">1. 映射视图独立建模，不归入搬运标签</a></li>
+<li><a href="#mapping-2-确定的公开接口与对象语义">2. 确定的公开接口与对象语义</a></li>
+<li><a href="#mapping-3-描述格式声明与已解析地址分开">3. 描述格式：声明与已解析地址分开</a></li>
+<li><a href="#mapping-4-组合裁决标签不能偷偷改变访问方式">4. 组合裁决：标签不能偷偷改变访问方式</a></li>
+<li><a href="#mapping-5-顺序与可见性合同">5. 顺序与可见性合同</a></li>
+<li><a href="#mapping-6-所有权关闭失败">6. 所有权、关闭、失败</a></li>
+<li><a href="#mapping-7-capturereplay-合同">7. Capture/replay 合同</a></li>
+<li><a href="#mapping-8-与-remote-和现有-capability-的衔接">8. 与 Remote 和现有 capability 的衔接</a></li>
+<li><a href="#mapping-9-统一访问层中的-map-合同">9. 统一访问层中的 MAP 合同</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<a class="navhead" href="#evidence">代码与验证</a><div class="toc">
+<ul>
+<li><a href="#evidence-tensor-统一设计源码证据与验证边界">Tensor 统一设计：源码证据与验证边界</a><ul>
+<li><a href="#evidence-1-本次核查基线">1. 本次核查基线</a></li>
+<li><a href="#evidence-2-逐层事实表">2. 逐层事实表</a></li>
+<li><a href="#evidence-3-需要纠正的理解">3. 需要纠正的理解</a></li>
+<li><a href="#evidence-4-已有调查如何约束方案">4. 已有调查如何约束方案</a></li>
+<li><a href="#evidence-5-本次验证">5. 本次验证</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<a class="navhead" href="#terms">术语</a><div class="toc">
+<ul>
+<li><a href="#terms-simpler-tensor-管理领域术语">Simpler Tensor 管理领域术语</a><ul>
+<li><a href="#terms-存储与参数">存储与参数</a></li>
+<li><a href="#terms-访问与归属">访问与归属</a></li>
+<li><a href="#terms-2026-09-28-参数接口与交付">2026-09-28 参数接口与交付</a></li>
+</ul>
+</li>
+<li><a href="#terms-2454-已交付-taskargs-transfer2467-已交付直接-l2-的参数接受校验与保留2475-959f84a9-的-worker-借用构造是已提交实现快照其公开入口按新决定待修订源-buffer-登记与目标-worker-接入分离正式-view-入口为-tensorbuffer-此为最初实现快照当前-2478-已合入2475-为-1c095ade统一-tensor-构造-2479-已合入-main-7b614764b源登记自动接入仍待-2475-完成">2454 已交付 TaskArgs transfer，#2467 已交付直接 L2 的参数接受/校验与保留。#2475 959f84a9 的 Worker 借用构造是已提交实现快照，其公开入口按新决定待修订：源 Buffer 登记与目标 Worker 接入分离，正式 view 入口为 Tensor(buffer, ...)。此为最初实现快照；当前 #2478 已合入，#2475 为 1c095ade，统一 Tensor 构造 #2479 已合入 main 7b614764b，源登记/自动接入仍待 #2475 完成。</a><ul>
+<li><a href="#terms-2026-09-29direct-l2-source-registration-的第一种-context-provider">2026-09-29：direct L2 source registration 的第一种 context provider</a></li>
+<li><a href="#terms-2026-09-29-合入与构建阻塞更新">2026-09-29 合入与构建阻塞更新</a></li>
+</ul>
+</li>
+<li><a href="#terms-2482-已合入-main-fcbf4f1d源登记自动接入的已验证-head-仍为-a938898b不把历史测试移挂到新主线2475-已关闭并由它替代下一项仍是-u1b-的-chipworker-公共参数入口收口跨-workerremote-grant-和外部-rts-context-attach-尚未交付">2482 已合入 main fcbf4f1d，源登记/自动接入的已验证 head 仍为 a938898b，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</a><ul>
+<li><a href="#terms-chipworker-共同参数入口2486-已合入">ChipWorker 共同参数入口：#2486 已合入</a></li>
+<li><a href="#terms-u2a-生产预检hosth2d-布局2489-已合入">U2a 生产预检：HOST/H2D 布局（#2489 已合入）</a></li>
+<li><a href="#terms-u2a显式-host-消费与消费者迁移2501-待审阅">U2a：显式 HOST 消费与消费者迁移（#2501 待审阅）</a><ul>
+<li><a href="#terms-2501-ci-修正2026-10-07">#2501 CI 修正（2026-10-07）</a></li>
+</ul>
+</li>
+<li><a href="#terms-2026-10-08当前接线与剩余问题">2026-10-08：当前接线与剩余问题</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside><main id="top"><header><div class="eyebrow">SIMPLER · ARGUMENT & MEMORY MODEL</div><h1>从 L3+ 到 Remote 与 L2<br>一套 Tensor 管理合同</h1><p>网络与 H2D/D2H 是跨 endpoint 访问的不同机制。统一源/目的、权限、完成与生命周期；保留明确的复制和映射语义。</p><span class="badge">选定设计 · 尚未完整实现</span><span class="badge">源码核查 09-24 · c605b03c</span><span class="badge">#2478 已合入 · #2479 Tensor 构造待合入 · #2475 源登记待实现</span><span class="badge">2026-09-28 进度更新 · 本地规划资料</span></header><div class="summary"><strong>确定方案</strong>：L3+、Remote、L2 对外只有一套 Buffer/Tensor；正式入口为 Tensor(buffer, ...)；源侧 Buffer.wrap 与 Worker 接入分离。TaskArgs 参数项保存本次 transfer。内部解析地址与保留资源，ChipTensor 仅作 ABI/兼容编码。不新增逐 Tensor 权限字段，复用 Buffer/grant 与调用方向。Remote 是端点关系；网络与 H2D/D2H 共用 COPY 合同，可组成多段路径。映射共享 backing，复制写入已有或新分配的目的 backing。当前禁跨 HOST/DEVICE 映射及隐式跨侧读。</div><section id="overview" class="overview"><h2>架构图</h2><div class="diagram-scroll"><svg viewBox="0 0 1000 580" role="img" aria-label="统一 Tensor 架构：L3、Remote、L2 汇入同一访问和绑定合同"><defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7b91ac"/></marker></defs><path d="M170,85 L170,114" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M170,204 L170,242" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M170,328 L170,366" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M170,450 L170,488" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M500,85 L500,114" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M500,204 L500,242" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M500,328 L500,366" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M500,450 L500,488" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M830,85 L830,114" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M830,204 L830,242" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M830,328 L830,366" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><path d="M830,450 L830,488" stroke="#7b91ac" stroke-width="2" marker-end="url(#arr)"/><rect x="20" y="20" width="960" height="65" rx="12" fill="#142438" stroke="#38536f"/><text x="500.0" y="49" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">一份有序参数列表</text><text x="500.0" y="74" text-anchor="middle" fill="#b8cadf" font-size="13">Buffer 来源独立 · Tensor(buffer, ...) 建视图 · TaskArgs 管本次请求</text><rect x="20" y="118" width="300" height="86" rx="12" fill="#142438" stroke="#38536f"/><text x="170.0" y="147" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">L3+ 本地</text><text x="170.0" y="172" text-anchor="middle" fill="#b8cadf" font-size="13">Buffer owner / 依赖 / 私有 provenance</text><rect x="350" y="118" width="300" height="86" rx="12" fill="#142438" stroke="#38536f"/><text x="500.0" y="147" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">Remote</text><text x="500.0" y="172" text-anchor="middle" fill="#b8cadf" font-size="13">值 / owner ref / import ref · 版本与 session</text><rect x="680" y="118" width="300" height="86" rx="12" fill="#142438" stroke="#38536f"/><text x="830.0" y="147" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">L2 直接入口</text><text x="830.0" y="172" text-anchor="middle" fill="#b8cadf" font-size="13">借用 Buffer / 同一 Tensor 参数入口</text><rect x="20" y="246" width="960" height="82" rx="12" fill="#142438" stroke="#38536f"/><text x="500.0" y="275" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">跨 endpoint 共同合同：NATIVE / MAP / COPY</text><text x="500.0" y="300" text-anchor="middle" fill="#b8cadf" font-size="13">双端权限与范围 → adapter：local / SHM / H2D-D2H / network → 完成与使用保留</text><rect x="20" y="370" width="300" height="80" rx="12" fill="#142438" stroke="#38536f"/><text x="170.0" y="399" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">HOST 绑定</text><text x="170.0" y="424" text-anchor="middle" fill="#b8cadf" font-size="13">host 编排 · 不隐式读取 DEVICE</text><rect x="350" y="370" width="300" height="80" rx="12" fill="#142438" stroke="#38536f"/><text x="500.0" y="399" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">Program IO 绑定</text><text x="500.0" y="424" text-anchor="middle" fill="#b8cadf" font-size="13">显式 H2D 请求 · 源/目的分开</text><rect x="680" y="370" width="300" height="80" rx="12" fill="#142438" stroke="#38536f"/><text x="830.0" y="399" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">DEVICE 绑定</text><text x="830.0" y="424" text-anchor="middle" fill="#b8cadf" font-size="13">AICPU / AICore 实际消费与最后使用</text><rect x="20" y="492" width="960" height="65" rx="12" fill="#142438" stroke="#38536f"/><text x="500.0" y="521" text-anchor="middle" fill="#f0f6ff" font-size="18" font-weight="700">提交 → 完成 → 退休</text><text x="500.0" y="546" text-anchor="middle" fill="#b8cadf" font-size="13">Pipeline A 承担执行顺序；Buffer / attachment / graph 承担各自保留义务</text></svg></div><h2>逐层调用流程</h2><p class="muted">切换路线查看各层职责。以下是目标流程，现状差异和交付顺序见正文第 6 节及代码证据。</p><div class="controls"><button type="button" data-flow="construct" aria-pressed="true">构造与接入 · Buffer → Tensor → TaskArgs → Worker</button><button type="button" data-flow="cross" aria-pressed="false">统一 COPY · 网络 → H2D</button><button type="button" data-flow="program" aria-pressed="false">Program · 本地 L3 → L2</button><button type="button" data-flow="kernel" aria-pressed="false">Kernel · 调用方设备资源 → 同一执行核心</button><button type="button" data-flow="inline" aria-pressed="false">Remote · 值传输到另一机器</button><button type="button" data-flow="import" aria-pressed="false">Remote · 导入同一 backing</button></div><div id="flow-construct" class="flow" ><h3>构造与接入 · Buffer → Tensor → TaskArgs → Worker</h3><ol><li><strong>1 · 取得 Buffer</strong><span>分配 / 源侧 Buffer.wrap / 授权 import；确定存储身份与位置</span></li><li><strong>2 · 建立 Tensor</strong><span>Tensor(buffer, shapes=..., dtype=...)；只建 view，不分配或复制</span></li><li><strong>3 · 本次参数</strong><span>TaskArgs 保存 tag、transfer、scalar；不修改 Tensor</span></li><li><strong>4 · 提交与校验</strong><span>Worker.submit 验证源登记、grant、范围、endpoint 与代际</span></li><li><strong>5 · 内部接入</strong><span>复用 attachment、解析本地地址、保留使用；不改变 backing identity</span></li><li><strong>6 · 完成与关闭</strong><span>按最后使用退出；借用内存的物理寿命仍由调用方保证</span></li></ol></div><div id="flow-cross" class="flow" hidden><h3>统一 COPY · 网络 → H2D</h3><ol><li><strong>1 · 明确请求</strong><span>A.HOST → B.DEVICE；网络发送与当地 H2D 都须获授权</span></li><li><strong>2 · 共同校验与绑定</strong><span>两端权限、完整路径、预算；保留源 H_A、中间 H_B、目的 D_B</span></li><li><strong>3 · 网络复制</strong><span>源读取结束可释放本段源引用；send 返回不能放行 H2D</span></li><li><strong>4 · 当地 H2D</strong><span>接收端 H_B 可用后才启动；H2D 不再读 H_B 后才回收中间存储</span></li><li><strong>5 · Device 消费</strong><span>D_B 可见后有序启动；已有 D_B 的 identity 不变</span></li><li><strong>6 · 最后使用与失败</strong><span>消费/回拷完成后退休；部分失败禁止后继，未知静止时保留资源</span></li></ol></div><div id="flow-program" class="flow" hidden><h3>Program · 本地 L3 → L2</h3><ol><li><strong>1 · 构造参数</strong><span>一个 Tensor 列表；TaskArgs 每项声明 NONE/H2D</span></li><li><strong>2 · L3 接纳</strong><span>校验 identity、具体 chip、既有 grant 与调用方向、几何；登记使用与依赖</span></li><li><strong>3 · 目标端解析</strong><span>HOST SHM 在 host prepare 映射；DEVICE 在所属 chip 解析</span></li><li><strong>4 · 本次绑定</strong><span>HOST 留给 HBG；H2D 建 device 副本；DEVICE 借用</span></li><li><strong>5 · 编排与 launch</strong><span>HBG 在 host 构图；TMR 在 device 编排；不隐式跨侧读</span></li><li><strong>6 · 完成与退休</strong><span>双侧最后使用 + 必要 copyback 完成，释放本次保留</span></li></ol></div><div id="flow-kernel" class="flow" hidden><h3>Kernel · 调用方设备资源 → 同一执行核心</h3><ol><li><strong>1 · 提供参数</strong><span>调用方提供 DEVICE operands，host 控制值单独传入</span></li><li><strong>2 · Host 准备</strong><span>权限/范围/环境校验；host 控制值显式快照；记录设备效果</span></li><li><strong>3 · 执行绑定</strong><span>借用 caller DEVICE；simpler 管理内部 workspace；拒绝隐式 H2D</span></li><li><strong>4 · Launch</strong><span>caller 顺序 + 完整 device 发布；A3 两侧都纳入完成边界</span></li><li><strong>5 · Replay 合同</strong><span>重复已捕获 device 效果；不会重新跑 host orchestration</span></li><li><strong>6 · 生命周期</strong><span>submission / graph 保留资源；caller IO 所有权不转移</span></li></ol></div><div id="flow-inline" class="flow" hidden><h3>Remote · 值传输到另一机器</h3><ol><li><strong>1 · 发送入口</strong><span>显式 HOST_INLINE：值快照；传输形式与 transfer 分开</span></li><li><strong>2 · 网络传输</strong><span>校验 frame/session/version；不发送可供远端解引用的本地 VA</span></li><li><strong>3 · 接收端 backing</strong><span>新 HOST Buffer、新 canonical identity；保留 dtype/几何/权限</span></li><li><strong>4 · 当地参数绑定</strong><span>NONE → host 编排；H2D → Program device 副本</span></li><li><strong>5 · 当地执行</strong><span>依赖满足后编排/launch；本次回拷完成后确认结果</span></li><li><strong>6 · 回收</strong><span>receiver backing 按任务寿命回收；结果回传须走显式合同</span></li></ol></div><div id="flow-import" class="flow" hidden><h3>Remote · 导入同一 backing</h3><ol><li><strong>1 · Owner export</strong><span>原 identity + incarnation + owner-relative 范围 + 授权</span></li><li><strong>2 · Target 选择机制</strong><span>判断 endpoint 关系和已实现 profile；不能仅看 Remote 标签</span></li><li><strong>3 · 建 attachment</strong><span>同机 SHM 可映射；跨机器 peer 未实现则拒绝，不能自动 copy</span></li><li><strong>4 · 新 Tensor 视图</strong><span>共享 backing；目标 grant、局部地址、范围单独登记</span></li><li><strong>5 · 使用与依赖</strong><span>同 backing 统一 footprint；不同 import_id 不分裂 alias</span></li><li><strong>6 · 关闭</strong><span>先关新使用资格；最后使用退出后 unmap，owner 最后回收</span></li></ol></div><h2>复制与映射：身份和寿命不同</h2><div class="pair"><div><h3>复制：两份存储</h3><pre>HOST backing H ── H2D ──▶ DEVICE backing D
+     identity H                 identity D（目的可已存在）
+
+目的 identity 不因重复复制而改变。后续写入不自动传播。
+共同 COPY 记录持有源、目的、中间存储与完成证明。</pre></div><div><h3>映射：同一份存储</h3><pre>DEVICE backing D
+  ├─ 原 device Tensor
+  └─ target attachment ──▶ 新 host view
+
+identity D 保持不变；原 Tensor 不修改。
+grant / 在飞任务 / graph 保活 backing。</pre></div></div><p class="muted">跨侧 map_view 当前返回不支持。以上映射图定义未来实现必须满足的合同，不代表能力已交付。</p></section><article id="design" class="document"><h1 id="design-simpler-tensor-管理统一设计">Simpler Tensor 管理统一设计</h1>
+<p>更新：2026-09-28。状态：<strong>选定设计，尚未完整实现</strong>。原则来源仍是 <a href="runtime-design-principles.md">runtime-design-principles.md</a>；本文负责将参数原则落实为 L3+、Remote、L2 共用的对象和流程。</p>
+<p>源码事实基线：main <code>c605b03cad7be2a80700efbdf3bd00dbc79812a9</code>。PR #2444 分支 <code>1761d1304eec8b1ea7836d8d2f6812acbc5b2498</code> 单独对照，不能当作主线。符号、差异及验证见 <a href="#evidence">代码证据</a>。<a href="simpler-argument-design.html">HTML 阅读版</a> 从本文和子文档生成。</p>
+<h2 id="design-1-总体决定一个公开-tensor一个公开-buffer">1. 总体决定：一个公开 Tensor，一个公开 Buffer</h2>
+<p><strong>L3+、Remote、L2 对用户统一为 <code>Buffer + Tensor</code>。</strong> Buffer 表达存储身份、位置、容量与归属；Tensor 是该 Buffer 的几何视图；一次调用的 transfer 属于 <code>TaskArgs</code> 参数项。用户不需要先把 Tensor 转成另一种 ChipTensor，也不维护 HostControl / DeviceOperand 两份参数列表。</p>
+<p>统一公开对象不要求把所有内部结构做成同一块内存：<code>BufferDescriptor</code> 是 Buffer 的可传输描述，已解析的地址和使用保留是本次绑定结果。现有 <code>ChipTensor</code> 可在迁移期保留为内部 ABI 编码，HBG/TMR 自己的调度 Tensor 也可保留；这些都不成为第二套公开资源模型。</p>
+<pre><code class="language-text">用户：一个有序参数列表（Tensor + Scalar）
+                     │
+L3+ / Remote：Buffer 身份 + Tensor 几何 + 调用要求 + attachment 引用
+                     │ 统一跨 endpoint 请求：NATIVE / MAP / COPY
+                     │ 授权、依赖、backend adapter、目标端解析
+L2 host prepare：本次参数绑定 + 使用保留 + Program IO 记录
+                     │
+HBG host 编排 / TMR device 编排 → KernelLaunch → 双侧完成 → IO 完成 → 退休
+</code></pre>
+<p><strong>Remote 访问与 host/device 访问是同一种跨 endpoint 问题。</strong> 底层统一 source/target、权限、范围、复制或映射语义、完成与使用保留；网络、SHM、H2D/D2H 由具体 adapter 实现。Remote 关系与 HOST/DEVICE 位置正交，同一路径可以先网络复制再 H2D。</p>
+<p>Buffer owner 继续负责物理分配与回收；目标 endpoint 负责 attachment；本次调用负责绑定与实际复制步骤。完整共用接口、双端能力判断、多段路径、完成与失败规则见 <a href="#access">跨 endpoint 访问合同</a>。不为 Remote 和 device 分别维护一套参数生命周期。</p>
+<h3 id="design-11-六个正交维度">1.1 六个正交维度</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>归属</th>
+<th>确定含义</th>
+<th>不能推导什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>backing 身份与 placement</td>
+<td>Buffer owner</td>
+<td>owner incarnation + buffer_id + generation；机器、owner endpoint、HOST/DEVICE</td>
+<td>local/remote 不是固定的 location 值</td>
+</tr>
+<tr>
+<td>访问授权</td>
+<td>既有 Buffer / import grant；映射授权归 mapping grant</td>
+<td>READ、WRITE、READWRITE；提交时与调用方向检查兼容</td>
+<td>不新增逐 Tensor 权限字段；授权不保证平台可达或数据就绪</td>
+</tr>
+<tr>
+<td>视图几何</td>
+<td>Tensor</td>
+<td>dtype、shape、stride、相对 backing 的 byte_offset</td>
+<td>不改变存储位置和 owner</td>
+</tr>
+<tr>
+<td>本次参数搬运</td>
+<td>TaskArgs 的 tensor 参数项</td>
+<td>NONE、H2D；D2H 已有设计位置但当前拒绝</td>
+<td>不塞进 AddressSpace 或 READ/WRITE</td>
+</tr>
+<tr>
+<td>endpoint attachment</td>
+<td>目标端 registry</td>
+<td>实际 profile、目标环境代际、有效范围、权限、局部地址或复制通道</td>
+<td>存在 copy 通道不等于存在直接地址</td>
+</tr>
+<tr>
+<td>本次使用</td>
+<td>TaskArgs / callable / 操作入口</td>
+<td>INPUT/OUTPUT/INOUT、实际 host/device 消费、依赖与 completion</td>
+<td>不因 NO_DEP 就免除权限、范围、寿命检查</td>
+</tr>
+</tbody>
+</table>
+<p><code>AddressSpace</code> 只保留 HOST / DEVICE。H2D 是独立字段，不保留 #2444 的 <code>AddressSpace::HOST_TO_DEVICE</code>。READ / WRITE 是访问权限；H2D / D2H 是搬运要求，两者不是同一个枚举。</p>
+<h3 id="design-12-对象关系与存储位置">1.2 对象关系与存储位置</h3>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>保存什么</th>
+<th>保存在哪里 / 谁拥有</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>canonical backing record</td>
+<td>不变身份、容量、物理位置、owner、backend、最大授权</td>
+<td>分配方或外部注册方的 registry</td>
+</tr>
+<tr>
+<td>Buffer handle</td>
+<td>指向 backing 的有效 owner/grant 引用；公开关闭状态</td>
+<td>用户持有；runtime 验证私有登记，不能相信可修改的公开字段</td>
+</tr>
+<tr>
+<td>Tensor descriptor</td>
+<td>Buffer 的描述引用、几何、可选 attachment grant 引用</td>
+<td>视图按值复制；所有层级使用同一公开类型</td>
+</tr>
+<tr>
+<td>TaskArgs 参数项</td>
+<td>Tensor 值、既有 tag、独立 transfer 请求</td>
+<td>本次调用；同一 Tensor 可在不同参数项使用不同请求</td>
+</tr>
+<tr>
+<td>attachment record</td>
+<td>backing 身份、目标 endpoint/context generation、profile、映射范围与地址、授权、使用计数</td>
+<td>目标 endpoint；owner 另保留对应 backing lease</td>
+</tr>
+<tr>
+<td>per-run binding</td>
+<td>endpoint 可用地址与范围、源/目的关联、IO 记录、使用保留；按需编码内部 ChipTensor</td>
+<td>本次调用；不引入可重复 submit 的 PreparedCall</td>
+</tr>
+<tr>
+<td>Scalar</td>
+<td>固定类型解释下的值位模式</td>
+<td>参数值快照；不借用 Python 标量对象或其容器</td>
+</tr>
+</tbody>
+</table>
+<p>Buffer 的物理位置不因 host 映射而变成 HOST。本次绑定的地址必须另有<strong>该地址可在哪个访问域使用</strong>的含义。当前无跨侧映射时两者相同；未来映射实现不能继续把这两个事实混在一个字段里。</p>
+<p>目标描述的字段归属如下（语义布局，不宣称二进制 ABI 已交付）：</p>
+<pre><code class="language-text">BufferDescriptor = identity + backing_location + total_bytes + owner_access
+                   + owner_route + backend/owner payload
+Tensor           = buffer_ref + byte_offset + shape/stride/dtype
+                   + optional attachment_grant_ref
+TaskArgs entry   = Tensor value + existing direction/tag + transfer request
+Attachment       = backing_identity + target EndpointIdentity/context_generation
+                   + owner_range + granted_access + profile + local resolution
+RunBinding       = 参数序号 → 原 Tensor + target address/span + access_space
+                   + leases + IO actions
+ChipTensor       = RunBinding 的内部 ABI 投影；不另设公开构造合同
+CopyRecord       = 源/目的绑定 + 实际传输步骤 + 中间存储 + 本次完成/清理记录
+</code></pre>
+<p>不增加 Tensor.view_access 或 ChipTensor.access/effective_access。授权只来自既有 Buffer/import grant；本次所需读写来自 TaskArgs tag、callable signature 和实际 get/set/copy 操作。普通几何 view 沿用源授权；映射/import 的收窄权限保存在对应 grant，不在 Tensor 上复制成另一份可修改状态。没有跨侧映射时 attachment_grant_ref 为空。</p>
+<p>绑定阶段检查所需读写是否为授予权限的子集；需要供 host get/set 继续检查的约束保存在本次 host 侧绑定记录，记录关联原 Buffer/grant 与调用方向。L3 materialize 不能丢掉这一关联，但不要求把权限再写进 ChipTensor POD。上述 access_space 只说明已解析地址的 HOST/DEVICE 访问域，不是 READ/WRITE 权限。L2 外部指针先包装成借用 Buffer，登记显式 endpoint、容量、位置和 caller lifetime 合同，再通过同一个 Tensor 入口提交。登记为同一个 Buffer 的视图共用身份；地址整数不作为稳定身份。外部重叠 allocation 不能靠重复包装自动识别 alias，调用方必须复用或明确关联同一登记。借用登记不接管 allocation，也不自动取得长期 map/graph 保活能力。</p>
+<p>Buffer 的 owner_route 是 locator，不是身份；跨机器 endpoint 解析由 registry 提供 node/context 信息，不在 address_space 增加 REMOTE_HOST 等值。变长 transport payload 放既有封包区域，以受检查的 offset/index 引用；公开调用仍只有一份 Tensor 列表。</p>
+<p><code>BufferDescriptor</code> 的 canonical 部分与 attachment 的 transport payload 必须区分。不能把同一 backing 的两个导入地址、不同授权范围写成两个互相冲突的 canonical descriptor。现有 ImportRegistry 的“同身份、不同 descriptor 拒绝”保护保留；新增 attachment 表承接可变的端点事实。</p>
+<h3 id="design-13-地址在哪里为什么还要解析">1.3 地址在哪里，为什么还要解析</h3>
+<p>Buffer 的 backend 载荷按机制保存地址或定位信息：本地 DEVICE_MALLOC 可以携带 device VA，POSIX_SHM 保存可导入名称，Remote 保存 owner 路由或引用。<strong>统一 Buffer 不等于每份 Buffer 都有当前进程可解引用的 <code>void *</code>。</strong></p>
+<p>Tensor 通过 Buffer 引用定位存储，再加自己的 byte_offset 和几何。只有在实际消费 endpoint 验证身份、授权、范围及就绪条件后，绑定层才得到可用 base；Tensor 的起点为该绑定覆盖区中的对应地址。Remote copy-only profile 没有本地 direct 地址，不能解析成一个假指针。</p>
+<p>当前代码已经有可复用路径：<code>Worker._materialize_l2_args</code> 在 L2 接收 <code>TaskArgs&lt;Tensor&gt;</code>，经 ImportRegistry 和 <code>materialize_task_args</code> 转成内部表示，再走 <code>run_materialized</code>。改造以此为共同入口，收拢低层 ChipWorker 的公开构造和借用包装，不重做另一套 materializer。</p>
+<p>当前 Tensor 按值嵌入 BufferDescriptor，并不强持有 Python Buffer 对象。目标也不靠 wrapper 引用计数解决所有寿命：已接受调用取得使用保留；有效 owner/import/map handle 各有合同；普通 Tensor 副本不能阻止显式 close。先保留现有在飞 free 拒绝，再按 §6 收口延后物理回收。</p>
+<h3 id="design-14-正式构造入口与内部接入">1.4 正式构造入口与内部接入</h3>
+<p><strong>正式入口固定为 <code>Tensor(buffer, shapes=..., dtype=..., strides=..., byte_offset=...)</code>。</strong> Buffer 管存储；Tensor 构造器负责 dtype、几何和范围检查。构造 view 不分配、不复制、不搬运，不创建新 backing identity；位置来自 Buffer，transfer 只在 TaskArgs 参数项中。</p>
+<ul>
+<li>simpler 分配的内存由现有 <code>worker.create_buffer</code> / <code>worker.malloc</code> 返回同一种 Buffer；外部本地存储通过 <code>Buffer.wrap(address=..., nbytes=..., location=...)</code> 登记，Remote 通过有授权的 export/import 取得同一种 Buffer。</li>
+<li><code>location</code> 表达源存储的 HOST/DEVICE 与所属 endpoint/context generation，不是当前消费者；单独一个 device ordinal 不足以覆盖跨进程、跨机器和 reset 后的新代际。这里规定语义，不假称已有这个完整 placement 构造器。</li>
+<li><code>Buffer.wrap</code> 在源侧建立有效登记，不自动向每个 Worker 注册。Worker 在 submit 中验证来源登记和授权，建立或复用自己的 attachment，解析地址并保留本次使用。用户不额外调用 <code>register_buffer</code>。</li>
+<li>同一 backing 在不同 Worker 上使用仍保留同一个 identity；目标地址、attachment 和 grant 可以不同。不能简单把现有方法移到 Buffer 类，再取消 Worker 的 live/provenance 检查。</li>
+<li>Tensor 在逻辑上引用同一 backing 记录；内部可保存描述符/句柄，跨进程经 registry 解析，不要求保留 Python Buffer wrapper。有效性及已接受使用的保留由登记合同控制，不能只复制裸地址，也不能仅靠 wrapper 引用计数。</li>
+<li>外部借用不转移 allocation 所有权、不自动保活调用方 Python owner。调用方保证容量、真实位置、地址稳定和实际使用期间存活；异常不是完成证明，关闭描述符也不是 device fence。</li>
+<li>目标关闭语义：逻辑关闭拒绝新使用，已接受的使用按完成边界保留内部记录；这不自动延长外部物理分配寿命。现阶段在飞 free/release 继续拒绝，延后物理回收按 U4 交付。</li>
+</ul>
+<p>迁移期 <code>buffer.tensor(...)</code> 仅转发到同一 Tensor 构造与检查，不维护另一套状态或权限规则。仓内公开用例迁移到 <code>Tensor(buffer, ...)</code> 后移除旧入口；外部兼容需求须明确记录，不默认永久保留两个等价接口。<code>worker.borrow_device_buffer(...)</code> 也不是最终公开入口，#2475 的实现状态与调整要求见 §6.1.2。</p>
+<h2 id="design-2-访问能力怎么判断一个入口分层证明">2. 访问能力怎么判断：一个入口，分层证明</h2>
+<p>复用当前 <code>buffer_adapter_candidates</code>、<code>DefaultRegionAccessService</code>、<code>BufferCapability</code> 的判断体系。扩展它们覆盖实际操作，不另做一个“看 location 就准许访问”的旁路。</p>
+<pre><code class="language-text">参数结构及几何合法
+ → backing/句柄/owner incarnation 有效
+ → target endpoint 与具体 chip 获授权
+ → 由调用方向/实际操作导出的读写 ⊆ Buffer/import/mapping grant 的既有授权
+ → 当前产品策略允许 location × attachment × transfer × operation
+ → adapter 候选及实际实现支持
+ → 建立/复用 attachment，核对其范围与 endpoint generation
+ → 原子取得本次使用保留
+ → 依赖及可见性满足后执行本次操作
+</code></pre>
+<p>前半段是静态合法性，最后一项是时间条件。检查与取得引用必须对 free/unmap 原子；拿到引用后仍可能要等待 producer，但不在持有 registry 锁时等待。</p>
+<h3 id="design-21-谁执行谁决定所需能力">2.1 谁执行，谁决定所需能力</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>判断的真实 endpoint</th>
+<th>必需的能力和附加条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L3 SUB Python 读取/写入 HOST buffer</td>
+<td>运行该 SUB 的 host 进程</td>
+<td>DIRECT_LOAD / DIRECT_STORE；权限、范围、依赖</td>
+</tr>
+<tr>
+<td>L2 准备映射 HOST SHM</td>
+<td>ChipWorker 的 host 进程</td>
+<td>HOST_SHM_MAP；<strong>不代表 AICPU/AICore 能读它</strong></td>
+</tr>
+<tr>
+<td>HBG get_tensor_data / set_tensor_data</td>
+<td>host orchestration</td>
+<td>已登记 HOST 绑定的 direct 读/写；不得临时 map DEVICE 或自动 copy</td>
+</tr>
+<tr>
+<td>TMR orchestration / core task operand</td>
+<td>真正使用地址的 AICPU / AICore</td>
+<td>device 可执行绑定；需要的每类消费者都可访问</td>
+</tr>
+<tr>
+<td>Worker.copy_to / copy_from</td>
+<td>有控制通道的 owner host + 所属 chip</td>
+<td>COPY_TO / COPY_FROM；不授予 host 直接解引用设备地址的能力</td>
+</tr>
+<tr>
+<td>remote copy</td>
+<td>源/目的 session 及其实际 backing owner</td>
+<td>明确复制通道、两端权限、range、完成确认</td>
+</tr>
+<tr>
+<td>map_view</td>
+<td>指定 target endpoint</td>
+<td>真正已实现的映射 profile + lifetime + coherence 合同</td>
+</tr>
+</tbody>
+</table>
+<p>现有 <code>AccessMode</code> 值是 READ=0、WRITE=1、READWRITE=2，不能直接对整数做位与；转成所需读写集合再求交。Remote 的 flags 是另外的位掩码，wire 解码时显式转换。</p>
+<h3 id="design-22-当前已实现能力与当前策略">2.2 当前已实现能力与当前策略</h3>
+<table>
+<thead>
+<tr>
+<th>关系 / backend</th>
+<th>当前共享能力判断</th>
+<th>本设计的处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同机 HOST → HOST：POSIX_SHM</td>
+<td>HOST_SHM_MAP，可得到 host 地址</td>
+<td>保留，正常用于 L3+ / SUB / L2 host prepare</td>
+</tr>
+<tr>
+<td>fork 继承 HOST</td>
+<td>FORK_INHERITED_VA；FORK_COW 只读</td>
+<td>保留，不能用 WRITE 声明把 COW 变共享写</td>
+</tr>
+<tr>
+<td>DEVICE_MALLOC / VMM_WINDOW → owner chip</td>
+<td>DEVICE_LOCAL，另需私有 provenance 精确 chip 校验</td>
+<td>保留；同 Worker nonce 不足以证明同 chip</td>
+</tr>
+<tr>
+<td>owner host → DEVICE</td>
+<td>OWNER_DEVICE_COPY / HOST_VMM_COPY</td>
+<td>保留显式 copy API；host get 不得降级到 copy</td>
+</tr>
+<tr>
+<td>VMM_SHAREABLE / VMM_WINDOW → peer device</td>
+<td>候选存在；默认 service 拒绝未实现 peer import</td>
+<td>明确失败，不能把枚举存在写成已支持</td>
+</tr>
+<tr>
+<td>HOST_SVM_MAP</td>
+<td>共享 service 缺已实现 probe/producer，拒绝</td>
+<td>当前跨侧 mapping 统一拒绝；平台私有 hook 存在也不自动放开</td>
+</tr>
+<tr>
+<td>REMOTE_COPY / DEVICE_FABRIC_V2_PEER_IMPORT</td>
+<td>默认 service 拒绝未实现 backend</td>
+<td>有独立 remote control transport 的路径单独验证，不能虚构通用 materializer</td>
+</tr>
+<tr>
+<td>REMOTE_SIDECAR → 本地 materialize</td>
+<td>拒绝，需由 remote session 解析</td>
+<td>保留强制入口；迁移后仍无“把远端 VA 当本地地址”路径</td>
+</tr>
+</tbody>
+</table>
+<p><strong>合同和操作记录统一，backend 的能力与完成机制保持真实。</strong> 默认 service 描述它实际能兑现的操作；remote session 的复制以限定 profile/endpoint 的 adapter 接入，不把 REMOTE_COPY 全局设为 true。COPY 同时检查源读和目的写；不能把“host 能驱动 device copy”误当成“host 有 device 地址”。</p>
+<p>H2D 参数标签只是 Program 入口的局部要求，共同层使用源/目的 endpoint 表达复制，不增加 REMOTE_H2D 一类组合值。只有显式网络请求加当地 H2D 请求才授权网络→H2D；不能看目标是 remote 就自动搬运。</p>
+<h2 id="design-3-l3-到-l2参数和依赖如何流动">3. L3+ 到 L2：参数和依赖如何流动</h2>
+<h3 id="design-31-本地-l3-流程">3.1 本地 L3+ 流程</h3>
+<ol>
+<li><code>Worker.create_buffer</code> / <code>alloc_shared_tensor</code> 建 HOST backing；<code>alloc_child_tensor</code> 建指定 chip 的 DEVICE backing。owner 登记不变 descriptor 与授权。</li>
+<li>用户由 Buffer 建 Tensor；slice 只变几何。同一 Tensor 可以作为两个参数项传入：NONE 用于 HOST 编排，H2D 用于 Program device 绑定。</li>
+<li><code>TaskArgs</code> 按既有顺序容纳所有 Tensor 和 Scalar；每个 tensor 参数项保存本次 transfer。L3 tag 定义依赖与使用方向，callable signature 定义 L2 读写；两者必须兼容，不能悄悄放宽。</li>
+<li>submit 校验 target、权限、几何，登记 backing 使用；生成依赖。HOST 来源有前驱时，<strong>读取/快照内容</strong>须在相应 producer 完成后进行。</li>
+<li>child 收到 Tensor 描述；不能把其中的 backend 地址载荷直接当成本地指针，ImportRegistry 在该 endpoint 验证并解析。HOST SHM 在 host prepare 映射；DEVICE 仅在授权 chip 解析为 device VA。</li>
+<li>materialize 生成本次绑定，参数项的 transfer 独立保留至 Program adapter 消费。授权来源及 attachment 关联留在 host 侧记录，由既有 tag/signature 检查所需读写；内部必要时编码为 ChipTensor。</li>
+<li>HBG host 编排或 TMR device 编排消费自己的合法绑定；提交内核；最后一个访问者及必要回拷完成后释放本次保留。</li>
+</ol>
+<p>L3 的 <code>TaskArgs</code> 值复制主要复制描述与 scalar，<strong>不是把所有 HOST backing 内容变成调用瞬间的快照</strong>。共享 HOST 数据有真实 producer/consumer 依赖；提前 memcpy 会读到前驱旧值。Kernel 的 host 控制参数快照则在其显式 host 准备入口完成，返回后不再借用调用方 host 容器。当前 <code>SimplerKernelInvocationHeader.host_copy_tensor_count</code> 的接收合同仍要求为零：开放该入口时必须同一改动更新封包生产者、消费者与容量检查，不能只增加 Host tensor snapshot 工具。</p>
+<h3 id="design-32-分配者与中间结果不能混为一类">3.2 分配者与中间结果不能混为一类</h3>
+<table>
+<thead>
+<tr>
+<th>backing 来源</th>
+<th>当前实际机制</th>
+<th>统一方案中的回收责任</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>create_buffer</td>
+<td>HOST POSIX_SHM，用户显式释放</td>
+<td>owner handle + 使用保留；Worker 管物理关闭</td>
+</tr>
+<tr>
+<td>alloc_shared_tensor / orch.alloc</td>
+<td>HOST HeapRing / FORK_SHM，scope 和 consumer 引用管理</td>
+<td>runtime 自动回收，不能当普通 malloc 手工 free</td>
+</tr>
+<tr>
+<td>alloc_child_tensor / L2 malloc</td>
+<td>指定 chip DEVICE_MALLOC</td>
+<td>chip allocator 负责物理 free，登记身份与实际 chip</td>
+</tr>
+<tr>
+<td>CommDomain window</td>
+<td>VMM/window 生命周期归 domain</td>
+<td>普通 Buffer.free 拒绝；domain teardown 负责</td>
+</tr>
+<tr>
+<td>外部指针包装</td>
+<td>caller-owned，wrapper 不拥有 allocation</td>
+<td>caller 保证寿命；无可保活 lease 时不得建立长期 map/graph 引用</td>
+</tr>
+<tr>
+<td>remote owner/import</td>
+<td>remote owner backing / importer attachment</td>
+<td>分别 free owner / release import，不相互替代</td>
+</tr>
+</tbody>
+</table>
+<p>HeapRing 中间结果的 Python Buffer wrapper 活着不代表 slot 永不复用。派生 Tensor 只在 scope/依赖保留内有效；要跨 run 保存结果，使用显式持久 Buffer 并复制/写入，不能让返回 wrapper 自动提升分配寿命。没有可延长 ring allocation 寿命的 allocator 合同，就拒绝把它导出为长寿命 mapping 或捕获到长期 graph。</p>
+<p>本地现有 OUTPUT 的分配时机不能从旧注释推断：<code>reserve_outputs_and_slot</code> 现在只 <code>alloc(0, ...)</code>；需要存储时先用显式分配入口。Remote 输出同样先 remote_malloc/import，HOST_INLINE 只有读权限、不能作 OUTPUT/INOUT，也不隐式回传修改后的值。输出返回通过显式远端结果 Buffer + copy_from。</p>
+<h3 id="design-33-l2-位置搬运方向矩阵">3.3 L2 位置、搬运、方向矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>源</th>
+<th>transfer</th>
+<th>Program 绑定</th>
+<th>Kernel 直接入口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HOST</td>
+<td>NONE</td>
+<td>HOST 参数供 HBG host 编排；TMR device 编排不能消费</td>
+<td>供显式 host 准备；调用内复制需要保留的控制值，不给 device 地址</td>
+</tr>
+<tr>
+<td>HOST</td>
+<td>H2D</td>
+<td>建独立 DEVICE 参数绑定，进入 Program IO 管理</td>
+<td>拒绝；kernel adapter 不承担用户 tensor 搬运</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>NONE</td>
+<td>借用已有 DEVICE 存储</td>
+<td>借用已有 DEVICE 存储</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>D2H</td>
+<td>当前拒绝此参数请求</td>
+<td>当前拒绝</td>
+</tr>
+<tr>
+<td>HOST</td>
+<td>D2H</td>
+<td>来源与方向不匹配；失败</td>
+<td>失败</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>H2D</td>
+<td>来源与方向不匹配；失败</td>
+<td>失败</td>
+</tr>
+<tr>
+<td>任意</td>
+<td>未知值</td>
+<td>解码/入口失败</td>
+<td>失败</td>
+</tr>
+</tbody>
+</table>
+<p>D2H 不支持只限制<strong>参数的自动搬运标签</strong>，不删除显式 <code>copy_from</code> / <code>remote_copy_from</code>。</p>
+<p><strong>H2D 在此参数接口表示“为 HOST 参数建立 Program 管理的 device 绑定”。</strong> 它不是 copy 指令计数：INPUT 复制到 device；OUTPUT 不读取未初始化 host 内容，完成后回拷；INOUT 复制进去并回拷。回拷是 Program IO 合同，不是 DEVICE tensor 被 host get 直接读取。实际 copy-in/copy-out 动作放在本次 IO 记录，不能再从 H2D 一字推断所有动作。缺失方向时保留原 Program 的保守 INOUT；不把它改成只入不出。</p>
+<p>这保留既有 Program 输入输出行为，也明确命名的限度：H2D 是参数绑定策略，单独 <code>copy_to</code> 才是严格单向复制操作。后续若希望 API 只表达单向复制，应迁移全部 Program IO 合同，不能只偷偷改变一个枚举解释。</p>
+<p>H2D 交给编排后的参数是 DEVICE；不得由这个参数找回原 host 指针。两侧都要用时，用户明确传两个参数。可以是同一 HOST buffer 的两个参数视图，或两个独立 HOST / DEVICE buffer；两份内容一致性必须由调用方或显式复制关系保证。</p>
+<h3 id="design-34-用户接口tensor-是视图taskargs-表达本次使用">3.4 用户接口：Tensor 是视图，TaskArgs 表达本次使用</h3>
+<p>以下展示<strong>选定的目标构造 API</strong>，尚未完整实现；TaskArgs 的 transfer 已由 #2454 交付，但独立 Buffer.wrap 与 Tensor(buffer, ...) 的完整登记/接入合同仍待实现，不增加新的参数容器。</p>
+<pre><code class="language-python">h = worker.create_buffer(nbytes)          # HOST Buffer
+x = Tensor(h, shapes=shape, dtype=dtype)    # 只有 Buffer 引用与几何
+args.add_tensor(x, TensorArgType.INPUT, transfer=TensorTransfer.NONE)
+args.add_tensor(x, TensorArgType.INPUT, transfer=TensorTransfer.H2D)
+
+# 同一 x 不修改；两个参数分别得到 HOST 绑定与 Program DEVICE 副本。
+device_buffer = Buffer.wrap(address=ptr, nbytes=capacity, location=device_location)
+y = Tensor(device_buffer, shapes=shape, dtype=dtype)
+args.add_tensor(y, TensorArgType.INOUT, transfer=TensorTransfer.NONE)
+</code></pre>
+<p>L2 直入通过源侧 <code>Buffer.wrap</code> 包装外部指针，再用 <code>Tensor(buffer, ...)</code> 和 <code>args.add_tensor(...)</code> 提交；Worker 在 submit 内完成目标接入。源登记不依附于某个消费者，目标接入必须保留现有 owner/provenance 检查。不要求用户构造 ChipTensor；现有 ChipTensor 调用由兼容适配器转换，移除前迁移公开示例与调用者。</p>
+<p><strong>transfer 不进入 Buffer 身份或 Tensor 几何，也不由建立 view 决定。</strong> 同一 Tensor 在不同调用中的使用互不修改。TaskArgs 内部按既有参数序号保存请求；不拆成 host/device 两组，设备 ABI 也不需要机械复制这份 host 侧请求。</p>
+<p>兼容期，旧入口省略 transfer 时保留已定义的默认行为：Program HOST/H2D、DEVICE/NONE；显式 NONE 与省略必须可区分。旧 <code>child_memory</code> 只在兼容入口解释为位置，不能成为另一份持久状态。新例子必须明确传 transfer；转成规范参数项后，不允许下游或远端再次猜默认值。Kernel 入口仍拒绝 H2D，不能继承 Program 自动搬运责任。</p>
+<p>HOST+NONE 的 get/set 权限按实际操作检查；readonly 不允许 set。HOST 控制值最终编码成 device metadata，不等于原 HOST tensor 被交给 device 读取。</p>
+<h3 id="design-35-几何和-alias-的约束">3.5 几何和 alias 的约束</h3>
+<ul>
+<li>bounds 检查用可达字节范围与溢出保护；非空 tensor 的末尾由 offset、shape、stride、dtype 决定，不能只用 <code>numel * element_size</code>。</li>
+<li>目标模型允许空视图不解引用；rank、dtype、枚举、身份、transfer 仍检查，空视图可保留构造器生成的零 stride/null。当前 L3 validate_tensor 拒绝零 shape/stride、L2 可表达空 Tensor；迁移要统一这条规则及 codec，不能宣称现状两层已经一致。</li>
+<li>当前 H2D 的 <code>t.nbytes()</code> 分配/连续 memcpy 不能覆盖任意 stride。<strong>本轮支持契约明确拒绝非连续 H2D/managed copyback</strong>，保留原生 HOST/DEVICE 合法 strided view；用户先打包或使用显式复制。后续通用 strided copy 必须同时定义 scatter 回写与空洞保护。</li>
+<li>两个 HOST+H2D 参数若需要写入且范围重叠，独立副本会改变 alias 语义。本轮在全参数预检时拒绝这类重叠；只读复制可以独立。不得通过简单保留源 identity 假装 device 副本共享存储。</li>
+<li>本次 Program IO 记录源/目的的对应关系，L3 完成时间覆盖回拷。源 H 和副本 D 是不同 backing，依赖由复制边连接；同 backing 的 view 才共享 alias 身份。</li>
+</ul>
+<h2 id="design-4-remote-进入同一模型而不是第三种-tensor">4. Remote 进入同一模型，而不是第三种 Tensor</h2>
+<h3 id="design-41-先区分两种远端">4.1 先区分两种“远端”</h3>
+<p><strong>远端执行</strong>：将调用发到另一机器，由那里的 Worker 使用当地 HOST / DEVICE backing。<strong>跨 endpoint 数据访问</strong>：目标使用源 endpoint 管理的数据，可明确选择复制到目的或映射同一 backing。远端直接解引用只是其中的 MAP 情况；TCP 连接不等于 peer memory 可达。</p>
+<p>当前 host_tcp 的 <code>REMOTE_DEVICE</code> owner entry 实际是 HOST POSIX_SHM。<code>EXPORT_BUFFER/IMPORT_BUFFER</code> 传 SHM 名称并在 importer open：它要求同一可访问 SHM namespace，不能作为跨机器共享内存证据。跨机器可用的传值路线是 inline/RPC copy 到目标 backing；不静默把 import 改成 copy。</p>
+<h3 id="design-42-五条-remote-数据流">4.2 五条 Remote 数据流</h3>
+<table>
+<thead>
+<tr>
+<th>使用场景</th>
+<th>统一流程</th>
+<th>身份与生命周期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小 HOST 控制值传到远端</td>
+<td>HOST_INLINE 值 → 接收端新 HOST Buffer → transfer=NONE → host 编排</td>
+<td>新 backing、新 identity；内容在发送入口快照，接收端保留至消费结束</td>
+</tr>
+<tr>
+<td>HOST 数据发远端跑 device</td>
+<td>inline 或显式 remote_copy_to → 远端 HOST Buffer → transfer=H2D → 当地 DEVICE 绑定</td>
+<td>网络复制与 H2D 是两个独立步骤；两端 completion 不混用</td>
+</tr>
+<tr>
+<td>已在远端的持久 HOST/DEVICE</td>
+<td>owner-issued reference → session registry 验证 → 当地解析</td>
+<td>保留该 backing 的真实 identity/location；不重新声明成 HOST_INLINE</td>
+</tr>
+<tr>
+<td>同机可共享 remote import</td>
+<td>export 原 identity/授权范围 → importer 建 HOST_SHM_MAP attachment → 新 Tensor view</td>
+<td>同 backing，新 attachment；不从不同 shm name/地址生成新身份</td>
+</tr>
+<tr>
+<td>真正跨机器 peer mapping</td>
+<td>真 transport profile + target grant + coherence + retain</td>
+<td>当前无相应实现的组合直接报不支持；显式 copy 是另一操作</td>
+</tr>
+</tbody>
+</table>
+<p>HOST_INLINE 不默认代表“host-only”，也不默认代表“H2D”。<strong>载荷如何过网络</strong>与<strong>接收后如何绑定</strong>是两个字段；transfer 必须穿过 codec 和 <code>_materialize_task_args</code>，不能由接收端硬编码默认值。</p>
+<h3 id="design-43-remote-wire-与身份迁移">4.3 Remote wire 与身份迁移</h3>
+<p>保留现有 RemoteBufferHandle / RemoteTensorRef 作为兼容门面；新的内部语义统一为 Buffer/Tensor/reference，不要求使用者立刻重写为另一套顶层 API。TaskArgs 仍只有一份用户参数列表；编码器按 tensor index 管理变长 transport 表，这是协议实现，不能让用户维护第二份角色 vector。</p>
+<p>新 wire 必须明确携带：</p>
+<ol>
+<li>canonical backing identity，包括真正 owner incarnation；node/session/owner route 独立存放。不能继续仅把 worker_id 填进 owner nonce 来跨 session 识别 backing。</li>
+<li>backing location、容量、最大授权；import 的 grant_id/generation、允许访问的 owner-relative 范围与收窄权限。</li>
+<li>Tensor 几何，以及独立参数项中的 transfer、调用 tag；scalar 的位模式及类型解释合同。</li>
+<li>transport kind（inline、owner reference、import reference）与版本化 opaque payload；地址只由对应 endpoint 解码。</li>
+<li>endpoint/session generation 以及协议版本/feature 协商。不认识新字段/组合必须拒绝，不按旧默认静默执行。</li>
+</ol>
+<p>owner 分配成功即生成 canonical identity，export/import 全程传递；导入不另造 backing 身份。HOST_INLINE 为新副本，必须每个独立值有独立身份；同一次调用中需要 alias 时显式复用同一传输 backing，不能碰巧靠相同 offset 关联。</p>
+<p><strong>所有 tensor offset 采用 owner backing 坐标。</strong> attachment 另存覆盖区间 <code>[begin,end)</code> 和对应 local_base，解析公式为 <code>local_base + (tensor.byte_offset - begin)</code>。导入切片不能既缩小 Buffer 容量又保留原 identity、再把偏移减掉一次；这会混淆 descriptor、bounds 和依赖坐标。</p>
+<h3 id="design-44-依赖与授权不在网络边界丢失">4.4 依赖与授权不在网络边界丢失</h3>
+<p>统一 dependency key 为 canonical backing identity；entry 带视图 footprint。Remote 不再把 offset 放在 key 中。同一 backing 不同 import_id、host/device mapped 地址仍相互可见；复制生成的新 backing 由显式传输边连接。</p>
+<p>本设计沿用现有 L3 run 内依赖推导，不新增跨独立 run 的全局依赖追踪器；外部 stream、跨 run 与应用级一致性由调用方有序化。<code>NO_DEP</code> 仅跳过依赖推导，不能跳过生命周期和权限。</p>
+<p>保留现有 tag 语义：INPUT 查前驱，INOUT 查前驱并登记新写者，OUTPUT/OUTPUT_EXISTING 只登记写者。统一 identity/footprint <strong>不自动补上所有 WAW/WAR 顺序</strong>：覆盖既有数据需使用相应 INOUT 或显式依赖，读后覆盖也要显式保证先前读者完成。不能把此方案误读成任意相交读写自动全序化。</p>
+<p>Remote 发送端、接收端、L2 使用端都不能放宽权限。接收端不可把 READ import 重建为 READWRITE 参数，再寄希望于发送端检查；grant 必须跟着参数传到下一层。</p>
+<h2 id="design-5-映射视图释放与数据可见性">5. 映射视图、释放与数据可见性</h2>
+<p><strong>为 device tensor 建 host view：返回新 Tensor，不修改原 Tensor，不复制数据。</strong> 新视图引用原 backing 和目标 attachment，地址可不同；源 location 仍 DEVICE。完整接口与状态机见 <a href="#mapping">映射合同</a>。当前跨 host/device 的两个方向均拒绝。</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>修改的对象</th>
+<th>不改变的事实</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>普通 slice</td>
+<td>新 Tensor 几何描述</td>
+<td>backing 身份、位置、原授权上限</td>
+</tr>
+<tr>
+<td>map_view(t, target, access)</td>
+<td>新目标 attachment/grant + 新 Tensor</td>
+<td>backing 内容、原 Tensor、原 owner</td>
+</tr>
+<tr>
+<td>HOST+H2D Program 绑定</td>
+<td>新 DEVICE 存储 + 本次 IO 关系</td>
+<td>源 HOST backing</td>
+</tr>
+<tr>
+<td>free/release owner</td>
+<td>关闭该 owner handle 新使用资格</td>
+<td>已接受使用和独立有效 mapping 的保留义务</td>
+</tr>
+<tr>
+<td>unmap_view</td>
+<td>关闭该 view grant 新使用资格</td>
+<td>owner buffer、其他有效 grant</td>
+</tr>
+</tbody>
+</table>
+<h3 id="design-51-统一释放目标与现状迁移">5.1 统一释放目标与现状迁移</h3>
+<p>选定目标为<strong>逻辑关闭立即生效、物理回收延后</strong>。Remote 已有 slot/import refs 与 pending-free journal；本地当前 host release 拒绝在飞、device free 受 control admission 约束。它们现在还不是统一语义，必须先有保留记录再修改行为，不能直接删检查。</p>
+<p>物理回收条件是：owner handle 已关闭，所有有效 mapping/import grant 已关闭，所有 accepted submission、copy、host 读取、event wait、graph 使用保留均结束。普通 Tensor descriptor 不是无期限保活 token；用户若释放 owner 后还想独立使用别名，须有显式有效 grant。</p>
+<p>public Buffer.close 也须服从 owner registry，不能绕过 Worker 直接 unlink/free；底层物理 close 留作 owner 内部动作。DEVICE_MALLOC、POSIX_SHM、CommDomain window 仍由各自 allocator 物理释放，不能统一成一个 rtFree。</p>
+<p>释放 RPC 失败或调用部分成功时，保留 cleanup journal 与相关引用，禁止地址/代际复用。只有已确认的 teardown 或释放完成能解除；网络超时不证明设备已不再访问。沿用现有“不确定资源保留到受控 teardown”的方向，不引入基于超时的分布式自动回收。</p>
+<h3 id="design-52-host-数据pipeline-a-和-capture">5.2 Host 数据、Pipeline A 和 capture</h3>
+<ul>
+<li>外部 producer 的 HOST/DEVICE 数据由用户保证就绪；L3 已声明 producer 的依赖由 runtime 执行。prepare 可提前进行描述校验、资源规划；依赖未满足的内容读取不能提前。</li>
+<li>kernel host-control 值在同步 host 准备入口完成快照，不能把用户 host vector 的生命周期交给异步任务。Program 大 tensor IO 可持有受管理 Buffer lease 至 DMA/copyback 完成；借用外部裸指针时需显式 caller lifetime 合同，不能靠 Python wrapper 引用保活 allocation。</li>
+<li>HBG 一次 kernel 调用必须在 launch 前完成 host 决策；不得等待本次尚未 launch 的图产生 control value。动态决策放 device 或由上层拆调用。</li>
+<li>每个 A3 逻辑调用涉及 AICPU/AICore 两次 launch，回收按两侧实际最后使用和后续 IO 完成；单一 kernel task 结束不够。</li>
+<li>capture 记录 host 准备产生的完整 device 效果及必要发布；replay 不调用 host orchestration。仅改变 HOST 控制值不能假定 replay 重算图。改变编排拓扑必须重建；已定义的参数更新只能更新允许的数据。</li>
+<li>graph 持有引用与稳定地址；view 公开关闭不破坏此前 graph 已取得的保留。context reset 使旧 generation 失效，不能继续 replay。</li>
+<li>MTP 的 KV cache、权重、持久 token 状态为显式 DEVICE IN/INOUT；host control 是显式 HOST 参数。一个 device scalar 若运行期变化仍是 Tensor，不把它当固定 Scalar 快照。</li>
+</ul>
+<h2 id="design-6-落地顺序拒绝行为与验收">6. 落地顺序、拒绝行为与验收</h2>
+<h3 id="design-61-实现步骤与-pr-边界2026-09-27">6.1 实现步骤与 PR 边界（2026-09-27）</h3>
+<p><strong>先修正尚未合入的公开合同，再统一入口，再交付实际消费与回收。</strong> 不为实现分层另造第二套公开 Tensor/Buffer，也不把内部 ABI 清理当作第一笔的前置。</p>
+<pre><code class="language-text">U1a  #2454 修订：TaskArgs 参数请求贯通
+  ↓
+U1b  统一公开 Buffer/Tensor 与本次解析、保留边界
+  ├─ U2a 显式 HOST 消费 + 旧用例迁移 → U2b 本地共同 IO 记录 ─┐
+  └─ U3  Remote 协议、身份/授权、COPY 接入 ──────────────────┤
+                                      联合网络→H2D 验收 → U4 关闭语义收口
+Kernel K1/K2 消费 U1、U2 所需能力，不等待全部 Remote 后端。
+Capture 的图保留随 C2 接入；不重新实现 Pipeline A 的排队/完成/退休。
+</code></pre>
+<p>以下每一行按一笔 PR 组织；若某行的代码量仍过大，只沿同一合同的生产消费者拆分，不改变最终方案。</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>范围 / 代码入口</th>
+<th>必须证明的完成条件</th>
+<th>本笔边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>U1a：修订 #2454</strong></td>
+<td><code>TaskArgs.add_tensor</code> 的本次 transfer；本地封包、Worker/chip child materialize、re-export、四个 binder 的组合预检</td>
+<td>同一 Tensor 两个请求互不污染；转发不丢请求；非法末项在任何源读取/复制前失败；旧 Program IN/OUT/INOUT 保持</td>
+<td>不交付 HOST/NONE chip 消费；不扩充公开 ChipTensor 构造合同；Remote v4 无法表达的请求继续拒绝</td>
+</tr>
+<tr>
+<td><strong>U1b：一个公开对象模型</strong></td>
+<td>以 Tensor(buffer, ...) 为正式入口；源侧 Buffer.wrap 与目标 Worker 接入分离，迁移旧 buffer.tensor / ChipWorker 参数入口；复用 <code>Worker._materialize_l2_args</code> / ImportRegistry；本次绑定保留身份、grant、endpoint、地址和使用引用</td>
+<td>L3 child 与 L2 direct 提交同一类 TaskArgs；slice 共用 Buffer；错误 chip、过期登记、越界及 READ 配 OUTPUT 拒绝；借用 Buffer 不误 free</td>
+<td>ChipTensor 只作内部 ABI/兼容适配；不重写设备调度 Tensor；未具备延后回收时保留在飞 free 拒绝</td>
+</tr>
+<tr>
+<td><strong>U2a：显式 HOST 语义</strong></td>
+<td>HBG host get/set、Program H2D 绑定及用例；TMR/core 参数检查；PA/FIFO 等双侧用例迁移</td>
+<td>HOST/NONE 留 host；HOST/H2D 在编排中只有 device 绑定；DEVICE host get/set 拒绝；需要两侧的调用显式传两项；连续性/写重叠限制生效</td>
+<td>移除 HBG 隐式跨侧 map/copy 必须与全部相关用例迁移同笔交付；未支持跨侧 view 继续报错</td>
+</tr>
+<tr>
+<td><strong>U2b：本地 IO 记录统一</strong></td>
+<td>HBG tensor loop 与 TMR <code>copy_in_device_args</code> 的规则和 <code>tensor_leases</code> 接到共同源/目的/完成记录；接现有 prepare/finalize</td>
+<td>H2D、OUTPUT 回拷、INOUT、失败回滚、A3 两侧最后使用及借用内存保留都有真实路径验证</td>
+<td>保留复制时机与 Pipeline A admission；同步复制不冒充异步；无 PreparedCall/cache</td>
+</tr>
+<tr>
+<td><strong>U3：Remote 接入</strong></td>
+<td>在 U1b 的共同边界上成对升级 producer/receiver/version、session materialize、owner/import 与 network COPY</td>
+<td>location/tag/transfer/grant/owner incarnation 不丢；不把 host_tcp 的 HOST backing 伪装 DEVICE；非零子区间与身份一致；网络→H2D 的延迟/失败验收等待 U2b</td>
+<td>与 U2a/U2b 可并行；不增加 RemoteTensor 公共模型，不把 send 返回当目的 ready，不自动网络搬运</td>
+</tr>
+<tr>
+<td><strong>U4：统一关闭语义</strong></td>
+<td>统一 owner/import/attachment 的使用保留与 cleanup journal；Buffer.close 路由 owner registry；物理释放仍由原 allocator 负责</td>
+<td>logical close 拒绝新使用；accepted uses / 独立有效 grants / graph 保留结束后才回收；submit-close 竞争和未知设备状态安全；地址复用不通过旧 generation</td>
+<td>U2/U3 引入每条路径时即须安全保留，不能拖到 U4 补洞；普通 Tensor 不延长 HeapRing scope；graph 验收依赖 C2</td>
+</tr>
+</tbody>
+</table>
+<p>U1b 固定的是现有两类消费者需要的解析与保留边界，不是先造一个无人使用的传输框架。U2b/U3 的共同 COPY 记录按真实 H2D 与网络路径接入。内部分配器、传输机制、设备 POD 可以不同，公开对象含义和完成/所有权合同必须相同。</p>
+<h3 id="design-611-u1a-已合入与-u1b-当前交付">6.1.1 U1a 已合入与 U1b 当前交付</h3>
+<p><strong>#2454 已按下表修订并合入，merge <code>ec6a33dac915024f76115a4897878537935ad4a8</code>。</strong> transfer 归属 TaskArgs 参数项，公开 Tensor 保持视图语义。下表记录已交付边界与后续范围。</p>
+<table>
+<thead>
+<tr>
+<th>处理</th>
+<th>具体内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>保留</td>
+<td><code>AddressSpace</code> 仅 HOST/DEVICE；独立 <code>TensorTransfer</code>；兼容旧 Program 行为；四个 binder 全调用预检；Remote 不能表达时明确失败；对应回归测试</td>
+</tr>
+<tr>
+<td>修改</td>
+<td>移除新公开的 <code>Buffer.tensor(..., transfer=...)</code> / <code>Tensor(..., transfer=...)</code> / ChipTensor 新 transfer 构造选项，将请求放进 <code>TaskArgs.add_tensor(..., transfer=...)</code>。更新本地封包与 materialize/re-export，使用显式参数序号贯通</td>
+</tr>
+<tr>
+<td>内部 ABI</td>
+<td>ChipTensor 可以暂留为内部编码；若私有搬运请求仍由它携带，须明确只在绑定期消费，不能把字段包装成新的公开 Tensor 语义。检查固定 POD、同构 mailbox 与跨版本 Remote 的各自兼容要求，不宣称换字段无需 ABI 审计</td>
+</tr>
+<tr>
+<td>继续明确拒绝</td>
+<td>HOST/NONE chip 消费待 U2a；D2H 参数标签、DEVICE/H2D 及未知值；Remote v4 无法表达的新请求。HBG 旧跨侧行为直到 U2a 才删除，不宣称这一笔已完成访问策略</td>
+</tr>
+<tr>
+<td>后续交付</td>
+<td>Buffer owner/借用包装与公开 ChipWorker 收口放 U1b；完整 HOST 用例放 U2a；共同 IO 与 Remote 升级放 U2b/U3；不扩成整套重构</td>
+</tr>
+</tbody>
+</table>
+<p>新增的关键验收：同一个 <code>Tensor x</code> 连续用于 NONE/H2D/NONE 三个参数项后，x 的描述和前两项均不改变；TaskArgs 复制/转发后每项请求保持；显式 NONE 不被旧默认值覆盖；最后一项非法时前项的 host 地址可置为不可读地址以证明没有提前复制。测试走真实参数入口与 binder，不能只测试一个尚无消费者的工具类。</p>
+<p>2026-09-28：U1a 已合入。U1b 第一笔 #2467 已合入，merge <code>255d78568</code>：修复现有 <code>Worker(level=2).submit(TaskArgs)</code> 的接受边界，而非新增独立参数模型。</p>
+<ul>
+<li>先保存本次 TaskArgs 描述、方向、transfer 与 scalar 值的快照；整组预检通过后才解析。</li>
+<li>复用 L3 的 live identity/generation、完整 descriptor、目标 chip 与 grant 校验；缓存的 import 不等于仍有使用资格。</li>
+<li>校验身份和登记在飞引用与 device free 使用同一把 chip 锁；登记后释放锁，不把 native submit 的阻塞带进此临界区。</li>
+<li>free 在同一锁内重查在飞引用；绑定失败撤销本次登记，成功调用保留至 finalize。</li>
+<li>这不是整个 U1b 完成：公开借用 Buffer 包装、旧 ChipWorker 参数入口迁移仍是下一笔；HOST/NONE chip 消费仍归 U2a。</li>
+</ul>
+<p>验证：新增 13 项直接 L2 测试；修复前已有 7 项失败；去掉 free 锁内重查时竞态测试失败。完整 Python UT 2766 passed / 55 skipped；HBG readiness 在 a2a3sim、a5sim 各 4 passed。硬件设备全被占用，未运行板上验证。规划、HTML 与实验材料留在仓库外；代码提交只包含实现、必要测试与 API 参考。</p>
+<h3 id="design-612-u1b-第二笔借用-device-buffer-的现有实现与待修订接口">6.1.2 U1b 第二笔：借用 device Buffer 的现有实现与待修订接口</h3>
+<p>已提交实现快照：PR #2475（<code>959f84a9</code>），分支 <code>feat/l2-borrowed-buffer</code>，基于 #2467 的合入点。以下记录该 head 的实现与验证，不是最终接口的验收。<code>Worker.borrow_device_buffer(ptr, nbytes, device_id=..., access=...)</code> 返回同一个 Buffer，所有 view 和 TaskArgs 复用既有路径。</p>
+<ul>
+<li>注册已有地址，不分配，不转移 allocation 所有权，也不自动保活调用方 Python owner。调用方保证实际 device/capacity、地址稳定和真实使用期间的存活；异常不等于完成证明。</li>
+<li>本地 live 登记范围不能重叠；同 backing 的多视图必须从同一 Buffer 派生。该检查不声称能识别 Worker 之外的所有别名。</li>
+<li>私有 borrowed 标记决定不能 allocator free，不增加 wire 字段。<code>release_buffer</code> 与 submit/copy 使用同一 chip 锁，拒绝在飞撤销，撤销后旧 TaskArgs 不能复活。</li>
+<li>仍是 Program Worker：close 可能 reset 设备；借用内存不是借用 context。调用方拥有的内存跨 Worker.close 的存活不在此合同中。</li>
+<li>两种模拟器均使用 native allocator 表之外的外部地址跑实际 producer/consumer；onboard 分支通过低层 allocator 提供地址，验证公开 Worker 不误认其为自有登记。</li>
+<li>ChipWorker 的旧参数入口迁移仍待下一笔；这笔不宣称 U1b 全部完成。</li>
+</ul>
+<p>验证：Python UT 2781 passed / 55 skipped；两种模拟器各 6 passed；静态检查通过。15 项新增 UT 覆盖借用合同、重叠、旧身份拒绝、释放与登记失败回滚。硬件 16 卡均占用，未运行板上；CI 以 PR 检查为准。</p>
+<p><strong>2026-09-28 接口修订决定：#2475 的 Worker 级构造不固化为正式入口。</strong> 保留借用不误 free、重叠检查、在飞保护、回滚及执行测试；调整为源 Buffer 登记独立、submit 内部接入。不是只重命名或搬移函数；这条设计决定的当前实现进度如下。</p>
+<p>当前交付更新：#2478 的 native 部分保留与 re-borrow 修复已合入 main <code>3121da33</code>；#2475 已 rebase 至 <code>1c095ade</code>，剩 7 个 Python/测试/文档文件。正式 Tensor 构造独立为 <a href="https://github.com/hw-native-sys/simpler/pull/2479">#2479</a>（已合入 main <code>7b614764b</code>）：原有 Tensor 类型接受 Buffer，兼容方法转发，共用几何校验；不分配/搬运/改变 identity。87 项 Buffer 测试、完整 Python 2774 passed / 55 skipped、两种模拟器各 4 项及 task-submit 板上 4 项通过。Buffer.wrap 源登记与 Worker 接入仍在 #2475 待实现，不能据此标记 U1b 完成。AIV 排查与接口推进独立：30 轮六用例测试及同一 Worker 的 18,000 次正常提交均通过，尚无稳定复现，未宣布修复。证据保留在 probes/aiv-borrowed-repro/REPORT.md。</p>
+<p>构造接口收尾：<a href="https://github.com/hw-native-sys/simpler/pull/2480"> #2480</a>（已合入 main <code>4d0610fb</code>）统一 <code>shapes=</code> 与正规导入 <code>simpler.task_interface.Tensor</code>，迁移入门示例 21 处，使用绑定函数持有的弱引用做懒加载类型缓存。完整 Python 2815 passed / 63 skipped，10 个 L2/L3 模拟器用例通过；L4 远端真机未验证，本轮无空闲 HBM 设备，未运行板测。主线已统一为 <code>shapes=</code>。</p>
+<p>U1b 剩余交付按依赖排列：</p>
+<ol>
+<li>
+<h1 id="design-2479-先交付-tensorbuffer-的同一构造与检查路径buffertensor-在迁移期仅兼容转发该步骤不依赖新的源-registry现有-buffer-已可使用多个-view-的-alias-判断共享-backing-identity">2479 先交付 Tensor(buffer, ...) 的同一构造与检查路径，buffer.tensor(...) 在迁移期仅兼容转发。该步骤不依赖新的源 registry；现有 Buffer 已可使用。多个 view 的 alias 判断共享 backing identity。</h1>
+</li>
+<li>
+<h1 id="design-2475-再交付源侧-bufferwrap-登记与目标-attachment-分离worker-在-submit-内验证并接入同-backing-跨-worker-不重新-mint-identityremote-不接受裸-va-伪造本地-buffer必须一次闭合-source-livenessendpointcontext-generation全调用预检在飞失败保留和关闭失效不把方法搬家当作交付">2475 再交付源侧 Buffer.wrap 登记与目标 attachment 分离，Worker 在 submit 内验证并接入；同 backing 跨 Worker 不重新 mint identity，Remote 不接受裸 VA 伪造本地 Buffer。必须一次闭合 source liveness、endpoint/context generation、全调用预检、在飞/失败保留和关闭失效，不把方法搬家当作交付。</h1>
+</li>
+<li>ChipWorker 公开参数入口收口到同一 TaskArgs；迁移仓内构造、示例和测试，再移除旧 buffer.tensor 和公开 ChipTensor 构造依赖。全程沿用 Pipeline A 的执行、完成和退休机制。</li>
+</ol>
+<p>新增验收：构造 view 不产生 allocation/copy/transfer 副作用；正式入口与兼容入口的几何/范围检查一致；不同消费者不改变 canonical identity；源关闭后新 submit 拒绝，已接受使用按既定完成合同保留；裸地址声明不能绕过 source/provenance 验证。后续 HOST、IO、Remote 与 U4 的交付顺序不变。</p>
+<h3 id="design-62-错误与资源副作用">6.2 错误与资源副作用</h3>
+<p>全调用结构/组合/权限预检在 host 内容复制、DMA、KernelLaunch 前完成；已建立资源失败后有逆序回滚记录。上报包含 arg index、backing identity/generation、source location、target endpoint、operation、transfer/profile、拒绝原因，不输出 tensor 内容或私有 transport key。</p>
+<p>Python 入口抛异常，C++ 返回现有错误状态，HBG/TMR 走现有 fatal 通路。<code>LOG_ERROR</code> 不是成功返回；不允许失败后返回正常零值或继续 launch。错误分类至少区分 INVALID_ARGUMENT、UNSUPPORTED_ACCESS、STALE_REFERENCE、PERMISSION_DENIED、OUT_OF_BOUNDS，最终映射到仓库现有可表达的错误码，不需要另建错误生命周期。</p>
+<h3 id="design-63-必须通过的验收矩阵">6.3 必须通过的验收矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>组别</th>
+<th>正例</th>
+<th>反例 / negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本地 L3 → L2</td>
+<td>HOST NONE/H2D、DEVICE NONE；一个 backing 两个不同 transfer 参数</td>
+<td>HOST 送 device、DEVICE host get、错误 chip、同身份被改 descriptor</td>
+</tr>
+<tr>
+<td>权限与几何</td>
+<td>READ HOST 控制；合法 native stride；空 view</td>
+<td>READ set、WRITE get、越界/溢出、未知 enum；非连续 H2D、写重叠 H2D</td>
+</tr>
+<tr>
+<td>Remote wire</td>
+<td>transfer/tag/权限/身份 roundtrip；inline 与 owner/import ref</td>
+<td>旧版本、漏 transfer、remote VA 本地 materialize、过期 session/owner</td>
+</tr>
+<tr>
+<td>Remote 子区间</td>
+<td>非零 export.begin + tensor offset；两次导入不同范围仍同 backing</td>
+<td>双重减 offset、权限升级、两范围互换；不同起点重叠不漏依赖</td>
+</tr>
+<tr>
+<td>复制与映射</td>
+<td>复制到已有目的保留其 identity；新分配副本才有新 identity；SHM import 保留源 identity</td>
+<td>copy 冒充 alias；跨机器 SHM 名称伪装 peer；未实现 profile 被候选存在放行</td>
+</tr>
+<tr>
+<td>统一 COPY</td>
+<td>H2D/网络同一状态合同；网络→H2D 两段；既有目的重复更新</td>
+<td>send 返回被误当目的 ready；第二段失败却放行；中间存储提前复用</td>
+</tr>
+<tr>
+<td>生命周期</td>
+<td>submit/close 竞争、多个 grant、公开 unmap 后已接受任务完成</td>
+<td>在飞提前 free；丢失释放 reply 后复用地址；关闭一 grant 撤销另一 grant</td>
+</tr>
+<tr>
+<td>host 准备</td>
+<td>L3 producer 完成后取 HOST；kernel 返回后源容器可销毁</td>
+<td>提前 prepare 读前驱旧 HOST；HBG 等自身未 launch 的 producer</td>
+</tr>
+<tr>
+<td>capture / MTP</td>
+<td>graph 保活稳定地址；DEVICE 持久状态跨调用</td>
+<td>replay 假装重跑 host；workspace reset 清 KV；仅 AICPU 完成就 free</td>
+</tr>
+</tbody>
+</table>
+<p>当前代码证据与单测只验证现状，不作为新 wire、映射、capture 或跨机器硬件合同已交付的证明。</p>
+<h3 id="design-2026-09-29direct-l2-source-registration-的第一种-context-provider">2026-09-29：direct L2 source registration 的第一种 context provider</h3>
+<p>代码提交 <code>a938898b</code>（<a href="https://github.com/hw-native-sys/simpler/pull/2482">#2482</a>，待合入）新增 <code>Buffer.wrap(address=..., nbytes=..., location=worker.device_location)</code>。
+source 登记独立于 consumer provenance/import cache；submit 在原有 chip/provenance 锁内获取 source 使用保留，再安装消费快照。缓存 live 检查与 acquire 间发生 close 时，acquire 必须在 source 锁内拒绝已失效的既有 attachment。未知 native 完成保留引用并作废 context token；close 不是 device fence。</p>
+<p>当前 context provider 是拥有设备的 direct L2 Program Worker，token 绑定进程与 Worker incarnation。它不是 device ordinal，也不是外部 RTS context 的 attach API。其他 Worker / Remote 仍明确拒绝，既不重新 mint 同一 backing 的 identity，也不绕过 owner/provenance 校验。跨消费者 grant/provider 接入仍未完成；不能把这一笔标为 U1b 全部完成或 kernel eager 已接通。</p>
+<p>正式 Tensor 构造继续用 <code>Tensor(buffer, shapes=..., dtype=...)</code>；外部 allocation 的物理寿命与 IO 由原 allocator 负责。本笔不引入 Worker.borrow_device_buffer，不自动复制 source Buffer，也不为 HOST/Remote 制造地址。U2b 再把 COPY 接到同一使用保留合同，U4 交付失败后的明确回收/恢复。</p>
+<p>验证：123 项 Buffer/L2 测试通过；HBG 两种模拟器各 6 项、task-submit A2/A3 6 项通过。最终 head 完整 Python 单测 2833 passed / 65 skipped。#2475 的旧接口提案由本笔替代，其原始 AIV 证据留在独立 worktree 与 probes/aiv-borrowed-repro/REPORT.md，未声称已修复。</p>
+<h3 id="design-2026-09-29-合入与构建阻塞更新">2026-09-29 合入与构建阻塞更新</h3>
+<h1 id="design-2482-已合入-main-fcbf4f1d源登记自动接入的已验证-head-仍为-a938898b不把历史测试移挂到新主线2475-已关闭并由它替代下一项仍是-u1b-的-chipworker-公共参数入口收口跨-workerremote-grant-和外部-rts-context-attach-尚未交付">2482 已合入 main <code>fcbf4f1d</code>，源登记/自动接入的已验证 head 仍为 <code>a938898b</code>，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</h1>
+<p>推进时发现 main <code>92a14e4e7</code>（#2483）无法构建 A5：boundary-wait discharge 错误分支仍调用单参数 <code>emit_device_dep_gen_graph</code>。先提交独立 <a href="https://github.com/hw-native-sys/simpler/pull/2484">#2484</a> <code>82af70f5</code>，补本次 epoch 与 false 完成判定。完整 editable/runtime 构建和三个 A5 DepGen C++ 单测目标通过；本机为 A2/A3，没有 A5 板测。此 PR 只修构建，未交付新的 TaskArgs 接口；参数入口测试草稿留在本地，尚未通过验证。</p>
+<h3 id="design-chipworker-共同参数入口2486-已合入">ChipWorker 共同参数入口：#2486 已合入</h3>
+<p>构建修复 #2484 已合入 main <code>8aae172e5</code>。<a href="https://github.com/hw-native-sys/simpler/pull/2486">#2486</a> 已合入 main <code>22c009811</code>；验证 head 为 <code>cacc1415</code>。它使公开同步 <code>ChipWorker.run</code> 接受同一 <code>TaskArgs&lt;Tensor&gt;</code>，复用快照、ImportRegistry 和 native POD materializer，不引入第二种 Tensor 或执行器。</p>
+<ul>
+<li>接受标量和 canonical row-major HOST/H2D 视图，包含非零 offset；DEVICE descriptor 仍交给拥有 live-source/provenance 合同的 <code>Worker(level=2).submit</code>。HOST/NONE 与非连续 H2D 在 import 前拒绝。旧 POD 入口保留兼容。</li>
+<li>本次导入映射持续到 native 返回及回写完成；bind 失败立即清理，native 调用失败保留并阻止新的公开 run，只有 native finalize 成功后清理，失败则继续保留。公开 run/finalize 串行。此合同只保留映射；调用者仍须保持 backing allocation 有效，不传递 host allocation 所有权。</li>
+<li>验证 head <code>cacc1415</code>：完整构建；Python 2853 passed / 65 skipped；HBG 两架构模拟器各 7 passed，其中新用例经真实 ChipWorker.run 连续提交 6 次。主线旧入口、去快照、失败提前 unmap 三种负对照均命中测试。板测未运行：架构是 A2/A3，但查询时 16 张卡全部有 HBM 占用，空 task-submit 队列不代表设备空闲。</li>
+<li>U1b 不标全部完成；跨消费者/grant、外部 RTS attach、旧公开 POD 的余下迁移仍需单独闭合。U2a 的 HOST/NONE 消费、本地 IO 和 Remote 工作未由本 PR 交付。只提交代码、测试及 API 合同文档，设计资料留本地。</li>
+</ul>
+<h3 id="design-u2a-生产预检hosth2d-布局2489-已合入">U2a 生产预检：HOST/H2D 布局（#2489 已合入）</h3>
+<p>基线 main <code>22c009811</code>。#2486 的 Python 同步入口已限制非连续 H2D，但
+Worker.submit 和旧 POD 入口仍能绕过该限制。四个 binder 都按 numel × element_size
+分配和搬运，却保留 strides/start_offset；因此先在共同原生预检拒绝非连续
+HOST/H2D 和非零原生 start_offset，覆盖 IN/OUT/INOUT。公开 Tensor.byte_offset
+已折算进导入地址，连续子区域仍合法；DEVICE/NONE 的跨步和偏移继续透传。</p>
+<p>本项是 U2a 的生产消费者安全前置；HOST/NONE 消费、HBG 双侧显式传参迁移、
+TMR/core 的访问判定仍需共同交付，不能把本项标为 U2a 完成。</p>
+<p>本项已提交 <a href="https://github.com/hw-native-sys/simpler/pull/2489">#2489</a>，
+head <code>6c319db0</code>，base <code>22c009811</code>，5 文件 +128/−6。两个 HBG/两个 TMR
+真实 binder 目标共 138 项通过；Python 参数测试 45 项通过；HBG readiness
+两种模拟器各 7 项、TMR vector 各 1 项通过。新拒绝测试在修复前两个 HBG
+目标因读取前项故障地址失败，两个 TMR 目标错误放行并发生分配；回归测试已提交。
+当前 16 个设备 HBM 非零，未做本项板上验证。预提交检查全部通过。
+规划文档及 HTML 仍在仓库外，不在 PR 内。下一项是 HOST/NONE 的真实消费
+与 HBG 双侧参数用例迁移，不能只开放 API 而保留隐式跨侧读取。</p>
+<h3 id="design-u2a显式-host-消费与消费者迁移2501-待审阅">U2a：显式 HOST 消费与消费者迁移（#2501 待审阅）</h3>
+<p>2026-10-07：#2489 已合入；本次以 main <code>01bf24bfa</code> 为基线，提交
+<a href="https://github.com/hw-native-sys/simpler/pull/2501">#2501</a>，head <code>e89204e5</code>。
+本项实现 HOST/NONE 的真实 HBG 消费，移除隐式 DEVICE 主机访问，未改 Pipeline A 的准入与完成机制。</p>
+<ul>
+<li>HBG 在复制任何参数前登记 HOST/NONE 的范围；get/set 仅按 IN/OUT/INOUT 访问。
+  Python 的直接/子进程 chip 入口在解析地址前检查 Buffer grant 能覆盖 callable 方向。</li>
+<li>H2D 产生独立 DEVICE 参数；需要两侧数据就传两个 Tensor。HOST 写入不反向更新已复制的 DEVICE 值。
+  要在 host 使用上次 device 结果，先显式等待与复制，再传入独立 host 参数。</li>
+<li>TMR、device task、graph 参数及 predicate 拒绝 HOST。HOST/NONE 支持有效跨步视图；
+  HOST/H2D 保留连续布局约束；两份 H2D 副本重叠且存在写入时在分配前拒绝，只读重叠允许。</li>
+<li>PA、BGEMM、DSv4 host 元数据、FIFO/early enqueue、拓扑与 readiness 用例随接口共同迁移。
+  本项不引入 PreparedCall、缓存、映射视图或自动 D2H 标签。</li>
+<li>验证：294 个 C++ 测试目标；Python 2907 passed / 57 skipped；A2/A3 sim 69、A5 sim 67；
+  task-submit A2/A3 板上 19 项通过，grant 检查后复测相关 readiness/FIFO 路径也通过。
+  A5 板上和完整大规模 DSv4 尚未运行；日志隔离问题记录在工作树 KNOWN_ISSUES.md。</li>
+</ul>
+<p>本 PR 待审阅，不能标为已合入。后续为 U2b 的本地显式 COPY 与完成/保留合同，
+U3 Remote producer/receiver 的对称升级可并行。Kernel eager 的外部 context/caller 顺序仍需单独接线与验收。
+代码 PR 只含产品代码、API 文档和测试；本节和 HTML 留在仓库外。</p>
+<h4 id="design-2501-ci-修正2026-10-07">#2501 CI 修正（2026-10-07）</h4>
+<p>最新 head <code>f632d25a</code>，rebase 基线 <code>a711032ed</code>。初次 CI 的 A2/A3 early_enqueue
+六例段错误来自漏迁共享 FIFO 编排的调用方：编排读取第 4 个 HOST/NONE 参数，
+调用方却仍声明、传入 3 个 tensor。已补齐签名和实参；没有改入队/完成逻辑。
+两个无设备参数构造回归测试在修复前均失败；修复后 Python 全套 2909 passed / 57 skipped，
+task-submit 六个板上用例全部通过（另四个 test_run 占位例按设计 skip）。
+先前模拟器通过不能覆盖这些 onboard-only 用例。新 head 已推送，CI 待重跑结果。</p>
+<p>最新依赖修正见 <a href="kernel-eager-open-work.md">Kernel eager 剩余问题与接线顺序</a>。</p>
+<h2 id="design-2026-10-08当前接线与剩余问题">2026-10-08：当前接线与剩余问题</h2>
+<p>当前状态统一维护在 <a href="kernel-eager-open-work.md">kernel-eager-open-work.md</a>。#2501 已合入；
+Program IO / TensorLease 整理不作为 kernel eager 的前置。当前本地工作是 TMR/HBG 借用设备下的
+共同 prepare/finalize，之后接 caller-stream launch 与公开入口，再做 capture。</p></article><article id="access" class="document"><h1 id="access-跨-endpoint-访问与复制共同合同">跨 endpoint 访问与复制：共同合同</h1>
+<p>更新：2026-09-27。状态：选定设计，尚未完整实现。本文落实 <a href="#design">Tensor 统一设计</a>，由 <a href="runtime-design-principles.md">运行时原则</a> 约束。源码事实仍使用 2026-09-24 核查的 main <code>c605b03c</code>，本次没有把旧证据重新标为最新主线。</p>
+<h2 id="access-1-同一种问题不同访问机制">1. 同一种问题，不同访问机制</h2>
+<p>Remote 和 DEVICE 都可能是消费者当前不能直接解引用的存储。统一抽象是 <strong>source backing → target endpoint 的访问请求</strong>；网络、H2D/D2H、同机共享内存、设备地址解析是不同机制。</p>
+<pre><code class="language-text">                                一份 Tensor 参数列表
+                                         │
+             本地 Program / kernel / remote callable / 显式 copy 或 import
+                                         │ 入口转换，不推断新授权
+                             统一访问请求与合法性判断
+                           ┌─────────────┼─────────────┐
+                      NATIVE 消费     MAP 同一存储    COPY 到目的存储
+                           │             │             │
+                   已有本地 attachment   │     源/目的引用 + 复制动作记录
+                           │             │             │
+              backend adapter：local / SHM / H2D-D2H / remote transport
+                           └─────────────┼─────────────┘
+                             目标绑定 + 顺序 + 使用保留
+</code></pre>
+<p>公开对象始终是 Buffer 与 Tensor，正式 view 构造为 <code>Tensor(buffer, ...)</code>；源侧 Buffer 登记与目标 attachment 分离，目标 Worker 在 submit 内验证接入，同 backing 身份不随消费者改变。TaskArgs 参数项提供本次 transfer，绑定层把它翻译为下面的内部请求。BufferDescriptor 只负责传输存储描述，ChipTensor 可作为绑定结果的内部 ABI 编码。</p>
+<p>这三个 operation 是内部请求语义，<strong>不是新增用户逐参数角色表，也不替换 AddressSpace / AccessMode</strong>。</p>
+<p>位置拆成 node/endpoint 与 HOST/DEVICE；remote 是 source/target 关系。机器 B 的 DEVICE 同时具有“远端”和“device”属性。H2D 不隐含跨机器；一次显式跨机器复制可以包含 NETWORK → H2D 两段。</p>
+<table>
+<thead>
+<tr>
+<th>源 → 目的</th>
+<th>确定的语义</th>
+<th>机制例子 / 支持条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A.HOST → A.DEVICE</td>
+<td>复制</td>
+<td>H2D；源读、目的写、device 顺序</td>
+</tr>
+<tr>
+<td>A.DEVICE → A.HOST</td>
+<td>复制</td>
+<td>D2H；device producer 完成、host 可见</td>
+</tr>
+<tr>
+<td>A.HOST → B.HOST</td>
+<td>复制</td>
+<td>网络传输；接收端完整提交后可读</td>
+</tr>
+<tr>
+<td>A.HOST → B.DEVICE</td>
+<td>复制</td>
+<td>网络到 B.HOST，再当地 H2D；或经过验收的直接传输 profile</td>
+</tr>
+<tr>
+<td>A.DEVICE → B.DEVICE</td>
+<td>复制</td>
+<td>已实现直接路径；否则明确已支持的 D2H → 网络 → H2D 组合；无完整路径就拒绝</td>
+</tr>
+<tr>
+<td>A 的 backing → B 的映射视图</td>
+<td>同一 backing 的别名</td>
+<td>必须有可兑现的 mapping/import profile，不能自动换成上述复制</td>
+</tr>
+</tbody>
+</table>
+<p>后两行规定合同，不宣称当前已有这些网络/peer 后端。当前 host_tcp 的 SHM import 要求共享 SHM namespace，仍不能跨机器充当映射。</p>
+<h2 id="access-2-一个内部接口两类结果">2. 一个内部接口，两类结果</h2>
+<p>在现有 Buffer/endpoint 判断与运行绑定之间建立共同接口。名称是目标内部接口，非当前已存在的函数：</p>
+<pre><code class="language-text">AccessRequest {
+    operation: NATIVE | MAP | COPY
+    source: Tensor reference + backing/grant identity
+    target_endpoint: EndpointIdentity + device context generation
+    destination: existing Tensor reference | explicit allocation request  // COPY only
+    required_access: derived from existing tag/signature/operation
+    source_range, destination_range, layout
+    execution_scope: host operation | program invocation | kernel invocation
+    capture_policy, ordering_context, budget
+}
+
+validate_access(request) -&gt; ValidatedAccess | error
+bind_access(validated)    -&gt; BoundAccess | error
+issue_copy(bound_copy)    -&gt; per-operation completion state | error
+retire_use(binding, completion_proof)
+</code></pre>
+<p><code>required_access</code> 是内部从已有调用方向或 copy/map 操作导出的检查输入，不是新的用户参数，也不序列化为 ChipTensor.access。授予权限查既有 Buffer/import/mapping grant；需要延续到 host 访问点的约束保存在本次绑定记录。不增加独立 Tensor.view_access / ChipTensor.effective_access。</p>
+<p><code>ValidatedAccess</code> 只是本次请求的检查结果，不是可缓存或多次 submit 的 PreparedCall；静态检查不取得永久授权。<code>bind_access</code> 必须在 registry 保护下重验 generation/状态并取得使用引用，然后才可异步执行。异步间隔不能靠先前的一次校验跨过 free/unmap。</p>
+<p><strong>两类结果：</strong></p>
+<ul>
+<li>NATIVE/MAP 返回同一 backing 的目标 attachment、有效范围、权限和使用保留。NATIVE 只解析该消费合同允许的 native/same-side 导入，不暗中创建跨 HOST/DEVICE 映射；MAP 明确申请新 grant。</li>
+<li>COPY 返回源/目的绑定、实际传输步骤、临时 buffer 记录和完成状态。COPY 不产生源 backing 的 direct-load 权限，复制通道不伪装成可解引用地址。</li>
+</ul>
+<p>负责 allocator、remote session、device context 的既有 owner 不转移给共同接口。接口统一校验和资源记账，adapter 调用各自 owner 的原有分配、发送、RTS copy、查询和清理操作。不为跨 endpoint 传输新建一套全局 scheduler。</p>
+<h3 id="access-21-请求backend-profile完成机制各司其职">2.1 请求、backend profile、完成机制各司其职</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>必须处理</th>
+<th>不应处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入口转换</td>
+<td>将已授权 API/参数合同翻译为 request</td>
+<td>因检测到远端就偷偷发网络复制</td>
+</tr>
+<tr>
+<td>共同判断</td>
+<td>身份、精确 endpoint、范围、方向、产品策略、可用机制</td>
+<td>用 Python 可达对象代替 allocation lifetime</td>
+</tr>
+<tr>
+<td>共同绑定/记录</td>
+<td>每一步源/目的/临时存储及使用引用；失败清理记录</td>
+<td>将地址整数作为跨 endpoint 身份</td>
+</tr>
+<tr>
+<td>backend adapter</td>
+<td>机制-specific 执行、进度、可见性和清理证明</td>
+<td>放宽上层 grant；改换 COPY/MAP 语义</td>
+</tr>
+<tr>
+<td>原有 run/stream 调度</td>
+<td>producer/consumer 顺序、完成查询、退休</td>
+<td>把远端 ACK 假装成 RTS event</td>
+</tr>
+</tbody>
+</table>
+<p>复用 <code>BufferAccessQuery</code>/<code>buffer_adapter_candidates</code>/<code>DefaultRegionAccessService</code>。对复制，判断必须覆盖源读取和目的写入两端，不能只查“consumer 能否访问源”。<code>COPY_TO/COPY_FROM</code> 始终相对于被操作 backing：H2D 要求读 HOST 源、写 DEVICE 目的。</p>
+<p>每个 profile 必须明确：支持的 endpoint 关系、operation、layout、执行及可见性机制、是否能提供 device-side 等待、capture 能力，以及哪些完成证明可用于回收。仅在枚举中出现不算支持。</p>
+<h3 id="access-22-公开入口如何归一">2.2 公开入口如何归一</h3>
+<table>
+<thead>
+<tr>
+<th>现有/目标入口</th>
+<th>转成什么请求</th>
+<th>保持的用户合同</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HOST+NONE / DEVICE+NONE 参数</td>
+<td>NATIVE 到实际消费者</td>
+<td>不授权额外复制，不允许隐式跨侧 get/set</td>
+</tr>
+<tr>
+<td>Program HOST+H2D 参数</td>
+<td>明确分配 DEVICE 绑定；IN/INOUT 的 COPY 入，OUT/INOUT 的 COPY 回</td>
+<td>保留 Program IO；纯 OUT 不读初始 host 内容</td>
+</tr>
+<tr>
+<td>Kernel DEVICE 参数</td>
+<td>NATIVE 到 caller 指定执行域</td>
+<td>不接管 tensor allocation，不隐式 H2D</td>
+</tr>
+<tr>
+<td>Worker.copy_to / copy_from</td>
+<td>COPY 到/从既有 chip backing</td>
+<td>保留各 API 已有同步/异步返回合同；不假装已经新增 async API</td>
+</tr>
+<tr>
+<td>remote_copy_to / remote_copy_from</td>
+<td>COPY 到/从指定远端 backing</td>
+<td>显式网络操作；远端实际位置决定后续需要哪种当地步骤</td>
+</tr>
+<tr>
+<td>HOST_INLINE</td>
+<td>发送入口值快照，再 COPY 到接收端新 HOST backing</td>
+<td>只读输入；接收后的 NONE/H2D 标签独立保留</td>
+</tr>
+<tr>
+<td>remote_import / map_view</td>
+<td>MAP 到指定 endpoint，返回同 backing 的新视图</td>
+<td>不支持就失败，不能改成副本</td>
+</tr>
+</tbody>
+</table>
+<p>H2D 只保留为 Program 的局部参数绑定要求。共同 COPY 层使用 source/destination endpoint 与 location，不扩张成 <code>REMOTE_H2D</code>、<code>NETWORK_D2H</code> 等组合枚举。上层明确要求发送到 remote worker，并且参数明确要求当地 H2D，才授权对应两段路径。</p>
+<h2 id="access-3-多段复制的确定流程">3. 多段复制的确定流程</h2>
+<p>以 A.HOST 的输入，经网络送到 B.DEVICE 为例：</p>
+<pre><code class="language-text">H_A ── NetworkCopy ──▶ H_B ── H2D ──▶ D_B ── device consume
+        │                 │                │
+  SourceReadDone_A  DestinationReady_HB  DestinationReady_DB
+                          │                │
+                 H2D SourceReadDone_HB    consume Done
+                          │                │
+                  可回收内部 H_B       可退休本次 D_B 使用
+</code></pre>
+<ol>
+<li>入口确认网络发送与目标 device 绑定均获授权；校验整条路径、预算、权限、几何，未支持的一段在传输前失败。</li>
+<li>绑定阶段取得源与目的引用，分配必要中间存储。先登记清理义务，再公开异步工作；不能只有裸指针列表。</li>
+<li>等待源 producer；NetworkCopy 执行后，只有 <code>DestinationReady_HB</code> 才能启动读取 H_B 的 H2D。</li>
+<li>只有 <code>DestinationReady_DB</code> 才能启动 device consumer。若后端不能形成合法等待边，则在既有 host 调度位置等完成再提交，不在 device kernel 中途回 host 补工作。</li>
+<li>H_B 最早在网络写与 H2D 读取均已结束后回收；本例两者顺序已建立，因此 H2D SourceReadDone 是最后一步。D_B 还要覆盖真正 device 消费及 Program 输出回拷。</li>
+<li>网络 send 返回不等于目的可用。发送缓冲可以保留到 send API 定义的源读取完成；若没有更细证明，保守保留至整次复制已证明完成。</li>
+</ol>
+<p><strong>这些顺序约束不要求逐段 host 等待。</strong> 后端若提供合法的 stream/event 顺序和失败阻断，可以提前 enqueue 后继，让设备等待前驱。<code>DestinationReady</code> 限制实际消费开始，不限制 host 提前提交的时刻。只提供 host completion 的网络后端，由既有 host 调度在接收完成后提交下一段；不得用忙等 host ACK 的 device kernel 伪造 bridge。</p>
+<p>提前排队还必须证明异步失败不会把不完整目的交给 consumer；单纯 record 一个 event 不自动具备成功门控。复用已有执行域错误/停止机制，未能证明该合同的 profile 不开放提前 enqueue，采用已证明安全的完成后提交路径。未确认静止的已排队任务继续保留资源。</p>
+<p>直接网络→device 后端若将来可用，可以替换 COPY 内部步骤，前提是复制的范围、布局、授权、返回值、可见性与源/目的寿命合同不变。当前选择已验收路径；不因一次 RPC 失败就临时换路径重写目的。</p>
+<h3 id="access-31-三个完成事实禁止合并成一个布尔值">3.1 三个完成事实，禁止合并成一个布尔值</h3>
+<table>
+<thead>
+<tr>
+<th>事实</th>
+<th>证明什么</th>
+<th>允许的动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SourceReadDone</td>
+<td>该复制不再读取源</td>
+<td>释放这一段的源使用引用；其他任务仍可能保留源</td>
+</tr>
+<tr>
+<td>DestinationReady</td>
+<td>该复制目的完整且对目标可见</td>
+<td>触发依赖它的消费；不表示 consumer 已完成</td>
+</tr>
+<tr>
+<td>OperationQuiescent</td>
+<td>所有已发起步骤都不再访问资源</td>
+<td>允许失败清理或最后退休；不等于操作成功</td>
+</tr>
+</tbody>
+</table>
+<p>以上是逻辑事实，不要求三个新物理 event。同步 memcpy 可在成功返回时同时满足；RTS 异步 copy 由对应 stream 完成证明；网络 ACK 必须按 receiver 合同解释。原有 Pipeline A 的 run 完成不能替代尚未结束的复制证明，反之复制完成不能替代 AICPU/AICore 完成。</p>
+<p>完成引用限定 endpoint/session/context generation 与本次 operation 标识。Backing generation 描述 allocation 代际，<strong>不随每次复制递增</strong>。不得用上次相同地址的完成记录放行本次数据更新。</p>
+<h3 id="access-32-预算与背压">3.2 预算与背压</h3>
+<p>每次路径绑定记录实际目的新分配 bytes、临时 HOST/pinned bytes、临时 DEVICE bytes、在飞 transport 数量，以及实际需要的 completion 对象。按 placement 归属计费，共用 backing 不重复计算物理字节。</p>
+<p>预算不足在接纳前阻塞或明确拒绝，取决于外层既有 API 合同；不是依赖 RTS 队列提供 WouldBlock。资源绑定允许失败回滚，但任何一步 DMA/send 发生前须保证其后续必要存储已有保留。中间 buffer 不能因“已进入网络队列”就提早复用。</p>
+<h3 id="access-33-失败取消和重试">3.3 失败、取消和重试</h3>
+<p>状态至少区分未提交、部分提交、已证明完成、失败且已静止、失败但静止性未知。某一步失败后不提交后继消费；已提交写入无法回滚成“从未写过”。对已有目的 Tensor，相关范围标为本次结果不可用，不能继续沿用旧值的成功状态。</p>
+<p>取消停止新的步骤，不撤销已经发出的 DMA/RPC；保留引用至 drain/静止证明。超时而无静止证明时保留 cleanup journal，拒绝复用相关资源。沿用现有 owner/session 故障处理，不新增“网络超时就释放 device buffer”的规则。</p>
+<p>默认不透明重试已部分提交的写入。只有后端能以 operation id 去重或提供可证明的覆盖/顺序合同，才可在同一请求内重试。公开 free 的幂等性不能推导为任意 COPY 幂等。</p>
+<h2 id="access-4-身份视图和内容各自稳定">4. 身份、视图和内容各自稳定</h2>
+<p><strong>COPY 写入既有目的时保留目的 identity；申请独立副本才产生新 backing identity。</strong> 后续读写不会自动传播，host/device 两份内容的一致性靠显式复制与顺序。</p>
+<p>MAP 保留源 backing identity，产生目标 attachment/grant；普通 Tensor view 保留 identity 并改变几何。Remote transport token、import_id、本地 VA 和 network sequence 都不替代 backing 身份。</p>
+<p>同一 backing 的别名仍用 owner-relative footprint 判断；中间副本有独立身份。复制记录显式关联源/目的，不能为“看起来是同一个逻辑 Tensor”而给副本共用 alias key。底层复制原语不默许重叠源/目的；同 backing 的重叠 copy 当前拒绝，除非某 profile 明确实现并验收了对应语义。</p>
+<p>复制范围还必须包含布局合同。当前不支持的 strided H2D/managed copyback 继续拒绝；网络携带 stride 不使下游 H2D 自动正确。所有步骤使用一致的数据布局解释，不能网络传完整 span、device 按 numel 分配然后保留旧 stride。</p>
+<h2 id="access-5-与-pipeline-akernelcapture-的衔接">5. 与 Pipeline A、Kernel、Capture 的衔接</h2>
+<p>共同访问接口复用已有 run/stream 的依赖和退休位置。可以并行开发静态请求、拒绝规则、adapter 接口、wire 与保留记录；消费已合入完成机制时逐后端验收，不修改 Pipeline A 的 admission 或另建 runner。</p>
+<p>Host prepare 只在数据依赖满足后读内容。可以提前验证 descriptor、选择机制和预留资源，但不能提前快照前驱未写好的数据。</p>
+<p>统一 COPY 合同不扩大 Kernel 的资源职责：Program adapter 负责创建 IO buffer 和复制；kernel 执行核心只消费已合法绑定的数据和 simpler 内部执行资源。Metadata 发布仍属于 runtime 执行协议，不能以“Kernel 禁止用户 IO 搬运”禁止 metadata H2D。</p>
+<p>Capture 要求每一条被捕获操作及其等待边都能由 device replay 完成。普通 host RPC、网络接收回调、Python host 调度不能因为被包装为 COPY 就变成可捕获 task。当前这类工作放在 capture 外，并在 graph 使用输入前显式证明目标可用；没有合法 bridge 就拒绝在 capture 中接入。</p>
+<p>直接网络/device 集成若未来提供真正可捕获的后端，仍须单独验收 generation、图保活和每次 replay 的数据版本。Eager 支持不等于 capture 支持。</p>
+<h2 id="access-6-实施与验收入口">6. 实施与验收入口</h2>
+<p><a href="#design">统一设计 §6</a> 给出唯一实施顺序；本页不另维护一套阶段状态。必须覆盖：</p>
+<ul>
+<li>同一套 COPY 合同用同步 fake、异步 device fake、异步 remote fake 验证；不能只测公共结构构造。</li>
+<li>延迟 receiver commit：send 已返回，consumer 仍不能执行；延迟 H2D：H_B 不得复用。</li>
+<li>复制到已存在的 D_B 两次：identity 不变，本次完成不能被第一次完成冒充。</li>
+<li>第二段失败/取消：前段写入不冒充整体成功；未知静止状态下源/中间/目的引用不丢。</li>
+<li>MAP 请求不可降级 COPY；HOST+H2D 不单独授权跨机器传输；kernel 不因可用 adapter 就开始自动搬运用户 tensor。</li>
+<li>本机复制无需走网络，remote 控制协议不绕过权限；同一接口不增加无必要的 RPC 或全局锁。</li>
+<li>SourceReadDone、DestinationReady、OperationQuiescent 可独立模拟，验证最后使用者再回收。</li>
+<li>普通网络路径 capture 拒绝；capture 外更新与 graph 消费必须有可验收的顺序。</li>
+</ul></article><article id="mapping" class="document"><h1 id="mapping-tensor-映射视图合同">Tensor 映射视图合同</h1>
+<p>更新：2026-09-27。本文是 <a href="#design">Tensor 统一设计</a> 的映射子合同。以下描述目标行为，<strong>当前跨 HOST/DEVICE mapping 均不开放</strong>。本地/Remote 释放的现状差异以主文 §5.1 为准，不把这里的保留语义冒充现有实现。</p>
+<h2 id="mapping-1-映射视图独立建模不归入搬运标签">1. 映射视图独立建模，不归入搬运标签</h2>
+<p>之前只在表里写“跨侧映射拒绝”不够：那只说明支持状态，没有给出映射的对象模型。</p>
+<pre><code class="language-text">Buffer：canonical identity / generation / backing location / granted access
+  └─ Tensor：dtype / shape / stride / offset；可选 mapping 引用
+       └─ endpoint attachment：访问端点 / adapter profile / local address / 有效范围 / 权限
+</code></pre>
+<p>映射视图是同一 backing 在目标 endpoint 的访问入口。存储位置仍归 Buffer；视图可访问的侧归 attachment。Host 与 device 即使指向同一 backing，也可以具有不同虚拟地址。
+不定义 HOST_MAPPED_DEVICE 或 DEVICE_MAPPED_HOST 位置枚举，也不把 MAP 放进 H2D/D2H 的 transfer 枚举。
+概念上可沿用已有 ImportRegistry / adapter / capability 体系；这不是声明当前所有跨侧 attachment 已存在。</p>
+<table>
+<thead>
+<tr>
+<th>来源 backing</th>
+<th>目标访问域</th>
+<th>方式</th>
+<th>数据与身份</th>
+<th>当前支持</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HOST</td>
+<td>HOST</td>
+<td>原地址或跨 host 进程共享映射</td>
+<td>同一 backing，保留 identity</td>
+<td>沿用已有 host backend 和权限检查</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>DEVICE</td>
+<td>本设备地址；已有 peer attachment</td>
+<td>保留 backing identity，地址限于有效 endpoint</td>
+<td>沿用已支持的 endpoint/peer 合同，不自动开放所有设备</td>
+</tr>
+<tr>
+<td>HOST</td>
+<td>DEVICE</td>
+<td>H2D 复制绑定</td>
+<td>独立 device allocation，独立内容；保留显式源/目的关系</td>
+<td>Program 已有 IO 路径</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>HOST</td>
+<td>显式 copy_from</td>
+<td>写入另一个 HOST backing</td>
+<td>保留既有 copy API；自动 D2H 参数标签仍拒绝</td>
+</tr>
+<tr>
+<td>HOST</td>
+<td>DEVICE</td>
+<td>映射视图</td>
+<td>同一 backing 的 device 访问入口；无独立 tensor 副本</td>
+<td>暂不支持，LOG_ERROR 并返回失败</td>
+</tr>
+<tr>
+<td>DEVICE</td>
+<td>HOST</td>
+<td>映射视图</td>
+<td>同一 backing 的 host 访问入口；无独立 tensor 副本</td>
+<td>暂不支持，LOG_ERROR 并返回失败</td>
+</tr>
+</tbody>
+</table>
+<p>跨 host 进程的 POSIX_SHM 映射不是 host/device 跨侧映射，不能连同 L3 参数传递一起禁掉。AICPU 在设备上执行编排时属于 device 访问域，不因其是 CPU 指令就归为 host。</p>
+<p>复制形成副本，后续写入不会自动传播。映射视图访问同一 backing，但这仍不保证无数据竞争或缓存自动可见：未来开放时必须同时满足以下合同。</p>
+<ul>
+<li><strong>别名</strong>：保留原 canonical identity 和视图范围；不能为映射伪造无关 buffer 身份，绕开 L3 依赖检查。COPY 的目标则是独立 backing。</li>
+<li><strong>权限</strong>：map_view 的 access 请求只能收窄，结果保存在 mapping grant；调用方向与实际操作不得超出 Buffer/grant 和后端能力。Tensor 只引用 grant，不新增 view_access。</li>
+<li><strong>地址</strong>：只有映射成功后得到的目标 endpoint 地址可用于该端点；不能直接转型源指针，也不能假定数值相同。</li>
+<li><strong>就绪/可见性</strong>：producer 完成、必要的 cache/coherence 操作完成后才可读；映射成功本身不提供这些保证，也不允许并发冲突写入。</li>
+<li><strong>寿命</strong>：有效 view、在飞使用者及 captured graph 的引用共同保活 backing 和 mapping；最后使用者退出前不能 unmap/free。Generation/context 改变使旧 attachment 失效。</li>
+<li><strong>机制选择</strong>：一次参数绑定明确采用 copy 或 mapped attachment，不能按平台能力静默切换；普通几何 slice/view 不创建跨侧映射。</li>
+</ul>
+<p>完整映射合同在下面确定；当前实现只走支持策略的拒绝分支，不执行 map/unmap、缓存同步或 replay 映射保活。开放映射时不修改 Buffer 位置含义或用户参数类别。</p>
+<h2 id="mapping-2-确定的公开接口与对象语义">2. 确定的公开接口与对象语义</h2>
+<p>以下是目标接口合同，函数名和参数名据此统一；尚未实现的入口报不支持，而不是假装产生 view。</p>
+<pre><code class="language-python"># Buffer 决定原始存储位置；Tensor 仍是唯一的 tensor 参数类型。
+host_tensor = Tensor(host_buffer, shape=shape, dtype=dtype)
+device_tensor = Tensor(device_buffer, shape=shape, dtype=dtype)
+
+# 几何 view：同一 backing、同一 attachment；不会调用平台 map。
+slice_tensor = tensor.view(...)  # 沿用各层现有几何 view 操作，不新增另一套布局算法
+
+# 显式跨侧映射：返回的仍是 Tensor，附带已注册的 mapping 引用。
+host_view = worker.map_view(device_tensor, target=host_endpoint, access=READ)
+device_view = worker.map_view(host_tensor, target=device_endpoint, access=READ)
+
+# 释放这次 map_view 获得的映射句柄；不是释放源 Buffer。
+worker.unmap_view(host_view)
+</code></pre>
+<p><strong>map_view 返回新的 Tensor 描述，不原地修改输入 Tensor，不分配新的 tensor 数据 backing。</strong> 原 device tensor 继续使用 device 原生地址；新 host view 使用映射引用在目标 host endpoint 解析地址。两者共享源 Buffer 的 canonical identity。映射关系直接引用 backing，不把原 Tensor wrapper 当作存储所有者，也不形成逐层 parent Tensor 保活链。</p>
+<pre><code class="language-text">源 Buffer 的 allocation 控制记录（DEVICE backing）
+  ├─ 原 device tensor：native 参数描述
+  └─ 独立 mapping 句柄：持有 backing lease
+       ├─ 新 host tensor view：参数描述 + mapping 引用
+       └─ 已接收的任务/graph：独立使用引用
+</code></pre>
+<p>源必须有可验证的 backing 生命周期合同。simpler 自有 Buffer 使用其 allocation 控制记录；外部 allocation 必须提供能实际保活存储的 owner lease。仅有裸 device pointer、尺寸或一个 Tensor wrapper 不足以建立映射寿命；不能获得这个保证的 map_view 请求明确拒绝。此限制不改变无映射 kernel 参数原有的 caller-owned 寿命合同。</p>
+<p><code>host_endpoint</code> / <code>device_endpoint</code> 是已有 endpoint 身份及 context generation，不是裸 HOST/DEVICE 字符串：host 进程 A 的 VA 对进程 B 无效，device 0 的 VA 也不自动对 device 1 有效。</p>
+<p><code>map_view</code> 的确定语义：</p>
+<ol>
+<li>输入必须是有效的、未附带跨侧 mapping 的 Tensor；它本身没有 transfer 属性。映射视图用于调用时，TaskArgs 参数项必须请求 NONE，不把 map 和自动搬运合并。目标须在另一侧；同侧切片、host 进程间导入和已支持的 device peer 使用原有路径，不经这个跨侧接口。</li>
+<li>校验来源 identity/generation、请求范围、权限、endpoint 关系及支持策略。当前在此返回 UNSUPPORTED，不调用平台 mapping API，不返回占位 view。</li>
+<li>支持后，由目标 endpoint 的管理者实际建立映射；成功返回前映射已建立。返回的是可路由的 mapping 引用，不把另一个进程的指针当作本进程可用地址。</li>
+<li>输出 Tensor 保留原 BufferDescriptor、dtype/shape/stride/offset，附带 mapping 引用；权限由该引用指向的 grant 保存，不在 Tensor 新增权限字段。只改变访问入口，不改变原 Buffer、其他 Tensor 或用户数据。</li>
+<li>不复制 tensor 内容，不等待尚未完成的 producer，不允许“map 不支持就自动 copy”。</li>
+</ol>
+<p>需要两侧消费时，原 Tensor 与映射后的 Tensor 是两个显式参数；不在一个 Tensor 中暗藏可供 get/set 自动切换的 host/device 双指针。当前 map_view 不支持，所以仍需两个分别具有 HOST/DEVICE backing 的参数，或通过 Program H2D 建立独立副本。</p>
+<h2 id="mapping-3-描述格式声明与已解析地址分开">3. 描述格式：声明与已解析地址分开</h2>
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>必须携带的语义</th>
+<th>不允许混入</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BufferDescriptor</td>
+<td>canonical identity、原位置、backing 大小、所有者权限、已有 backend 描述</td>
+<td>逐调用 transfer、某个消费者的映射地址</td>
+</tr>
+<tr>
+<td>Tensor 视图</td>
+<td>Buffer 描述引用、几何、可选 mapping 引用</td>
+<td>本次 transfer、未经 endpoint 验证的直接寻址、第二份 host/device tensor 类型</td>
+</tr>
+<tr>
+<td>TaskArgs 参数项</td>
+<td>Tensor、调用方向/tag、本次 transfer</td>
+<td>改写源 Buffer 位置或身份</td>
+</tr>
+<tr>
+<td>Mapping 记录</td>
+<td>owner-issued id/generation、源 Buffer identity/generation、目标 endpoint/context generation、profile、映射范围、授予权限、生命周期状态</td>
+<td>与 backing 无关的新 allocation identity</td>
+</tr>
+<tr>
+<td>endpoint 本地 attachment</td>
+<td>平台映射句柄、本地 base、覆盖范围、实际能力、可见性规则、引用计数</td>
+<td>跨 endpoint 复用的裸指针</td>
+</tr>
+<tr>
+<td>已解析 L2 / runtime tensor</td>
+<td>本次操作实际可用的地址、访问域与几何</td>
+<td>用源 backing location 判断这个已解析地址能被哪侧访问</td>
+</tr>
+</tbody>
+</table>
+<p><strong>所有公开层级传同一种 Tensor，实际消费 endpoint 解析地址。</strong> 同一个 mapping 引用可被合法的同目标参数重复使用；派生几何 view 共享它，不重新 map。传到错误 endpoint/context、使用旧 generation 或扩展范围/权限都拒绝。</p>
+<p>L2 必须把“已解析地址的访问域”与“原 backing 的位置”在术语和实现上分开：例如 DEVICE backing 的合法 host mapping，L2 host 参数使用的是 HOST 可访问地址。源 backing 位置与身份保存在原 descriptor 和 binding/lease 中，不靠篡改 Buffer.address_space 通过检查。拟将 L2 这个意义明确命名为 access_space，仍使用 HOST/DEVICE 值域；它不是第二个物理位置。</p>
+<p>一个逻辑 kernel 可能有 AICPU/AICore 多个实际消费者。目标 device attachment 必须覆盖这次调用所需的消费角色，满足共同 descriptor 的寻址合同；只证明某一个处理器能读不够。无法提供所需共享地址或可见性时拒绝该 profile，不能把一侧 VA 当作另一侧地址。</p>
+<p>Wire 编码必须同时更新生产者、解析者和版本/能力校验。不借 reserved padding 静默塞字段；不序列化 STL 容器或 host ownership 指针；接收方不认识 mapping/transfer 时拒绝。映射引用验证和 backing 身份验证是两件事，二者都不能省。</p>
+<h2 id="mapping-4-组合裁决标签不能偷偷改变访问方式">4. 组合裁决：标签不能偷偷改变访问方式</h2>
+<table>
+<thead>
+<tr>
+<th>参数形式</th>
+<th>有效目标</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native HOST + NONE</td>
+<td>HOST</td>
+<td>同侧访问</td>
+</tr>
+<tr>
+<td>Native DEVICE + NONE</td>
+<td>已授权 DEVICE endpoint</td>
+<td>同侧/既有 peer 访问</td>
+</tr>
+<tr>
+<td>Native HOST + H2D</td>
+<td>DEVICE</td>
+<td>Program 创建独立 device 绑定</td>
+</tr>
+<tr>
+<td>Native DEVICE + D2H</td>
+<td>HOST</td>
+<td>自动复制标签暂不支持，拒绝</td>
+</tr>
+<tr>
+<td>HOST backing + DEVICE mapping + NONE</td>
+<td>mapping 指定的 DEVICE endpoint</td>
+<td>设计合法；当前能力未实现，拒绝</td>
+</tr>
+<tr>
+<td>DEVICE backing + HOST mapping + NONE</td>
+<td>mapping 指定的 HOST endpoint</td>
+<td>设计合法；当前能力未实现，拒绝</td>
+</tr>
+<tr>
+<td>任意 mapped 参数 + H2D/D2H</td>
+<td>任意</td>
+<td>参数绑定同时指定映射与复制，拒绝；要复制须用独立显式 copy 操作和目标参数</td>
+</tr>
+<tr>
+<td>mapped view 再跨侧 map</td>
+<td>任意</td>
+<td>拒绝映射链；从原 native tensor 分别建立所需 view</td>
+</tr>
+<tr>
+<td>mapped view 传给原侧或其他 endpoint</td>
+<td>与 mapping 目标不符</td>
+<td>拒绝，不自动回退到源地址；原侧传原 Tensor</td>
+</tr>
+<tr>
+<td>任意 view 提权、扩大授权范围、引用过期</td>
+<td>任意</td>
+<td>无效参数，拒绝</td>
+</tr>
+</tbody>
+</table>
+<p>当前支持策略是一次明确的裁决。两个映射方向都是已知合法模型但暂不支持，不将它们归为未知 location。LOG_ERROR 应区分 UNSUPPORTED 与 INVALID_ARGUMENT；沿用已有错误返回/异常通道，不扩展一套独立错误协议。</p>
+<h2 id="mapping-5-顺序与可见性合同">5. 顺序与可见性合同</h2>
+<p>Mapping 是 live alias，不是 snapshot。它不让 host 读提前完成，也不让 device 在 HBG 构图中途先执行。</p>
+<table>
+<thead>
+<tr>
+<th>数据流</th>
+<th>完整顺序</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HOST 写 → DEVICE mapped read</td>
+<td>host 写完成 → backend 要求的写入发布/可见性动作 → 有序 device launch → device read</td>
+</tr>
+<tr>
+<td>DEVICE 写 → HOST mapped read</td>
+<td>device 写完成及必要发布动作 → 覆盖 producer 的完成边界 → 调用方等待 → host 侧必要可见性动作 → host read</td>
+</tr>
+<tr>
+<td>两侧可能写同一范围</td>
+<td>调用方或已有显式 DAG 依赖建立互斥顺序；仅持有两个 view 不允许同时冲突访问</td>
+</tr>
+</tbody>
+</table>
+<p>不额外创建全局跨 run tensor 冲突推断系统。L3 已声明的 DAG 依赖和 canonical identity 别名检查继续生效；外部调用方及跨 run 的未声明关系仍由调用方负责。</p>
+<p>Backend profile 必须明确规定其 release/acquire 可见性动作：硬件保证一致时动作可为空，非一致时必须落到具体可执行的位置。Runtime 在已声明的准备/执行/完成边界做这些动作；不能在 host get 中偷加 stream wait 或 D2H。若无法保证某个写入方向的可见性，就不授予对应能力并返回不支持。不能以“地址已经映射成功”替代这份合同。</p>
+<p>调用方承诺 host 读取前已经完成必要等待。Runtime 不可能仅凭裸指针自动证明外部 stream 的就绪性。HOST buffer 若可能被 device 写入，即使原 host 地址一直有效，仍须遵守这条顺序。</p>
+<p>映射来源 HOST 存储须是可注册、寿命明确的 Buffer；不能把临时 host 值快照参数悄悄升级为可被 device 长期访问的 caller 容器。simpler 不取得 caller host 容器的所有权。</p>
+<h2 id="mapping-6-所有权关闭失败">6. 所有权、关闭、失败</h2>
+<p>映射是独立的资源句柄，不是源 allocation 的所有权转移。跨进程建立映射时，负责该 endpoint 的 runtime 管理本地 mapping，调用方持有 owner-issued 句柄。</p>
+<pre><code class="language-text">创建前：全量静态预检 → 支持/后端检查
+创建失败：清理已取得的部分资源，返回错误，不公开 view
+创建成功：ACTIVE（允许派生 view 和提交）
+unmap_view：CLOSING（拒绝新的派生和提交；已经接收的使用者继续保活）
+最后一个已接收使用者退出：实际 unmap → CLOSED
+</code></pre>
+<ul>
+<li>原 Tensor descriptor 的销毁不结束 backing 或 mapping；host view 的寿命不依赖这个 wrapper。不得原地修改原 Tensor 的地址、位置或权限。</li>
+<li>free/close 源 Buffer 结束的是源 owner 句柄，拒绝通过它新建 native 绑定或 map。已存在且仍 ACTIVE 的 mapping 句柄拥有独立 backing lease，可继续按其授权使用；物理 free 延迟到全部保留义务退出。</li>
+<li>unmap_view 只结束对应 mapping 的公开授权，不释放原 Buffer owner。派生的 Tensor descriptor 即使还在，也不能据此重新取得新使用引用；过期引用必须报错。</li>
+<li>一个 map_view 调用获得一个显式句柄；对其 unmap 使该句柄派生的所有 Tensor view 不能用于新的提交。不能靠 Python 对象引用数量定义跨进程协议。</li>
+<li>内部可以复用同一物理 mapping，但每个公开句柄的关闭不能撤销另一个有效句柄的授权；复用键包含 backing generation、endpoint/context generation、profile、覆盖范围及权限兼容性。</li>
+<li>有效句柄、已接收的 host 准备、device submission、状态读取和 captured graph 都是保留义务。A3 要覆盖 AICPU/AICore 两侧实际使用期限。</li>
+<li>原 backing 在这些引用存续时不能物理释放；API 可以结束调用方的 owner 句柄并阻止新派生，但真正释放推迟到所有引用结束。外部借用存储仍要求外部所有者履行同样寿命合同。</li>
+<li>未 map 成功不产生可用句柄。若部分映射回滚失败，runtime 保留受隔离的清理记录，不返回成功，不遗失仍需处理的资源。</li>
+<li>正常 unmap 失败时保留原平台句柄与清理状态，拒绝新使用，允许已有清理路径重试；设备/context 状态不确认时不能再把地址投入复用。</li>
+<li>generation/context 的有效性检查和取得使用引用必须作为一次受保护的操作；不能先检查 ACTIVE，解锁后再使用一个已被 unmap 的地址。</li>
+</ul>
+<p>这些是映射支持必须遵守的语义，不要求当前拒绝映射的实现创建整套 mapping manager。</p>
+<h2 id="mapping-7-capturereplay-合同">7. Capture/replay 合同</h2>
+<ol>
+<li>map/unmap 是 capture 外的资源操作。Capture 开始前 view 必须已解析，地址和映射代际稳定；capture 内请求新映射直接报不支持。</li>
+<li>图记录 device 可执行地址及完整设备顺序，并持有 backing + mapping 使用引用；原 Tensor wrapper 的 host 生命周期不被转移给图。</li>
+<li>调用方 unmap 结束公开句柄，但图先前取得的引用继续有效，允许已有图 replay；真正 unmap 晚于图销毁和最后一次 replay 完成。新图不能从 CLOSING 句柄取得引用。</li>
+<li>Reset/context replacement 使旧代际图失效；不能用同值的新地址冒充旧 mapping。图 wrapper 在允许 replay 前校验执行域 generation。</li>
+<li>HOST backing 的 device mapped view 是 live 数据来源。连续 replay 读新内容仍要求 host 写与各次 device 读取有序；图拥有 mapping 不等于拥有数据快照。</li>
+<li>DEVICE backing 的 host mapped view 仅让 host prepare 能合法读当前值。Capture 仍不会重放 host get/set；依赖每次 device 结果重新构图的调用不能因此变成可 replay，必须放 device 控制或显式拆调用。</li>
+<li>Backend 所需可见性动作若不能纳入 capture/replay 的合法有序路径，该 profile 的 capture 能力为不支持；不能由 eager 能跑推断 capture 能跑。</li>
+</ol>
+<h2 id="mapping-8-与-remote-和现有-capability-的衔接">8. 与 Remote 和现有 capability 的衔接</h2>
+<p>同机 host SHM import 与跨侧 map_view 共用 backing/grant/attachment 的内部模型；公开入口仍按用途区分。同机 SHM 不证明跨机器映射；peer device profile 在当前 DefaultRegionAccessService 中仍拒绝，不能将“沿用 peer 合同”写成已交付 peer 能力。</p>
+<p>沿用 EndpointIdentity 的 session_instance_id / registry_epoch / endpoint_id，并在 attachment 登记目标 device context generation。Buffer 的 owner incarnation 和 endpoint session 身份各有作用，不能互相替代。</p>
+<p>attachment 存 owner-relative 的覆盖范围，local_base 对应范围起点；Tensor offset 始终保留 owner 坐标。不同导入范围不能改写 canonical backing 大小。读取地址 = local_base + (tensor.byte_offset - attachment.begin)。</p>
+<p>主线调查 <code>docs/investigations/2026-09-hbg-per-run-host-view-rebuild.md</code> 已否定逐 run 重建映射的性能假设。本设计的显式映射按 backing/endpoint/grant 生命周期保留，可复用物理 attachment；不把禁用隐式映射误称为平台无法映射，也不重新引入每调用 map/unmap。此性能结论不使当前产品支持策略自动放开。</p>
+<h2 id="mapping-9-统一访问层中的-map-合同">9. 统一访问层中的 MAP 合同</h2>
+<p>map_view 与 remote_import 都转为 <a href="#access">共同访问请求</a> 的 MAP，返回同 backing 的目标 attachment/grant；平台 H2D/D2H 与网络复制则转为 COPY。MAP 不能用 COPY 返回一个“看起来相同”的 Tensor：两者后续写入是否共享、完成与寿命不同。</p>
+<p>同 backing 的权限、identity、owner-relative 范围在多次导入中保持；目标地址和 transport token 属于 adapter。跨 host/device 映射当前仍拒绝，共同层的存在不扩大 profile 支持范围。</p>
+<p>map_view(..., access=READ) 保留为建立映射授权的请求参数，remote import 的 access 参数同理；它们不构成每次提交需要重复填写的 Tensor 权限字段；内部 ChipTensor 也不新增该字段。</p></article><article id="evidence" class="document"><h1 id="evidence-tensor-统一设计源码证据与验证边界">Tensor 统一设计：源码证据与验证边界</h1>
+<p>更新：2026-09-24。设计入口：<a href="#design">argument-domain-policy.md</a>。本页区分观察和方案，不另定义一套原则。</p>
+<h2 id="evidence-1-本次核查基线">1. 本次核查基线</h2>
+<ul>
+<li>读取最新 <code>upstream/main</code>：<code>c605b03cad7be2a80700efbdf3bd00dbc79812a9</code>。</li>
+<li>工作分支 #2444：<code>1761d1304eec8b1ea7836d8d2f6812acbc5b2498</code>，基线 <code>bef53236679a0ff56d38abbf38d5a738f40e530c</code>。</li>
+<li>fetch 后没有 rebase、修改产品代码、commit 或 push。main 新增变更集中于 resident scheduler storage；本文引用的 Buffer、Remote、能力判断路径相对分支基线未改变。</li>
+<li>当前分支已经改过 HOST/H2D 行为。主线旧 HBG 路径用 <code>git show</code> 单独核查，不能拿分支的禁跨侧访问证明 main 已禁用。</li>
+<li>引用主键是固定提交 + 文件 + 符号/独特文本。行号不作为移动分支的事实依据。</li>
+</ul>
+<h2 id="evidence-2-逐层事实表">2. 逐层事实表</h2>
+<p>以下链接全部固定 main commit；定位键在第二列。</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>定位键</th>
+<th>观察与设计影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/task_interface/buffer.h">buffer.h</a></td>
+<td>CanonicalIdentity / BufferDescriptor / Tensor</td>
+<td>身份为 owner nonce + buffer id + generation；descriptor 不包含消费者本地地址；Tensor 承载几何</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/task_interface/buffer.h">buffer.h</a></td>
+<td>AccessMode / validate_buffer_descriptor / tensor_footprint</td>
+<td>READ=0、WRITE=1、READWRITE=2，非位掩码；backend/位置配对和范围已有校验，不能另造不一致权限规则</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/task_interface/tensor.h">tensor.h</a></td>
+<td>ChipTensor</td>
+<td>L2 已解析 POD 与 L3 Tensor 分层存在，不需把所有层合成一个 C++ struct</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/bindings/task_interface.cpp">task_interface.cpp</a></td>
+<td>materialize_one</td>
+<td>从 identity 找 local_base，折入 byte_offset，保留 shape/stride；新增 transfer/grant 须经过此 seam</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/buffer.py">buffer.py</a></td>
+<td>ImportRegistry.materialize</td>
+<td>map-once 缓存；同 identity 不同 descriptor 拒绝；copy-only adapter 不产生本地地址</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/buffer.py">buffer.py</a></td>
+<td>select_adapter / ImportContext</td>
+<td>HOST SHM 为 host prepare 映射，即使调用目标为 chip；DEVICE 需 owner nonce，精确 chip 校验在父端</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/buffer.py">buffer.py</a></td>
+<td>capabilities_for_adapter / _CAPABILITIES_BY_ADAPTER</td>
+<td>direct 与 delegated copy 区分；能力再按 AccessMode 收窄；未知值 fail closed</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/comm_endpoints.py">comm_endpoints.py</a></td>
+<td>EndpointIdentity / EndpointRecord</td>
+<td>已有 session_instance_id、registry_epoch、endpoint_id、node_scope_id；不必再用字符串猜 endpoint 身份</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/comm_endpoints.py">comm_endpoints.py</a></td>
+<td>BufferAccessQuery / DefaultRegionAccessService</td>
+<td>候选不等于已实现。HOST_SVM_MAP、DEVICE_VMM_PEER_IMPORT、REMOTE_COPY、DEVICE_FABRIC_V2_PEER_IMPORT 在默认 service 被拒绝</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/worker.py">worker.py</a></td>
+<td>_child_prov_check_dispatch_locked</td>
+<td>私有注册 descriptor 与 target chip 精确验证；check-through-submit 保持事务性</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/worker.py">worker.py</a></td>
+<td>release_buffer / free / _require_freeable</td>
+<td>host release 拒绝在飞引用；device free 先撤销 provenance；CommDomain buffer 不允许通过普通 allocator free</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/worker.py">worker.py</a></td>
+<td>_device_control_admission</td>
+<td>owner 外部 device control 对在飞 run 有 admission 限制；不是已有通用延迟回收体系</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/host_build_graph/host/host_tensor_access.cpp">host_tensor_access.cpp</a></td>
+<td>AccessMeans / resolve_means / read / write</td>
+<td>主线 HBG 仍可为 child memory 查 host mapping，失败走 copy；这与用户新约束冲突，#2444 的有效迁移不能丢</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp">HBG runtime_maker.cpp</a></td>
+<td>bind_callable_to_runtime_impl 的 tensor loop；needs_copy_in / needs_copy_back</td>
+<td>DEVICE passthrough；HOST 分配 device slice、按方向复制/回拷，并登记 host accessor；nbytes 分配与任意 stride 不相容</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/remote_l3_protocol.py">remote_l3_protocol.py</a></td>
+<td>RemoteAddressSpace / RemoteTaskArgsWire / FrameHeader</td>
+<td>Remote 标签混合载荷形式和引用方式；TaskArgs 有 indexed sidecar；frame 有 session_id，不能据此认定 backing identity 已含 owner incarnation</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/remote_l3_session.py">remote_l3_session.py</a></td>
+<td>ALLOC_REMOTE_BUFFER / _RemoteBufferEntry.wire_buffer</td>
+<td>host_tcp 的 REMOTE_DEVICE entry 持有 create_buffer / create_host_shared_buffer 生成的 POSIX_SHM；协议名不是物理位置</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/remote_l3_session.py">remote_l3_session.py</a></td>
+<td>EXPORT_BUFFER / IMPORT_BUFFER</td>
+<td>transport_descriptor 是 shm_name，import 调 SharedMemory(name=...)；它不是跨机器 mapping 的实现</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/remote_l3_session.py">remote_l3_session.py</a></td>
+<td>_materialize_task_args / _materialize_inline_payload / _resolve_session_backing</td>
+<td>inline 变为接收端新 Buffer；standing handle 走 session registry；重建参数时必须保留新的 transfer/tag/grant 合同</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/buffer.py">buffer.py</a></td>
+<td>remote_backing_identity</td>
+<td>owner nonce 目前由 worker_id 填充，远端真实 incarnation 未随此 identity 传播；扩展跨 session 复用必须补齐</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/remote_l3_session.py">remote_l3_session.py</a></td>
+<td>_import_wire_buffer</td>
+<td>imported wire Buffer 重新填 descriptor/access；统一设计需把原 backing 信息和导入范围/权限分开，不能丢 grant</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/task_interface.py">task_interface.py</a></td>
+<td>RemoteBufferHandle / RemoteTensorRef.host_inline / _sidecar_from_ref</td>
+<td>owner/import/inline handle 生命周期不同；用户一个 add_tensor 已能内部生成 indexed transport 描述，无需新增用户双列表</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/python/simpler/worker.py">worker.py</a></td>
+<td>remote_free / remote_release_import / _flush_pending_remote_frees</td>
+<td>Remote 已有逻辑释放、slot/import refs 和 pending journal；RPC 结果不确定时保留所有权，而不是假设释放成功</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/hierarchical/orchestrator.cpp">orchestrator.cpp</a></td>
+<td>infer_deps / TensorKey::remote_buffer</td>
+<td>local key 以 backing 为单位并带 footprint；remote key 仍带 desc.offset，remote 分支用默认 whole-backing footprint</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/src/common/hierarchical/tensormap.h">tensormap.h</a></td>
+<td>RunTensorKey / lookup_overlapping</td>
+<td>已有推导以 RunId 限域，不等于全局跨 run hazard tracker；统一身份不能顺手扩大并发承诺</td>
+</tr>
+</tbody>
+</table>
+<p>另外核查了 <code>Worker.alloc_shared_tensor → Orchestrator::alloc</code>：它使用 HeapRing/FORK_SHM，按 scope/consumer 自动回收。<code>reserve_outputs_and_slot</code> 当前只分配零 heap 字节；旧 Remote 文档中“local null OUTPUT 自动分配”的描述不能当作现状。<code>infer_deps</code> 的 OUTPUT/OUTPUT_EXISTING 只 insert，完整的 WAW/WAR 自动推导不在当前合同中。</p>
+<p><code>validate_tensor</code> 当前拒绝零 shape/stride，而 L2 构造器可以产生空 Tensor。主文把统一空视图规则列为迁移内容，并未把这两层现状混同。</p>
+<h2 id="evidence-3-需要纠正的理解">3. 需要纠正的理解</h2>
+<ol>
+<li><strong>平台有 mapping hook ≠ 共享 capability service 已开放该 profile。</strong> 两条路径当前并不完全一致；新策略必须覆盖 HBG 旧 accessor 的旁路。</li>
+<li><strong>Remote API 存在 ≠ 当前所有 backend 支持跨机器共享存储。</strong> host_tcp 的 inline/copy 与其 SHM import 是不同机制。README/设计里的 HCOMM contract 不能当作对应 producer/materializer 已实现的证据。</li>
+<li><strong>同 backing 的多个 import ≠ 多个 backing。</strong> canonical 信息、授权范围与 attachment 本地地址必须分开；具体非零 export offset 行为需用端到端用例钉住，本文不把静态审计当成已完成缺陷复现。</li>
+<li><strong>当前不同释放行为不能靠重命名统一。</strong> Remote 的 deferred free 是可复用先例；本地必须新增/接通使用保留后才能改变 release_buffer 的拒绝行为。</li>
+<li><strong>现有 Program HOST 输出依靠 copyback。</strong> 参数模型迁移不能把 H2D 的名字解释成“去掉输出回拷”；也不能利用回拷保留旧 host get DEVICE 的隐式行为。</li>
+<li><strong>几何校验正确不保证搬运正确。</strong> 同一合法 strided Tensor 可以给原生消费者使用，但现有连续 H2D 算法不能因此宣称支持它。</li>
+</ol>
+<p>这些是设计迁移必须覆盖的断点，不是对未经完整调用链验证的安全漏洞作定性。</p>
+<h2 id="evidence-4-已有调查如何约束方案">4. 已有调查如何约束方案</h2>
+<ul>
+<li><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/docs/investigations/2026-09-hbg-per-run-host-view-rebuild.md">映射逐 run 重建调查</a>：逐 run 重建的优化方案被测量否定。因此未来显式 attachment 生命周期按 backing/grant 管理，不能每次 bind 重新 map/unmap。当前禁隐式跨侧访问是用户合同变化，不是推翻原性能测量。</li>
+<li><a href="https://github.com/hw-native-sys/simpler/blob/c605b03cad7be2a80700efbdf3bd00dbc79812a9/docs/investigations/2026-08-hbg-consumer-wait-cannot-observe-device.md">HBG host watermark 等待调查</a>：host mirror 无法以那个等待观察 device 进度。设计不恢复 HBG 构图中途等待 device 的路径。</li>
+<li>仓库 <code>docs/remote-l3-worker-design/buffers-and-transports.md</code> 同时包含现状与目标段落，部分正文仍称旧 ChipTensor / ptr key；本次以代码为准，不能整份照搬。</li>
+</ul>
+<h2 id="evidence-5-本次验证">5. 本次验证</h2>
+<p>先运行三组现有 Python UT，构建身份保护在收集阶段拒绝：本地扩展标记为 <code>0a024158aff8</code>，源码为 <code>1761d1304eec</code>。没有绕过身份保护。</p>
+<p>按仓库 testing skill，用 worktree 自己的 <code>.venv</code> 执行 <code>python -m pip install --no-build-isolation -e .</code> 重建成功，然后执行：</p>
+<pre><code class="language-sh">.venv/bin/python -m pytest \
+  tests/ut/py/test_buffer.py \
+  tests/ut/py/test_worker/test_comm_endpoints.py \
+  tests/ut/py/test_remote_l3_protocol.py \
+  -q --disable-warnings
+</code></pre>
+<p>结果：<strong>139 passed in 0.33s</strong>，基线为分支 <code>1761d130</code>。日志：<code>reviews/tensor-model-tests-1761d130.log</code>；构建日志：<code>reviews/tensor-model-rebuild-1761d130.log</code>。</p>
+<p>范围：已有 descriptor、adapter/endpoint、remote protocol 单测。不是新设计的测试，也不是当前 main 的全套测试；没有宣称真实跨机器 peer、跨侧 map、capture 或所有生命周期竞争已通过。</p></article><article id="terms" class="document"><h1 id="terms-simpler-tensor-管理领域术语">Simpler Tensor 管理领域术语</h1>
+<h2 id="terms-存储与参数">存储与参数</h2>
+<p><strong>Backing</strong>：一份实际存储，具有稳定身份、容量、所在位置和负责其物理释放的 owner。两个地址相同不代表同一 backing，两个地址不同也可能指向同一 backing。</p>
+<p><strong>Buffer</strong>：对 backing 的受管理引用，描述其身份、位置、容量和授权。它不是 Tensor 的形状，也不是调用参数的搬运要求。</p>
+<p><strong>Tensor</strong>：backing 上具有类型、形状、步长和偏移的视图。L3+、Remote、L2 对外使用同一种 Tensor；host/device 只是所引用 Buffer 的物理位置。Tensor 自身不保存某次调用的 transfer。正式构造为 <code>Tensor(buffer, ...)</code>，不分配或复制数据；<code>buffer.tensor(...)</code> 仅作迁移期兼容转发。
+<em>Avoid</em>：将 HostTensor、DeviceTensor、RemoteTensor、ChipTensor 当成并列的公开资源模型。</p>
+<p><strong>BufferDescriptor</strong>：同一 Buffer 的可传输描述形式，不是第二种公开存储对象。按 backend 携带定位信息或受限地址，必须经消费 endpoint 验证才能使用。</p>
+<p><strong>ChipTensor</strong>：现有内部地址/几何 ABI；公开入口迁移期保留兼容适配，不继续扩充第二套用户构造合同。</p>
+<p><strong>本次绑定</strong>：Tensor 在实际 endpoint 的解析结果及使用保留、复制记录。解析地址的需要不构成另造公开 Tensor 的理由。</p>
+<p><strong>参数搬运要求</strong>：TaskArgs 参数项中，描述这次调用如何从源 Tensor 建立执行参数绑定的 transfer 请求。它不修改 Tensor 视图或源 backing 的物理位置；与同一参数项已有方向/tag 共同决定 IO 动作。</p>
+<p><strong>Scalar</strong>：按值传递的定型标量，其类型、位宽和位模式共同确定含义。设备上会变化的一个数仍可以是 Tensor。</p>
+<h2 id="terms-访问与归属">访问与归属</h2>
+<p><strong>Endpoint</strong>：一次访问实际发生的位置，包括所属机器、进程或设备执行环境。Remote 是两个 endpoint 的关系，不是第三种存储位置。</p>
+<p><strong>Attachment</strong>：某 endpoint 访问一份 backing 的已建立机制，包括可用范围与权限。可执行复制的 attachment 不一定提供可解引用地址。</p>
+<p><strong>映射视图</strong>：通过目标 endpoint 的有效映射访问原 backing 的新 Tensor 视图。它共享数据，不是数据副本，也不修改原 Tensor。</p>
+<p><strong>复制</strong>：把数据写入目的 backing 的操作。目的可以已经存在；为副本新分配存储时才产生新身份，后续写入不会自动互相传播。</p>
+<p><strong>使用保留</strong>：为已接受的访问、有效映射或可重放图保留 backing 和必要 attachment 的义务。它不等于数据已经就绪。</p>
+<p><strong>逻辑释放</strong>：结束一个公开句柄接纳新使用的资格。物理回收须等其余有效使用保留全部结束。</p>
+<p><strong>就绪</strong>：本次读取所依赖的写入已经完成并满足目标 endpoint 的可见性要求。地址可达、权限足够和生命周期有效都不能替代就绪。</p>
+<p><strong>跨 endpoint 访问</strong>：从一个执行位置使用另一执行位置管理的存储。跨机器与 host/device 访问共用这一概念，具体访问机制可以不同。</p>
+<p><strong>访问请求</strong>：调用方明确要求的消费、映射或复制行为，包含源、目标、范围与授权约束。它不因平台存在另一种机制就自动改变语义。</p>
+<p><strong>复制路径</strong>：为一次已授权复制连接源和目的的一个或多个传输步骤。网络复制与 H2D/D2H 可以出现在同一路径中。</p>
+<p><strong>源读取完成</strong>：某次复制已不再读取源数据的事实。它不代表目的数据已经可消费。</p>
+<p><strong>目的可用</strong>：本次复制的目的数据已经完整写入并满足目标消费者的可见性要求。它不代表资源的所有使用者都已结束。</p>
+<p><strong>访问授权与调用方向</strong>：访问授权说明 Buffer 或导入、映射允许的读写，调用方向说明本次调用所需读写。调用需要不得超出已获授权。</p>
+<h2 id="terms-2026-09-28-参数接口与交付">2026-09-28 参数接口与交付</h2>
+<h1 id="terms-2454-已交付-taskargs-transfer2467-已交付直接-l2-的参数接受校验与保留2475-959f84a9-的-worker-借用构造是已提交实现快照其公开入口按新决定待修订源-buffer-登记与目标-worker-接入分离正式-view-入口为-tensorbuffer-此为最初实现快照当前-2478-已合入2475-为-1c095ade统一-tensor-构造-2479-已合入-main-7b614764b源登记自动接入仍待-2475-完成">2454 已交付 TaskArgs transfer，#2467 已交付直接 L2 的参数接受/校验与保留。#2475 <code>959f84a9</code> 的 Worker 借用构造是已提交实现快照，其公开入口按新决定待修订：源 Buffer 登记与目标 Worker 接入分离，正式 view 入口为 Tensor(buffer, ...)。此为最初实现快照；当前 #2478 已合入，#2475 为 <code>1c095ade</code>，统一 Tensor 构造 #2479 已合入 main <code>7b614764b</code>，源登记/自动接入仍待 #2475 完成。</h1>
+<p>后续步骤与验收以 <a href="#design">统一设计</a> §1.4、§6.1 为准；构造写法不改变 caller-owned 内存的实际寿命责任。旧 #2444 与 <a href="reviews/pr2454-transfer-split.md">原 #2454 head 验证</a> 只保留历史证据意义。</p>
+<p>构造接口收尾：<a href="https://github.com/hw-native-sys/simpler/pull/2480"> #2480</a>（已合入 main <code>4d0610fb</code>）统一 <code>shapes=</code> 与正规导入 <code>simpler.task_interface.Tensor</code>，迁移入门示例 21 处，使用绑定函数持有的弱引用做懒加载类型缓存。完整 Python 2815 passed / 63 skipped，10 个 L2/L3 模拟器用例通过；L4 远端真机未验证，本轮无空闲 HBM 设备，未运行板测。主线已统一为 <code>shapes=</code>。</p>
+<h3 id="terms-2026-09-29direct-l2-source-registration-的第一种-context-provider">2026-09-29：direct L2 source registration 的第一种 context provider</h3>
+<p>代码提交 <code>a938898b</code>（<a href="https://github.com/hw-native-sys/simpler/pull/2482">#2482</a>，待合入）新增 <code>Buffer.wrap(address=..., nbytes=..., location=worker.device_location)</code>。
+source 登记独立于 consumer provenance/import cache；submit 在原有 chip/provenance 锁内获取 source 使用保留，再安装消费快照。缓存 live 检查与 acquire 间发生 close 时，acquire 必须在 source 锁内拒绝已失效的既有 attachment。未知 native 完成保留引用并作废 context token；close 不是 device fence。</p>
+<p>当前 context provider 是拥有设备的 direct L2 Program Worker，token 绑定进程与 Worker incarnation。它不是 device ordinal，也不是外部 RTS context 的 attach API。其他 Worker / Remote 仍明确拒绝，既不重新 mint 同一 backing 的 identity，也不绕过 owner/provenance 校验。跨消费者 grant/provider 接入仍未完成；不能把这一笔标为 U1b 全部完成或 kernel eager 已接通。</p>
+<p>正式 Tensor 构造继续用 <code>Tensor(buffer, shapes=..., dtype=...)</code>；外部 allocation 的物理寿命与 IO 由原 allocator 负责。本笔不引入 Worker.borrow_device_buffer，不自动复制 source Buffer，也不为 HOST/Remote 制造地址。U2b 再把 COPY 接到同一使用保留合同，U4 交付失败后的明确回收/恢复。</p>
+<p>验证：123 项 Buffer/L2 测试通过；HBG 两种模拟器各 6 项、task-submit A2/A3 6 项通过。最终 head 完整 Python 单测 2833 passed / 65 skipped。#2475 的旧接口提案由本笔替代，其原始 AIV 证据留在独立 worktree 与 probes/aiv-borrowed-repro/REPORT.md，未声称已修复。</p>
+<h3 id="terms-2026-09-29-合入与构建阻塞更新">2026-09-29 合入与构建阻塞更新</h3>
+<h1 id="terms-2482-已合入-main-fcbf4f1d源登记自动接入的已验证-head-仍为-a938898b不把历史测试移挂到新主线2475-已关闭并由它替代下一项仍是-u1b-的-chipworker-公共参数入口收口跨-workerremote-grant-和外部-rts-context-attach-尚未交付">2482 已合入 main <code>fcbf4f1d</code>，源登记/自动接入的已验证 head 仍为 <code>a938898b</code>，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</h1>
+<p>推进时发现 main <code>92a14e4e7</code>（#2483）无法构建 A5：boundary-wait discharge 错误分支仍调用单参数 <code>emit_device_dep_gen_graph</code>。先提交独立 <a href="https://github.com/hw-native-sys/simpler/pull/2484">#2484</a> <code>82af70f5</code>，补本次 epoch 与 false 完成判定。完整 editable/runtime 构建和三个 A5 DepGen C++ 单测目标通过；本机为 A2/A3，没有 A5 板测。此 PR 只修构建，未交付新的 TaskArgs 接口；参数入口测试草稿留在本地，尚未通过验证。</p>
+<h3 id="terms-chipworker-共同参数入口2486-已合入">ChipWorker 共同参数入口：#2486 已合入</h3>
+<p>构建修复 #2484 已合入 main <code>8aae172e5</code>。<a href="https://github.com/hw-native-sys/simpler/pull/2486">#2486</a> 已合入 main <code>22c009811</code>；验证 head 为 <code>cacc1415</code>。它使公开同步 <code>ChipWorker.run</code> 接受同一 <code>TaskArgs&lt;Tensor&gt;</code>，复用快照、ImportRegistry 和 native POD materializer，不引入第二种 Tensor 或执行器。</p>
+<ul>
+<li>接受标量和 canonical row-major HOST/H2D 视图，包含非零 offset；DEVICE descriptor 仍交给拥有 live-source/provenance 合同的 <code>Worker(level=2).submit</code>。HOST/NONE 与非连续 H2D 在 import 前拒绝。旧 POD 入口保留兼容。</li>
+<li>本次导入映射持续到 native 返回及回写完成；bind 失败立即清理，native 调用失败保留并阻止新的公开 run，只有 native finalize 成功后清理，失败则继续保留。公开 run/finalize 串行。此合同只保留映射；调用者仍须保持 backing allocation 有效，不传递 host allocation 所有权。</li>
+<li>验证 head <code>cacc1415</code>：完整构建；Python 2853 passed / 65 skipped；HBG 两架构模拟器各 7 passed，其中新用例经真实 ChipWorker.run 连续提交 6 次。主线旧入口、去快照、失败提前 unmap 三种负对照均命中测试。板测未运行：架构是 A2/A3，但查询时 16 张卡全部有 HBM 占用，空 task-submit 队列不代表设备空闲。</li>
+<li>U1b 不标全部完成；跨消费者/grant、外部 RTS attach、旧公开 POD 的余下迁移仍需单独闭合。U2a 的 HOST/NONE 消费、本地 IO 和 Remote 工作未由本 PR 交付。只提交代码、测试及 API 合同文档，设计资料留本地。</li>
+</ul>
+<h3 id="terms-u2a-生产预检hosth2d-布局2489-已合入">U2a 生产预检：HOST/H2D 布局（#2489 已合入）</h3>
+<p>基线 main <code>22c009811</code>。#2486 的 Python 同步入口已限制非连续 H2D，但
+Worker.submit 和旧 POD 入口仍能绕过该限制。四个 binder 都按 numel × element_size
+分配和搬运，却保留 strides/start_offset；因此先在共同原生预检拒绝非连续
+HOST/H2D 和非零原生 start_offset，覆盖 IN/OUT/INOUT。公开 Tensor.byte_offset
+已折算进导入地址，连续子区域仍合法；DEVICE/NONE 的跨步和偏移继续透传。</p>
+<p>本项是 U2a 的生产消费者安全前置；HOST/NONE 消费、HBG 双侧显式传参迁移、
+TMR/core 的访问判定仍需共同交付，不能把本项标为 U2a 完成。</p>
+<p>本项已提交 <a href="https://github.com/hw-native-sys/simpler/pull/2489">#2489</a>，
+head <code>6c319db0</code>，base <code>22c009811</code>，5 文件 +128/−6。两个 HBG/两个 TMR
+真实 binder 目标共 138 项通过；Python 参数测试 45 项通过；HBG readiness
+两种模拟器各 7 项、TMR vector 各 1 项通过。新拒绝测试在修复前两个 HBG
+目标因读取前项故障地址失败，两个 TMR 目标错误放行并发生分配；回归测试已提交。
+当前 16 个设备 HBM 非零，未做本项板上验证。预提交检查全部通过。
+规划文档及 HTML 仍在仓库外，不在 PR 内。下一项是 HOST/NONE 的真实消费
+与 HBG 双侧参数用例迁移，不能只开放 API 而保留隐式跨侧读取。</p>
+<h3 id="terms-u2a显式-host-消费与消费者迁移2501-待审阅">U2a：显式 HOST 消费与消费者迁移（#2501 待审阅）</h3>
+<p>2026-10-07：#2489 已合入；本次以 main <code>01bf24bfa</code> 为基线，提交
+<a href="https://github.com/hw-native-sys/simpler/pull/2501">#2501</a>，head <code>e89204e5</code>。
+本项实现 HOST/NONE 的真实 HBG 消费，移除隐式 DEVICE 主机访问，未改 Pipeline A 的准入与完成机制。</p>
+<ul>
+<li>HBG 在复制任何参数前登记 HOST/NONE 的范围；get/set 仅按 IN/OUT/INOUT 访问。
+  Python 的直接/子进程 chip 入口在解析地址前检查 Buffer grant 能覆盖 callable 方向。</li>
+<li>H2D 产生独立 DEVICE 参数；需要两侧数据就传两个 Tensor。HOST 写入不反向更新已复制的 DEVICE 值。
+  要在 host 使用上次 device 结果，先显式等待与复制，再传入独立 host 参数。</li>
+<li>TMR、device task、graph 参数及 predicate 拒绝 HOST。HOST/NONE 支持有效跨步视图；
+  HOST/H2D 保留连续布局约束；两份 H2D 副本重叠且存在写入时在分配前拒绝，只读重叠允许。</li>
+<li>PA、BGEMM、DSv4 host 元数据、FIFO/early enqueue、拓扑与 readiness 用例随接口共同迁移。
+  本项不引入 PreparedCall、缓存、映射视图或自动 D2H 标签。</li>
+<li>验证：294 个 C++ 测试目标；Python 2907 passed / 57 skipped；A2/A3 sim 69、A5 sim 67；
+  task-submit A2/A3 板上 19 项通过，grant 检查后复测相关 readiness/FIFO 路径也通过。
+  A5 板上和完整大规模 DSv4 尚未运行；日志隔离问题记录在工作树 KNOWN_ISSUES.md。</li>
+</ul>
+<p>本 PR 待审阅，不能标为已合入。后续为 U2b 的本地显式 COPY 与完成/保留合同，
+U3 Remote producer/receiver 的对称升级可并行。Kernel eager 的外部 context/caller 顺序仍需单独接线与验收。
+代码 PR 只含产品代码、API 文档和测试；本节和 HTML 留在仓库外。</p>
+<h4 id="terms-2501-ci-修正2026-10-07">#2501 CI 修正（2026-10-07）</h4>
+<p>最新 head <code>f632d25a</code>，rebase 基线 <code>a711032ed</code>。初次 CI 的 A2/A3 early_enqueue
+六例段错误来自漏迁共享 FIFO 编排的调用方：编排读取第 4 个 HOST/NONE 参数，
+调用方却仍声明、传入 3 个 tensor。已补齐签名和实参；没有改入队/完成逻辑。
+两个无设备参数构造回归测试在修复前均失败；修复后 Python 全套 2909 passed / 57 skipped，
+task-submit 六个板上用例全部通过（另四个 test_run 占位例按设计 skip）。
+先前模拟器通过不能覆盖这些 onboard-only 用例。新 head 已推送，CI 待重跑结果。</p>
+<p>最新依赖修正见 <a href="kernel-eager-open-work.md">Kernel eager 剩余问题与接线顺序</a>。</p>
+<h2 id="terms-2026-10-08当前接线与剩余问题">2026-10-08：当前接线与剩余问题</h2>
+<p>当前状态统一维护在 <a href="kernel-eager-open-work.md">kernel-eager-open-work.md</a>。#2501 已合入；
+Program IO / TensorLease 整理不作为 kernel eager 的前置。当前本地工作是 TMR/HBG 借用设备下的
+共同 prepare/finalize，之后接 caller-stream launch 与公开入口，再做 capture。</p></article><footer>本文从本地 Markdown 生成。实现状态见第 6 节；规划资料不进入代码 PR。重新生成：python3 render-argument-design.py。</footer></main><script>
+for(const button of document.querySelectorAll('[data-flow]')){button.addEventListener('click',()=>{for(const b of document.querySelectorAll('[data-flow]'))b.setAttribute('aria-pressed',String(b===button));for(const f of document.querySelectorAll('.flow'))f.hidden=f.id!=='flow-'+button.dataset.flow;});}
+</script></body></html>
