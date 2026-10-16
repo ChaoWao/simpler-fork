@@ -1,7 +1,7 @@
 # Pipeline A 设计资料
 
 本分支保存重要设计资料的可阅读快照，来源为 manager 管理的本地设计文件。
-最近同步的主线基线：`8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba`。文档导出日期：2026-10-16。
+最近同步的主线基线：`e994e106d8020c049dc419a67498db37bc6fcd3d`。文档导出日期：2026-10-16。
 HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 
 ## 先读什么
@@ -16,7 +16,7 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 - 步骤一有界验收，步骤二 #2447/#2456，步骤三 #2471/#2511/#2568/#2592，以及可配置资源容量 #2571 已合入。
 - 默认自动资源准入首版 [#2596](https://github.com/hw-native-sys/simpler/pull/2596) 已发布，未Ready：原作者正在补齐分配压力下闲置资源组回收、可退休前驱等待和实际分配边界回归，并适配已合入#2595；CI格式检查失败后测试跳过。不要求调用者配置多个depth，自动模式Qwen组合仍需另验。
 - 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。[具体实施合同](review/p4-auto-resource-admission-decision.md)和[收口评审](review/p4-auto-resource-admission-manager-review-r21.md)已经归档且获用户批准，原作者正在实施。
-- #2588 当前b2a7feb41按run发布扩展记录的修复已通过A5板端HBG/TMR及DFX smokes；A3 TMR本次通过，A3 HBG首run的513条PMU记录全零，结束时72核报告控制使能丢失。原作者继续定位；完整功能未Ready，远端审查仍待收口。A5 HBG ArgsDump按用户要求延期，其他适用诊断保留严格验收。设计矩阵代表范围，不代表当前head全部通过。
+- #2588 当前da7460e15在main e994上保留PMU初始化/结束独立观察，修正泳道扩展发布与预算边界，单提交。A3 PMU全零根因仍未解决，新CI在途；证据推断和超时尾项由原作者继续处理，未Ready。旧b2a7的A5通过不是新head验收；A5 HBG ArgsDump仍延期。
 - [#2592](https://github.com/hw-native-sys/simpler/pull/2592)已合入：可配置容量下六请求636步Qwen DEVICE组合，合入补丁与已审head一致，最终CI18成功、1跳过。限定单A3 HBG、固定形状、关闭诊断；自动准入模式与该workload的组合仍需另验。
 - 历史合同中“是否批准”“待合入”等文字属于当时决策记录，不是当前用户待办；以本索引和路线表辨别阶段。固定形状vLLM eager、动态请求范围、capture/replay及最终性能报告不是当前已交付能力。
 

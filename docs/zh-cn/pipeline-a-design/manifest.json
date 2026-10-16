@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-10-16T07:35:21.416953+00:00",
-  "source_main": "8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba",
+  "exported_at": "2026-10-16T08:02:27.277519+00:00",
+  "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d",
   "documents": [
     {
       "file": "runtime-design-principles.md",
@@ -12,16 +12,16 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "8a7d1a2a875f4a58390bcae27e386f5fe27b48d1742ae2084499fddfa9e91580",
-      "export_sha256": "be3b061e848fb3379350c625435993bbed23817214bc7687339a12005648c77a",
-      "source_main": "8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba"
+      "source_sha256": "132dddb2a475a41b4d2cb26fdfdf663405eee2b4dbfcd48c0d21a614e2331822",
+      "export_sha256": "01053f4c18f689e5a1a96a7388bbcc826730eb947c4779930431fc7ea645d488",
+      "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "9a33c1103e392f2d1d083ae2feb8570da26581062f93c35e8b656b2e3d654e78",
-      "export_sha256": "9e82f95e980c5a54ed92c58e7f45a03b6eb49d5108bba7cea9fec5d16c0b8a00",
-      "source_main": "8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba"
+      "source_sha256": "08f1401b4c47da5e1bb1e391a0a25a7d21b1f82a7a58af7d779be1b915f1c5ff",
+      "export_sha256": "65112fc68b45f5d601122e3b7617fa420006ed15d26812f71949cd9b5dde2b85",
+      "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "memory-current-state.html",
@@ -110,9 +110,9 @@
     {
       "file": "review/dfx-joined-launch-complete-design.md",
       "source_document": ".docs/review/dfx-joined-launch-complete-design.md",
-      "source_sha256": "8918c5c7bac7f31a69eacc107b3062f3a2f72e7696626104a56d3450cfe04789",
-      "export_sha256": "8052811c464503410c8b42d037e6121450ffe2719ddd0c4b55b5b88a96958b66",
-      "source_main": "8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba"
+      "source_sha256": "5c697c5882f630a9d34b0bd24a6be3f94bf7088e085e60a90bcb07766b8f83d1",
+      "export_sha256": "dbf6baac03944dbfe993443e6c9bd0e57af37840b41aa24e50b8fe348abd2c48",
+      "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "review/dfx-a5-task-args-capture-decision.md",
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/dfx-joined-launch-complete-design.md"
   ],
   "last_changed_omitted_local_link_count": 14
 }

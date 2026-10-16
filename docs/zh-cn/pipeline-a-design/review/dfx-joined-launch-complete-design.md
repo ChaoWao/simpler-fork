@@ -1,6 +1,6 @@
 # Joined-launch DFX: implementation design and decision
 
-**Manager evidence checkpoint 2026-10-16 07:19 UTC:** b2a7feb41 has CI, testing merge029d66b against main8c3 (#2595 included). A5 onboard HBG/TMR and DFX smokes pass; A3 TMR passes; A3 HBG epoch1 has513 zero-cycle PMU rows and terminal held0/lost72. Current checks15success/1skip/1failure/2running; not Ready. Earlier “no current CI” text below is the author's delivery-time snapshot. c044 had16successful CheckRuns/1skip/2failure; its separate external status must not be counted as a CheckRun. P4#2596 is published and being repaired.
+Manager checkpoint: current head da7460e15 is under CI and is not Ready. The A3 zero-cycle cause remains unresolved. The author is correcting claims that lost=72 proves 72 identical raw register values, that equal endpoint values prove continuous enable, or that three proposed outcomes exhaust and uniquely identify causes. The hypotheses below must not be read as measured causal conclusions. Previous b2a7 CI ended with 15 successes, 1 skip, 1 failure and 2 timeout cancellations; tail checks remain unqualified.
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
@@ -17,15 +17,16 @@
 
 | Field | Value |
 | ----- | ----- |
-| head | `b2a7feb41cac12ca883a00a98cc0f56ede35fe6b` |
-| base | `1a8a3ee221968ec397588db070089354806c84c5` (main, re-fetched; #2592 landed — three files, none of this PR's) |
-| shape | 1 commit, 141 files vs main, `+21304 / −534`, 0 file deletions |
+| head | `da7460e15` |
+| base | `e994e106d8020c049dc419a67498db37bc6fcd3d` (main, re-fetched; **#2595** forked-child worker and **#2597** argument materialization landed, plus #2592 earlier) |
+| shape | 1 commit, 141 files vs main, `+21417 / −537`, 0 file deletions |
 | author | `Chao Wang` |
-| open PRs | 32, re-enumerated this session; external #2595 and the rest unchanged and theirs |
+| open PRs | 33, re-enumerated this session. **#2596 is P4's own admission PR** — it is fixing the confirmed admission gaps and is P4's alone; it shares one file with this PR (`onboard/host/device_runner_base.h`) and touches nothing this PR touches in it. #2597 merged; external #2583 / #2453 / #2436 / #1967 / #1987 remain theirs. |
 
-Previous head `c04408217` on base `3351950f4`. **No CI run exists for
-`b2a7feb41`** — the only completed run is `c044`'s, and it was red (§0.3/§0.4).
-Nothing below may be read as current-head qualification.
+Previous heads: `b2a7feb41` on base `1a8a3ee22`, and `c04408217` on base
+`3351950f4`. **No CI run exists for the current head.** Nothing below may be
+read as current-head qualification; §0.3 and §0.4 are what CI has actually
+said so far.
 
 ### 0.1 Superseded claims, named
 
@@ -83,7 +84,79 @@ bounded design that would close the gap. It is deferred to its own change at the
 nothing in this PR or in P4's work waits on it, and its four-row contract delta is what such a change
 *would* take rather than a decision owed to anyone.
 
-### 0.4 What the previous head's CI found, and what this head does about it
+### 0.4 What CI has found so far, head by head
+
+**`b2a7feb41` — workflow for that head completed. A5 passes; A3 does not.**
+Job `116853656768` (A5 onboard) verifies the strict HBG scene (7.0 s) and the
+strict TMR scene (7.1 s) on device 2, plus the DFX smokes: **the host-extension
+run-ownership repair below is confirmed on hardware.** Job `116853656790` (A3
+onboard) still fails the HBG agreeing pair on device 6, and its TMR strict scene
+passes on device 4 (7.6 s). The tested merge is `029d66bad72d038e80388da2b92d67711f595b94`
+= `b2a7feb41` + main `8c3b0e174` (so #2595 was included; the A3 failure is not a
+missing-#2595 artefact). A5 HBG ArgsDump stays unsupported and deferred.
+
+The A3 failure moved and the new discriminator is why:
+
+| Field | run 1 (epoch 1, scene index 0) | run 2 (epoch 2, scene index 1) |
+| ----- | ------------------------------ | ------------------------------ |
+| rows | 513, correct identities, cores 24/26/28 = 181/162/170 | not reached — index 0 failed first |
+| cycles | **all zero** | — |
+| close read-back | **held=0, lost=72** | **held=72, lost=0** |
+| first producer | physical 0, `PMU_CTRL_0` **0x2** | physical 24, `0x7` |
+
+Device boundaries from the same log put the two ops strictly serial —
+`aic_start` 1914103843035 for run 2 against `wo_end` 1914103843033 for run 1,
+and disjoint `device_wall` windows — so **no concurrency between the two runs'
+AICPU ops**, and the shared AICPU-SO globals are not being written by two live
+runs. The per-producer physical ids (59/61/63 for run 1's logical 24/26/28,
+57/59/61 for run 2's) are all inside the AIV range of the flat register table
+and are two different, internally consistent core allocations; they are not
+evidence of a corrupted mapping. Physical 0 as the *first reporting* producer is
+the real mapping of logical core 0 — the `c044` log reports the same id for the
+same position, with `0x7` at init.
+
+**What that establishes.** A run programmed `PMU_CTRL_0` to `0x7`; its own close
+reads `0x2` on every one of its 72 reporting cores; its successor's close reads
+`0x7`. `platform_config.h` names the three fields in that word —
+`GLB_PMU_EN | USER_PMU_MODE_EN << 1 | SAMPLE_PMU_MODE_EN << 2` — so `0x2` is
+`USER_PMU_MODE_EN` alone, with `GLB_PMU_EN` **and** `SAMPLE_PMU_MODE_EN` clear.
+The only writer of a non-`0x7` value in this repo is `pmu_stop`, and it writes
+the word the run's own init saved.
+
+**What it does not establish, and the two candidates it leaves.**
+`pmu_collector_aicore.h` names the AICore `CTRL` SPR bit 0 as `GLB_PMU_EN` too —
+the *same named field* the AICPU reads as `PMU_CTRL_0` bit 0 — and
+`pmu_aicore_end()` clears it with an unsynchronized read-modify-write after
+**every task**. That would explain a cleared bit 0 and a clobbered bit 2, and it
+is a real two-writers-one-field shape. But the per-task gate runs only on cores
+that executed tasks (3 of 72 here), and **all 72** lost the word, so it cannot
+be the whole mechanism. The alternative is that `pmu_stop` had already run for
+those cores when the observing read was taken, which requires a second
+`pmu_aicpu_finalize` for the same core — and the only caller,
+`SchedulerContext::shutdown`, runs once per AICPU thread over a disjoint core
+slice, with no emergency path touching PMU and no emergency shutdown in this
+log. **Neither candidate is adopted.** No register write was added, removed or
+reordered, and no mapping was guessed.
+
+**The precise remaining evidence gap, and why the next run closes it.** The
+first revision of this discriminator wrote its close observation *over* the init
+one and folded the init code into the close verdict, so `lost=72` could not be
+told from "init never enabled on 72 cores" and the init distribution was gone
+(`at init only enabled=0 not-enabled=0 no-window=0` in the log above). That is a
+defect in the evidence channel, and it is fixed at this head: the close
+observation has its own field, its code is decided by the close word alone, and
+the host prints both distributions and both words. The next A3 run therefore
+reads out one of three mutually exclusive answers —
+
+| at init | at close | what it means |
+| ------- | -------- | ------------- |
+| `enabled=72` | `lost=72` | the word was armed and was cleared during the run on cores that executed nothing, so neither the per-task gate nor our own restore can be the writer |
+| `enabled=72` | `lost=3 held=69` | the AICore's per-task `GLB_PMU_EN` clear is aliasing the AICPU's window — a real defect with a known fix site |
+| `not-enabled=72` | either | the enable never took for that run, and the question moves to the write, not the window |
+
+— which is a measurement, not another hypothesis.
+
+### 0.5 What the `c044` head's CI found (history)
 
 Three concrete failures, all in the joined-launch acceptance suites, from the
 two saved onboard logs (final checkout `be10986` = `c044` + `335` in both):
@@ -149,16 +222,17 @@ refused.
 
 ### 0.3 Evidence boundaries
 
-- **The last completed CI run is the previous head's and it was red.** Workflow `38855904192` on
-  `c04408217`: 17 success, 1 skipped, 2 failed (20 CheckRuns, external status included). §0.4 is
-  what those failures were. **No CI run exists for `b2a7feb41`**; no retry was submitted, and the
-  matrix in §0.2 describes the intended supported scope, never passed current-head qualification.
-  The feature is **not Ready**.
+- **CI exists, and it is mixed.** At `b2a7feb41`: **A5 onboard passes** the strict HBG and TMR
+  scenes and the DFX smokes, **A3 onboard still fails** the HBG agreeing pair (§0.4). At the earlier
+  `c04408217`: workflow `38855904192` finished **16 success, 1 skipped, 2 failure** on the repository's
+  own checks, with the external status counted separately (§0.5). **No CI run exists for the current
+  head `da7460e15`**; no retry was submitted. The matrix in §0.2 describes the intended supported
+  scope, never passed current-head qualification, and the feature is **not Ready**.
 - The A3 strict HBG/TMR scene passes were observed on the **earlier** head `1c811a039`, on different
   devices. They are neither a result for any later head nor a unique root-cause proof for the a2a3
   zero-cycle PMU question, which **remains unresolved** (§0.4).
 - **No test of any kind was executed locally for this head** — no scene test, no unit test, no
-  cpput, no simulation, no device run. An earlier revision of this branch ran the cpput suite
+  cpput, no simulation, no device run, and no pyut or pytest. An earlier revision of this branch ran the cpput suite
   locally (359/359; the author's own result, never a manager run). That **violated the standing
   no-local-tests constraint**; CANN-free, host-only, short, or new cases do not authorize overriding
   it, and a skill guideline does not outrank it. It is recorded, not repeated, and is not
