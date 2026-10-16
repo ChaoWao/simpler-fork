@@ -32,3 +32,5 @@ Two new host-only cases invoke real native initialization/finalization through a
 Unify the direct L2 and child argument-materialization boundary while preserving target-specific authorization and ImportRegistry lifetime. K2c public borrowed init/submit and complete dual-runtime eager acceptance follow. No capture/replay capability is claimed here.
 
 Final committed head `2358c5a3` rebuilt successfully; **306 focused cases passed**. Product PR: [#2595](https://github.com/hw-native-sys/simpler/pull/2595). CI pre-commit and docs build have passed; Python/C++ UT, simulator and hardware jobs are pending or running. No all-green cross-platform result is claimed.
+
+Merged as main `8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba` (#2595). The common materialization follow-up has separate [#2597 evidence](../shared-chip-arguments/REPORT.md). Historical validation remains attached to `2358c5a3`.
