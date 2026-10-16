@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T14:47:10.785776+00:00",
+  "exported_at": "2026-10-16T15:20:45.780516+00:00",
   "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "bae88a33966cf3e8bd022808eed105e6c76bb3551a6b584bc210cd9bf4553741",
-      "export_sha256": "35144aca0280830142662e2932be34a38c4ed9f725a4b6e571c63bbfcd9b66e2",
+      "source_sha256": "cea41d13a0a3b98675ebe9340964c1e0e8cdc6007b7ef0247c1be9221872ea39",
+      "export_sha256": "f20536c230bb8892cec6f43a7f333711e40e01b1cff68c8e82150e9520c9133d",
       "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "4c610754198ef85462d2bb9a6b6f598281202f44fd97bb5e53d47bedaaf38aef",
-      "export_sha256": "bb59f1a7b0465e996cc6df94414d72bb66d31f7f87d24e96cb6ff5d7b99d149f",
+      "source_sha256": "b1e037ec06f4b164be633659560140ffbcc1beef82bab004615d120e138991df",
+      "export_sha256": "c32d7b23b17bca2a8ff414b5f62b655f03d51ed4fcfb2ac1418c29925020db00",
       "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
     },
     {
@@ -89,9 +89,9 @@
     {
       "file": "review/p4-auto-resource-admission-decision.md",
       "source_document": ".docs/review/p4-auto-resource-admission-decision.md",
-      "source_sha256": "91d0cf3ddb9fe872b89ea8198ea9c983abe5ae5b2d358321d21a6b3415375f96",
-      "export_sha256": "7e75a80fdfb43dc9a8d22601756e468492ba3b3806bc2e6b721d5dffe7cca8f6",
-      "source_main": "4aedb1f4318f024f9d50392bb312673523841632"
+      "source_sha256": "67fc2681eb5cae2527ec2764f9aa6bbef7506e7876dbffa766454391ea9140b8",
+      "export_sha256": "6e23b4f94842113c672a3ef47ed66a4ac0491c4cd9a1cdf9a092c031e29b6acf",
+      "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
     },
     {
       "file": "review/p4-auto-resource-admission-manager-review-r21.md",
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/p4-auto-resource-admission-decision.md"
   ],
-  "last_changed_omitted_local_link_count": 15
+  "last_changed_omitted_local_link_count": 17
 }

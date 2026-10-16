@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-状态：用户已批准完整合同，一个PR、单提交。普通异步#2596远端仍为b571e7323/base289b30164，单提交，未Ready。原CI为16成功、1跳过、Ubuntu两项启动夹具失败、macOS联动取消。Codex已交付19文件本地验收补丁，包含四后端默认自动模式、真实native资源压力和关闭路径，独立复审已完成；已查实布尔属性误调用、CPU测试缺链接符号，以及关闭后读取已释放共享缓冲的问题，已交同一Codex作者修复，并同步纠正公开submit说明。新增验收尚未执行、补丁未发布；Qwen自动模式组合另验。 详见[验收补丁报告](../README.md#archive-boundary)及[经理初审](../README.md#archive-boundary)。
+状态：用户已批准完整合同，一个PR、单提交。实施由#2596交付；当前head、评审及CI状态统一见[进度看板](../run-pipeline-track-a.html)和[经理工作区](../README.md#archive-boundary)。本合同规定功能与验收边界，不保存逐轮CI快照。
 
 ## 用户怎么使用
 
@@ -40,7 +40,7 @@
 
 仅本地顶层 L3、onboard program 四后端的默认未配置路径。显式深度/预算配置、L2、嵌套 L3、remote/MPI、kernel/borrowed context、sim 保持现行行为。capture/replay 和通信不开放。本地多 endpoint 按整 run 完成反馈合并，不用单设备先完成冒充整体退休。
 
-外部 #2592 的 Qwen driver 沿其原作者推进；本 PR 提供资源机制并完成真实 Worker.submit 验收。Qwen 在新机制上的组合验收另记，不把现有可配置深度证据当成自动准入已验证。
+Qwen driver 已通过 #2592 合入；本 PR 提供资源机制并完成真实 Worker.submit 验收。Qwen 在新机制上的组合验收另记，不把现有可配置深度证据当成自动准入已验证。
 
 ## 一个 PR 的验收
 
