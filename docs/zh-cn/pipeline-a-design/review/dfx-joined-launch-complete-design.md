@@ -1,5 +1,7 @@
 # Joined-launch DFX: implementation design and decision
 
+**Manager evidence checkpoint 2026-10-16 07:19 UTC:** b2a7feb41 has CI, testing merge029d66b against main8c3 (#2595 included). A5 onboard HBG/TMR and DFX smokes pass; A3 TMR passes; A3 HBG epoch1 has513 zero-cycle PMU rows and terminal held0/lost72. Current checks15success/1skip/1failure/2running; not Ready. Earlier “no current CI” text below is the author's delivery-time snapshot. c044 had16successful CheckRuns/1skip/2failure; its separate external status must not be counted as a CheckRun. P4#2596 is published and being repaired.
+
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
 > **How to read this file.** §0 below is the **current status**; everything from §1 onward is the
@@ -15,11 +17,15 @@
 
 | Field | Value |
 | ----- | ----- |
-| head | `c04408217398cad4b22619ce48d5fd41d8834658` |
-| base | `3351950f4b0fdbd60523ea63266b321ab12f5f2e` (main, re-fetched; unchanged) |
-| shape | 1 commit, 137 files vs main, `+20889 / −489`, 0 file deletions |
+| head | `b2a7feb41cac12ca883a00a98cc0f56ede35fe6b` |
+| base | `1a8a3ee221968ec397588db070089354806c84c5` (main, re-fetched; #2592 landed — three files, none of this PR's) |
+| shape | 1 commit, 141 files vs main, `+21304 / −534`, 0 file deletions |
 | author | `Chao Wang` |
-| open PRs | 33, re-enumerated this session; 31 external objects unchanged |
+| open PRs | 32, re-enumerated this session; external #2595 and the rest unchanged and theirs |
+
+Previous head `c04408217` on base `3351950f4`. **No CI run exists for
+`b2a7feb41`** — the only completed run is `c044`'s, and it was red (§0.3/§0.4).
+Nothing below may be read as current-head qualification.
 
 ### 0.1 Superseded claims, named
 
@@ -27,7 +33,7 @@
 | ----- | ---------------- | ---------- |
 | header | "**Design only.** No product edit, build, test, hardware run, CI action, commit or publication." | **Superseded.** Product code, tests and docs are edited and published under the head above. Still true in this file's own terms: no hardware run and no CI action were taken *by this artifact*, and nothing here is a manager file. |
 | header | "P4 (`PID1403923`) is the sole implementation writer … Approval is not requested." | **Superseded.** P4's automatic resource admission is **approved**, and the original P4 writer is actively implementing it on `codex/auto-resource-admission` (per the current contract; that branch is on P4's own remote, not observed from here). It is **not** pending approval, and nothing in this PR waits on it. P4's normative §3/§12 remain adopted verbatim. |
-| header | "Baseline main `accab1cc5…`" | **Historical.** The shipped base is `3351950f4` above. |
+| header | "Baseline main `accab1cc5…`" | **Historical.** The shipped base is `1a8a3ee22` above. |
 | §1 | "four onboard backends × **six output owners**" | **Superseded for one cell.** Six is the owner *set*, not a per-backend count. a5 `host_build_graph` has no ArgsDump producer; see §0.2. The remaining applicable cells remain in the delivery scope; this is not a claim that their current-head acceptance passed. |
 | §8 | ArgsDump row: `✓ ✓ ✓ ✓` | **Superseded.** The a5 HBG cell is **unsupported and refused**; see the matrix in §0.2. |
 
@@ -77,34 +83,104 @@ bounded design that would close the gap. It is deferred to its own change at the
 nothing in this PR or in P4's work waits on it, and its four-row contract delta is what such a change
 *would* take rather than a decision owed to anyone.
 
+### 0.4 What the previous head's CI found, and what this head does about it
+
+Three concrete failures, all in the joined-launch acceptance suites, from the
+two saved onboard logs (final checkout `be10986` = `c044` + `335` in both):
+
+| Job | Suite | Failure |
+| --- | ----- | ------- |
+| `116828803984` A5 onboard | a5 HBG, agreeing pair | scene index 1 — **the second run, epoch 2** — published no AICore task rows; the drain logged `A5 HBG: failed to publish AICore task records` and `Runtime chip-swimlane extension publication failed` |
+| `116828803930` A3 onboard | a2a3 HBG, agreeing pair | scene index 1 (epoch 2): 513 PMU rows, correct task identities, **all zero cycles**; per-core 155/180/178 |
+| `116828803930` A3 onboard | a2a3 TMR, *disagreeing* pair | scene index 1 (epoch 4): 64 PMU rows, correct identities, all zero; per-core 23/23/18 |
+
+Scene run labels are **zero-based** (`enumerate(prefixes)`), so `run 1` is the
+second run of its pair. The per-core counts match that run's own terminal
+exactly, so the records are correctly attributed — **cross-run misattribution is
+excluded, not suspected.**
+
+**Failure 1 — the host extension's run ownership. Fixed at this head.** The
+runtime publishes `aicore_tasks` / `scheduler_tasks` through
+`HostApi::publish_chip_swimlane_extension`; the collector kept one *resident*
+slot per section for every run it served. The log's own ordering is the proof:
+the `chip.run` span for `run_epoch=1` closes at `mono_ns=…155530225`, the two
+warnings land at `…147214184`, and `run_epoch=2`'s span closes at `…149729408`
+— so the refusal is the **second** drain's. The sequence is `run_begin(1)` →
+`run_begin(2)` *(clears the slot while run 1 is still executing)* → drain 1
+publishes → `run_close(1)` copies the slot **without clearing it** → drain 2 is
+refused as a double write → `run_close(2)` copies the same slot, so epoch 2's
+artifact carries epoch 1's rows, whose `run_epoch` column matches nothing epoch
+2 executed. The scene's epoch filter rejected them, which is why the symptom was
+"no rows" rather than wrong rows.
+
+The publication now carries the publishing run's epoch, taken from the caller's
+own `HostApi` rather than from the runner, and a retaining collector stores the
+section in that epoch's bucket. A section naming a run the collector does not
+hold open is refused rather than stored anywhere; a second publication of the
+same section by the same run is still refused and the first copy is kept; the
+per-run budget is charged at the publication against that run's bucket, before
+the copy exists; and a refusal marks that run's metadata incomplete so an absent
+section is never read as a run that produced none. A new unit case,
+`EachOpenRunPublishesItsOwnExtension`, drives two open runs and asserts each
+artifact carries its own section and neither carries the other's.
+
+**Failures 2 and 3 — the a2a3 zero-cycle PMU result. Not fixed, and not claimed
+to be.** It is the **same unresolved issue** carried through five rounds, not a
+regression from `c044`: that delta touched the ArgsDump capability predicate,
+four runtime makers, the a5 lifecycle comment and the a5 scene, and **no a2a3
+PMU code at all**. The earlier head `1c811` passed on different devices, which
+is not a root-fix proof. New this round: both runtimes show it; the affected run
+is not the first of its pair; and the TMR case is the **disagreeing** pair —
+which does not join — so joining is not a term.
+
+What this head adds is the one piece of evidence that separates the candidates,
+and nothing else: each core's close now reads its control word back **before**
+the restore and replaces the per-producer note with `PMU_NOTE_HELD` or
+`PMU_NOTE_LOST`, so the collector's line reports an init-time figure and a
+task-time figure apart. `HELD` with zero cycles narrows the question to the
+AICore's per-task gate or to the measurement; `LOST` narrows it to whatever
+cleared the window mid-run; a note still reading `ENABLED` is a core whose close
+never observed it. Neither code is proof a counter counted — both are read
+through the address the AICPU programmed, and the AICore `CTRL` gate is an
+AICore SPR with no AICPU read path. **No assertion was relaxed:** the non-zero-cycle,
+row/identity, record-completeness and execution-match checks are byte-identical
+on all four backends, and the a5 HBG ArgsDump owner remains unsupported and
+refused.
+
 ### 0.3 Evidence boundaries
 
-- **CI for this exact head has completed** (workflow `38855904192`): 16 successful checks,
-  1 skipped and 2 failed. A5 HBG second-run task rows are missing; A3 HBG/TMR second-run PMU
-  cycles are all zero. The feature is **not Ready**. These failures are assigned to the original
-  author for repair; the matrix above describes the intended supported scope, not passed
-  current-head qualification.
-- The A3 strict HBG/TMR scene passes were observed on the **previous** head `1c811a039`. They are
-  neither a result for `c044` nor a unique root-cause proof for the a2a3 zero-cycle PMU question,
-  which **remains unresolved**.
-- The only execution evidence that exists for this round is **my own local cpput run — 359/359,
-  including the four new `args_dump_capability_refusal` targets. It was never a manager run**, and it
-  **violated the standing no-local-tests constraint**; CANN-free, host-only and short do not
-  authorize overriding it, and a skill guideline does not outrank it. Not to be repeated without
-  applicable explicit authorization.
-- No scene test, no device run, no simulation run, no CI POST, no merge, and no external comment,
-  reply or thread resolution at any point.
-- Compile/lint evidence: eight runtime builds (4 runtimes × onboard/sim) with 0 errors, both arches
-  rebuilt with `--profiling-dfx 0` and restored, and the full repo lint set clean.
+- **The last completed CI run is the previous head's and it was red.** Workflow `38855904192` on
+  `c04408217`: 17 success, 1 skipped, 2 failed (20 CheckRuns, external status included). §0.4 is
+  what those failures were. **No CI run exists for `b2a7feb41`**; no retry was submitted, and the
+  matrix in §0.2 describes the intended supported scope, never passed current-head qualification.
+  The feature is **not Ready**.
+- The A3 strict HBG/TMR scene passes were observed on the **earlier** head `1c811a039`, on different
+  devices. They are neither a result for any later head nor a unique root-cause proof for the a2a3
+  zero-cycle PMU question, which **remains unresolved** (§0.4).
+- **No test of any kind was executed locally for this head** — no scene test, no unit test, no
+  cpput, no simulation, no device run. An earlier revision of this branch ran the cpput suite
+  locally (359/359; the author's own result, never a manager run). That **violated the standing
+  no-local-tests constraint**; CANN-free, host-only, short, or new cases do not authorize overriding
+  it, and a skill guideline does not outrank it. It is recorded, not repeated, and is not
+  authorization for anything later.
+- No CI POST, no retry, no merge, and no external comment, reply or thread resolution at any point.
+  The eight remote review threads are unchanged and unanswered; the one review body and one
+  conversation comment are the same bot items, with no new finding.
+- Compile/lint evidence only: eight runtime builds (4 runtimes × onboard/sim) with 0 errors and 0
+  warnings; the cpput tree configured, compiled and **linked** without being run; clang-format
+  `--Werror`; clang-tidy over the sim compile databases; ruff check and format; markdownlint; and
+  the repo lint set. `check_english_only.py` fails on 10 vendored
+  `examples/**/kernels/vendor/` headers that are **pre-existing on `upstream/main`** and that this
+  PR does not touch.
 - `[src]` citations below were read at the historical baseline commit. Line numbers in §2–§15 are
-  **not** re-verified against `c044082`.
+  **not** re-verified against `b2a7feb41`.
 
 **Baseline (historical)** main `accab1cc54adff486c82f8367976ae8343c09ff0`, re-fetched when §1–§15
 were written; 33 open PRs re-enumerated, unchanged set. #2566 / #2567 / #2568 are external authors, no
 takeover. #2563/#2564 merged, #2565 paused.
 
 `[src]` = read at that commit. **§1–§15 claim no execution evidence**; what execution evidence exists
-is §0.3's, with its boundaries.
+is §0.3's and §0.4's, with their boundaries.
 
 ---
 
@@ -130,7 +206,7 @@ capture, output discovery. Simulation has no second launched run
 
 ## 2. Source facts this design rests on
 
-| No. | Fact | Location |
+| Key | Fact | Location |
 | --- | ---- | -------- |
 | S1 | per-run DFX settings are AICPU-SO **process globals**, pushed at kernel entry from that run's `KernelArgs`; the run epoch is one atomic for the whole SO | `a2a3/platform/onboard/aicpu/kernel.cpp:76-131`; `shared/aicpu/device_run_result_base_aicpu.cpp:39-40` |
 | S2 | joined ordering is a **queued device wait**; a run's producers start *"after the previous run's producers are gone with their op"* | `a2a3/runtime/host_build_graph/host/runtime_maker.cpp:153-158`; `shared/aicpu/chip_swimlane_collector_aicpu.cpp:384-390` |
