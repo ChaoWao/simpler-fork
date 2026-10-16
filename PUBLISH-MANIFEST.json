@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-15",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "a8c682a3217593d8ad7562c0a6ef1a03d61d6670",
-  "pending_pr": 2593,
+  "latest_roadmap_source_baseline": "3351950f4b0fdbd60523ea63266b321ab12f5f2e",
+  "pending_pr": 2595,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "dce4d71289cd5a8df1ab592b4c8843ccf029a3a27a1b2ea3d1a90aefc395c30c",
-      "published_sha256": "88a9b72a4d9331f4c7aa8e6de8ad2be770b08b7689e395709e053fed75863739",
-      "bytes": 49560
+      "source_sha256": "5e8f96372ac441dfe2a8efe63016905343f92790d1636b8f30aa722d98187c88",
+      "published_sha256": "f1e5ff6fca4d36bee16293a74eeca9fadcabe78906d13ec429900c34d294e0ab",
+      "bytes": 49643
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -64,9 +64,9 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "8ac3f21e62fd4f4107a9e87e32b0a889687313d4c3aad5a92b41f99ba54a2633",
-      "published_sha256": "123cd2f6e941fc9cc5a7efd2a6cff9eda0689147328c97bf3b1e2db5e4b6c811",
-      "bytes": 65195
+      "source_sha256": "3c77c7b8f6177273d9cce4a06971da31b3b8eb70a3dc4485fd716ec2351b4190",
+      "published_sha256": "7544d66ea6de81a41963f14c3b2e63595be6579bc9983055350bcd26de028934",
+      "bytes": 65219
     },
     {
       "path": "endpoint-access-contract.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "ed0377ec4ce282d0ed746d240a0fe94ee14e07214fd485015e4c52b1c7ed0522",
-      "published_sha256": "f77e2a70dd6e2628503f66a9acd4c0458914a521e2f1c50e86b483297fc92f54",
-      "bytes": 23509
+      "source_sha256": "f4f7dcf00edab3c76b50ee4a18f84a4b92f373f50ecf0e5ab52cbeb5c529eae0",
+      "published_sha256": "ae7244a0288bdb38e5711175ab5ae54ee84393d9dc8b810781da7f59abd6de3f",
+      "bytes": 23649
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "788616f2bbb60bd7d35c108ae0d5bbdf0a94d723b72aeb966038d55572a3a664",
-      "published_sha256": "120e3560e16a2cea9e0bda0c5dd8e12a2b4d9309e8b221694721683286f8cf94",
-      "bytes": 64870
+      "source_sha256": "c4a5f8e0f43ff849e4ae387aed081a7cb7a1c571815537d6095d251d3162b72f",
+      "published_sha256": "b8f878be6318ca18b93c76cfa8a431763386f75a72b19fa9d2ba81ef5d0764d0",
+      "bytes": 64983
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "0c03441cde8946c18a1c199d0f0eb0c596151ad6a76fab29cdd693ce38732c2c",
-      "published_sha256": "857d4afea48967a76ba7f4d34f2bd3b2a25428e713edcfcdc26a8580a59e5a39",
-      "bytes": 42297
+      "source_sha256": "aa97eb694927c1e4b8fde49bc3db1e2078f15e1b3c05a5084d91585c0254405a",
+      "published_sha256": "fd1a2655c4c76ac08c852965b4f284b6b8c854bf7e983a57d71e4df09c7f014b",
+      "bytes": 43396
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "066cd95e2527c12006abc7ac00eb27b592f3693fcc2eb8b99f23365083e4b5f4",
-      "published_sha256": "3cb2b31789a49306db186d4533ef8287f562e9830f75c8f17feb800217b56f70",
-      "bytes": 16550
+      "source_sha256": "f555bfa434fd245fe102e8ab640ec089993f3ca149f7a1a2f4530225845a55ff",
+      "published_sha256": "677ef19cf05bf5590e5b252cf0fc684c4dbb029dac8064e1cd42e937ad61e9c3",
+      "bytes": 17098
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -302,9 +302,16 @@
     {
       "path": "reviews/chip-child-communicator/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "9266256a5ef22b59f090ce58ad2e93f3c77c26949a6336852fe916e21c7e2456",
-      "published_sha256": "f2c385949d5592659070b14153ea9a7b8f1bff7d8b6b94246323f46ac2270bdc",
-      "bytes": 5652
+      "source_sha256": "39fb573df392c8ccbddf076f25d1a4f8cbace523fe46ba6b81dd7e7a584199b5",
+      "published_sha256": "7353ce25139ee9d943fe565b92aa29c98bfc895329b974aab5da7238c9830ca9",
+      "bytes": 5825
+    },
+    {
+      "path": "reviews/chip-child-native/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "e4a5761e98830c1c6cd19db6d34eb809454820651bb29cc3629ea9b5e15518b0",
+      "published_sha256": "e0971d75182256dd4508abd77806202ba2eb566a78a47fc27b7455fa0116f031",
+      "bytes": 4159
     },
     {
       "path": "reviews/cleanup-wait-poison/REPORT.md",

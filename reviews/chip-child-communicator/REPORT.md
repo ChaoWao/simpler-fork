@@ -45,3 +45,5 @@ The init payload write uses an explicit end offset. The five control scenarios n
 Local validation is Linux-only. Actual macOS coverage must come from the new CI revision; the initial hardware/simulator evidence above belongs to `149c8997`, not this revision. Raw revision logs remain local.
 
 Final committed revision rebuilt successfully; full Linux Python UT: **3283 passed, 91 skipped**, one existing PyTorch read-only-buffer warning, 142.99 seconds. All four PR files pass hooks after rebase. New CI run 38738767777 has passed pre-commit; macOS UT was queued at the last query. This is not an all-green CI claim.
+
+Merged as main `3351950f4b0fdbd60523ea63266b321ab12f5f2e` (#2593). Follow-up child native access is tracked separately in [#2595 evidence](../chip-child-native/REPORT.md).
