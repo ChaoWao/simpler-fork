@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-状态：用户已批准完整合同，原 P4 作者已启动实施。一个 PR 交付完整功能、单提交；实施从最新 main 3351950f4 开始。设计基线 cc6c4d51f；本稿结合原作者 r21 和 [经理收口勘误](p4-auto-resource-admission-manager-review-r21.md)。当前实施PR #2596已发布292b5511（单提交，基线e994）；闲置回收与跨资源组等待增量已核，Ubuntu UT和实际runner分配压力覆盖仍待修复/验收，未Ready。
+状态：用户已批准完整合同，Codex在原P4工作区继续实施。一个PR交付完整功能、单提交。设计基线cc6c4d51f；结合原作者r21和[经理收口勘误](p4-auto-resource-admission-manager-review-r21.md)。当前PR #2596为b571e7323/base289b30164；预检查通过，运行时CI在途。已发现原场景入口显式注入launch_depth、未验默认自动模式，正在同PR补齐真实入口与四后端/native边界验收，未Ready。详见[验收审查](../README.md#archive-boundary)。
 
 ## 用户怎么使用
 
