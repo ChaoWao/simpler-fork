@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "7d0a66ee99c0f76da787cbb5a926d44f94914f388dcdcdaee141876126294775",
-      "published_sha256": "54f9e5a2902f7769351ebac49cb8f7a49fe858d405fb273e8421c534fdba6062",
-      "bytes": 50557
+      "source_sha256": "1d23ecb4b59158e8f525b68a20d6fec4fa9ba1ea64f0742970e1b4281c8e8b5c",
+      "published_sha256": "711a5fe84dc4973aeb0e19e26b6f18e79c5009cd66a4231f759394313e4b449b",
+      "bytes": 50696
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -64,9 +64,9 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "6318ee9758fb93aa66be32b77b208730ab73b0f853a9858e101dbfce985f43f2",
-      "published_sha256": "40d86c51bdd3d229cf4f951b6164eea433acef615957cfe079202f344810b784",
-      "bytes": 66702
+      "source_sha256": "e17671c27ec23684ae7157afc6059e24aeb3a16d55e66bf79a920927ddb9f5f8",
+      "published_sha256": "336bc5edf52ca1111ed5438fbf8020b5f302c02dbdba97042d343edd1ace54f7",
+      "bytes": 66804
     },
     {
       "path": "endpoint-access-contract.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "de724ca18aa83f98ec5a0c0ab954907b05512ebdb2a9f2a7e22f134e9c03886e",
-      "published_sha256": "7057e26e304a26f85597eec87da8eb0e858325c89b9b9b584643e42fb9f4e00e",
-      "bytes": 23983
+      "source_sha256": "7fcfc097bc65f491433d570672b8d57e80f60714340f44023195bb65948fc2ee",
+      "published_sha256": "21aa8bd9ab9e71f7aee8857d06c2c2cb90d44b6c9e395b765e93d5c7f6a7c7f5",
+      "bytes": 24134
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "50a54c5c2fdab7d1ec7225e0227529088df74993c7b2a2076a069f7a367da9ed",
-      "published_sha256": "7b9100721a08875a82392c0611ca663824773d665ad53bc42459f55a41b210ee",
-      "bytes": 65983
+      "source_sha256": "15b890a0b80098e9e6ca6d440f53cb158bbc3a1927a2c059e55ad5959af4e4ed",
+      "published_sha256": "25d9fdd88bdde2ee003397744ea6d84b085930a255d6852f922f252c3e86e4bb",
+      "bytes": 66133
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "08f1401b4c47da5e1bb1e391a0a25a7d21b1f82a7a58af7d779be1b915f1c5ff",
-      "published_sha256": "775149f50d588cf942180bb2c76fa47cc200d79c1d3cc9aad5d73f2af67d3770",
-      "bytes": 44342
+      "source_sha256": "f46ddc9863739729192d3d142fc9d6fcbd44af018a0089b2601c38082560ec20",
+      "published_sha256": "49e4aa95c83220c34865637a2752e13698500dff4bbb52dedea68ac359d11990",
+      "bytes": 45524
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "132dddb2a475a41b4d2cb26fdfdf663405eee2b4dbfcd48c0d21a614e2331822",
-      "published_sha256": "316663aa19ea31c4ce793ab39a31b360cd96f6eabeb6617a225dfea6bd5e306d",
-      "bytes": 17652
+      "source_sha256": "99ed5b7083e193cbdfaa07b01cd189e358f290770e0a9495f6fcb76508006ceb",
+      "published_sha256": "9e5925cf9375c24b31485ab6e511f57ab36c53ac21d9760208fecb86ef1e799f",
+      "bytes": 18627
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -470,9 +470,9 @@
     {
       "path": "reviews/public-borrowed-worker/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "39912c59edbf0688a22ea9df00afd0bdbac3997d3628d07043340ab233a041c2",
-      "published_sha256": "c14ac1fc51696e0894dc2a352494c5e09513fc7694e0c0feef08a3f15ab27d73",
-      "bytes": 4414
+      "source_sha256": "625c74258f9077f1c585fe1712bf7d232b817ddbb3a1675a7e665de950124789",
+      "published_sha256": "c7cc271a2990fd124dc1a99175f17b7e1276ab427e719678b4e90fec0ed05317",
+      "bytes": 9511
     },
     {
       "path": "reviews/publication-contract-main-2d366151.md",

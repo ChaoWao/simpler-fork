@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `e994e106d`：#2597 已合入，K2a/b 共同接口已交付；当前 PR #2599 接公开 borrowed eager。** 同一 Worker init/submit/run 复用原 native owner/lane、参数 materialization 和退休。A3 的公开实际调用通过 8 组合；完整 K2c 验收保留后续矩阵，详见[证据](reviews/public-borrowed-worker/REPORT.md)。
+**2026-10-16 / main `e994e106d`：#2597 已合入，K2a/b 共同接口已交付；当前 PR #2599 接公开 borrowed eager。** 同一 Worker init/submit/run 复用原 native owner/lane、参数 materialization 和退休。A3 本地 8 组合通过，修订 head `12304f0a` CI 19 通过/1 跳过，A3/A5 各 8 个公共组合通过；完整 K2c 验收保留后续矩阵，详见[证据](reviews/public-borrowed-worker/REPORT.md)。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -47,7 +47,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 
 3. **#2584（已合入）：结构性汇聚。** `_operation_lease` 在持有临时 lease、释放生命周期 CV 后调用同一 native 谓词，再进入 API body；拒绝经 finally 退回 lease。所有新 leased API 默认覆盖，只有 `device_location` 显式豁免 current RTS context（它仍持有生命周期 lease）；close 保持独立承诺点。native malloc/free/copy_to/copy_from/device_memory_info/flush 也守自己的 backend entry；缓存 host counters、地址与 workspace/teardown reports 仅作观察。裸 C ABI 与 legacy HCCL borrowed 能力未扩充，不能据此声称完整 borrowed API 已资格化。
 
-第 3 笔已合入并完成本地验收，K2a 结项；K2b 仅部分交付。#2582 验证为 3222 Python UT、317 C++ targets、L2 sim 6/3 项和 task-submit 44 项；最终提交重建后 206 项通过。故障脚本独立保留失败预算，已接受的 close debt 在错误环境下保留、恢复后可清理。没有扩大 capture 或公开 borrowed 资格声明；之后进入 K2b。K2a 不新增 caller API、不交付 generation、不重排 Pipeline A 的准入和双侧完成协议。
+该历史节点第 3 笔已合入并完成本地验收，K2a 结项；当时 K2b 仅部分交付（当前交付状态见下节）。#2582 验证为 3222 Python UT、317 C++ targets、L2 sim 6/3 项和 task-submit 44 项；最终提交重建后 206 项通过。故障脚本独立保留失败预算，已接受的 close debt 在错误环境下保留、恢复后可清理。没有扩大 capture 或公开 borrowed 资格声明；之后进入 K2b。K2a 不新增 caller API、不交付 generation、不重排 Pipeline A 的准入和双侧完成协议。
 
 ### K2b：借用环境与内部接入——身份必须有消费者
 
@@ -108,7 +108,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 | #2593 已合入：K2b child 控制状态 | base communicator 的控制句柄归 serve loop；init 返回值与 alloc/release 显式传递 | 不改 native 缓存/资源所有权、mailbox wire 或排队协议 |
 | #2595 已合入：K2b child 原生接入 | child 直接构造 `_ChipWorker`、共用 init、原生注册/通信/提交/退休；保留 Host log flush 与 teardown 观察 | 不改 mailbox/准入/完成协议；不开放 public borrowed |
 | #2597 已合入：K2b 参数 | direct L2 / child 串行和暂存提交 / 兼容 ChipWorker 共用 `_materialize_chip_task_args`；本次地址解析与 POD 构造不关闭 registry | 保留各入口快照、权限/source 引用与关闭时机；不复制 tensor 内容、不授权外部 allocation |
-| 当前 PR #2599：K2c 公开接线 | 同一 public init/submit/run；借用初始化、caller stream、前置拒绝、source 保活与 close 重试 | A3 8 组合通过；A5/框架后台队列/故障与 DFX 完整资格不由本笔冒充 |
+| 当前 PR #2599：K2c 公开接线 | 同一 public init/submit/run；借用初始化、caller stream、前置拒绝、source 保活与 close 重试 | 修订 head CI 19 通过/1 跳过、A3/A5 各 8 组合通过；框架后台队列/故障与 DFX 完整资格另记 |
 | 并行：S3 | 单独的 module owner；随后单独能力 profile/query | 不改变运行排序；不把整个函数表迁移和所有 façade 拆分塞入一笔 |
 
 同一行若仍太大，沿真实生产消费者拆 PR，并逐笔保留不变量；目标能力与验收不能降级为可选扩展。S3 与 K2 即使逻辑可并行，仍需协调共同文件、loader/环境保留和 close 路径。U2b/Remote 不作 K2 前置，但每条新增生产复制/网络路径当笔就必须证明保活；不能拖到 U4 再补。

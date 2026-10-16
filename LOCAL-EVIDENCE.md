@@ -82,6 +82,14 @@
 
 引用文档：[reviews/descriptor-main-0dbf12ae.md](reviews/descriptor-main-0dbf12ae.md)。材料未收录。
 
+<a id="artifact-0d401974217f"></a>
+
+## 0d401974217f
+
+原引用：`ci-fix-hooks.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-0d79c51e5517"></a>
 
 ## 0d79c51e5517
@@ -217,6 +225,14 @@
 原引用：`descriptor-main-0dbf12ae/sim-a5.log`
 
 引用文档：[reviews/descriptor-main-0dbf12ae.md](reviews/descriptor-main-0dbf12ae.md)。材料未收录。
+
+<a id="artifact-1f9237a30fe1"></a>
+
+## 1f9237a30fe1
+
+原引用：`ci-initial-ubuntu-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-1f983d001087"></a>
 
@@ -378,6 +394,14 @@
 
 引用文档：[reviews/context-state-preflight-final/REPORT.md](reviews/context-state-preflight-final/REPORT.md)。材料未收录。
 
+<a id="artifact-34df2093135f"></a>
+
+## 34df2093135f
+
+原引用：`ci-fix-a3-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-36763a034e75"></a>
 
 ## 36763a034e75
@@ -409,6 +433,14 @@
 原引用：`pyut.log`
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
+
+<a id="artifact-3c0ec9b2f594"></a>
+
+## 3c0ec9b2f594
+
+原引用：`review/pr2596-292b5511-manager-review.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-3c6284d18c8c"></a>
 
@@ -457,6 +489,14 @@
 原引用：`../staging-update-results/tq0.log`
 
 引用文档：[probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
+
+<a id="artifact-4309d6791c9e"></a>
+
+## 4309d6791c9e
+
+原引用：`ci-fix-final-focused.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-451cb974f726"></a>
 
@@ -529,6 +569,14 @@
 原引用：`early-rollback-r2/pr2587-rollback-final-tests.log`
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
+
+<a id="artifact-504a662d1ee4"></a>
+
+## 504a662d1ee4
+
+原引用：`no-sdk-full.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-51067296a9da"></a>
 
@@ -633,6 +681,22 @@
 原引用：`final-py.log`
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
+
+<a id="artifact-603d4c875d40"></a>
+
+## 603d4c875d40
+
+原引用：`ci-fix-a5-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-6242ca3f1795"></a>
+
+## 6242ca3f1795
+
+原引用：`ci-fix-build.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-6262a91c2a85"></a>
 
@@ -858,6 +922,14 @@
 
 引用文档：[reviews/context-state-preflight-final/REPORT.md](reviews/context-state-preflight-final/REPORT.md)。材料未收录。
 
+<a id="artifact-9629b78010ca"></a>
+
+## 9629b78010ca
+
+原引用：`ci-fix-final-feedback.json`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-976cc1a40fa4"></a>
 
 ## 976cc1a40fa4
@@ -922,6 +994,14 @@
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
 
+<a id="artifact-9f0772e3aec4"></a>
+
+## 9f0772e3aec4
+
+原引用：`ci-initial-a3-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-a1b9fb8fab05"></a>
 
 ## a1b9fb8fab05
@@ -937,6 +1017,14 @@
 原引用：`final-tests.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-a44c574ad773"></a>
+
+## a44c574ad773
+
+原引用：`no-sdk-green.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-a4e7104aa842"></a>
 
@@ -969,14 +1057,6 @@
 原引用：`pyut.log`
 
 引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
-
-<a id="artifact-a87239cb9532"></a>
-
-## a87239cb9532
-
-原引用：`review/pr2596-8f4725ed-manager-review.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-ab59ee585958"></a>
 
@@ -1162,6 +1242,14 @@
 
 引用文档：[reviews/leased-context-validation/REPORT.md](reviews/leased-context-validation/REPORT.md)。材料未收录。
 
+<a id="artifact-c5c0faba73d7"></a>
+
+## c5c0faba73d7
+
+原引用：`ci-fix-macos-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-c7bd8db579dc"></a>
 
 ## c7bd8db579dc
@@ -1177,6 +1265,14 @@
 原引用：`probes/queue-saturation-results/tq1.log`
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md)。材料未收录。
+
+<a id="artifact-c9ba558fd175"></a>
+
+## c9ba558fd175
+
+原引用：`no-sdk-red.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-c9dfe79fe95f"></a>
 
@@ -1386,6 +1482,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
+<a id="artifact-e8b06b53059b"></a>
+
+## e8b06b53059b
+
+原引用：`ci-fix-ubuntu-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-e9af7bab9363"></a>
 
 ## e9af7bab9363
@@ -1442,6 +1546,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
 
+<a id="artifact-f12685450fb1"></a>
+
+## f12685450fb1
+
+原引用：`ci-fix-final-checks.json`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-f2b0c4071594"></a>
 
 ## f2b0c4071594
@@ -1497,6 +1609,14 @@
 原引用：`early-rollback-r2/pr2587-rollback-final-build.log`
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
+
+<a id="artifact-f8f047ae10b9"></a>
+
+## f8f047ae10b9
+
+原引用：`ci-initial-a5-ut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-fa3c46d23d4a"></a>
 
