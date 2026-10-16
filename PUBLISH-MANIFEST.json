@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-16",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "e994e106d8020c049dc419a67498db37bc6fcd3d",
-  "pending_pr": 2599,
+  "latest_roadmap_source_baseline": "905d336e41d324ba8c8dbf87fe138965d84e74e2",
+  "pending_pr": 2604,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1d23ecb4b59158e8f525b68a20d6fec4fa9ba1ea64f0742970e1b4281c8e8b5c",
-      "published_sha256": "711a5fe84dc4973aeb0e19e26b6f18e79c5009cd66a4231f759394313e4b449b",
-      "bytes": 50696
+      "source_sha256": "8513d606a816718edd72d1b10830216e16ab8253ab07abd4f797574f398dc26c",
+      "published_sha256": "28015ea07f46270dfb7e8948794d9eb7af37ac0bdbdbbbe2c8572861b07c9ba1",
+      "bytes": 51620
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -64,9 +64,9 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "e17671c27ec23684ae7157afc6059e24aeb3a16d55e66bf79a920927ddb9f5f8",
-      "published_sha256": "336bc5edf52ca1111ed5438fbf8020b5f302c02dbdba97042d343edd1ace54f7",
-      "bytes": 66804
+      "source_sha256": "77224e34a06556ceac6745881061a34bfccdb13b8b9621541113711bad939c9c",
+      "published_sha256": "6a5315a8fc7129f254ec547741e9e10bcf51cb70b86b5ffc9aa787dea1d94a63",
+      "bytes": 66841
     },
     {
       "path": "endpoint-access-contract.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "7fcfc097bc65f491433d570672b8d57e80f60714340f44023195bb65948fc2ee",
-      "published_sha256": "21aa8bd9ab9e71f7aee8857d06c2c2cb90d44b6c9e395b765e93d5c7f6a7c7f5",
-      "bytes": 24134
+      "source_sha256": "cab13343b44b4fa77692fc174e4efa56417fb7895c20f7509fe365483b9b0233",
+      "published_sha256": "8cb73d8dc3596fad5039124b2fe53d3784488011fafecc3ad1eec8e930203df5",
+      "bytes": 24394
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "15b890a0b80098e9e6ca6d440f53cb158bbc3a1927a2c059e55ad5959af4e4ed",
-      "published_sha256": "25d9fdd88bdde2ee003397744ea6d84b085930a255d6852f922f252c3e86e4bb",
-      "bytes": 66133
+      "source_sha256": "9b34a9f12e9c54e58c945627cad78d4f6c23fcef7bff30f50ebed66eead061e8",
+      "published_sha256": "25aa4d90f36492877e4a289c539218041b64b333685df4bd10203ad11e175152",
+      "bytes": 67085
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "f46ddc9863739729192d3d142fc9d6fcbd44af018a0089b2601c38082560ec20",
-      "published_sha256": "49e4aa95c83220c34865637a2752e13698500dff4bbb52dedea68ac359d11990",
-      "bytes": 45524
+      "source_sha256": "cf8cf14be1253ce66bce1fb4b37493bd3065f215452b37a19ff0af5a5211ffe5",
+      "published_sha256": "a7eaabf51001a42de003faddf514c02bf596c00e40b77fcfa56d04a26f17657b",
+      "bytes": 45504
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "99ed5b7083e193cbdfaa07b01cd189e358f290770e0a9495f6fcb76508006ceb",
-      "published_sha256": "9e5925cf9375c24b31485ab6e511f57ab36c53ac21d9760208fecb86ef1e799f",
-      "bytes": 18627
+      "source_sha256": "36a5f1eee2533ebf7aa7b3990a57161863bd809bab9938995dae63fa96f36f16",
+      "published_sha256": "3ce519b220541c554c4a1a7138a32776854eab8416c6ae86677b1ad6182b1227",
+      "bytes": 18619
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -370,6 +370,13 @@
       "bytes": 1864
     },
     {
+      "path": "reviews/empty-eager-completion/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "3cd4b839a532bc9f0f20b5bbcd951a1e5280855e8ed7324b275c6d0ab38f3517",
+      "published_sha256": "7326b1ceb31ff9cf4c9d8ef748b7a7eae16cbd2bf776810856627cb7a15f36f2",
+      "bytes": 6352
+    },
+    {
       "path": "reviews/hbg-validation-log-sink/REPORT.md",
       "source_collection": "kernel-design",
       "source_sha256": "fc2ba4368776c2af6d64bf07be0e8c8e32821878a520ff6278bdef775d52c48f",
@@ -470,9 +477,9 @@
     {
       "path": "reviews/public-borrowed-worker/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "625c74258f9077f1c585fe1712bf7d232b817ddbb3a1675a7e665de950124789",
-      "published_sha256": "c7cc271a2990fd124dc1a99175f17b7e1276ab427e719678b4e90fec0ed05317",
-      "bytes": 9511
+      "source_sha256": "7a067683c533335a5262e7885866e25228159245deb39ed85e48981d2e460178",
+      "published_sha256": "eb90f87929ec4baca0a9d90dc18c757253a50f2e95a0054d4c7bbaede94e1835",
+      "bytes": 9829
     },
     {
       "path": "reviews/publication-contract-main-2d366151.md",

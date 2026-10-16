@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `e994e106d`：#2597 已合入，K2a/b 共同接口已交付；当前 PR #2599 接公开 borrowed eager。** 同一 Worker init/submit/run 复用原 native owner/lane、参数 materialization 和退休。A3 本地 8 组合通过，修订 head `12304f0a` CI 19 通过/1 跳过，A3/A5 各 8 个公共组合通过；完整 K2c 验收保留后续矩阵，详见[证据](reviews/public-borrowed-worker/REPORT.md)。
+**2026-10-16 / main `905d336e4`：#2599 已合入，K2a/b 与公开 borrowed eager 接线已交付；当前 [PR #2604](https://github.com/hw-native-sys/simpler/pull/2604) 推进 K2c 的空调用完成与持久 INOUT 状态。** 同一 Worker init/submit/run 复用原 native owner/lane。#2599 的原 head `12304f0a` CI 19 通过/1 跳过，A3/A5 各 8 个公共组合通过；合入与原 head 证据分别保留。当前 [零任务验收](reviews/empty-eager-completion/REPORT.md)覆盖设备标量、HBG HOST/NONE 控制、同一 Buffer 身份和 caller 顺序；borrowed HBG 的首次容量边界独立记录。实际框架后台发射、partial/fault/DFX 与完整产品矩阵尚未结项。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -52,7 +52,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 ### K2b：借用环境与内部接入——身份必须有消费者
 
 
-当前 #2587 已合入：native 记录 process、非重复 incarnation、context generation、device 与 owned/borrowed 策略；source 的 wrap/descriptor/acquire 比较同一 native 身份。成功 teardown 清除，失败 rollback/teardown 保留供 cleanup retry。当前 RTS identity 仍由既有 runner 判定，不能把逻辑 generation 当 RTS reset 探测器或地址所有权证明。此笔交付时 source provider 仍是 Program Worker；后续 #2589/#2593/#2595/#2597 已闭合 K2b 的内部接入。公开 borrowed provider 由当前 PR #2599 接线。
+当前 #2587 已合入：native 记录 process、非重复 incarnation、context generation、device 与 owned/borrowed 策略；source 的 wrap/descriptor/acquire 比较同一 native 身份。成功 teardown 清除，失败 rollback/teardown 保留供 cleanup retry。当前 RTS identity 仍由既有 runner 判定，不能把逻辑 generation 当 RTS reset 探测器或地址所有权证明。此笔交付时 source provider 仍是 Program Worker；后续 #2589/#2593/#2595/#2597 已闭合 K2b 的内部接入。公开 borrowed provider 已由 #2599 接线。
 #2589 已合入（验证 head `27098ab9`）：direct L2 Worker 直接持有 `_ChipWorker`，既有 Worker registry、operation lease、imports、source uses 和 close journal 继续负责原有状态。此交付时公开兼容 ChipWorker 和 forked chip child 仍走 wrapper。`_initialize_chip_runtime` 仅共用日志/路径/原生 init 参数转换，不另建 executor 或生命周期 owner。#2593 已合入，沿真实 child 控制消费者收口通信句柄状态：init 成功才发布新值，失败保留旧值，alloc/release 显式消费；native 保留物理资源所有权。#2595 已移除 child 的 wrapper 穿透；#2597 已统一四处 materialization，保留快照、入口前置授权和原 registry 寿命。
 
 在原 Worker/ChipWorker 的生命周期中建立一份环境绑定，关联 RTS context identity、进程、非零逻辑 context generation 与 owned/borrowed 权限。所有环境使用和 source attachment 都验证同一份绑定。设备 ordinal 只是选择信息，不能作为外部地址授权。

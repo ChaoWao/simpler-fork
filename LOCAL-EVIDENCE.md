@@ -2,6 +2,14 @@
 
 本页是链接落点，不是原始证据。原始日志、脚本、trace、backup 和部分参考材料仅保留在本地；已发布报告里的数量与结论没有因为上传而得到重新验证。
 
+<a id="artifact-016c7c371646"></a>
+
+## 016c7c371646
+
+原引用：`cpp-full.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-01940bbb0835"></a>
 
 ## 01940bbb0835
@@ -33,6 +41,14 @@
 原引用：`a5sim.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-057608ae8282"></a>
+
+## 057608ae8282
+
+原引用：`initial-board-fail.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-05c23b720ccf"></a>
 
@@ -458,6 +474,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md)。材料未收录。
 
+<a id="artifact-3f708cfabb83"></a>
+
+## 3f708cfabb83
+
+原引用：`board-device-control.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-40aa144c7692"></a>
 
 ## 40aa144c7692
@@ -642,6 +666,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
+<a id="artifact-5c0d6166a172"></a>
+
+## 5c0d6166a172
+
+原引用：`hbg-ut-red.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-5c9839daad9c"></a>
 
 ## 5c9839daad9c
@@ -778,6 +810,14 @@
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
 
+<a id="artifact-6d214f30b46a"></a>
+
+## 6d214f30b46a
+
+原引用：`a3sim-serial-fail.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-6de918f7d89b"></a>
 
 ## 6de918f7d89b
@@ -810,6 +850,14 @@
 
 引用文档：[reviews/chip-child-native/REPORT.md](reviews/chip-child-native/REPORT.md)。材料未收录。
 
+<a id="artifact-74ad272e9c26"></a>
+
+## 74ad272e9c26
+
+原引用：`board-full.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-773af8eb80cc"></a>
 
 ## 773af8eb80cc
@@ -834,6 +882,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-799eee46fd3d"></a>
+
+## 799eee46fd3d
+
+原引用：`a5sim-serial-fail.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-7a2d5ffbc978"></a>
 
 ## 7a2d5ffbc978
@@ -849,6 +905,14 @@
 原引用：`../review-results/publication-followup.json`
 
 引用文档：[probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
+
+<a id="artifact-7cf3584d9374"></a>
+
+## 7cf3584d9374
+
+原引用：`tmr-ut-green.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-7d9ce5cfcad9"></a>
 
@@ -890,6 +954,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-8be6f7a3550b"></a>
+
+## 8be6f7a3550b
+
+原引用：`hbg-ut-green.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-8df2cb816793"></a>
 
 ## 8df2cb816793
@@ -897,6 +969,14 @@
 原引用：`final-tests.log`
 
 引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
+<a id="artifact-8f9da0ba1daa"></a>
+
+## 8f9da0ba1daa
+
+原引用：`a5sim-full.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-91b61fecb97f"></a>
 
@@ -1001,6 +1081,14 @@
 原引用：`ci-initial-a3-ut.log`
 
 引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-a1821f02dcb4"></a>
+
+## a1821f02dcb4
+
+原引用：`board-capacity-boundary.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-a1b9fb8fab05"></a>
 
@@ -1258,6 +1346,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
 
+<a id="artifact-c86f3ea6d7a9"></a>
+
+## c86f3ea6d7a9
+
+原引用：`tmr-ut-red.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-c88c25fe2901"></a>
 
 ## c88c25fe2901
@@ -1305,6 +1401,14 @@
 原引用：`r2-precommit.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-d0132f55fca6"></a>
+
+## d0132f55fca6
+
+原引用：`final-a5sim.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-d03e5863da08"></a>
 
@@ -1402,6 +1506,22 @@
 
 引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
+<a id="artifact-d5b95a435af5"></a>
+
+## d5b95a435af5
+
+原引用：`final-head-a3sim.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
+<a id="artifact-d65625d96810"></a>
+
+## d65625d96810
+
+原引用：`fatal-isolated-green.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-d679a9a33f9f"></a>
 
 ## d679a9a33f9f
@@ -1473,6 +1593,14 @@
 原引用：`s2-main-d49730f3/sim-a2a3.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
+
+<a id="artifact-e5a285de5b34"></a>
+
+## e5a285de5b34
+
+原引用：`baseline-fatal-module-red.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-e685a8dba05a"></a>
 
@@ -1546,6 +1674,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
 
+<a id="artifact-ef7d3c6a5723"></a>
+
+## ef7d3c6a5723
+
+原引用：`a3sim-full.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
 <a id="artifact-f12685450fb1"></a>
 
 ## f12685450fb1
@@ -1609,6 +1745,14 @@
 原引用：`early-rollback-r2/pr2587-rollback-final-build.log`
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
+
+<a id="artifact-f820c6692011"></a>
+
+## f820c6692011
+
+原引用：`hooks.log`
+
+引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
 <a id="artifact-f8f047ae10b9"></a>
 

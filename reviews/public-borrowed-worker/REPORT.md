@@ -47,3 +47,7 @@ New-head macOS UT is fully green: [job 116885148990](https://github.com/hw-nativ
 ## Final follow-up disposition
 
 At 2026-10-16 08:55 UTC, head `12304f0a` has **19 successful checks / 1 skipped deploy**, no failures, cancellations or pending checks, and zero unresolved review threads. PR #2599 remains OPEN and MERGEABLE; it has not been merged. Both review threads were answered and resolved, and the CI cause/validation are posted on the PR. [CI run](https://github.com/hw-native-sys/simpler/actions/runs/38874103541), [final local status record](../../LOCAL-EVIDENCE.md#artifact-f12685450fb1), [review record](../../LOCAL-EVIDENCE.md#artifact-9629b78010ca). Historical checkpoint statements above retain their original time/scope.
+
+## Merge disposition
+
+PR #2599 merged as `905d336e41d324ba8c8dbf87fe138965d84e74e2`. The final CI and review evidence above remains attributed to head `12304f0a`; the earlier OPEN status is a historical checkpoint. Subsequent work qualifies empty calls and persistent INOUT state through the same public Worker path.
