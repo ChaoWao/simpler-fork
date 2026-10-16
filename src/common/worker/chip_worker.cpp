@@ -153,6 +153,22 @@ std::string format_native_run_identity(const ChipWorkerNativeRun &run) {
            " run_epoch=" + std::to_string(run.run_epoch) + ")";
 }
 
+uint64_t load_runtime_capabilities(void *handle) {
+    using Query = decltype(&simpler_query_runtime_capabilities);
+    auto query = reinterpret_cast<Query>(dlsym(handle, "simpler_query_runtime_capabilities"));
+    if (query == nullptr) return PTO_RUNTIME_CAP_OWNED_CONTEXT;
+    RuntimeCapabilities capabilities{PTO_RUNTIME_CAPABILITIES_ABI_VERSION, sizeof(RuntimeCapabilities), 0};
+    const int rc = query(&capabilities);
+    if (rc != 0 || capabilities.abi_version != PTO_RUNTIME_CAPABILITIES_ABI_VERSION ||
+        capabilities.struct_size < sizeof(RuntimeCapabilities)) {
+        throw std::runtime_error(
+            "host runtime returned incompatible capabilities: code=" + std::to_string(rc) +
+            " version=" + std::to_string(capabilities.abi_version) + " size=" + std::to_string(capabilities.struct_size)
+        );
+    }
+    return capabilities.flags;
+}
+
 std::string format_device_address(uint64_t addr) {
     std::ostringstream os;
     os << "0x" << std::hex << addr;
@@ -400,10 +416,17 @@ void ChipWorker::init(
         throw;
     }
 
-    if (borrowed_context_generation.has_value() &&
+    const uint64_t resolved_capabilities = load_runtime_capabilities(handle);
+    const uint64_t required_capabilities = borrowed_context_generation.has_value() ?
+                                               PTO_RUNTIME_CAP_BORROWED_CONTEXT | PTO_RUNTIME_CAP_CALLER_ORDERING :
+                                               PTO_RUNTIME_CAP_OWNED_CONTEXT;
+    if ((resolved_capabilities & required_capabilities) != required_capabilities) {
+        throw std::runtime_error("host runtime capabilities do not support the requested execution environment");
+    }
+    if ((resolved_capabilities & PTO_RUNTIME_CAP_CALLER_ORDERING) != 0 &&
         (validate_execution_context_fn_ == nullptr || validate_caller_stream_fn_ == nullptr ||
          launch_run_on_stream_fn_ == nullptr)) {
-        throw std::runtime_error("borrowed initialization requires native caller ordering and context validation");
+        throw std::runtime_error("runtime caller ordering capability requires native launch and context validation");
     }
 
     const PipelineContract *contract = get_pipeline_contract_fn();
@@ -622,6 +645,7 @@ void ChipWorker::init(
     }
 
     lib_handle_ = host_guard.release();
+    runtime_capabilities_ = resolved_capabilities;
     kernel_supported_fn_ = kernel_supported_fn;
     kernel_init_fn_ = kernel_init_fn;
     kernel_prepare_callable_fn_ = kernel_prepare_callable_fn;
@@ -761,6 +785,7 @@ void ChipWorker::finalize() {
 void ChipWorker::clear_runtime_binding() {
     execution_environment_.reset();
     lib_handle_ = nullptr;
+    runtime_capabilities_ = 0;
     create_device_context_fn_ = nullptr;
     simpler_init_fn_ = nullptr;
     destroy_device_context_fn_ = nullptr;
@@ -1170,8 +1195,11 @@ void ChipWorker::abandon_after_failed_teardown(std::exception_ptr error) noexcep
 }
 
 void ChipWorker::validate_caller_stream(void *caller_stream) {
-    if (!initialized_ || validate_caller_stream_fn_ == nullptr || launch_run_on_stream_fn_ == nullptr) {
-        throw std::runtime_error("caller-stream submission requires an initialized runtime with caller ordering");
+    if (!initialized_ || (runtime_capabilities_ & PTO_RUNTIME_CAP_CALLER_ORDERING) == 0 ||
+        validate_caller_stream_fn_ == nullptr || launch_run_on_stream_fn_ == nullptr) {
+        throw std::runtime_error(
+            "caller-stream submission requires an initialized runtime with caller ordering capability"
+        );
     }
     const int rc = validate_caller_stream_fn_(device_ctx_, caller_stream);
     if (rc != 0) throw std::runtime_error("caller-stream validation failed with code " + std::to_string(rc));

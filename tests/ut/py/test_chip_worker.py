@@ -225,9 +225,22 @@ def kernel_symbol_runtime(tmp_path_factory):
         memory=False,
         early_failure=None,
         lifecycle_log=None,
+        capabilities="auto",
     ):
         nonlocal next_library_id
-        key = (supported, missing, init_result, finalize_failures, borrowed, memory, early_failure, lifecycle_log)
+        if capabilities == "auto":
+            capabilities = (1, 16, 7, 0) if borrowed else None
+        key = (
+            supported,
+            missing,
+            init_result,
+            finalize_failures,
+            borrowed,
+            memory,
+            early_failure,
+            lifecycle_log,
+            capabilities,
+        )
         # Fault scripts retain their consumed failure budget in the loaded DSO.
         if finalize_failures == 0 and key in cache:
             return cache[key]
@@ -250,8 +263,9 @@ def kernel_symbol_runtime(tmp_path_factory):
             '    std::fprintf(file, "%s\\n", event);\n'
             "    std::fclose(file);\n"
             "}\n"
-            "static int live_contexts = 0;\n"
+            "static int live_contexts = 0, creates = 0;\n"
             "static int destroys = 0, closes = 0, borrowed_inits = 0, validation = 0;\n"
+            'extern "C" int test_creates() { return creates; }\n'
             'extern "C" int test_destroys() { return destroys; }\n'
             'extern "C" int test_closes() { return closes; }\n'
             'extern "C" int test_borrowed_inits() { return borrowed_inits; }\n'
@@ -276,7 +290,7 @@ def kernel_symbol_runtime(tmp_path_factory):
             # not export the setter is a stale build, not an opt-out. This stub
             # accepts the pointer and ignores it, as it does the log state.
             'extern "C" void simpler_bind_device_fault_monitor(void *) {}\n'
-            "DeviceContextHandle create_device_context() { ++live_contexts; return new Context; }\n"
+            "DeviceContextHandle create_device_context() { ++creates; ++live_contexts; return new Context; }\n"
             "void destroy_device_context(DeviceContextHandle ctx) {\n"
             "    ++destroys; --live_contexts; delete static_cast<Context *>(ctx);\n"
             '    record("context-destroyed");\n'
@@ -312,6 +326,15 @@ def kernel_symbol_runtime(tmp_path_factory):
             ),
             encoding="utf-8",
         )
+        if capabilities is not None:
+            version, struct_size, flags, query_rc = capabilities
+            with source.open("a", encoding="utf-8") as output:
+                output.write(
+                    "int simpler_query_runtime_capabilities(RuntimeCapabilities *out) {\n"
+                    f"    *out = RuntimeCapabilities{{{version}, {struct_size}, {flags}}};\n"
+                    f"    return {query_rc};\n"
+                    "}\n"
+                )
         if early_failure == "grant":
             with source.open("a", encoding="utf-8") as output:
                 output.write("int simpler_set_run_resource_grant_ctx(DeviceContextHandle, uint32_t) { return -89; }\n")
@@ -335,9 +358,12 @@ def kernel_symbol_runtime(tmp_path_factory):
                     "int simpler_unregister_callable(DeviceContextHandle, int32_t) {\n"
                     "    ++unregistrations; return validation;\n"
                     "}\n"
-                    "static int caller_validation = 0;\n"
+                    "static int caller_validation = 0, caller_checks = 0;\n"
                     'extern "C" void test_caller_validation(int rc) { caller_validation = rc; }\n'
-                    "int simpler_validate_caller_stream(DeviceContextHandle, void *) { return caller_validation; }\n"
+                    'extern "C" int test_caller_checks() { return caller_checks; }\n'
+                    "int simpler_validate_caller_stream(DeviceContextHandle, void *) {\n"
+                    "    ++caller_checks; return caller_validation;\n"
+                    "}\n"
                     "int simpler_launch_run_on_stream(DeviceContextHandle, RuntimeHandle, void *, RuntimeHandle) "
                     "{ std::abort(); }\n"
                 )
@@ -1448,12 +1474,13 @@ class TestChipWorkerBorrowedInit:
         runtime = kernel_symbol_runtime()
         observer = ctypes.CDLL(str(runtime))
         worker = _ChipWorker()
-        before_destroy = observer.test_destroys()
-        with pytest.raises(RuntimeError, match="requires native caller ordering"):
+        before_destroy, before_create = observer.test_destroys(), observer.test_creates()
+        with pytest.raises(RuntimeError, match="capabilities do not support"):
             worker.init(str(runtime), os.devnull, os.devnull, "", 0, borrowed_context_generation=77)
         assert not worker.initialized
         assert worker.runtime_slot_count == 0
         assert observer.test_destroys() == before_destroy
+        assert observer.test_creates() == before_create
         worker.init(str(runtime), os.devnull, os.devnull, "", 0)
         worker.finalize()
 
@@ -1933,3 +1960,74 @@ class TestMailboxConfigRoundtrip:
             # because the nonce is urandom output and JSON carries no bytes.
             "owner_instance_id": "0f1e2d3c4b5a6978",
         }
+
+
+class TestRuntimeCapabilityContract:
+    @pytest.mark.parametrize(
+        ("capabilities", "borrowed"),
+        [
+            (None, True),
+            ((1, 16, 1, 0), True),
+            ((1, 16, 3, 0), True),
+            ((1, 16, 5, 0), True),
+            ((1, 16, 6, 0), False),
+            ((2, 16, 7, 0), False),
+            ((1, 8, 7, 0), False),
+            ((1, 16, 7, -1001), False),
+        ],
+    )
+    def test_missing_or_incompatible_profile_refuses_before_context_creation(
+        self, kernel_symbol_runtime, capabilities, borrowed
+    ):
+        library = kernel_symbol_runtime(borrowed=True, capabilities=capabilities)
+        observer = ctypes.CDLL(str(library))
+        before = observer.test_creates(), observer.test_destroys(), observer.test_borrowed_inits()
+        worker = _ChipWorker()
+        options = {"borrowed_context_generation": 77} if borrowed else {}
+        try:
+            with pytest.raises(RuntimeError, match="capabilit"):
+                worker.init(str(library), os.devnull, os.devnull, "", device_id=0, **options)
+            assert not worker.initialized
+            assert worker._execution_environment is None
+            assert (observer.test_creates(), observer.test_destroys(), observer.test_borrowed_inits()) == before
+            healthy = kernel_symbol_runtime(borrowed=True)
+            worker.init(str(healthy), os.devnull, os.devnull, "", device_id=0, **options)
+            assert worker.initialized
+        finally:
+            worker.finalize()
+
+    @pytest.mark.parametrize("capabilities", [None, (1, 16, 1, 0), (1, 24, 1 | (1 << 40), 0)])
+    def test_owned_profile_accepts_legacy_and_ignores_unknown_bits(self, kernel_symbol_runtime, capabilities):
+        library = kernel_symbol_runtime(capabilities=capabilities)
+        worker = _ChipWorker()
+        try:
+            worker.init(str(library), os.devnull, os.devnull, "", device_id=0)
+            assert worker.initialized
+        finally:
+            worker.finalize()
+
+    def test_declared_caller_capability_requires_its_entry_points(self, kernel_symbol_runtime):
+        library = kernel_symbol_runtime(capabilities=(1, 16, 7, 0))
+        observer = ctypes.CDLL(str(library))
+        before = observer.test_creates()
+        worker = _ChipWorker()
+        try:
+            with pytest.raises(RuntimeError, match="capability requires native launch"):
+                worker.init(str(library), os.devnull, os.devnull, "", device_id=0)
+            assert observer.test_creates() == before
+        finally:
+            worker.finalize()
+
+    @pytest.mark.parametrize("capabilities", [None, (1, 16, 1, 0)])
+    def test_owned_profile_without_caller_capability_rejects_before_entry(self, kernel_symbol_runtime, capabilities):
+        library = kernel_symbol_runtime(borrowed=True, capabilities=capabilities)
+        observer = ctypes.CDLL(str(library))
+        worker = _ChipWorker()
+        try:
+            worker.init(str(library), os.devnull, os.devnull, "", device_id=0)
+            before = observer.test_caller_checks()
+            with pytest.raises(RuntimeError, match="caller ordering"):
+                worker._validate_caller_stream(0x1234)
+            assert observer.test_caller_checks() == before
+        finally:
+            worker.finalize()

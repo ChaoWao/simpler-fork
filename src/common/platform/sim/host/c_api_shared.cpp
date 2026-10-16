@@ -551,6 +551,15 @@ void destroy_device_context(DeviceContextHandle ctx) {
     delete runner;
 }
 
+int simpler_query_runtime_capabilities(RuntimeCapabilities *out) {
+    if (out == nullptr || out->abi_version != PTO_RUNTIME_CAPABILITIES_ABI_VERSION ||
+        out->struct_size < sizeof(RuntimeCapabilities)) {
+        return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
+    }
+    *out = {PTO_RUNTIME_CAPABILITIES_ABI_VERSION, sizeof(RuntimeCapabilities), PTO_RUNTIME_CAP_OWNED_CONTEXT};
+    return 0;
+}
+
 size_t get_runtime_size(void) { return sizeof(SimNativeRunContext); }
 
 size_t get_runtime_alignment(void) { return alignof(SimNativeRunContext); }

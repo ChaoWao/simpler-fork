@@ -1188,3 +1188,47 @@ if __name__ == "__main__":
         _run_loader_unload_retry(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4][len("loader_") :])
     else:
         _run_lifecycle_retry(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4])
+
+
+class _RuntimeCapabilities(ctypes.Structure):
+    _fields_ = [("abi_version", ctypes.c_uint32), ("struct_size", ctypes.c_uint32), ("flags", ctypes.c_uint64)]
+
+
+_CAPABILITY_CASES = [
+    pytest.param(arch, runtime, "sim", 1, id=f"{arch}-sim-{runtime}") for arch in _ARCHES for runtime in _RUNTIMES
+] + [
+    pytest.param(
+        arch,
+        runtime,
+        "onboard",
+        7,
+        id=f"{arch}-onboard-{runtime}",
+        marks=[pytest.mark.requires_hardware, pytest.mark.platforms([arch])],
+    )
+    for arch in _ARCHES
+    for runtime in _RUNTIMES
+]
+
+
+@pytest.mark.parametrize(("arch", "runtime", "variant", "expected_flags"), _CAPABILITY_CASES)
+def test_static_capability_query_validates_abi_without_a_context(arch, runtime, variant, expected_flags):
+    lib = _load(arch, variant, runtime)
+    query = lib.simpler_query_runtime_capabilities
+    query.argtypes = [ctypes.POINTER(_RuntimeCapabilities)]
+    query.restype = ctypes.c_int
+    assert ctypes.sizeof(_RuntimeCapabilities) == 16
+    assert query(None) == PTO_RUNTIME_ERR_INVALID_ARGUMENT
+    for version, size in ((0, 16), (2, 16), (1, 0), (1, 15)):
+        output = _RuntimeCapabilities(version, size, 0xDEADBEEF)
+        before = bytes(output)
+        assert query(ctypes.byref(output)) == PTO_RUNTIME_ERR_INVALID_ARGUMENT
+        assert bytes(output) == before
+
+    class Extended(ctypes.Structure):
+        _fields_ = [("prefix", _RuntimeCapabilities), ("tail", ctypes.c_uint64)]
+
+    output = Extended(_RuntimeCapabilities(1, ctypes.sizeof(Extended), 0), 0xFEDCBA9876543210)
+    assert query(ctypes.byref(output.prefix)) == 0
+    assert output.prefix.abi_version == 1 and output.prefix.struct_size == 16
+    assert output.prefix.flags == expected_flags
+    assert output.tail == 0xFEDCBA9876543210

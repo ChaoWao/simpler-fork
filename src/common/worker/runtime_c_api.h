@@ -46,6 +46,9 @@
  *   - comm:         comm_init, comm_alloc_windows, comm_get_local_window_base,
  *                   comm_get_window_size, comm_barrier, comm_destroy
  *
+ * Optional export: simpler_query_runtime_capabilities. Legacy modules may omit
+ * it for ordinary owned initialization; borrowed/caller ordering requires it.
+ *
  * Native-run storage: caller allocates at least get_runtime_size() bytes with
  * get_runtime_alignment() alignment, zero-initializes it before first use, and
  * keeps its address stable from prepare through finalize. After finalize the
@@ -115,6 +118,36 @@ enum {
     /* A caller supplied an invalid pointer, id, size, or other argument. */
     PTO_RUNTIME_ERR_INVALID_ARGUMENT = PTO_RUNTIME_ERR_BASE - 4,
 };
+
+/** Static host-module capabilities, independent of a live device context. */
+enum {
+    PTO_RUNTIME_CAPABILITIES_ABI_VERSION = 1,
+    PTO_RUNTIME_CAP_OWNED_CONTEXT = 1U << 0,
+    PTO_RUNTIME_CAP_BORROWED_CONTEXT = 1U << 1,
+    PTO_RUNTIME_CAP_CALLER_ORDERING = 1U << 2,
+    PTO_RUNTIME_CAP_CAPTURE_REPLAY = 1U << 3,
+};
+
+typedef struct RuntimeCapabilities {
+    uint32_t abi_version;
+    uint32_t struct_size;
+    uint64_t flags;
+} RuntimeCapabilities;
+
+/**
+ * Query without creating a context or touching a device. The caller supplies
+ * ABI version 1 and a buffer of at least sizeof(RuntimeCapabilities). Success
+ * writes that prefix and reports its size; any trailing caller bytes remain
+ * unchanged. Invalid version/size/null requests fail without modifying output.
+ * Unknown flag bits are ignored by readers. Flags describe implemented entry
+ * families, not per-call admission, graph lifetime or current-context validity.
+ *
+ * Legacy modules without this symbol support only the owned loader profile;
+ * borrowed contexts and caller ordering require an explicit declaration. The
+ * old simpler_kernel_mode_supported verdict covers its legacy launch entry,
+ * independently of the native caller-ordered eager path.
+ */
+int simpler_query_runtime_capabilities(RuntimeCapabilities *out);
 
 /** Return values from simpler_poll_run(). */
 enum {

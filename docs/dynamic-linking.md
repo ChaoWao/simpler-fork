@@ -319,6 +319,7 @@ ChipWorker.init(device_id, bins)                       # Python wrapper
            finalize_device, simpler_kernel_mode_supported,
            simpler_kernel_mode_init, simpler_kernel_mode_prepare_callable,
            simpler_kernel_mode_launch
+    simpler_query_runtime_capabilities(&capabilities)   validate ABI/profile, when exported
     create_device_context() → DeviceContextHandle
     allocate zeroed, aligned, stable native-run storage per pipeline slot
     simpler_init(ctx, device_id, aicpu*, aicpu_size, aicore*, aicore_size, ...)
@@ -355,6 +356,26 @@ ChipWorker.finalize()
   dlclose(host_runtime.so)                   -fno-gnu-unique ensures real unload
 ```
 
+Before creating a device context, `ChipWorker` queries the module's static
+capabilities through `simpler_query_runtime_capabilities`. The caller supplies
+ABI version 1 and a buffer size; success writes the 16-byte version/size/flags
+prefix without changing any trailing bytes. A bad version, short buffer, or
+null output is rejected without modifying the output. The query allocates no
+context and makes no device calls.
+
+| Module declaration | Loader behavior |
+| ------------------ | --------------- |
+| Query absent | Legacy owned initialization remains compatible; caller-stream and borrowed initialization require an explicit declaration. |
+| Owned context only | Normal owned initialization; current sim modules declare this profile. |
+| Borrowed context + native caller ordering | Borrowed initialization also requires the context-validation and caller launch symbols; current onboard modules declare these plus owned support. |
+| Bad ABI/size, failed query, or missing requested capability | Refuse before context creation. |
+
+Unknown flag bits are ignored. These declarations do not replace per-call
+context/capture validation or resource admission. Capture/replay is not declared
+by either backend. `simpler_kernel_mode_supported` still describes the legacy
+launch entry; its zero verdict is independent of native caller-ordered eager
+execution.
+
 ### Onboard (subprocess per device, ChipWorker reused per runtime group)
 
 ```text
@@ -366,6 +387,7 @@ device_worker_main(device_id)
                        dispatcher_path, device_id)       # C++
         dlopen(host_runtime.so, RTLD_LOCAL)
         dlsym(handle, simpler_host_log_bind_state)(state)
+        simpler_query_runtime_capabilities(&capabilities)  validate ABI/profile
         create_device_context()
         simpler_init(ctx, device_id,
                      aicpu*, aicpu_size, aicore*, aicore_size,

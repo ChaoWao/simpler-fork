@@ -216,6 +216,7 @@ int launch_on_stream(void *ctx, void *runtime, void *stream, void *predecessor) 
 void prime_caller_streams(ChipWorker &worker) {
     g_caller_validation_rc = 0;
     g_caller_streams.clear();
+    worker.runtime_capabilities_ = PTO_RUNTIME_CAP_OWNED_CONTEXT | PTO_RUNTIME_CAP_CALLER_ORDERING;
     worker.validate_caller_stream_fn_ = validate_caller_stream;
     worker.launch_run_on_stream_fn_ = launch_on_stream;
 }

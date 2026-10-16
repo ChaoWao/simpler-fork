@@ -540,6 +540,7 @@ private:
     void clear_comm_sessions();
 
     void *lib_handle_ = nullptr;
+    uint64_t runtime_capabilities_ = 0;
     CreateDeviceContextFn create_device_context_fn_ = nullptr;
     DestroyDeviceContextFn destroy_device_context_fn_ = nullptr;
     DeviceMallocCtxFn device_malloc_ctx_fn_ = nullptr;
