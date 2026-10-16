@@ -1,6 +1,6 @@
 # Static runtime capability contract
 
-Baseline: main `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` (#2606). Branch `feat/runtime-capability-contract`, one commit `169e6bb884bd86927d34fb3b521444b932f85a48` on the stated baseline; PR [#2607](https://github.com/hw-native-sys/simpler/pull/2607) is open; CI is pending. Product diff: 9 files, +257/−11. This delivers the capability/profile subset of S3; module ownership and graph/callable/run retention remain separate work.
+Baseline: main `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` (#2606). Branch `feat/runtime-capability-contract`, current single commit `f736c882c19d8b7db6f6695fd7fcace7c703e8fc` on the stated baseline; PR [#2607](https://github.com/hw-native-sys/simpler/pull/2607) is open; CI is pending. Product diff: 9 files, +259/−11. This delivers the capability/profile subset of S3; module ownership and graph/callable/run retention remain separate work.
 
 ## Contract
 
@@ -29,3 +29,7 @@ Local evidence: [old loader red](../../LOCAL-EVIDENCE.md#artifact-11717e2213ba),
 The final cached-DSO counter test rerun passes 14 cases in 4.15 s. Full-suite results above precede this assertion-only refinement and commit; the executable production content is identical. Final head rebuilt successfully and all 169 related CPU Python cases passed again (12.75 s). No final-head hardware rerun or A5 hardware qualification is claimed.
 
 Final [head rebuild](../../LOCAL-EVIDENCE.md#artifact-ee1f3f654576), [169 related tests](../../LOCAL-EVIDENCE.md#artifact-8e213fb2a442), [counter assertions](../../LOCAL-EVIDENCE.md#artifact-3dac033ae80d). Source content was frozen during full-suite runs; the only later source change makes cached test-DSO counter assertions relative to their entry values.
+
+## Review clarification
+
+Initial head `169e6bb8` received one valid inline note: the header's required-export catalog included the optional capability query. Follow-up head `f736c882c19d8b7db6f6695fd7fcace7c703e8fc` moves it into an explicit optional-export paragraph, matching the loader's legacy-owned behavior. This is comment-only; the single PR commit was amended. The follow-up rebuilt successfully and 18 focused loader/query checks pass (4.58 s). Earlier full-suite evidence stays attributed to the initial production content, which is unchanged. CI for the new head remains pending.

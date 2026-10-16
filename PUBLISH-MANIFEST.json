@@ -512,9 +512,9 @@
     {
       "path": "reviews/runtime-capability-contract/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "223812484dce4bcf686a8734f56d53c0629143ccbd00f39e4b760c38913e5995",
-      "published_sha256": "1fa33d1eb7a0cf76c3c19bcefc7d7e9c72e1bdb91873bd89497f3216d699001b",
-      "bytes": 4913
+      "source_sha256": "3c308d96eca0baa03ec1f7dce69bb07d06cfcba12682cd3934a73e18a0c0f365",
+      "published_sha256": "5efffd3df74eafd0228b7daa79ff1b375e0c56e5b1ad64d79233b5cab155c38a",
+      "bytes": 5517
     },
     {
       "path": "reviews/s2-main-d49730f3.md",
