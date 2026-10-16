@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-核对时间：2026-10-16T10:19:38.123124+00:00。主线基线：`289b3016463f60c159fb1255a581868daf04a104`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+核对时间：2026-10-16T10:42:28.584840+00:00。主线基线：`289b3016463f60c159fb1255a581868daf04a104`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
 
 本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](README.md#archive-boundary)，不能作为当前待办。
 
@@ -16,7 +16,7 @@
 
 步骤一有界 P4/P1–P3 验收已完成；步骤二 #2447/#2456、步骤三 #2471/#2511/#2568/#2592 均已合入当前 main。普通异步并非仍是单 launched；剩余重点是动态资源扩展收口、真实 workload 组合，以及 DFX 完整接线。
 
-\#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；当前 main `289b30164` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596当前8f9ff4f/base905d336e，单提交，尚未Ready。Codex已形成启动准入、动态提前入队、资源等待透传与HBG已构图计划续用的本地补丁，35文件补丁已冻结并交独立Codex完整复审；等待重试保留输入地址、构图结果与诊断记录，并补齐失败清理。四后端窄语法检查通过，未运行本地测试、未发布。当前远端CI16成功、1跳过、Ubuntu UT失败、macOS UT取消；两个C++测试目标的夹具缺陷已在本地修正，待CI验证。Qwen自动模式组合仍待验收。 manager已更新[设计要求](review/p4-qwen-grant-composition-decision.md)，已完成[完整实施合同](review/p4-auto-resource-admission-decision.md)，按已批准合同实施与验收，再做真实Qwen组合。
+\#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；当前 main `289b30164` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596已更新为单提交1c9c112aa/base289b30164，尚未Ready。启动只准入一个run，后续按端点资源证明扩展；资源等待后续用已构建的HBG计划，保留输入、诊断及失败清理。35文件修订已完整静审，原UT夹具问题已修，新CI正在验证；本轮未运行本地测试。四后端自动准入的真实持续运行与Qwen自动模式组合仍待验收。 manager已更新[设计要求](review/p4-qwen-grant-composition-decision.md)，已完成[完整实施合同](review/p4-auto-resource-admission-decision.md)，按已批准合同实施与验收，再做真实Qwen组合。
 
 本次按用户讨论修订目标和进度记录；上述代码/CI事实沿用标注核对时间，没有新增测试。合入事实、设计目标与执行证据分开记录。
 
@@ -39,21 +39,21 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | ---- | -------- | -------- | ------------------ |
 | P0 · 测量基线 | 已有基线，最终性能验收未完成 | [#2262](https://github.com/hw-native-sys/simpler/pull/2262) | 已有设备时基与观测工具；同负载、同设备条件下的端到端正确性、吞吐、长尾和资源峰值报告仍待交付。 |
 | P1 · run 私有资源 | 有界普通路径已交付 | [#2268](https://github.com/hw-native-sys/simpler/pull/2268) / [#2275](https://github.com/hw-native-sys/simpler/pull/2275) / [#2283](https://github.com/hw-native-sys/simpler/pull/2283) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) | 计时、arena、结果与终态按 run 保留。动态资源表由 #2571 扩展；不能用历史固定容量验收替代组合验收。 |
-| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | #2588：#2588当前aaa041ba2/base905d336e，单提交，未Ready。本次A3 HBG及A5板端通过；A3 TMR第二个run的64条PMU记录全零，72核初始化使能、结束未保持，改写来源未明。Codex已完成寄存器因果证据梳理，已核新日志：相邻设备关闭会走reset，但现有日志不能证明共享PMU域或时间重合；需要CI机器的拓扑及驱动日志继续定位。覆盖检查去重已发布，保存数据库1447次调用对应817个独立键，无耗时收益结论。A5 HBG ArgsDump仍不支持，审查线程待关闭。 当前CI已全部结束：16成功、1跳过、1失败、1取消；macOS的Python与358项CTest通过，但后续检查完成前取消，Codex正在核查尾部检查耗时。 |
+| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | #2588：#2588远端仍为aaa041ba2/base905d336e，未Ready。A3 TMR第二个run的64条PMU记录全零，改写来源未明，仍待设备拓扑与驱动日志。macOS明确触发20分钟job上限，Python及358项CTest通过，尾部检查归属未知。已审的三项命名CI步骤整理为本地单提交f87a865bf/base289b30164，但HTTPS缺workflow权限且SSH被拒，尚未推送、未启动新CI。此改动仅补足阶段证据，不声称修复超时或PMU。远端CI为16成功、1跳过、1失败、1取消；A5 HBG ArgsDump继续延期。 |
 | P2 E1 · 健康消费者 | 已合入，不再是“下一项” | [#2303](https://github.com/hw-native-sys/simpler/pull/2303) / [#2354](https://github.com/hw-native-sys/simpler/pull/2354) / [#2374](https://github.com/hw-native-sys/simpler/pull/2374) | callback owner、故障证据及匹配设备代际的停止准入已交付；通知不自动归属某个 run，通知缺席不证明成功。 |
 | P2 E2 · 完成与安全退休 | 批准的有界 program 范围已完成 | [#2272](https://github.com/hw-native-sys/simpler/pull/2272) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) / [#2330](https://github.com/hw-native-sys/simpler/pull/2330) / [#2379](https://github.com/hw-native-sys/simpler/pull/2379) / [#2391](https://github.com/hw-native-sys/simpler/pull/2391) / [#2411](https://github.com/hw-native-sys/simpler/pull/2411) | 有效本 run 完成证据与 Ok 判定走正常分支；错误、Partial 或停止未知保留对应回退/隔离。不得外推所有故障形态都无同步。 |
 | P3 · FIFO / build / host 访问 | 已合入；步骤一有界集成验收完成 | [#2314](https://github.com/hw-native-sys/simpler/pull/2314) / [#2356](https://github.com/hw-native-sys/simpler/pull/2356) / [#2399](https://github.com/hw-native-sys/simpler/pull/2399) / [#2406](https://github.com/hw-native-sys/simpler/pull/2406) | 保持 parent FIFO、recorder/build 所有权及调用方 host 就绪合同。扩大准入后仍需对应组合回归，不自动推导跨 run host 数据依赖。 |
 | P4 · native 提前入队 | 四后端有界能力已合入 | [#2419](https://github.com/hw-native-sys/simpler/pull/2419) / [#2481](https://github.com/hw-native-sys/simpler/pull/2481) / [#2491](https://github.com/hw-native-sys/simpler/pull/2491) / [#2560](https://github.com/hw-native-sys/simpler/pull/2560) | A3/A5 × HBG/TMR 设备串行、后继可提前提交；HBG 三套资源有 #2466/#2531。各 PR 的 endpoint、输入及诊断限制分别有效。 |
 | P5 · 真实 Worker.submit 与持续补队 | 有界公开路径已交付 | [#2419](https://github.com/hw-native-sys/simpler/pull/2419) / [#2446](https://github.com/hw-native-sys/simpler/pull/2446) / [#2471](https://github.com/hw-native-sys/simpler/pull/2471) / [#2511](https://github.com/hw-native-sys/simpler/pull/2511) / [#2568](https://github.com/hw-native-sys/simpler/pull/2568) | 真实 API、clone 双请求与同请求 DEVICE 连续反馈均有证据；现有可配置容量下的组合验收#2592已合入；默认自动资源准入正在实施，其Qwen组合验收仍待完成。 |
-| P6 · 资源准入、背压与吞吐 | 容量扩展已合入；组合/性能待验收 | [#2571](https://github.com/hw-native-sys/simpler/pull/2571) | 四后端容量 grant、launch_depth=4、64 次连续提交及五 run 场景已有证据；78365f79c已合入，补丁与已审a002一致；main源码基线已核，自动资源准入完整合同已批准，#2596已具备生产增长协调模块，Codex正补齐实际接线与资源压力验收；旧示例审批已撤回。 |
+| P6 · 资源准入、背压与吞吐 | 容量扩展已合入；组合/性能待验收 | [#2571](https://github.com/hw-native-sys/simpler/pull/2571) | 四后端容量 grant、launch_depth=4、64 次连续提交及五 run 场景已有证据；78365f79c已合入，补丁与已审a002一致；main源码基线已核，自动资源准入完整合同已批准，#2596已具备生产增长协调模块，完整修订已静审并发布，自动资源压力与持续运行验收待完成；旧示例审批已撤回。 |
 
 ## 剩余工作与依赖
 
 | 工作层 | 依赖 / 顺序 | 交付与限制 |
 | ------ | ----------- | ---------- |
 | R1 · 容量扩展收口 | #2571 已合入 → main 源码基线已核 | 合入补丁核验完成；历史CI不冒充最新main重测，后续集中组合验收。 |
-| R2 · 动态资源 × 真实 Qwen | R1 + 已合入 #2471/#2511/#2568 | 组合验证自动准入、transport/执行背压、持续 refill、DEVICE 最后消费者、失败/关闭；组件分别通过不等于组合已通过；旧4/2与固定N+1示例方案撤回；#2596正在修复实际准入/launch/等待续用接线及CI用例；随后完成Qwen自动模式组合验收。#2592已合入1a8a3ee2，合入补丁与已审93b7b4c3一致；最终CI18成功、1跳过，macOS重跑成功。作者板端证据为六请求636步、619条joined相邻边、608条refill，数值与最后消费者检查通过，小窗口和失败关闭对照完成。范围限固定形状、单A3 HBG端点、关闭诊断，替换请求设显式排干检查点；不代表自动资源准入或任意动态请求已验收。本轮未重测。 自动准入已批准实施；Codex作者负责，不重复#2592 driver。 |
-| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | #2588当前aaa041ba2/base905d336e，单提交，未Ready。本次A3 HBG及A5板端通过；A3 TMR第二个run的64条PMU记录全零，72核初始化使能、结束未保持，改写来源未明。Codex已完成寄存器因果证据梳理，已核新日志：相邻设备关闭会走reset，但现有日志不能证明共享PMU域或时间重合；需要CI机器的拓扑及驱动日志继续定位。覆盖检查去重已发布，保存数据库1447次调用对应817个独立键，无耗时收益结论。A5 HBG ArgsDump仍不支持，审查线程待关闭。 当前CI已全部结束：16成功、1跳过、1失败、1取消；macOS的Python与358项CTest通过，但后续检查完成前取消，Codex正在核查尾部检查耗时。 |
+| R2 · 动态资源 × 真实 Qwen | R1 + 已合入 #2471/#2511/#2568 | 组合验证自动准入、transport/执行背压、持续 refill、DEVICE 最后消费者、失败/关闭；组件分别通过不等于组合已通过；旧4/2与固定N+1示例方案撤回；#2596修订已发布，新CI与自动资源压力验收待完成；随后完成Qwen自动模式组合验收。#2592已合入1a8a3ee2，合入补丁与已审93b7b4c3一致；最终CI18成功、1跳过，macOS重跑成功。作者板端证据为六请求636步、619条joined相邻边、608条refill，数值与最后消费者检查通过，小窗口和失败关闭对照完成。范围限固定形状、单A3 HBG端点、关闭诊断，替换请求设显式排干检查点；不代表自动资源准入或任意动态请求已验收。本轮未重测。 自动准入已批准实施；Codex作者负责，不重复#2592 driver。 |
+| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | #2588远端仍为aaa041ba2/base905d336e，未Ready。A3 TMR第二个run的64条PMU记录全零，改写来源未明，仍待设备拓扑与驱动日志。macOS明确触发20分钟job上限，Python及358项CTest通过，尾部检查归属未知。已审的三项命名CI步骤整理为本地单提交f87a865bf/base289b30164，但HTTPS缺workflow权限且SSH被拒，尚未推送、未启动新CI。此改动仅补足阶段证据，不声称修复超时或PMU。远端CI为16成功、1跳过、1失败、1取消；A5 HBG ArgsDump继续延期。 |
 | R4 · 固定形状 vLLM eager | 普通异步组合边界成立；目标 workload / ABI / 输出合同固定 | 后续集成里程碑，不是 Pipeline A 当前所有功能的前置；DFX 若属于验收要求则单列依赖。 |
 | R5 · 约定动态请求范围 | 固定形状 eager + 明确 batch / request lifecycle 范围 | 逐项约定准入、取消、失败、回收和资源背压；不宣称无限请求或无限内存。 |
 | R6 · capture / replay | 准备产物、参数绑定、graph 引用寿命及目标 SDK 合同成立 | 后续独立能力；当前普通异步不以 capture 实现为前置。 |
