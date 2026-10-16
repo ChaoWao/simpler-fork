@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T08:02:27.277519+00:00",
+  "exported_at": "2026-10-16T08:04:43.437491+00:00",
   "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "132dddb2a475a41b4d2cb26fdfdf663405eee2b4dbfcd48c0d21a614e2331822",
-      "export_sha256": "01053f4c18f689e5a1a96a7388bbcc826730eb947c4779930431fc7ea645d488",
+      "source_sha256": "dc6fd818b4d0dc549173bf41bfc8bb585b1e734b88d898ad58907fa8815d468f",
+      "export_sha256": "3370050873ab6d4bfab14df420d3801dd59c5c3c09d9d068f5b1b389f0decf88",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "08f1401b4c47da5e1bb1e391a0a25a7d21b1f82a7a58af7d779be1b915f1c5ff",
-      "export_sha256": "65112fc68b45f5d601122e3b7617fa420006ed15d26812f71949cd9b5dde2b85",
+      "source_sha256": "01842a320d1c865c74b8e0337a6e57137e6e7716539040833fa25b02b9c1cc64",
+      "export_sha256": "a6bf56742190b154384a2070626c82c564bc851ed2474f316848e53c9b9806ec",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
@@ -194,8 +194,7 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html",
-    "review/dfx-joined-launch-complete-design.md"
+    "run-pipeline-track-a.html"
   ],
   "last_changed_omitted_local_link_count": 14
 }
