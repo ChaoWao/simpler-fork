@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T04:32:04.003549+00:00",
+  "exported_at": "2026-10-16T04:46:46.576735+00:00",
   "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "46989d63c115258d95d5e1451fe437a9c692817a050a6a4542c93cba7be25827",
-      "export_sha256": "ff5ad5fcc3fcbae8689a51f4a0e511630ec0bcfda874f8751905838e83c97f79",
+      "source_sha256": "f555bfa434fd245fe102e8ab640ec089993f3ca149f7a1a2f4530225845a55ff",
+      "export_sha256": "19a3caa7475dbfeed430599bdeaab7a7a01200aa49200565c7ecd477bf6f63b0",
       "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "ab15a08b40800841c6bfbc7e4ecba9727299bfd1272cac444cb3654485848de1",
-      "export_sha256": "76763a29c7267e07294b0e3a999b1092deb84962f79bc718bd1f5e585bd772e3",
+      "source_sha256": "aa97eb694927c1e4b8fde49bc3db1e2078f15e1b3c05a5084d91585c0254405a",
+      "export_sha256": "539667cf79f6ea784905b55555fb6df3963890369b62d257b3b63fdb9b8056fa",
       "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
@@ -117,9 +117,9 @@
     {
       "file": "review/dfx-a5-task-args-capture-decision.md",
       "source_document": ".docs/review/dfx-a5-task-args-capture-decision.md",
-      "source_sha256": "184bccc37e0c6ba65dbf8dc25740ac46fca5ac6d15e2307814b14fcc1d50b8ef",
-      "export_sha256": "e7a4cd575ab642465dad3d9ddcde3835336a45594513497d72e316a3ede17d02",
-      "source_main": "cc6c4d51f79e98af5ef07829e3ca71c36f752a43"
+      "source_sha256": "b8dfeee21b70bbbe40c179a655b8fd2b549a72c68297b4053c7b17cbead43fb9",
+      "export_sha256": "b7dd928c6dec404d5842d4492c325e9db4b703497b8af9524edbc5574f5464c2",
+      "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
       "file": "review/dynamic-registration-once-decision.md",
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/dfx-a5-task-args-capture-decision.md"
   ],
   "last_changed_omitted_local_link_count": 13
 }
