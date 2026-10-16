@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T21:23:49.571677+00:00",
+  "exported_at": "2026-10-16T21:32:57.602698+00:00",
   "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "96fe7c0eab6d01e693c9d694b0987d0e3f75810b1ca637bd2f6b3bb352af1058",
-      "export_sha256": "baa1c83477a366d3dec468c4dfac85279b7bf715a6bc4c99fa06d0e6360ea1bd",
+      "source_sha256": "8e10862ab1dab6061aa9b0379a8b7ef02d09c465ca1ea14d8d5baf57488beec2",
+      "export_sha256": "18053a106cc5d7df450aa7e7a69f01057267b8ae7117c371871f70d5818589ab",
       "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "59ffcb13d59a4c76814cc94b0a91517e3ef59beca43c7ddf94291708030c2663",
-      "export_sha256": "6f31c69c2e6a364c5d3ba2beecd5e8f424ba604edda42761ee316990eeb7934b",
+      "source_sha256": "51e8ba7ac5476faf24056bc908ff2bddb6e9977f0ae3498cd78139aa3a172779",
+      "export_sha256": "2fc5a4cc5e8bc62bbd69c9de75b114a62f91edaaf41c21bc4605f56a181c2618",
       "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
     },
     {
@@ -193,8 +193,7 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md",
     "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 16
+  "last_changed_omitted_local_link_count": 12
 }
