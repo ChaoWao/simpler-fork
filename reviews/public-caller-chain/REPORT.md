@@ -26,3 +26,7 @@ Local evidence: [A3 eight-case task](../../LOCAL-EVIDENCE.md#artifact-029ffb5b86
 [Full CPU Python UT](../../LOCAL-EVIDENCE.md#artifact-25732957e1bd). Runtime rebuilt after the final commit; all 20 focused public borrowed checks passed in 0.77 s. The full hardware matrix above belongs to the precommit candidate with the same executable test content, not to an additional final-head board run.
 
 Final [head rebuild](../../LOCAL-EVIDENCE.md#artifact-6baa0010c90e), [20 public borrowed checks](../../LOCAL-EVIDENCE.md#artifact-59553c0916bb), and [initial CI status](../../LOCAL-EVIDENCE.md#artifact-7cb20f12b2ad). No A5 hardware result or merge is claimed at this checkpoint.
+
+## Merge disposition
+
+PR #2606 merged as `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1`. Final head `f2a55941` check rollup reports 8 successful checks and 9 skips; skips reflect the test-only CI gates and are not additional hardware passes. Subsequent work starts on that main baseline. Historical pending statements above retain their original checkpoint.

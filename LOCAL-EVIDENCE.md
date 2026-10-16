@@ -66,6 +66,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-07114129f728"></a>
+
+## 07114129f728
+
+原引用：`focused-green.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
+
 <a id="artifact-0a579ac039ff"></a>
 
 ## 0a579ac039ff
@@ -145,6 +153,14 @@
 原引用：`caller/run.log`
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
+
+<a id="artifact-11717e2213ba"></a>
+
+## 11717e2213ba
+
+原引用：`loader-red.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-133f5e080b94"></a>
 
@@ -482,6 +498,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
+<a id="artifact-3dac033ae80d"></a>
+
+## 3dac033ae80d
+
+原引用：`final-counter-tests.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
+
 <a id="artifact-3dd5ca4db17b"></a>
 
 ## 3dd5ca4db17b
@@ -625,6 +649,14 @@
 原引用：`cmake.log`
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
+
+<a id="artifact-5375d0121f9c"></a>
+
+## 5375d0121f9c
+
+原引用：`query-red.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-53a9e7b33ebe"></a>
 
@@ -794,6 +826,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-6496ee051ddb"></a>
+
+## 6496ee051ddb
+
+原引用：`board-full.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
+
 <a id="artifact-65881e0ed0c4"></a>
 
 ## 65881e0ed0c4
@@ -817,6 +857,14 @@
 原引用：`probes/queued-prepared-results/tq0.log`
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
+
+<a id="artifact-6a17a7c45f1b"></a>
+
+## 6a17a7c45f1b
+
+原引用：`a5sim-full.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-6a2c7d8549c7"></a>
 
@@ -881,6 +929,22 @@
 原引用：`a3sim.log`
 
 引用文档：[reviews/chip-child-native/REPORT.md](reviews/chip-child-native/REPORT.md)。材料未收录。
+
+<a id="artifact-71cd3ca5db81"></a>
+
+## 71cd3ca5db81
+
+原引用：`hooks.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
+
+<a id="artifact-7490d94d2ccd"></a>
+
+## 7490d94d2ccd
+
+原引用：`cpp-full.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-74ad272e9c26"></a>
 
@@ -1002,6 +1066,14 @@
 
 引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
 
+<a id="artifact-8c9f63679303"></a>
+
+## 8c9f63679303
+
+原引用：`pyut-full.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
+
 <a id="artifact-8df2cb816793"></a>
 
 ## 8df2cb816793
@@ -1009,6 +1081,14 @@
 原引用：`final-tests.log`
 
 引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
+
+<a id="artifact-8e213fb2a442"></a>
+
+## 8e213fb2a442
+
+原引用：`final-focused.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-8f9da0ba1daa"></a>
 
@@ -1098,6 +1178,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
 
+<a id="artifact-9bd823655dd3"></a>
+
+## 9bd823655dd3
+
+原引用：`review/codex-dfx-ssh-resume-result.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-9be6d3a4b63a"></a>
 
 ## 9be6d3a4b63a
@@ -1137,6 +1225,14 @@
 原引用：`descriptor-main-0dbf12ae/current-flow.png`
 
 引用文档：[reviews/descriptor-main-0dbf12ae.md](reviews/descriptor-main-0dbf12ae.md)。材料未收录。
+
+<a id="artifact-a3327760b35a"></a>
+
+## a3327760b35a
+
+原引用：`a3sim-full.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-a33c42bab2d8"></a>
 
@@ -1594,14 +1690,6 @@
 
 引用文档：[reviews/descriptor-main-0dbf12ae.md](reviews/descriptor-main-0dbf12ae.md)。材料未收录。
 
-<a id="artifact-dd2e68105c35"></a>
-
-## dd2e68105c35
-
-原引用：`review/codex-dfx-ci-tail-publish-result.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-e04379b57cc8"></a>
 
 ## e04379b57cc8
@@ -1713,6 +1801,14 @@
 原引用：`missing-d2d.log`
 
 引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
+<a id="artifact-ee1f3f654576"></a>
+
+## ee1f3f654576
+
+原引用：`final-build.log`
+
+引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
 <a id="artifact-ee79834e8745"></a>
 

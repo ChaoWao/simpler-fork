@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `4aedb1f43`：#2604 已合入，空调用完成与持久 INOUT 验收已交付；当前 [PR #2606](https://github.com/hw-native-sys/simpler/pull/2606) 补齐 public Worker 的跨 caller-stream DEVICE 数据链。** #2604 head `1f97d9f8` 最终 CI 19 通过/1 跳过，随后合入 `4aedb1f43`；保留其原 head 证据。下一笔在原有 public 硬件测试中连接三次真实调用，使用事件与 D2D，不在每次调用之间成功 wait/poll。详见[当前证据](reviews/public-caller-chain/REPORT.md)。#2605 已承接固定形状框架集成；框架后台队列证明、partial/fault/DFX 与完整业务矩阵分别记账，K2c 未整体结项。
+**2026-10-16 / main `17129ba49`：#2606 已合入，公开显式跨 stream 数据链已交付；当前 [PR #2607](https://github.com/hw-native-sys/simpler/pull/2607) 推进 S3 的最小静态能力合同。** #2606 head `f2a55941` 最终 CI 8 成功/9 跳过，合入 `17129ba49`；保留其原 head 证据。当前 [静态能力增量](reviews/runtime-capability-contract/REPORT.md)以 version/size/flags 区分 owned、borrowed、native caller ordering 与 capture/replay；旧 owned profile 保持兼容，per-call 判定不由静态位替代。#2605 的框架集成、partial/fault/DFX、S3 module owner 与图保活分别记账，K2c/S3 均未整体结项。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -74,6 +74,8 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 框架有后台发射队列时，adapter 必须在同一有序队列进入 native enqueue，并保持排队期参数与 allocation 引用；调用线程直接提交的测试不代替此验收。TQ=0/1、真实 enqueue 返回合同和 caller 后序均须成立。K2c 完成后才交付公共 kernel eager 可用状态，之后进入 capture。
 
 ### S3：动态模块与能力合同——可并行，C2 必须依赖
+
+当前实现候选先交付最小能力查询与 loader 校验：onboard flags=owned+borrowed+caller ordering，sim flags=owned；capture bit 恒关闭。旧模块无查询时只保留普通 owned profile；坏 ABI、失败查询和缺失所需能力在 context 创建前拒绝；拒绝不消耗初始化，允许重试。值快照属于 ChipWorker，清理后清除。下面的 module owner 与最后使用者保活仍须完成，不能把一个查询入口写成 S3 完成。
 
 把既有 dlopen/dlsym、required/conditional 符号、函数指针和 DSO 寿命收口到 ChipWorker 内部 module owner。它是资源 owner，不是另一个 runner，也不要求另打包一份 C++ SDK so。
 
