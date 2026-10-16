@@ -33,3 +33,5 @@ Hardware task `task_20261016_000147_12853944985` holds devices 1/4 through the r
 After merge/acceptance, K2c connects public Worker borrowed initialization and per-submit caller stream to the existing native path. It must qualify source/context refusals, both runtimes and caller ordering through the real public entry; common internal materialization does not establish that qualification. S3 module ownership remains independently required by C2. Capture/replay is subsequent work.
 
 Final committed head `246d2156` rebuilt successfully; **321 focused tests passed**. Product PR: [#2597](https://github.com/hw-native-sys/simpler/pull/2597). Initial CI is pending; no cross-platform all-green result is claimed.
+
+Merged as main `e994e106d`. The next public borrowed eager step is tracked in [its report](../public-borrowed-worker/REPORT.md); preceding test numbers remain attached to their original head.

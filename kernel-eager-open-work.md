@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `8c3b0e174`：#2595 已合入；当前 PR #2597 收口共同参数 materialization。** 统一的是描述符解析与芯片 POD 构造，direct L2/child/兼容入口的快照、授权与 backing/source 引用、ImportRegistry 关闭仍由各 owner 负责。此笔合入并验收后进入 K2c 公开 borrowed eager 接入。
+**2026-10-16 / main `e994e106d`：#2597 已合入，K2a/b 共同接口已交付；当前 PR #2599 接公开 borrowed eager。** 同一 Worker init/submit/run 复用原 native owner/lane、参数 materialization 和退休。A3 的公开实际调用通过 8 组合；完整 K2c 验收保留后续矩阵，详见[证据](reviews/public-borrowed-worker/REPORT.md)。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -52,8 +52,8 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 ### K2b：借用环境与内部接入——身份必须有消费者
 
 
-当前 #2587 已合入：native 记录 process、非重复 incarnation、context generation、device 与 owned/borrowed 策略；source 的 wrap/descriptor/acquire 比较同一 native 身份。成功 teardown 清除，失败 rollback/teardown 保留供 cleanup retry。当前 RTS identity 仍由既有 runner 判定，不能把逻辑 generation 当 RTS reset 探测器或地址所有权证明。公开 source provider 仍是 Program Worker。此笔没有收口所有内部 adapter，也没有开放 public borrowed init；K2b 尚未完成。
-#2589 已合入（验证 head `27098ab9`）：direct L2 Worker 直接持有 `_ChipWorker`，既有 Worker registry、operation lease、imports、source uses 和 close journal 继续负责原有状态。此交付时公开兼容 ChipWorker 和 forked chip child 仍走 wrapper。`_initialize_chip_runtime` 仅共用日志/路径/原生 init 参数转换，不另建 executor 或生命周期 owner。#2593 已合入，沿真实 child 控制消费者收口通信句柄状态：init 成功才发布新值，失败保留旧值，alloc/release 显式消费；native 保留物理资源所有权。#2595 已移除 child 的 wrapper 穿透；当前 PR #2597 统一四处 materialization，保留快照、入口前置授权和原 registry 寿命。
+当前 #2587 已合入：native 记录 process、非重复 incarnation、context generation、device 与 owned/borrowed 策略；source 的 wrap/descriptor/acquire 比较同一 native 身份。成功 teardown 清除，失败 rollback/teardown 保留供 cleanup retry。当前 RTS identity 仍由既有 runner 判定，不能把逻辑 generation 当 RTS reset 探测器或地址所有权证明。此笔交付时 source provider 仍是 Program Worker；后续 #2589/#2593/#2595/#2597 已闭合 K2b 的内部接入。公开 borrowed provider 由当前 PR #2599 接线。
+#2589 已合入（验证 head `27098ab9`）：direct L2 Worker 直接持有 `_ChipWorker`，既有 Worker registry、operation lease、imports、source uses 和 close journal 继续负责原有状态。此交付时公开兼容 ChipWorker 和 forked chip child 仍走 wrapper。`_initialize_chip_runtime` 仅共用日志/路径/原生 init 参数转换，不另建 executor 或生命周期 owner。#2593 已合入，沿真实 child 控制消费者收口通信句柄状态：init 成功才发布新值，失败保留旧值，alloc/release 显式消费；native 保留物理资源所有权。#2595 已移除 child 的 wrapper 穿透；#2597 已统一四处 materialization，保留快照、入口前置授权和原 registry 寿命。
 
 在原 Worker/ChipWorker 的生命周期中建立一份环境绑定，关联 RTS context identity、进程、非零逻辑 context generation 与 owned/borrowed 权限。所有环境使用和 source attachment 都验证同一份绑定。设备 ordinal 只是选择信息，不能作为外部地址授权。
 
@@ -107,8 +107,8 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 | #2589 已合入：K2b direct L2 | Worker 直接持有原生 binding；共用 init 路径与 options；不增加 executor | child/公开兼容 wrapper 暂留；无公开 borrowed init 或 caller API |
 | #2593 已合入：K2b child 控制状态 | base communicator 的控制句柄归 serve loop；init 返回值与 alloc/release 显式传递 | 不改 native 缓存/资源所有权、mailbox wire 或排队协议 |
 | #2595 已合入：K2b child 原生接入 | child 直接构造 `_ChipWorker`、共用 init、原生注册/通信/提交/退休；保留 Host log flush 与 teardown 观察 | 不改 mailbox/准入/完成协议；不开放 public borrowed |
-| PR #2597 当前：K2b 参数 | direct L2 / child 串行和暂存提交 / 兼容 ChipWorker 共用 `_materialize_chip_task_args`；本次地址解析与 POD 构造不关闭 registry | 保留各入口快照、权限/source 引用与关闭时机；不复制 tensor 内容、不授权外部 allocation |
-| 随后：K2c | 同一 public init/submit 连通 + 两 runtime eager 资格证明 | 不把 native smoke 宣布为完整框架/业务验收 |
+| #2597 已合入：K2b 参数 | direct L2 / child 串行和暂存提交 / 兼容 ChipWorker 共用 `_materialize_chip_task_args`；本次地址解析与 POD 构造不关闭 registry | 保留各入口快照、权限/source 引用与关闭时机；不复制 tensor 内容、不授权外部 allocation |
+| 当前 PR #2599：K2c 公开接线 | 同一 public init/submit/run；借用初始化、caller stream、前置拒绝、source 保活与 close 重试 | A3 8 组合通过；A5/框架后台队列/故障与 DFX 完整资格不由本笔冒充 |
 | 并行：S3 | 单独的 module owner；随后单独能力 profile/query | 不改变运行排序；不把整个函数表迁移和所有 façade 拆分塞入一笔 |
 
 同一行若仍太大，沿真实生产消费者拆 PR，并逐笔保留不变量；目标能力与验收不能降级为可选扩展。S3 与 K2 即使逻辑可并行，仍需协调共同文件、loader/环境保留和 close 路径。U2b/Remote 不作 K2 前置，但每条新增生产复制/网络路径当笔就必须证明保活；不能拖到 U4 再补。

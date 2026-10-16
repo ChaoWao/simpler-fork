@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线与 API 层次快照固定 main `8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba`，含已合入 #2595。
-- 本次记录的待合入工作为 [#2597](https://github.com/hw-native-sys/simpler/pull/2597)，head `246d21562f0d31980d2e71de8f2c0efcb5fb7da5`。修订验证及限制见对应报告；CI 状态以报告注明的查询时刻为准。
+- 最新路线与 API 层次快照固定 main `e994e106d8020c049dc419a67498db37bc6fcd3d`，含已合入 #2597。
+- 本次记录的待合入工作为 [#2599](https://github.com/hw-native-sys/simpler/pull/2599)，head `b91c04b505daabf3499cef56634d73a2f194f0cc`。修订验证及限制见对应报告；CI 状态以报告注明的查询时刻为准。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。

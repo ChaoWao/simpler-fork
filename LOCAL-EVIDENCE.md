@@ -138,6 +138,14 @@
 
 引用文档：[reviews/leased-context-validation/REPORT.md](reviews/leased-context-validation/REPORT.md)。材料未收录。
 
+<a id="artifact-13fc48564a57"></a>
+
+## 13fc48564a57
+
+原引用：`board-task.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-1529c58b9c3e"></a>
 
 ## 1529c58b9c3e
@@ -298,6 +306,14 @@
 
 引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
+<a id="artifact-2e416c6df573"></a>
+
+## 2e416c6df573
+
+原引用：`final-build.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-2eaae16ff28b"></a>
 
 ## 2eaae16ff28b
@@ -369,14 +385,6 @@
 原引用：`board/task.log`
 
 引用文档：[reviews/shared-chip-arguments/REPORT.md](reviews/shared-chip-arguments/REPORT.md)。材料未收录。
-
-<a id="artifact-397c2c9fcc05"></a>
-
-## 397c2c9fcc05
-
-原引用：`review/pr2588-c04408217-manager-review.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-3ad4cb3622b7"></a>
 
@@ -529,6 +537,14 @@
 原引用：`cmake.log`
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
+
+<a id="artifact-53a9e7b33ebe"></a>
+
+## 53a9e7b33ebe
+
+原引用：`final-focused.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-54669faff63e"></a>
 
@@ -713,6 +729,14 @@
 原引用：`../probe_i_publication_contracts.py`
 
 引用文档：[probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
+
+<a id="artifact-6ec23ffc3a04"></a>
+
+## 6ec23ffc3a04
+
+原引用：`a3sim.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-706dbaba9b42"></a>
 
@@ -938,6 +962,22 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/README.md](probes/README.md)。材料未收录。
 
+<a id="artifact-a7e737161e76"></a>
+
+## a7e737161e76
+
+原引用：`pyut.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-a87239cb9532"></a>
+
+## a87239cb9532
+
+原引用：`review/pr2596-8f4725ed-manager-review.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-ab59ee585958"></a>
 
 ## ab59ee585958
@@ -1017,6 +1057,14 @@
 原引用：`tq0-retry.log`
 
 引用文档：[probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
+
+<a id="artifact-b492ba43bf57"></a>
+
+## b492ba43bf57
+
+原引用：`review/pr2588-da746-manager-review.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-b4f6e70c4ee1"></a>
 
@@ -1193,6 +1241,14 @@
 原引用：`program-queue-design-alignment.md`
 
 引用文档：[runtime-design-principles.md](runtime-design-principles.md)。材料未收录。
+
+<a id="artifact-d3e1670b627b"></a>
+
+## d3e1670b627b
+
+原引用：`focused.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-d44ad0d80e23"></a>
 
@@ -1426,6 +1482,14 @@
 
 引用文档：[reviews/chip-child-native/REPORT.md](reviews/chip-child-native/REPORT.md)。材料未收录。
 
+<a id="artifact-f646aedf2e50"></a>
+
+## f646aedf2e50
+
+原引用：`hooks.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
 <a id="artifact-f7aca95ed3d6"></a>
 
 ## f7aca95ed3d6
@@ -1441,6 +1505,14 @@
 原引用：`review/p4-qwen-grant-composition-decision.md`
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
+
+<a id="artifact-fc72937e7a43"></a>
+
+## fc72937e7a43
+
+原引用：`a5sim.log`
+
+引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
 <a id="artifact-fd3955154e6e"></a>
 
