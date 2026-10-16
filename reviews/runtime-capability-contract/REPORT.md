@@ -1,6 +1,10 @@
-# Static runtime capability contract
+# Withdrawn: static runtime capability contract
 
-Baseline: main `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` (#2606). Branch `feat/runtime-capability-contract`, current single commit `f736c882c19d8b7db6f6695fd7fcace7c703e8fc` on the stated baseline; PR [#2607](https://github.com/hw-native-sys/simpler/pull/2607) is open; CI is pending. Product diff: 9 files, +259/−11. This delivers the capability/profile subset of S3; module ownership and graph/callable/run retention remain separate work.
+Baseline: main `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` (#2606). Branch `feat/runtime-capability-contract`, current single commit `f736c882c19d8b7db6f6695fd7fcace7c703e8fc` on the stated baseline; PR [#2607](https://github.com/hw-native-sys/simpler/pull/2607) is closed and was not merged. Product diff: 9 files, +259/−11. This is historical experimental evidence, not a delivered S3 increment.
+
+## Withdrawal and design correction
+
+User review rejected this PR on 2026-10-16. Its query shifts existing unsupported-operation refusal earlier; it adds no execution capability. The version/size/tail negotiation repeats mechanisms removed by #2029 and #2113; same-build DSO boundaries do not establish independent ABI evolution. #2607 is closed without merge. Normative principles and the roadmap remove versioned capability queries as a required milestone. The passing tests below only prove the withdrawn implementation, not its necessity. The next deliverable fixes an actual borrowed HBG eager sequence.
 
 ## Contract
 

@@ -50,6 +50,10 @@ Program 提供设备与 IO 管理，kernel 提供借用环境和 caller 顺序�
 
 动态模块的加载、能力声明和寿命由同一个 module owner 管理。静态支持与逐调用就绪分别检查；有效 callable、run、graph 或 replay 仍使用代码时不得卸载。模块能力不代表公共路径已通过端到端验收；兼容旧 C symbols 不意味着继续维护另一套执行器。
 
+**内部接口不预设版本协商。** 同仓、同构建的结构体与动态模块接口不新增 `abi_version`、`struct_size` 或扩展尾部协商。跨 `.so` 不构成独立演进的证据；能力查询也不是默认前置。必须先指出实际消费者和需要支持的独立演进双方，才能讨论兼容协议。已有跨仓或远端协议按真实合同单独维护。此规则沿用 [#2029](https://github.com/hw-native-sys/simpler/pull/2029)、[#2113](https://github.com/hw-native-sys/simpler/pull/2113)、[#1991](https://github.com/hw-native-sys/simpler/pull/1991)、[#1996](https://github.com/hw-native-sys/simpler/pull/1996) 的已合入判断。
+
+**PR 按实际功能闭环交付。** 从真实需求或缺陷出发，完成生产调用、错误与资源寿命，再以用户可观察的结果验收。文件数量和提交大小不是功能边界；不把接口占位、重复能力标志及只验证自定义规则的测试当作独立功能交付。
+
 共同生命周期入口把执行环境校验作为统一前置条件，不由每个 C API 或架构清理函数自行判断 `is_kernel()` 后决定是否检查。环境接入层负责 Program 的线程绑定与借用环境的 caller context 校验；设备所有权决定 reset 权限。借用环境即使 streams/events 已关闭，只要仍有资源需要清理重试，其 context identity 就必须保留。初始化防止拥有／借用身份互换的保护仍需存在，不能以统一接口为由删除。
 
 PyPTO→simpler 的 host 入参只在 API 期间借读。返回后还需使用的数据，simpler 在返回前完成必要快照／序列化，包括被描述指针指向的 host 控制内容；不能只复制含指针的结构体。若返回值包含 host 数据，也须按调用方拥有的值交付，不暴露一个要求调用方管理 runtime 内部 host 对象寿命的接口。框架队列尚未进入 simpler API 时，由框架 adapter 保留自己的封包。
@@ -73,6 +77,8 @@ Simpler 分配的 device 资源可以通过 handle 交由 PyPTO 控制逻辑生�
 ### 4. 让真实依赖决定排队，不让 host 回收决定下一次启动
 
 资源和数据依赖允许时，后继可以提前进入设备队列；前驱 host finalize、结果导出或对象销毁不天然成为后继 launch 的前置。各阶段有自己的工作容量和使用期限，不要求整个 pipeline 按一个固定节拍交接。
+
+借用设备不等于冻结内部 arena 的容量。Eager 可在既有预算和实际使用期限内，通过共同替换事务增长没有在飞读写者的 bank；分配失败保留旧容量和地址。Capture 的固定地址要求来自图的实际引用，不能仅凭 kernel 模式对所有 eager 调用提前施加。图接入仍必须证明其地址保活和容量合同，不能从 eager 增长推定图可迁移。
 
 这不承诺无限队列或永不阻塞。[Probe L](kernel-mode-design.md) 观测到 RTS 饱和时 enqueue 调用阻塞，不能承诺底层返回 WouldBlock；simpler 自己的容量预检拒绝是另一层合同。资源预算、合法 host 访问、底层队列容量和真实依赖都可以产生背压；限制必须能解释对应的资源或顺序原因。
 

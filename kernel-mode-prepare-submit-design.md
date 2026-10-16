@@ -89,7 +89,7 @@ HBG 先建立本次 host-view window 和 tensor slice offsets，再做依赖它�
 
 图 g 有 N_g 个节点，U_g 个需要显式原图更新。稳定槽 HBM 为 `Σ_g Σ_(i in U_g) aligned(slot_bytes[g,i])`。K 张同形图、每图 N 个可更新节点时是 K×N 份，不是 B 份。每类 budget 计入对齐、保留空闲块和仍被引用的旧代块；各类不重叠记账，HBM 总上限覆盖它们之和。Host 版本与 RTS/provider 自有内存另列可见账。
 
-已有图引用的底层地址冻结；包括 `requested_size=0` 的释放请求也不能放行。已分配块内的逻辑缩小可保留原地址和 committed size；不能借缩小换块。对所有将改动的区域先整批预检，避免后一块拒绝触发回滚、反而释放前面已被图引用的地址。当前 `kernel_arena_change_is_forbidden` 已体现 zero-size 与增长的检查，后续协议不能削弱它。
+已有图引用的底层地址冻结；包括 `requested_size=0` 的释放请求也不能放行。已分配块内的逻辑缩小可保留原地址和 committed size；不能借缩小换块。对所有将改动的区域先整批预检，避免后一块拒绝触发回滚、反而释放前面已被图引用的地址。图接入必须按图 owner 的实际引用保护这些地址。Kernel/borrowed 模式本身不代表已有图引用；[#2608](https://github.com/hw-native-sys/simpler/pull/2608) 在 capture 仍拒绝的前提下，让 eager 消费共同替换事务，解除按模式冻结容量的限制。C2 仍须交付图引用期间的地址保活，不能从 eager 可增长推定图中地址可以移动。
 
 本协议执行链含五个逻辑事件；publication 增加每节点 Ready，每图增加 Root。当前选择**每图独立预留**：
 

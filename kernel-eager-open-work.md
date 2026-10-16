@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `17129ba49`：#2606 已合入，公开显式跨 stream 数据链已交付；当前 [PR #2607](https://github.com/hw-native-sys/simpler/pull/2607) 推进 S3 的最小静态能力合同。** #2606 head `f2a55941` 最终 CI 8 成功/9 跳过，合入 `17129ba49`；保留其原 head 证据。当前 [静态能力增量](reviews/runtime-capability-contract/REPORT.md)以 version/size/flags 区分 owned、borrowed、native caller ordering 与 capture/replay；旧 owned profile 保持兼容，per-call 判定不由静态位替代。#2605 的框架集成、partial/fault/DFX、S3 module owner 与图保活分别记账，K2c/S3 均未整体结项。
+**2026-10-16 / main `17129ba49`：#2606 已合入；#2607 已关闭且未合入。** 版本化能力查询没有增加执行能力，并违反同仓内部格式不预设协商的既有判断。当前 [PR #2608](https://github.com/hw-native-sys/simpler/pull/2608) 修复 [borrowed HBG eager 的 arena 增长](reviews/borrowed-eager-arena-growth/REPORT.md)，交付无需非空预热的连续空／大／小图调用，资源失败回滚与实际上板结果必须一起验收。#2605 的框架集成、partial/fault/DFX 与图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -75,13 +75,13 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 
 ### S3：动态模块与能力合同——可并行，C2 必须依赖
 
-当前实现候选先交付最小能力查询与 loader 校验：onboard flags=owned+borrowed+caller ordering，sim flags=owned；capture bit 恒关闭。旧模块无查询时只保留普通 owned profile；坏 ABI、失败查询和缺失所需能力在 context 创建前拒绝；拒绝不消耗初始化，允许重试。值快照属于 ChipWorker，清理后清除。下面的 module owner 与最后使用者保活仍须完成，不能把一个查询入口写成 S3 完成。
+#2607 的静态能力查询已撤回。S3 以实际代码寿命问题和消费者为交付边界，不再把版本/大小结构、能力位或 loader profile 单独作为下一笔功能。沿用现有执行入口的明确拒绝；module owner 若重构，须同时证明最后使用者退出前不会卸载、失败清理可重试。
 
 把既有 dlopen/dlsym、required/conditional 符号、函数指针和 DSO 寿命收口到 ChipWorker 内部 module owner。它是资源 owner，不是另一个 runner，也不要求另打包一份 C++ SDK so。
 
-能力声明分别表达 owned/borrowed 环境、native caller ordering、capture/replay；以有版本/大小的最小能力查询集中校验，不用符号存在推定 stub 支持。旧 kernel supported 位只描述旧入口，不能作为公共 K2 交付门。静态模块能力与每次“现在可否 join”分开，后者仍受配置、资源与当前状态约束。
+静态支持与每次“现在可否 join”仍需区分，但不由此推导必须增加查询接口。同仓、同构建的边界不加 `abi_version`/`struct_size`；跨 `.so` 本身不是兼容协议的理由。旧 kernel supported 位只描述旧入口，不能作为公共 K2 交付门。
 
-本次选择保留现有执行 C symbols，并在内部按职责分组；**不新增一张覆盖全部 API 的 get_api 函数表**。兼容旧 Program 模块的 loader profile 必须明确，旧模块缺少能力查询时不得猜测 borrowed/capture 支持。run、有效 callable、graph 和在飞 replay 持有 module 资源；卸载早于最后引用是验收失败。unknown completion / close 失败须保留正确的 module 与环境，不随 C++ wrapper 析构误 unload。
+本次选择保留现有执行 C symbols，并在内部按职责分组；**不新增一张覆盖全部 API 的 get_api 函数表**。沿用既有导出与明确的操作返回值；符号存在不等于操作成功，也不因此增加一层兼容协商。run、有效 callable、graph 和在飞 replay 持有 module 资源；卸载早于最后引用是验收失败。unknown completion / close 失败须保留正确的 module 与环境，不随 C++ wrapper 析构误 unload。
 
 ## 2. API 审查与原路线的对应
 
@@ -91,7 +91,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 | R2 拒绝与设备失败混同 | #2580 → K2a；C1/C4 继续消费 | 拒绝不消耗状态；真实失败终态；partial/unknown 保留；binding 保持分类；禁止字符串解析 |
 | R3 owned/borrowed 与旧 kernel ABI 并存 | K2b；能力归 S3 | 共同环境策略、执行/注册/退休；旧 C symbols 兼容；不恢复第二套旧 launch，不以旧 supported 位代替 eager 验收 |
 | R4 context generation 未消费 | K2b → K2c；图代际归 C2 | 环境/source/调用关联；stale 与错误进程拒绝；close debt 保留；不混用 slot/Buffer generation |
-| R5 loader 与能力散落 | S3，可与 K2 并行；C2 前完成 | DSO owner + required/conditional profile + 最小版本化能力查询；无全 API get_api 表；graph 引用阻止早卸载 |
+| R5 loader 与能力散落 | S3，可与 K2 并行；C2 前完成 | DSO owner + 既有导出和实际失败／保活合同；无全 API get_api 表；graph 引用阻止早卸载 |
 | R6 façade 职责过宽 | K2a/b 的 run/环境；U1b/U2b 的 Buffer/IO；U3/U4 的 remote/关闭 | 随真实 owner 移交实现，保留唯一 admission/close owner；不一次性重写 Worker，不要求 U3 完成才接 kernel |
 | R7 公开参数与内部 wire 混淆 | U1b/K2b；实际 device ABI 改动归 C1 | 一份公开 Tensor/Buffer；内部 ChipTensor/POD 保留；未使用 header 不冒充生产协议；producer/reader 同步迁移 |
 
@@ -111,7 +111,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 | #2595 已合入：K2b child 原生接入 | child 直接构造 `_ChipWorker`、共用 init、原生注册/通信/提交/退休；保留 Host log flush 与 teardown 观察 | 不改 mailbox/准入/完成协议；不开放 public borrowed |
 | #2597 已合入：K2b 参数 | direct L2 / child 串行和暂存提交 / 兼容 ChipWorker 共用 `_materialize_chip_task_args`；本次地址解析与 POD 构造不关闭 registry | 保留各入口快照、权限/source 引用与关闭时机；不复制 tensor 内容、不授权外部 allocation |
 | 当前 PR #2599：K2c 公开接线 | 同一 public init/submit/run；借用初始化、caller stream、前置拒绝、source 保活与 close 重试 | 修订 head CI 19 通过/1 跳过、A3/A5 各 8 组合通过；框架后台队列/故障与 DFX 完整资格另记 |
-| 并行：S3 | 单独的 module owner；随后单独能力 profile/query | 不改变运行排序；不把整个函数表迁移和所有 façade 拆分塞入一笔 |
+| 并行：S3 | 按实际消费者交付 module/code 保活，不预设能力查询 | 不改变运行排序；不把整个函数表迁移和所有 façade 拆分塞入一笔 |
 
 同一行若仍太大，沿真实生产消费者拆 PR，并逐笔保留不变量；目标能力与验收不能降级为可选扩展。S3 与 K2 即使逻辑可并行，仍需协调共同文件、loader/环境保留和 close 路径。U2b/Remote 不作 K2 前置，但每条新增生产复制/网络路径当笔就必须证明保活；不能拖到 U4 再补。
 
