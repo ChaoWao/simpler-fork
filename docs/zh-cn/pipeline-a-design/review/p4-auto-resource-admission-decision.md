@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-状态：用户已批准完整合同，Codex在原P4工作区继续实施。一个PR交付完整功能、单提交。设计基线cc6c4d51f；结合原作者r21和[经理收口勘误](p4-auto-resource-admission-manager-review-r21.md)。当前PR #2596为b571e7323/base289b30164；当前CI16成功1跳过，Ubuntu两项启动夹具失败、macOS联动取消，修复随同PR验收补齐。已发现原场景入口显式注入launch_depth、未验默认自动模式，正在同PR补齐真实入口与四后端/native边界验收，未Ready。详见[验收审查](../README.md#archive-boundary)。
+状态：用户已批准完整合同，一个PR、单提交。普通异步#2596远端仍为b571e7323/base289b30164，单提交，未Ready。原CI为16成功、1跳过、Ubuntu两项启动夹具失败、macOS联动取消。Codex已交付19文件本地验收补丁，包含四后端默认自动模式、真实native资源压力和关闭路径，独立复审已完成；已查实布尔属性误调用、CPU测试缺链接符号，以及关闭后读取已释放共享缓冲的问题，已交同一Codex作者修复，并同步纠正公开submit说明。新增验收尚未执行、补丁未发布；Qwen自动模式组合另验。 详见[验收补丁报告](../README.md#archive-boundary)及[经理初审](../README.md#archive-boundary)。
 
 ## 用户怎么使用
 
