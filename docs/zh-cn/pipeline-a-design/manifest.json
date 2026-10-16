@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-10-16T06:10:51.261671+00:00",
-  "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e",
+  "exported_at": "2026-10-16T06:54:58.745756+00:00",
+  "source_main": "1a8a3ee221968ec397588db070089354806c84c5",
   "documents": [
     {
       "file": "runtime-design-principles.md",
@@ -12,16 +12,16 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "497db87430f9ef1de4e8d5bac966f8c13190a350116b426c6eb384cca99bb5e7",
-      "export_sha256": "992dd691584462ee4efad1254326f88dce6adaa2b8f062ba4c34c954f39d7237",
-      "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
+      "source_sha256": "765e651b429b0d764e3917f7d95d9678e7726d4d3628d8f2d275f76dd08ec23b",
+      "export_sha256": "f1ab1c135773df38a36eb9992b57b7fa5fc4195a05d884e5aa5b258ca4e41d43",
+      "source_main": "1a8a3ee221968ec397588db070089354806c84c5"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "be1a686910f42e2d09135c97e80dd4e8d9745360f8afff9a9f4ff915cb90b287",
-      "export_sha256": "4fa6b3335b4111f14263ee70356febab50de893003ceb0bbc6dbb54585ccdee2",
-      "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
+      "source_sha256": "182a33ac51b12724e667d678fa7a2c95278a105f7b182b21ad08d2da7aac7580",
+      "export_sha256": "624dc87c04babaa3357c8cf697c7788650cdbe4d76278dc0a66f2ed965b3a6ca",
+      "source_main": "1a8a3ee221968ec397588db070089354806c84c5"
     },
     {
       "file": "memory-current-state.html",
@@ -194,8 +194,7 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html",
-    "review/dfx-joined-launch-complete-design.md"
+    "run-pipeline-track-a.html"
   ],
   "last_changed_omitted_local_link_count": 13
 }
