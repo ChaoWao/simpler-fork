@@ -15,9 +15,9 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 
 - 步骤一有界验收，步骤二 #2447/#2456，步骤三 #2471/#2511/#2568，以及可配置资源容量 #2571 已合入。
 - 默认自动资源准入完整合同已批准，原P4作者实施中：不要求调用者配置多个 depth；复用/可安全增长时接受，存在明确释放来源时等待，不可满足或停止未知时明确失败/隔离。当前代码不等于已实现该目标。
-- 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。[具体实施合同](review/p4-auto-resource-admission-decision.md)和[收口评审](review/p4-auto-resource-admission-manager-review-r21.md)已经归档，尚未获实施批准。
-- #2588 当前71006e411未Ready：A3 HBG的513条PMU记录仍全零；manager已补核因果链，原作者因服务端错误暂时无法执行。当前三端TMR严格验收通过；A5 HBG逐任务ArgsDump[补充合同](review/dfx-a5-task-args-capture-decision.md)仍待批准。
-- 外部作者在[#2429](https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862)进行当前main多请求Qwen组合验收，与自动准入设计并行。
+- 旧固定4/2与N+1 Qwen方案已撤回。[现行要求](review/p4-qwen-grant-composition-decision.md)替代该方案。[具体实施合同](review/p4-auto-resource-admission-decision.md)和[收口评审](review/p4-auto-resource-admission-manager-review-r21.md)已经归档且获用户批准，原作者正在实施。
+- #2588 当前c04408217能力边界增量静态审查通过，新CI执行中，未Ready。A5 HBG ArgsDump按用户要求当前不支持、后续独立添加；[延期设计](review/dfx-a5-task-args-capture-decision.md)不再是待批项。其余三个后端ArgsDump与A5其他诊断保留严格验收；旧提交结果不替代当前head。原设计正文正在补注历史与当前能力差异，以本索引和路线表为准。
+- 外部作者在[#2429](https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862)进行当前main多请求Qwen组合验收，与自动准入实施并行。
 - 历史合同中“是否批准”“待合入”等文字属于当时决策记录，不是当前用户待办；以本索引和路线表辨别阶段。固定形状vLLM eager、动态请求范围、capture/replay及最终性能报告不是当前已交付能力。
 
 ## 文档目录
