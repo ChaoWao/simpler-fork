@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `905d336e4`：#2599 已合入，K2a/b 与公开 borrowed eager 接线已交付；当前 [PR #2604](https://github.com/hw-native-sys/simpler/pull/2604) 推进 K2c 的空调用完成与持久 INOUT 状态。** 同一 Worker init/submit/run 复用原 native owner/lane。#2599 的原 head `12304f0a` CI 19 通过/1 跳过，A3/A5 各 8 个公共组合通过；合入与原 head 证据分别保留。当前 [零任务验收](reviews/empty-eager-completion/REPORT.md)覆盖设备标量、HBG HOST/NONE 控制、同一 Buffer 身份和 caller 顺序；borrowed HBG 的首次容量边界独立记录。实际框架后台发射、partial/fault/DFX 与完整产品矩阵尚未结项。
+**2026-10-16 / main `4aedb1f43`：#2604 已合入，空调用完成与持久 INOUT 验收已交付；当前 [PR #2606](https://github.com/hw-native-sys/simpler/pull/2606) 补齐 public Worker 的跨 caller-stream DEVICE 数据链。** #2604 head `1f97d9f8` 最终 CI 19 通过/1 跳过，随后合入 `4aedb1f43`；保留其原 head 证据。下一笔在原有 public 硬件测试中连接三次真实调用，使用事件与 D2D，不在每次调用之间成功 wait/poll。详见[当前证据](reviews/public-caller-chain/REPORT.md)。#2605 已承接固定形状框架集成；框架后台队列证明、partial/fault/DFX 与完整业务矩阵分别记账，K2c 未整体结项。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 

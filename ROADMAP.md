@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-16 / main `905d336e4`：#2599 已合入，公开 Worker borrowed eager 已接线；当前推进 K2c 的零任务完成与持久 INOUT 状态验收。**
+**2026-10-16 / main `4aedb1f43`：#2604 已合入，零任务完成与持久 INOUT 状态已补齐；当前推进 K2c 的公开跨 caller-stream DEVICE 数据链验收。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -30,7 +30,9 @@
 
 已合入 #2599 的交付范围：同一 `Worker.init(borrowed_context_generation=...)` 与 `submit/run(..., caller_stream=...)` 接既有 native owner/lane；沿用 Buffer/Tensor/TaskArgs/RunHandle。stream/capture 与 H2D 请求在 Python 逻辑引用发布前拒绝；有效 borrowed close 保留 caller context/stream，失败 close 保留债务供重试。A3 上 TMR/HBG × owned/borrowed × SDK `TASK_QUEUE_ENABLE=0/1` 的 8 组合已通过；这不是框架后台发射队列证明，也不宣布 K2c 完整验收。修订 head `12304f0a` 的 CI 已完成：19 通过、1 跳过，Ubuntu/macOS UT 与 A3/A5 各 8 个公共组合均通过；评审线程为 0。实际框架 adapter、部分 enqueue/故障与 DFX 业务资格仍须按原门槛闭合。见[本轮证据](reviews/public-borrowed-worker/REPORT.md)。
 
-当前 [PR #2604](https://github.com/hw-native-sys/simpler/pull/2604) 修复范围：TMR 先等 device orchestration 发布 final count，HBG 先等 runtime 初始化发布 host-built final count；final count=0 也是正常完成。两架构真实 cold-path 单测先失败后通过。公共调用沿用一个 DEVICE INOUT Buffer，交替空／写／空／写／空并检查未写区域；HBG 另外使用 HOST/NONE 控制 Tensor，submit 返回后修改源值不能改变本次决策。HBG borrowed 的 arena 首次 commit 后仍禁止增长，需先以足够大的非空调用建立容量；空调用先 commit 后再增长的缺口单独记录，不靠本次 completion 修复放宽。验证和边界见[当前验收记录](reviews/empty-eager-completion/REPORT.md)。框架后台发射、故障/DFX 和 capture 仍分别验收。
+已合入 [PR #2604](https://github.com/hw-native-sys/simpler/pull/2604) 的修复范围：TMR 先等 device orchestration 发布 final count，HBG 先等 runtime 初始化发布 host-built final count；final count=0 也是正常完成。两架构真实 cold-path 单测先失败后通过。公共调用沿用一个 DEVICE INOUT Buffer，交替空／写／空／写／空并检查未写区域；HBG 另外使用 HOST/NONE 控制 Tensor，submit 返回后修改源值不能改变本次决策。HBG borrowed 的 arena 首次 commit 后仍禁止增长，需先以足够大的非空调用建立容量；空调用先 commit 后再增长的缺口单独记录，不靠本次 completion 修复放宽。验证和边界见[当前验收记录](reviews/empty-eager-completion/REPORT.md)。框架后台发射、故障/DFX 和 capture 仍分别验收。
+
+当前 [PR #2606](https://github.com/hw-native-sys/simpler/pull/2606) 的 K2c 验收增量：同一 public Worker 的三次调用按 caller stream A → B → A 连接。每条边由 caller record/wait 事件和 D2D 复制承接前次 DEVICE 输出；后继输入先写入毒值，漏掉复制必须得到错误结果。全部 caller 结果在首次成功 RunHandle wait/poll 前读取；caller copy/event wait 在释放 raw allocation/event 前须另有完成证明。已有 #2605 负责固定形状框架接入，本笔不重复该 driver，也不据显式流链通过宣布后台发射队列合格。见[当前证据](reviews/public-caller-chain/REPORT.md)。
 
 初版 `149c8997` 的 Linux 验证：完整 Python UT 3275 passed / 91 skipped；初版最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
 
@@ -208,7 +210,7 @@ S2 同步合同退出要求 TMR/HBG program 回归、两架构的发布失败和
 共同 native 执行、失败清理、caller lane 和 borrowed ChipWorker 已由 #2557/#2561/#2567/#2572/#2578 交付。#2580/#2581/#2582 已合入；#2584 已合入，完成汇聚校验入口和 native 内存保护；K2a 结项。
 
 1. **K2a：共同拒绝与失败合同。** native/binding 保持可机器判断的环境拒绝分类，公开层消费同一判定；拒绝保留状态，真实设备失败发布终态，partial/unknown 保留。#2581 已替换 callback；#2582 已闭合 Python submit/注册/close 的状态承诺边界；#2584 已收口共同 lease 校验并补齐 native 内存保护，K2a 结项，下一步 K2b。
-2. **K2b：环境/generation/source 与内部接入。** #2587 环境/source 与 #2589 direct L2 已合入；#2593 child 控制句柄已合入；PR #2595 原生调用已合入；#2597 已收口共同 materialization；已合入 #2599 交付 K2c 公开接线；当前补齐零任务与持久 INOUT 语义。目标仍是同一生命周期绑定 RTS identity、进程、context generation、source；收口 Worker → 原 `_ChipWorker`/lane 接入和共同 materialization。公开 ChipWorker 兼容；旧 init C ABI 留适配，不再造执行入口。
+2. **K2b：环境/generation/source 与内部接入。** #2587 环境/source 与 #2589 direct L2 已合入；#2593 child 控制句柄已合入；PR #2595 原生调用已合入；#2597 已收口共同 materialization；已合入 #2599 交付 K2c 公开接线；已由 #2604 补齐零任务与持久 INOUT 语义，当前验证跨 caller-stream 数据链。目标仍是同一生命周期绑定 RTS identity、进程、context generation、source；收口 Worker → 原 `_ChipWorker`/lane 接入和共同 materialization。公开 ChipWorker 兼容；旧 init C ABI 留适配，不再造执行入口。
 3. **K2c：公开调用与 eager 验收。** 同一 Worker.init/submit 接 owned/borrowed 和 caller 顺序；真实 public Buffer/Tensor/TaskArgs → RunHandle 通过 TMR/HBG、A2/A3/A5 的寿命、失败、跨流与 Program 回归；框架后台队列另须证明有序 native 发射。
 4. **S3：可并行 module owner 与能力合同。** 集中 loader、required/conditional 与版本化最小能力查询；不迁移全 API 函数表。K2 可先消费现有 loader；C2 必须消费已验收的模块/代码保活。
 5. **K2c 通过后进入 C1→C2→C3→C4。** C1 沿实际 producer/device reader 完成 ABI 与异步闭包；C2 同时接图资源与 S3 引用；两 runtime 的 replay 和完整产品矩阵继续必交付。

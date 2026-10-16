@@ -18,6 +18,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
 
+<a id="artifact-029ffb5b86c5"></a>
+
+## 029ffb5b86c5
+
+原引用：`board.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
 <a id="artifact-02b874b2befe"></a>
 
 ## 02b874b2befe
@@ -298,6 +306,14 @@
 
 引用文档：[reviews/chip-child-communicator/REPORT.md](reviews/chip-child-communicator/REPORT.md)。材料未收录。
 
+<a id="artifact-25732957e1bd"></a>
+
+## 25732957e1bd
+
+原引用：`pyut-full.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
 <a id="artifact-25e661e6321a"></a>
 
 ## 25e661e6321a
@@ -450,14 +466,6 @@
 
 引用文档：[reviews/native-context-refusal/REPORT.md](reviews/native-context-refusal/REPORT.md)。材料未收录。
 
-<a id="artifact-3c0ec9b2f594"></a>
-
-## 3c0ec9b2f594
-
-原引用：`review/pr2596-292b5511-manager-review.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-3c6284d18c8c"></a>
 
 ## 3c6284d18c8c
@@ -465,6 +473,14 @@
 原引用：`early-rollback-r2/pr2587-rollback-cpp.log`
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
+
+<a id="artifact-3ca573448fce"></a>
+
+## 3ca573448fce
+
+原引用：`review/codex-p4-auto-acceptance-audit.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-3dd5ca4db17b"></a>
 
@@ -650,6 +666,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
 
+<a id="artifact-59553c0916bb"></a>
+
+## 59553c0916bb
+
+原引用：`final-public-ut.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
 <a id="artifact-5a77760e07cc"></a>
 
 ## 5a77760e07cc
@@ -802,6 +826,14 @@
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
 
+<a id="artifact-6baa0010c90e"></a>
+
+## 6baa0010c90e
+
+原引用：`final-build.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
 <a id="artifact-6bd91c10800f"></a>
 
 ## 6bd91c10800f
@@ -897,6 +929,14 @@
 原引用：`a5sim.log`
 
 引用文档：[reviews/shared-chip-arguments/REPORT.md](reviews/shared-chip-arguments/REPORT.md)。材料未收录。
+
+<a id="artifact-7cb20f12b2ad"></a>
+
+## 7cb20f12b2ad
+
+原引用：`ci-initial.json`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
 
 <a id="artifact-7cb73086c9a8"></a>
 
@@ -1472,7 +1512,7 @@
 
 原引用：`review/pr2588-1d707-ci-repair-coverage.md`
 
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html), [references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
+引用文档：[references/pipeline-a/run-pipeline-track-a.md](references/pipeline-a/run-pipeline-track-a.md)。材料未收录。
 
 <a id="artifact-d49186164148"></a>
 
@@ -1554,6 +1594,14 @@
 
 引用文档：[reviews/descriptor-main-0dbf12ae.md](reviews/descriptor-main-0dbf12ae.md)。材料未收录。
 
+<a id="artifact-dd2e68105c35"></a>
+
+## dd2e68105c35
+
+原引用：`review/codex-dfx-ci-tail-publish-result.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-e04379b57cc8"></a>
 
 ## e04379b57cc8
@@ -1610,6 +1658,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
+<a id="artifact-e7b5803334d6"></a>
+
+## e7b5803334d6
+
+原引用：`base-build.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
+
 <a id="artifact-e8b06b53059b"></a>
 
 ## e8b06b53059b
@@ -1649,6 +1705,14 @@
 原引用：`r2b-final-tests.log`
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-edf6090a9a70"></a>
+
+## edf6090a9a70
+
+原引用：`missing-d2d.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
 
 <a id="artifact-ee79834e8745"></a>
 
@@ -1793,6 +1857,14 @@
 原引用：`kernel-mode-principles-recheck.md`
 
 引用文档：[runtime-design-principles.md](runtime-design-principles.md)。材料未收录。
+
+<a id="artifact-fd89d919c0ba"></a>
+
+## fd89d919c0ba
+
+原引用：`hooks.log`
+
+引用文档：[reviews/public-caller-chain/REPORT.md](reviews/public-caller-chain/REPORT.md)。材料未收录。
 
 <a id="artifact-ffce64bb2f77"></a>
 

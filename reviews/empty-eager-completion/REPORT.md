@@ -36,3 +36,7 @@ Final [full hardware sweep](../../LOCAL-EVIDENCE.md#artifact-74ad272e9c26) and [
 ## Final commit and next gate
 
 The committed head rebuilt successfully. Final-head focused A3 sim completed with exit 0 (three owned cases pass, three borrowed cases skip). The full sweeps above ran before commit with identical product content; they are not represented as a second final-head hardware run. [Final focused log](../../LOCAL-EVIDENCE.md#artifact-d5b95a435af5). PR CI is pending; no A5 hardware pass or merge is claimed. K2c remains open for actual framework emission ordering and the separately tracked fault/DFX/business-state matrix. C1 capture and S3/C2 ownership remain subsequent work.
+
+## Merge disposition
+
+PR #2604 merged as `4aedb1f4318f024f9d50392bb312673523841632` at 2026-10-16 12:13:41 UTC. Head `1f97d9f8` final check rollup has 19 successful checks and 1 skipped deploy. Historical pending statements above refer to their original checkpoints; no AIV fix or complete K2c acceptance follows from this merge.

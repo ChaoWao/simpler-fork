@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-16",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "905d336e41d324ba8c8dbf87fe138965d84e74e2",
-  "pending_pr": 2604,
+  "latest_roadmap_source_baseline": "4aedb1f4318f024f9d50392bb312673523841632",
+  "pending_pr": 2606,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "8513d606a816718edd72d1b10830216e16ab8253ab07abd4f797574f398dc26c",
-      "published_sha256": "28015ea07f46270dfb7e8948794d9eb7af37ac0bdbdbbbe2c8572861b07c9ba1",
-      "bytes": 51620
+      "source_sha256": "e9df0d4249c1094ebe19b41c268c29732f43f9237757e039145c52252ac79237",
+      "published_sha256": "aa484040b466b970e96a4c87ab3be1f4116f76a09eb82868bbc6ca854eed7b0d",
+      "bytes": 52350
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -64,9 +64,9 @@
     {
       "path": "current-api-layers.html",
       "source_collection": "kernel-design",
-      "source_sha256": "77224e34a06556ceac6745881061a34bfccdb13b8b9621541113711bad939c9c",
-      "published_sha256": "6a5315a8fc7129f254ec547741e9e10bcf51cb70b86b5ffc9aa787dea1d94a63",
-      "bytes": 66841
+      "source_sha256": "d1f0b3cc6b97843f885b7bc033f30c968b72fa4449007a50247838bdb6c8b35a",
+      "published_sha256": "236900efe3635e78a599154ed163a9e58efef73d56b5ad619b2df61ec6a9a9a5",
+      "bytes": 66888
     },
     {
       "path": "endpoint-access-contract.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "cab13343b44b4fa77692fc174e4efa56417fb7895c20f7509fe365483b9b0233",
-      "published_sha256": "8cb73d8dc3596fad5039124b2fe53d3784488011fafecc3ad1eec8e930203df5",
-      "bytes": 24394
+      "source_sha256": "62cf2172fd0dd2cf3e5a33448822bd413e027ac7dcb16f7ed736b2aa1ec16573",
+      "published_sha256": "9a2911d51d718e8a03cfaef148a26f3e3248722871c7ee4ecb8eabb11232b94b",
+      "bytes": 24380
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "9b34a9f12e9c54e58c945627cad78d4f6c23fcef7bff30f50ebed66eead061e8",
-      "published_sha256": "25aa4d90f36492877e4a289c539218041b64b333685df4bd10203ad11e175152",
-      "bytes": 67085
+      "source_sha256": "d7c0015913d3e1124b6bb896f4deeb8e7ebb03e11a961cb85e1f0c5811c326ba",
+      "published_sha256": "c2bf3ab4853c154d840918e8f3eb4b1ebc1af3c0b3f1aef26b18f21e0c93b959",
+      "bytes": 67843
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "cf8cf14be1253ce66bce1fb4b37493bd3065f215452b37a19ff0af5a5211ffe5",
-      "published_sha256": "a7eaabf51001a42de003faddf514c02bf596c00e40b77fcfa56d04a26f17657b",
-      "bytes": 45504
+      "source_sha256": "eb8f0fdbd35e5bccf3fbf894b70bc3917e42fb09fcb89c98f177113b588db67b",
+      "published_sha256": "032f27200c6c01f2b369ca8beb06fbaa75b34d382917b19cf255e521da592423",
+      "bytes": 46108
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "36a5f1eee2533ebf7aa7b3990a57161863bd809bab9938995dae63fa96f36f16",
-      "published_sha256": "3ce519b220541c554c4a1a7138a32776854eab8416c6ae86677b1ad6182b1227",
-      "bytes": 18619
+      "source_sha256": "8fd5c129a75691726c9b38f5d65a6163834f9d020eee4a4a9f0e5d6cd372baf8",
+      "published_sha256": "7e48dee7d8ca252af3c47aac1b86c462b0c1ca15877ec11684584588b1e7e299",
+      "bytes": 19032
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -372,9 +372,9 @@
     {
       "path": "reviews/empty-eager-completion/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "3cd4b839a532bc9f0f20b5bbcd951a1e5280855e8ed7324b275c6d0ab38f3517",
-      "published_sha256": "7326b1ceb31ff9cf4c9d8ef748b7a7eae16cbd2bf776810856627cb7a15f36f2",
-      "bytes": 6352
+      "source_sha256": "b80f85d43b264147e9d02ea22a774145596a93f4e7706a7be88f9864f1ee2c8e",
+      "published_sha256": "e1c18cbd34d149b220f47caa86e884230cf402e6e29f224578f806a31e66a46f",
+      "bytes": 6683
     },
     {
       "path": "reviews/hbg-validation-log-sink/REPORT.md",
@@ -480,6 +480,13 @@
       "source_sha256": "7a067683c533335a5262e7885866e25228159245deb39ed85e48981d2e460178",
       "published_sha256": "eb90f87929ec4baca0a9d90dc18c757253a50f2e95a0054d4c7bbaede94e1835",
       "bytes": 9829
+    },
+    {
+      "path": "reviews/public-caller-chain/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "fef89a0e390fc4220f3971abdbe89f592a5f5d108d629c17f190a036d9c3e053",
+      "published_sha256": "e0730bb33e8f50fe8a3a7e84f0948c40e1ebd8b2bcd6f593e7b0f77e5cc8a2f8",
+      "bytes": 3676
     },
     {
       "path": "reviews/publication-contract-main-2d366151.md",
