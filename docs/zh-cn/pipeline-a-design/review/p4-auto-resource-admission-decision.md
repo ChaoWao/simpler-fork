@@ -2,7 +2,7 @@
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-状态：设计已审，待具体实施批准。一个 PR 交付完整功能。基线 cc6c4d51f；本稿结合原作者 r21 和 [经理收口勘误](p4-auto-resource-admission-manager-review-r21.md)。尚未实施或验收。
+状态：用户已批准完整合同，原 P4 作者已启动实施。一个 PR 交付完整功能、单提交；实施从最新 main 3351950f4 开始。设计基线 cc6c4d51f；本稿结合原作者 r21 和 [经理收口勘误](p4-auto-resource-admission-manager-review-r21.md)。尚未交付实施结果或验收结论。
 
 ## 用户怎么使用
 
