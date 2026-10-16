@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-10-16T09:48:35.338845+00:00",
-  "source_main": "905d336e41d324ba8c8dbf87fe138965d84e74e2",
+  "exported_at": "2026-10-16T09:57:28.091636+00:00",
+  "source_main": "289b3016463f60c159fb1255a581868daf04a104",
   "documents": [
     {
       "file": "runtime-design-principles.md",
@@ -12,16 +12,16 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "435278e7d928ca8abf7a114bce5b1ba74a6f890f352c12a11535e5c3c8a7ef9d",
-      "export_sha256": "cf19ce9ce5767abcc7591af34313a5b96c8eb62def5652ec9bb50c4e38ccb93b",
-      "source_main": "905d336e41d324ba8c8dbf87fe138965d84e74e2"
+      "source_sha256": "59e3358e91d0ed4a6595a2c6e2fbf08d0f27b2c8cb11341339749e7bcf88122f",
+      "export_sha256": "a81b2d3f689028a5ead39cfac1f8cc422dfbc6d3c2f02ff81363e793f7f70d6f",
+      "source_main": "289b3016463f60c159fb1255a581868daf04a104"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "7592cc2f21c2483ea102a21f5a40b280a8eb3966bc9c5a8090d4fb7c55d8df43",
-      "export_sha256": "686f12f33c42c555742e62337963a7e2f0d11a29d209198693e8ccf6a538cfe9",
-      "source_main": "905d336e41d324ba8c8dbf87fe138965d84e74e2"
+      "source_sha256": "5d3489fdbce84b41854c975a880fd302e85897ae2e46858e9add97706f440721",
+      "export_sha256": "9475d3f850ca8b0a7b5ab6075c0409676bdb32377a666a7c908f1c01bc7344e1",
+      "source_main": "289b3016463f60c159fb1255a581868daf04a104"
     },
     {
       "file": "memory-current-state.html",
@@ -196,5 +196,5 @@
     "run-pipeline-track-a.md",
     "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 14
+  "last_changed_omitted_local_link_count": 15
 }
