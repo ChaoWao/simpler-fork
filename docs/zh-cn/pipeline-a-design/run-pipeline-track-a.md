@@ -2,11 +2,13 @@
 
 设计归档快照：状态与阅读顺序见[索引](README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-核对时间：2026-10-16T00:14:29.492964+00:00。主线基线：`cc6c4d51f79e98af5ef07829e3ca71c36f752a43`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+核对时间：2026-10-16T00:33:57.432126+00:00。主线基线：`cc6c4d51f79e98af5ef07829e3ca71c36f752a43`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
 
 本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](README.md#archive-boundary)，不能作为当前待办。
 
 设计方向更新：默认自动资源准入；PR/CI证据仍以以上核对时间为准。
+
+当前CI已结束：13成功、1跳过、3失败、2取消。macOS UT在3251个Python用例和354个C++测试通过后触及20分钟job时限，后续校验未获完整结果；不计为通过，不盲重试。
 
 ## 当前结论
 
