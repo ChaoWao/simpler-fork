@@ -16,7 +16,7 @@
 
 步骤一有界 P4/P1–P3 验收已完成；步骤二 #2447/#2456、步骤三 #2471/#2511/#2568/#2592 均已合入当前 main。普通异步并非仍是单 launched；剩余重点是动态资源扩展收口、真实 workload 组合，以及 DFX 完整接线。
 
-\#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；当前 main `289b30164` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596当前b571e7323/base289b30164，单提交，未Ready。Pyright三处Optional访问已修，新CI预检查通过、运行时检查在途。独立审查确认pytest与standalone均默认传入launch_depth，已有场景未覆盖默认自动准入；同一Codex作者已开始在本PR补齐真正省略配置的入口、四后端持续提交/寿命/关闭场景及实际native分配边界压力回归。新增验收尚未执行，Qwen自动模式组合另验。 manager已更新[设计要求](review/p4-qwen-grant-composition-decision.md)，已完成[完整实施合同](review/p4-auto-resource-admission-decision.md)，按已批准合同实施与验收，再做真实Qwen组合。
+\#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；当前 main `289b30164` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596当前b571e7323/base289b30164，单提交，未Ready。CI已结束：16成功、1跳过、Ubuntu UT失败、macOS联动取消。Ubuntu两项失败来自启动夹具与真实容量校验不一致，已交同一Codex作者随当前补丁修正，不放宽生产校验。默认自动模式验收正在同PR补齐：共享入口、四后端场景与实际DeviceRunnerBase/CAPI压力路径已有在制代码；关闭时计划/令牌清理及HOST借用边界正在核查，尚未交付或执行新增验收。Qwen自动模式组合另验。 manager已更新[设计要求](review/p4-qwen-grant-composition-decision.md)，已完成[完整实施合同](review/p4-auto-resource-admission-decision.md)，按已批准合同实施与验收，再做真实Qwen组合。
 
 本次按用户讨论修订目标和进度记录；上述代码/CI事实沿用标注核对时间，没有新增测试。合入事实、设计目标与执行证据分开记录。
 
