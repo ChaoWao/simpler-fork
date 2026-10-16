@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T08:14:07.511097+00:00",
+  "exported_at": "2026-10-16T08:23:31.732541+00:00",
   "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "12fec55766b32085ffc8cc824e83294ad0eb5d4bbf57b8f83d7e3891fb78fec7",
-      "export_sha256": "3f70ab80ae34a3ab48133fb29cd11560da0e74f67bd433809f7d592bd04eea69",
+      "source_sha256": "b3663785cd246d9be2bcb8b498b0800572c096cce115cc6ad634a8aeae5b60c5",
+      "export_sha256": "51646d383a5021973c2a110844ce5e582848237e17a27a81421b513738c3b3ba",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "f72dd1bcc34664f643f4920b5d13653705435e747ce0ed948ed2778db678b25f",
-      "export_sha256": "683d4b82ecf9d0ffac7ec81c84a03fabe5829d67ad9c17dd82fd78e9e6a33838",
+      "source_sha256": "918c559ce633b10fbfc3b5b97caa4f8b1d0b060db0b5a1491c1162fa0327e558",
+      "export_sha256": "983b4b2592d811b019416d957470384174eb12b7d42153f9cf4a23beab4c852a",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
@@ -110,8 +110,8 @@
     {
       "file": "review/dfx-joined-launch-complete-design.md",
       "source_document": ".docs/review/dfx-joined-launch-complete-design.md",
-      "source_sha256": "5c697c5882f630a9d34b0bd24a6be3f94bf7088e085e60a90bcb07766b8f83d1",
-      "export_sha256": "dbf6baac03944dbfe993443e6c9bd0e57af37840b41aa24e50b8fe348abd2c48",
+      "source_sha256": "d8d99edd96745bc9054acb8b1d4c5c9bfa102158be186a2ae9fd7403629b995a",
+      "export_sha256": "79e7b8d64e4d329f94e03d9f0897298655c940495646fc225c59f0425c10d214",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
@@ -193,8 +193,7 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.md"
   ],
-  "last_changed_omitted_local_link_count": 14
+  "last_changed_omitted_local_link_count": 10
 }

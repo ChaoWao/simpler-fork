@@ -1,6 +1,6 @@
 # Joined-launch DFX: implementation design and decision
 
-Manager checkpoint: current head da7460e15 is under CI and is not Ready. The A3 zero-cycle cause remains unresolved. The author is correcting claims that lost=72 proves 72 identical raw register values, that equal endpoint values prove continuous enable, or that three proposed outcomes exhaust and uniquely identify causes. The hypotheses below must not be read as measured causal conclusions. Previous b2a7 CI ended with 15 successes, 1 skip, 1 failure and 2 timeout cancellations; tail checks remain unqualified.
+Manager checkpoint (2026-10-16 08:22 UTC): da746 CI ended with 16 successes, 1 skip, A3 HBG failure and macOS timeout cancellation. This PR is not Ready. The author has resumed causal investigation. The latest macOS CTest completed 358 cases, followed by about four minutes of silent checks before timeout; earlier timing breakdowns below are historical. Absent close notes do not prove close never ran; matching physical IDs in one run pair do not prove why an older pair differs. Build optimization recommendations remain proposals, with no implementation or measured benefit. External PR #2600 owns PMU host cleanup and requires later integration; it is not a demonstrated repair of this live-run PMU failure.
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
@@ -84,6 +84,57 @@ bounded design that would close the gap. It is deferred to its own change at the
 nothing in this PR or in P4's work waits on it, and its four-row contract delta is what such a change
 *would* take rather than a decision owed to anyone.
 
+### 0.4a Current head `da7460e15`: the split fields answered, and what they ruled out
+
+A3 onboard job `116872397143`, test merge `2b41e84d` (`da7460e15` + main `e994`).
+a2a3 **TMR passes** on device 3. a2a3 **HBG fails** on device 2 at scene index 1
+— the *second* run, epoch 2 — with 513 rows, correct identities, per-core
+167/179/167 matching that epoch's own terminal, all cycles zero. Index 0
+(epoch 1) passed. The separated fields report, verbatim:
+
+```text
+run 1 ... at init enabled=72 not-enabled=0 no-window=0; at close held=72 lost=0;
+          first reporting producer: physical core 0, PMU_CTRL_0 0x7 at init, 0x7 at close
+run 2 ... at init enabled=72 not-enabled=0 no-window=0; at close held=0  lost=72;
+          first reporting producer: physical core 0, PMU_CTRL_0 0x7 at init, 0x2 at close
+```
+
+Per-producer, for the three cores that executed tasks — the same logical→physical
+mapping in **both** runs, so the run-to-run physical-id difference seen at `b2a7`
+was two different core allocations and nothing more:
+
+| run | logical → physical | init | close |
+| --- | ------------------ | ---- | ----- |
+| 1 (passed) | 24→25, 26→27, 28→29 | `0x7` (code 2) | **`0x7` (code 4, held)** |
+| 2 (failed) | 24→25, 26→27, 28→29 | `0x7` (code 2) | **`0x2` (code 5, lost)** |
+
+**What this rules out.**
+
+- *"The init write never took."* **Ruled out for both runs.** `at init
+  enabled=72` is a per-core predicate satisfied by every one of the 72 reporting
+  producers, in the run that passed and the run that failed.
+- *"The AICore's per-task `GLB_PMU_EN` clear is what the AICPU observes."*
+  **Disfavoured by a control inside the same log.** Run 1's three task-executing
+  cores ran the identical per-task `pmu_aicore_begin` / `pmu_aicore_end`
+  sequence and closed at `0x7`. If that clear were visible in the AICPU's
+  `PMU_CTRL_0`, run 1's task cores would have closed at `0x2` as well. They did
+  not. And in run 2 the 69 cores that executed *no* task are also counted
+  `lost`, so whatever changed the word reached cores the per-task gate never
+  touched. The two are separate code interfaces — an AICore SPR and an AICPU
+  MMIO word — and the shared field *name* in two comments is **not** evidence
+  that they are one register.
+
+**What is now correlated, and still not explained.** Across these two runs the
+close-time window state and the symptom move together: `held` with non-zero
+cycles and a passing index, `lost` with all-zero cycles and a failing index, on
+the same device, the same cores and the same code. `0x2` is also exactly what
+`pmu_stop` would write if the saved pre-run word were `0x2`, so "the restore
+preceded the observing read" remains open — but it has to explain why the
+*order* differs between two serial runs rather than why the *value* differs.
+Nothing here names the writer. The 69 non-printing cores' words are still not
+observed, only their predicate; a causal claim needs the per-core notes, and the
+next step is the manager's to assign.
+
 ### 0.4 What CI has found so far, head by head
 
 **`b2a7feb41` — workflow for that head completed. A5 passes; A3 does not.**
@@ -115,28 +166,50 @@ evidence of a corrupted mapping. Physical 0 as the *first reporting* producer is
 the real mapping of logical core 0 — the `c044` log reports the same id for the
 same position, with `0x7` at init.
 
-**What that establishes.** A run programmed `PMU_CTRL_0` to `0x7`; its own close
-reads `0x2` on every one of its 72 reporting cores; its successor's close reads
-`0x7`. `platform_config.h` names the three fields in that word —
-`GLB_PMU_EN | USER_PMU_MODE_EN << 1 | SAMPLE_PMU_MODE_EN << 2` — so `0x2` is
-`USER_PMU_MODE_EN` alone, with `GLB_PMU_EN` **and** `SAMPLE_PMU_MODE_EN` clear.
-The only writer of a non-`0x7` value in this repo is `pmu_stop`, and it writes
-the word the run's own init saved.
+**What is actually observed, stated at its real width.** Four raw words were
+printed for run 1, not 72: the *first reporting* producer (physical 0) and the
+three task-producing cores (logical 24/26/28), each `PMU_CTRL_0 = 0x2`. The
+figure `lost=72` is a **predicate count, not 72 raw values** — and at `b2a7`
+that predicate was `(close word carries the enable) AND (init code was
+ENABLED)`, so a core counted `lost` may have failed either term. `lost=72`
+therefore does **not** establish that 72 cores read `0x2`, nor that 72 cores
+had been enabled at init, nor which of the two terms failed on any core beyond
+the four printed. The init distribution for that run is not recoverable from
+this log at all, because the close note overwrote it.
 
-**What it does not establish, and the two candidates it leaves.**
-`pmu_collector_aicore.h` names the AICore `CTRL` SPR bit 0 as `GLB_PMU_EN` too —
-the *same named field* the AICPU reads as `PMU_CTRL_0` bit 0 — and
-`pmu_aicore_end()` clears it with an unsynchronized read-modify-write after
-**every task**. That would explain a cleared bit 0 and a clobbered bit 2, and it
-is a real two-writers-one-field shape. But the per-task gate runs only on cores
-that executed tasks (3 of 72 here), and **all 72** lost the word, so it cannot
-be the whole mechanism. The alternative is that `pmu_stop` had already run for
-those cores when the observing read was taken, which requires a second
-`pmu_aicpu_finalize` for the same core — and the only caller,
-`SchedulerContext::shutdown`, runs once per AICPU thread over a disjoint core
-slice, with no emergency path touching PMU and no emergency shutdown in this
-log. **Neither candidate is adopted.** No register write was added, removed or
-reordered, and no mapping was guessed.
+`platform_config.h` names the three fields in that word —
+`GLB_PMU_EN | USER_PMU_MODE_EN << 1 | SAMPLE_PMU_MODE_EN << 2` — so the four
+printed `0x2` words are `USER_PMU_MODE_EN` alone, with `GLB_PMU_EN` **and**
+`SAMPLE_PMU_MODE_EN` clear. In this repo the only writer of a non-`0x7` value
+is `pmu_stop`, which writes the word that run's own init saved.
+
+**Two endpoint reads do not describe the interval between them.** Even for run
+2, where init and close both carry the enable, a disable and re-enable *within*
+the run is fully consistent with both observations: the pair bounds the
+endpoints and says nothing about continuity. No claim here may be read as "the
+enable held across the run".
+
+**Candidate explanations, none adopted and none excluded.**
+
+- *`GLB_PMU_EN` has two writers.* `pmu_collector_aicore.h` names the AICore
+  `CTRL` SPR bit 0 `GLB_PMU_EN` — the same named field the AICPU reads as
+  `PMU_CTRL_0` bit 0 — and `pmu_aicore_end()` clears it with an unsynchronized
+  read-modify-write after every task. This would account for a cleared bit 0 and
+  a clobbered bit 2 on the cores that executed tasks. It is a hypothesis about
+  aliasing; the field names are repo text, **the aliasing is not established**,
+  and the per-task gate reaches only task-executing cores.
+- *`pmu_stop` had already run* for the observed cores when the read was taken,
+  which needs a second `pmu_aicpu_finalize` for the same core. The only caller,
+  `SchedulerContext::shutdown`, runs once per AICPU thread over a disjoint core
+  slice; `emergency_shutdown` touches no PMU and none appears in this log. That
+  makes a second finalize unlikely on the paths read, **not impossible**.
+- *The init write never took on some cores* — indistinguishable from the above
+  in `b2a7`'s combined predicate, and the reason the predicate was split.
+- *Mixed states across cores*, *cores whose close note is simply absent*, and
+  *a register window that is writable but not this core's* all remain open; the
+  printed sample of four cannot separate them.
+
+No register write was added, removed or reordered, and no mapping was guessed.
 
 **The precise remaining evidence gap, and why the next run closes it.** The
 first revision of this discriminator wrote its close observation *over* the init
@@ -145,16 +218,22 @@ told from "init never enabled on 72 cores" and the init distribution was gone
 (`at init only enabled=0 not-enabled=0 no-window=0` in the log above). That is a
 defect in the evidence channel, and it is fixed at this head: the close
 observation has its own field, its code is decided by the close word alone, and
-the host prints both distributions and both words. The next A3 run therefore
-reads out one of three mutually exclusive answers —
+the host prints both distributions and both words.
 
-| at init | at close | what it means |
-| ------- | -------- | ------------- |
-| `enabled=72` | `lost=72` | the word was armed and was cleared during the run on cores that executed nothing, so neither the per-task gate nor our own restore can be the writer |
-| `enabled=72` | `lost=3 held=69` | the AICore's per-task `GLB_PMU_EN` clear is aliasing the AICPU's window — a real defect with a known fix site |
-| `not-enabled=72` | either | the enable never took for that run, and the question moves to the write, not the window |
+That separates the two terms the old predicate conflated. It does **not** turn
+the next run into a verdict. Readings that would *narrow* the search, none of
+them exhaustive and none of them uniquely causal:
 
-— which is a measurement, not another hypothesis.
+| at init | at close | narrows toward, without proving |
+| ------- | -------- | ------------------------------- |
+| `enabled=N` | `lost=N` over cores that executed nothing | a writer that is neither the per-task gate nor our own restore — but says nothing about which, and a wrong-but-writable window would read the same |
+| `enabled=N` | `lost` ≈ the count of task-executing cores | the per-task `GLB_PMU_EN` clear — *supports* the aliasing hypothesis, and a coincidence of counts is not aliasing |
+| `not-enabled=N` | either | the init write, rather than the window — leaving open whether the address, the value or the field is at fault |
+| mixed, or close notes absent | — | nothing yet; the sample has to be read per core, not per count |
+
+The counts are evidence about where to look next. **A repair must not be
+selected from counts alone**, and the per-core notes — not the aggregates —
+are what a causal claim has to rest on.
 
 ### 0.5 What the `c044` head's CI found (history)
 
@@ -222,12 +301,18 @@ refused.
 
 ### 0.3 Evidence boundaries
 
-- **CI exists, and it is mixed.** At `b2a7feb41`: **A5 onboard passes** the strict HBG and TMR
-  scenes and the DFX smokes, **A3 onboard still fails** the HBG agreeing pair (§0.4). At the earlier
-  `c04408217`: workflow `38855904192` finished **16 success, 1 skipped, 2 failure** on the repository's
-  own checks, with the external status counted separately (§0.5). **No CI run exists for the current
-  head `da7460e15`**; no retry was submitted. The matrix in §0.2 describes the intended supported
-  scope, never passed current-head qualification, and the feature is **not Ready**.
+- **CI exists, and it is mixed.** At `b2a7feb41` (workflow `38863843732`) the final rollup is
+  **15 success, 1 skipped, 1 failure, 2 cancelled**: **A5 onboard passes** the strict HBG and TMR
+  scenes and the DFX smokes, **A3 onboard fails** the HBG agreeing pair (§0.4), and the two
+  cancellations are **job-timeout annotations, not test failures** — see §0.6, including which
+  checks therefore have *no* completion evidence. At the earlier `c04408217`: workflow `38855904192`
+  finished **16 success, 1 skipped, 2 failure** on the repository's own checks, with the external
+  status counted separately (§0.5).
+- **A CI run for the current head `da7460e15` exists and was still in progress when this was
+  written** — workflow `38869839635`, 8 success / 1 skipped / 11 in progress at inspection, with
+  `ut-a2a3` and `ut-a5` already successful. **No current-head verdict is claimed.** No retry was
+  submitted. The matrix in §0.2 describes the intended supported scope, never passed current-head
+  qualification, and the feature is **not Ready**.
 - The A3 strict HBG/TMR scene passes were observed on the **earlier** head `1c811a039`, on different
   devices. They are neither a result for any later head nor a unique root-cause proof for the a2a3
   zero-cycle PMU question, which **remains unresolved** (§0.4).
@@ -248,6 +333,84 @@ refused.
   PR does not touch.
 - `[src]` citations below were read at the historical baseline commit. Line numbers in §2–§15 are
   **not** re-verified against `b2a7feb41`.
+
+### 0.6 The two `b2a7` cancellations: budgets, not failures
+
+Both are GitHub job-timeout annotations. Neither is a hung tool, and neither
+job's own clock was spent queueing for a runner (`created_at` 06:59:09 →
+`started_at` 06:59:19 for the macOS job: 10 s).
+
+**macOS `ut` job `116853656998`** — annotation: *"The job has exceeded the
+maximum execution time of 20m0s"*. `_ut-no-hardware.yml` sets
+`timeout-minutes: 20`. Step timings from the saved job record, against the
+Ubuntu job in the same workflow (`116853656951`, **success in 15m02**):
+
+| step | Ubuntu | macOS |
+| ---- | ------ | ----- |
+| set-up + GoogleTest + pip cache | 0m20 | 0m33 |
+| Install dependencies | 2m55 | 3m49 |
+| Python unit tests | 1m39 | 3m23 |
+| cpput cmake configure | ~0m00 | 0m03 |
+| **cpput build (`--parallel 4`)** | **7m52** | **11m00** |
+| ctest | 1m04 (359) | 1m16 (358) |
+| **axis + stub-linkage + export-parse roundtrip** | **1m09** | **never reached** |
+| total | **15m02** | 20m04 → killed at 20m00 |
+
+CTest finished at 07:19:23.7 and the cancellation landed at 07:19:33.9 — **10 s
+after the last test, with zero margin for the three post-CTest checks.** Those
+are `check_ut_cpp_axis.py --jobs 4`, `check_ut_cpp_stub_linkage.py` and
+`tests/ut/py/test_swimlane_export_run_identity.py`; on Ubuntu they cost 1m09
+together. **They have no completion evidence on macOS and the job must not be
+read as passed.** The 20-minute overrun is also **not new**: the same annotation
+appears at the `710` head, before this PR's newest unit case existed.
+
+What the build is actually spending: **1546 compile actions over 279 distinct
+sources — 1267 (81%) are recompilations of a source already compiled in the same
+build.** 31 sources account for 996 of them (`profiling_copy.cpp` 112×,
+`device_run_result_base_aicpu.cpp` 91×, `chip_swimlane_collector.cpp` 58×,
+`runtime.cpp` 57×, `args_dump_collector.cpp` 48×). The cause is structural: each
+`platform_case` / `hbg_case` / `tmr_case` target re-lists the same shared
+platform/collector closure, so a 4-case × 2-arch × 2-runtime family compiles that
+closure 16 times. This PR's own `test_args_dump_capability_refusal` contributes
+**80 of the 1546 actions** across its four targets — ~5%, on the order of 30 s of
+the macOS build. A real increment, not the cause.
+
+**Bounded repair recommendation, in order, every check preserved:**
+
+1. **Stop the duplication, don't raise the cap.** Give each (arch, runtime) its
+   shared closure as a CMake `OBJECT` library that the case targets link instead
+   of re-listing. Every target, test and check stays identical; only repeated
+   compilation of the same translation unit goes away. **Carries one obligation
+   that must not be skipped:** `check_ut_cpp_axis.py` proves each case's
+   arch/runtime coverage by reading `compile_commands.json`, and an object
+   library changes what appears there — so it must learn to resolve a target's
+   axis through its linked object libraries in the same change, or that check
+   silently weakens.
+2. `--parallel 4` is hard-coded for every runner; letting each use its own core
+   count is safe but bounded, and may be neutral on a 3-vCPU macOS box.
+3. A ccache keyed on compiler + source hash helps repeat runs on an unchanged
+   tree, which is not the shape of this PR's pushes.
+4. **Raising `timeout-minutes` is the wrong first move.** The job was doing real
+   work with no queue wait; a raise would hide an 81%-redundant build. If a
+   stop-gap is wanted anyway, the honest figure is ~22–24 min, because the job
+   needed ≈21.5.
+
+**A5 `ut-a5` job `116853656885` — already resolved at the current head; no
+change recommended.** Annotation: *"maximum execution time of 30m0s"*
+(`_ut-npu-a5.yml` sets `timeout-minutes: 30`). The hardware Python sweep passed
+(40 selected, 3365 deselected) and exited 0 at 07:19:24; the `cann-examples`
+tail then submitted `task_20261016_151924_28897121107` and sat at
+*waiting-for-execution* until the job limit killed it at 07:29:58. There is **no
+lock-acquisition, build or smoke output for that tail**, so it is neither a
+passing smoke run nor an observed tool hang — it is a shared-device-queue wait.
+**At `da7460e15` the same job succeeded in 3m48 with the complete tail**
+(`116872397324`, manager-verified), so the queue was simply free. One latent
+mismatch is worth recording without acting on it: both `task-submit` calls in
+that job use `--timeout 1800`, a 30-minute *queue-wait* budget equal to the whole
+job budget, so a tail submitted ~10 minutes before the job's deadline can only
+ever surface as an uninformative job timeout rather than as "the queue was
+busy". Fixing that would be a diagnostic improvement, not a timeout increase,
+and it is not needed while the job passes.
 
 **Baseline (historical)** main `accab1cc54adff486c82f8367976ae8343c09ff0`, re-fetched when §1–§15
 were written; 33 open PRs re-enumerated, unchanged set. #2566 / #2567 / #2568 are external authors, no
