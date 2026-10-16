@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T06:05:31.385896+00:00",
+  "exported_at": "2026-10-16T06:10:51.261671+00:00",
   "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "fe76fa911e6e6ffecb186256d9290c9982678e4e9ecb0228331828e256e03544",
-      "export_sha256": "32215c2b96649e3f8cda5168c5d05abd3277588dfd3357a435e2f1f68b44f051",
+      "source_sha256": "497db87430f9ef1de4e8d5bac966f8c13190a350116b426c6eb384cca99bb5e7",
+      "export_sha256": "992dd691584462ee4efad1254326f88dce6adaa2b8f062ba4c34c954f39d7237",
       "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "de1d33db998457e0b7f79e9da86ef47dceaf185a4ba148465075ee5f40f0a14c",
-      "export_sha256": "623801d316f3054778c2707fa79e2c32d1094eb9ddb70a9f259f2a30c6778cb7",
+      "source_sha256": "be1a686910f42e2d09135c97e80dd4e8d9745360f8afff9a9f4ff915cb90b287",
+      "export_sha256": "4fa6b3335b4111f14263ee70356febab50de893003ceb0bbc6dbb54585ccdee2",
       "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
@@ -110,9 +110,9 @@
     {
       "file": "review/dfx-joined-launch-complete-design.md",
       "source_document": ".docs/review/dfx-joined-launch-complete-design.md",
-      "source_sha256": "918c8fd9af4067ac012bfd8b3bfa9a32a90f24d4946bfd0acdcde2a39da69703",
-      "export_sha256": "d515db47fc5ac8c845ed8a8680daf21ecf4fedc59af7c7f23a1231bf2b72e1b8",
-      "source_main": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b"
+      "source_sha256": "ff0a3d0d1e895bd86b2cf09cf9b72c3fc972a3858ee1f9ba1b7ee8da5c7ffca6",
+      "export_sha256": "b3206e56204ec230c79dbba4d07c7957acffd1504379948b41eabc1367d4f4f7",
+      "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
     },
     {
       "file": "review/dfx-a5-task-args-capture-decision.md",
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/dfx-joined-launch-complete-design.md"
   ],
   "last_changed_omitted_local_link_count": 13
 }

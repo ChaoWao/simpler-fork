@@ -2,22 +2,127 @@
 
 设计归档快照：状态与阅读顺序见[索引](../README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-**Design only.** No product edit, build, test, hardware run, CI action, commit or publication. P4
-(`PID1403923`) is the sole implementation writer — dynamic resources and mailbox WIP — and none of its
-files are touched here. Its normative §3 and §12 are preserved as written. Approval is not requested.
+> **How to read this file.** §0 below is the **current status**; everything from §1 onward is the
+> **historical design baseline**, kept as written so the reasoning that produced the shipped code
+> stays readable. Where the two disagree, §0 governs, and each superseded claim is labelled at the
+> place it was made. The design was written before implementation; it is no longer "design only",
+> and three of its claims are now wrong.
 
-**Baseline** main `accab1cc54adff486c82f8367976ae8343c09ff0`, re-fetched this session; 33 open PRs
-re-enumerated, unchanged set. #2566 / #2567 / #2568 are external authors, no takeover. #2563/#2564
-merged, #2565 paused.
+## 0. Current status — supersedes the header and §1/§8 below
 
-`[src]` = read at this commit. No execution evidence is claimed anywhere.
+**This design is implemented and published.** PR
+[#2588](https://github.com/hw-native-sys/simpler/pull/2588) is OPEN with **one** commit:
+
+| Field | Value |
+| ----- | ----- |
+| head | `c04408217398cad4b22619ce48d5fd41d8834658` |
+| base | `3351950f4b0fdbd60523ea63266b321ab12f5f2e` (main, re-fetched; unchanged) |
+| shape | 1 commit, 137 files vs main, `+20889 / −489`, 0 file deletions |
+| author | `Chao Wang` |
+| open PRs | 33, re-enumerated this session; 31 external objects unchanged |
+
+### 0.1 Superseded claims, named
+
+| Where | Claim as written | Status now |
+| ----- | ---------------- | ---------- |
+| header | "**Design only.** No product edit, build, test, hardware run, CI action, commit or publication." | **Superseded.** Product code, tests and docs are edited and published under the head above. Still true in this file's own terms: no hardware run and no CI action were taken *by this artifact*, and nothing here is a manager file. |
+| header | "P4 (`PID1403923`) is the sole implementation writer … Approval is not requested." | **Superseded.** P4's automatic resource admission is **approved**, and the original P4 writer is actively implementing it on `codex/auto-resource-admission` (per the current contract; that branch is on P4's own remote, not observed from here). It is **not** pending approval, and nothing in this PR waits on it. P4's normative §3/§12 remain adopted verbatim. |
+| header | "Baseline main `accab1cc5…`" | **Historical.** The shipped base is `3351950f4` above. |
+| §1 | "four onboard backends × **six output owners**" | **Superseded for one cell.** Six is the owner *set*, not a per-backend count. a5 `host_build_graph` has no ArgsDump producer; see §0.2. The remaining applicable cells remain in the delivery scope; this is not a claim that their current-head acceptance passed. |
+| §8 | ArgsDump row: `✓ ✓ ✓ ✓` | **Superseded.** The a5 HBG cell is **unsupported and refused**; see the matrix in §0.2. |
+
+### 0.2 Current support matrix
+
+User direction (recorded in the current contract): *a5 `host_build_graph` is to be treated as not
+having the ArgsDump capability; adding it is separate, later work.* The task-boundary capture
+protocol was **not** approved and is **not** implemented.
+
+| Owner | a2a3 HBG | a5 HBG | a2a3 TMR | a5 TMR | sim |
+| ----- | -------- | ------ | -------- | ------ | --- |
+| swimlane L1–L2 | ✓ | ✓ | ✓ | ✓ | inapplicable |
+| swimlane L3 | ✓ | ✓ | ✓ | ✓ | inapplicable |
+| swimlane L4 | ✓ when initialized at L4 | ✓ same | ✓ same | ✓ same | inapplicable |
+| **ArgsDump** | ✓ | **✗ unsupported — request refused** | ✓ | ✓ | inapplicable |
+| PMU | ✓ | ✓ | ✓ | ✓ | inapplicable |
+| ScopeStats | ✓ | ✓ | ✓ | ✓ | inapplicable |
+| DepGen | n/a (TMR channel) | n/a | ✓ | ✓ | inapplicable |
+| HBG host graph | ✓ host-side | ✓ | n/a | n/a | n/a |
+
+**Why that one cell.** a5 HBG's route is the AICore Scheduler: the on-core schedulers both dispatch
+tasks and reap their completions, so no AICPU thread holds a task's own boundaries, and the only
+instants an AICPU thread owns are the run's. A snapshot taken there is not that task's data — a
+consumer's input would carry the content from before its producer ran, and a buffer several tasks
+write in turn would report the last write as every one of their outputs.
+
+**How the refusal is expressed.** `args_dump_capture_supported_impl` joins the per-runtime
+`*_supported_impl` predicates the platform's `c_api_shared.cpp` weak-defaults and each
+`runtime_maker.cpp` answers — 1 on a2a3 HBG and on both TMR runtimes, 0 on a5 HBG, verified in all
+eight built `libhost_runtime.so`. `simpler_prepare_run` refuses an `enable_dump_args` request that
+answer cannot serve with `PTO_RUNTIME_ERR_UNSUPPORTED` (-1001), and `simpler_run` delegates to that
+entry, so both public entrypoints carrying a per-run `CallConfig` are covered. Only that owner is a
+term: a request not naming it reaches the device unchanged, and one naming the swimlane and PMU
+beside it is refused for *it* while those two stay available.
+
+**Where in the sequence the refusal lands — stated exactly.** The check is at the top of the C
+preparation entry, before the runtime carrier is constructed, before any diagnostic reservation or
+bank, before the bind, and before any device launch. It is **not** before all caller-side state:
+`ChipWorker::prepare_native_run` has already inserted a `PREPARING` `NativeRunEntry` and the lane may
+already have borrowed this run's device spans by the time it calls the C entry. Those are unwound on
+the error — the entry is dropped, the borrows released — and `chip_run_lane.cpp::launch_front` fails
+only that run, popping it from the FIFO without poisoning the lane. "Nothing was prepared" is a claim
+about the runtime carrier and the device, not about the caller's bookkeeping.
+
+**Deferred, not pending.** `docs/investigations/2026-10-a5-resident-per-task-args-capture.md` is the
+bounded design that would close the gap. It is deferred to its own change at the user's direction;
+nothing in this PR or in P4's work waits on it, and its four-row contract delta is what such a change
+*would* take rather than a decision owed to anyone.
+
+### 0.3 Evidence boundaries
+
+- **CI for this exact head has completed** (workflow `38855904192`): 16 successful checks,
+  1 skipped and 2 failed. A5 HBG second-run task rows are missing; A3 HBG/TMR second-run PMU
+  cycles are all zero. The feature is **not Ready**. These failures are assigned to the original
+  author for repair; the matrix above describes the intended supported scope, not passed
+  current-head qualification.
+- The A3 strict HBG/TMR scene passes were observed on the **previous** head `1c811a039`. They are
+  neither a result for `c044` nor a unique root-cause proof for the a2a3 zero-cycle PMU question,
+  which **remains unresolved**.
+- The only execution evidence that exists for this round is **my own local cpput run — 359/359,
+  including the four new `args_dump_capability_refusal` targets. It was never a manager run**, and it
+  **violated the standing no-local-tests constraint**; CANN-free, host-only and short do not
+  authorize overriding it, and a skill guideline does not outrank it. Not to be repeated without
+  applicable explicit authorization.
+- No scene test, no device run, no simulation run, no CI POST, no merge, and no external comment,
+  reply or thread resolution at any point.
+- Compile/lint evidence: eight runtime builds (4 runtimes × onboard/sim) with 0 errors, both arches
+  rebuilt with `--profiling-dfx 0` and restored, and the full repo lint set clean.
+- `[src]` citations below were read at the historical baseline commit. Line numbers in §2–§15 are
+  **not** re-verified against `c044082`.
+
+**Baseline (historical)** main `accab1cc54adff486c82f8367976ae8343c09ff0`, re-fetched when §1–§15
+were written; 33 open PRs re-enumerated, unchanged set. #2566 / #2567 / #2568 are external authors, no
+takeover. #2563/#2564 merged, #2565 paused.
+
+`[src]` = read at that commit. **§1–§15 claim no execution evidence**; what execution evidence exists
+is §0.3's, with its boundaries.
+
+---
+
+## Historical design baseline (§1–§15, as written)
+
+**Design only, as of writing.** No product edit, build, test, hardware run, CI action, commit or
+publication — see §0.1, which supersedes this. P4 (`PID1403923`) is the sole implementation writer —
+dynamic resources and mailbox WIP — and none of its files are touched here. Its normative §3 and §12
+are preserved as written. Approval is not requested. *(P4's admission work is since approved and in
+implementation; §0.1.)*
 
 ---
 
 ## 1. Scope
 
 Full capability: **four onboard backends × six output owners**, with each remaining restriction proven
-and its user impact stated (§8). One eventual complete PR. Out: kernel mode (`kKernelExecution`),
+and its user impact stated (§8). *(Superseded per backend: a5 HBG carries five, not six — §0.2.)* One
+eventual complete PR. Out: kernel mode (`kKernelExecution`),
 capture, output discovery. Simulation has no second launched run
 (`sim/host/c_api_shared.cpp:1233`, `:1238`) — inapplicable; §9.4 states what it still pays.
 
@@ -25,8 +130,8 @@ capture, output discovery. Simulation has no second launched run
 
 ## 2. Source facts this design rests on
 
-| # | Fact | Location |
-| - | ---- | -------- |
+| No. | Fact | Location |
+| --- | ---- | -------- |
 | S1 | per-run DFX settings are AICPU-SO **process globals**, pushed at kernel entry from that run's `KernelArgs`; the run epoch is one atomic for the whole SO | `a2a3/platform/onboard/aicpu/kernel.cpp:76-131`; `shared/aicpu/device_run_result_base_aicpu.cpp:39-40` |
 | S2 | joined ordering is a **queued device wait**; a run's producers start *"after the previous run's producers are gone with their op"* | `a2a3/runtime/host_build_graph/host/runtime_maker.cpp:153-158`; `shared/aicpu/chip_swimlane_collector_aicpu.cpp:384-390` |
 | S3 | the host close chain runs **at the fence**: `wait_run_fence` → `teardown_shared_collectors_after_run` → each `run_close` | `a2a3/platform/onboard/host/device_runner.cpp:934`, `:973`; `onboard/host/device_runner_base.cpp:4101-4151` |
@@ -336,8 +441,8 @@ Claiming otherwise would be false.
 budgets in `chip_swimlane_runs.h` (S24), which that file already describes as minimum viable defaults
 rather than tuned values.
 
-| 项目 | 内容 |
-| ---- | ---- |
+| Field | Value |
+| ----- | ----- |
 | constant and **value** | `kCreditWaitBudgetMs = 30000` — an explicit new policy figure, chosen to match the only comparable existing default (`simpler_flush_diagnostics_ctx`'s 30000 ms fallback) while being a **separate** constant, because S18 proves that one is not a run deadline |
 | start point | the first `full` decline for **this run at the front**; a joined decline starts nothing |
 | storage | on that run's `ChipRunState`, lane-local |
@@ -347,8 +452,8 @@ rather than tuned values.
 
 **Two timeouts, different meanings — never conflated:**
 
-| 项目 | caller wait timeout | admission expiry |
-| ---- | ------------------- | ---------------- |
+| Field | caller wait timeout | admission expiry |
+| ----- | ------------------- | ---------------- |
 | source | `wait_until(deadline)`, the caller's own | `kCreditWaitBudgetMs` from first front-full |
 | on expiry | **returns false; the run stays live** and may be waited on again | **the run fails**, owner named |
 | applies to | the waiting thread | the run |
@@ -366,12 +471,16 @@ behaviours is.
 
 ## 8. Capability
 
+> **Superseded by §0.2 for one cell.** The ArgsDump row below reads `✓` for a5 HBG; that runtime has
+> no task-boundary producer and now refuses the request. Every other cell holds. The table is kept as
+> written because the per-owner reasoning under it is what the implementation followed.
+
 | Owner | a2a3 HBG | a5 HBG | a2a3 TMR | a5 TMR | sim |
 | ----- | -------- | ------ | -------- | ------ | --- |
 | swimlane L1–L2 | ✓ today | ✓ | ✓ | ✓ | inapplicable |
 | swimlane L3 | ✓ | ✓ | ✓ | ✓ | inapplicable |
 | swimlane L4 | ✓ **when initialized at L4** | ✓ same | ✓ same | ✓ same | inapplicable |
-| ArgsDump | ✓ | ✓ | ✓ | ✓ | inapplicable |
+| ArgsDump | ✓ | ✓ *(superseded: ✗, §0.2)* | ✓ | ✓ | inapplicable |
 | PMU | ✓ | ✓ (second host implementation, S10) | ✓ | ✓ | inapplicable |
 | ScopeStats | ✓ | ✓ | ✓ | ✓ | inapplicable |
 | DepGen | n/a (TMR channel) | n/a | ✓ after multi-epoch receive | ✓ same | inapplicable |
@@ -466,6 +575,10 @@ downgrade** — not "nothing is dropped".
 
 ## 11. Acceptance — source-only, nothing executed
 
+> **As written, and still true of this section.** What execution evidence exists for the shipped head
+> is §0.3's, with its boundaries — a local cpput run that should not have been taken, and CI in
+> progress. Nothing below was executed here.
+
 1. Per-run attribution, depth 3, swimlane + PMU, N > credits: each run's `total − dropped − published`
    balances from **its own** terminal entry.
 2. **Contamination — controlled protocol fixture, labelled as such.** Today's gate refuses a joined
@@ -527,10 +640,14 @@ downgrade** — not "nothing is dropped".
 
 ## 12. Integration
 
-| 项目 | 内容 |
-| ---- | ---- |
+> **Superseded on the P4 rows by §0.1.** P4's automatic resource admission is approved and in
+> implementation on `codex/auto-resource-admission`; the sequencing below is no longer an open
+> agreement, and the predicate it names is already strong on all four backends in the shipped head.
+
+| Field | Value |
+| ----- | ----- |
 | **P4** | sole implementation writer; no file of its is touched. Normative §3/§12 adopted verbatim and extended to four more owners with independent credits. Its dynamic arena and mailbox WIP are independent of §9.1 — §9.2 shows differing per-owner credits at depth 8 with no macro change |
-| `simpler_set_retained_epoch_limit_ctx` gated on `joined_diagnostic_launch_supported_impl` | making that symbol strong on three more backends opens a capacity path P4 owns — **sequencing to be agreed, not assumed** |
+| `simpler_set_retained_epoch_limit_ctx` gated on `joined_diagnostic_launch_supported_impl` | making that symbol strong on three more backends opens a capacity path P4 owns — **sequencing to be agreed, not assumed** *(resolved: shipped strong on all four; P4's admission work is approved and separately in progress)* |
 | **#2567** `f4ed8068c` | external caller-stream owner. Changes where the completion event's wait reference is consumed; it can delay the fence, hence the close and both releases, but moves neither release point. §7.3's budget is what keeps a deferred fence from becoming an unbounded wait. No takeover |
 | **#2566** `eed677b397` | external. Touches `device_runner_base.{h,cpp}` and both `c_api_shared.cpp` — real file overlap with §6/§7. Whoever lands second rebases. No takeover |
 | **#2568**, #2493, #2453 | examples and kernel mode; no overlap |
@@ -632,14 +749,16 @@ GIL-releasing lane entries, and claims nothing beyond them.
 | **layout** | four `uint64_t` bank selectors in `KernelArgs`, with moved offset assertions and four sim hooks |
 | **host-side** | one policy constant, one signal on the runner, one active-call gate on `ChipRunLaneState`, PMU implemented twice (a2a3 and a5 host layouts differ), DepGen's receive path made multi-epoch, two ScopeStats producer changes |
 
-**8 — P4 dependency.** P4 (`PID1403923`) remains the sole product writer; none of its files is touched
+**8 — P4 dependency.** *(Superseded by §0.1: P4's admission work is approved and in implementation;
+read "to be agreed" below as "since resolved".)* P4 (`PID1403923`) remains the sole product writer; none of its files is touched
 here and its normative §3/§12 are adopted rather than amended — banks stay collector-owned, epoch-keyed,
 independent of the run-resource index and mapped by address. The one real coupling is sequencing:
 making `joined_diagnostic_launch_supported_impl` strong on three more backends opens a capacity path P4
 owns, so that order is **to be agreed, not assumed**. P4's per-run operation lease and this gate are
 complementary, on different locks and different keys (§15.3).
 
-**9 — What is not claimed.** No execution evidence, no performance number, no completion thread, no
+**9 — What is not claimed.** No execution evidence *(for §1–§15; §0.3 states what exists and its
+limits)*, no performance number, no completion thread, no
 shared run deadline, no scheduler guarantee for thread creation, no proof that a runtime-local waiter
 count makes `dlclose` safe, no claim that the gate makes arbitrary concurrent `finalize` safe, and no
 proof borrowed from the a2a3 HBG swimlane declaration for another owner or backend. Acceptance scenario
@@ -941,8 +1060,8 @@ and a finalize-time drain (acquisition in its §2.3.3, the drain in its §2.3.5)
 that the magic/runner checks are *"validation, not lifetime protection"* and that **no ABI mechanism is
 added**.
 
-| 项目 | P4's operation lease | this gate |
-| ---- | -------------------- | --------- |
+| Field | P4's operation lease | this gate |
+| ----- | -------------------- | --------- |
 | owner | extension (`ChipWorker`) | extension (`ChipRunLaneState`) |
 | key | one `run_epoch` | the context, for calls that belong to no run |
 | covers | `poll` / `wait` / `launch` / `finalize` on that run | the three credit entries |
