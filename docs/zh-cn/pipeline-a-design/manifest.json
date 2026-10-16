@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-16T08:23:31.732541+00:00",
+  "exported_at": "2026-10-16T08:47:51.970482+00:00",
   "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "b3663785cd246d9be2bcb8b498b0800572c096cce115cc6ad634a8aeae5b60c5",
-      "export_sha256": "51646d383a5021973c2a110844ce5e582848237e17a27a81421b513738c3b3ba",
+      "source_sha256": "99ed5b7083e193cbdfaa07b01cd189e358f290770e0a9495f6fcb76508006ceb",
+      "export_sha256": "3c829a85daadb9ffa9852835b9bf7afa731d0938ba7a32572a76fff8968d480d",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "918c559ce633b10fbfc3b5b97caa4f8b1d0b060db0b5a1491c1162fa0327e558",
-      "export_sha256": "983b4b2592d811b019416d957470384174eb12b7d42153f9cf4a23beab4c852a",
+      "source_sha256": "f46ddc9863739729192d3d142fc9d6fcbd44af018a0089b2601c38082560ec20",
+      "export_sha256": "e7c19d4573c978a86246146af6b4c92a5004aa12b25f600ddbc4348b00b1d772",
       "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
@@ -89,9 +89,9 @@
     {
       "file": "review/p4-auto-resource-admission-decision.md",
       "source_document": ".docs/review/p4-auto-resource-admission-decision.md",
-      "source_sha256": "d84fa1e6a77ee16075d4d359e16d64c5ab2fc915433de64fc41fed6650ca8694",
-      "export_sha256": "59241ce6508befa5364b2ec8a0379d79f1892dd59599fda303b07624edc1e40e",
-      "source_main": "3351950f4b0fdbd60523ea63266b321ab12f5f2e"
+      "source_sha256": "37fab576ded2963ff726f43356100efefd130dd720da6b38e96c873ad704a4f4",
+      "export_sha256": "afc117818c3b3bd2b32438d3e7b0724b06c23fbd056a3d0f42b4e038ffda300e",
+      "source_main": "e994e106d8020c049dc419a67498db37bc6fcd3d"
     },
     {
       "file": "review/p4-auto-resource-admission-manager-review-r21.md",
@@ -193,7 +193,8 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md"
+    "run-pipeline-track-a.md",
+    "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 10
+  "last_changed_omitted_local_link_count": 14
 }
