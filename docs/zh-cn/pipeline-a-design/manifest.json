@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-10-17T03:23:23.961311+00:00",
-  "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9",
+  "exported_at": "2026-10-17T05:54:23.421138+00:00",
+  "source_main": "aa91a9d60e0e7ce22cdae3cf70533ece46875546",
   "documents": [
     {
       "file": "runtime-design-principles.md",
@@ -12,16 +12,16 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "c571f65e4fa770e37cd97f22fce0477d572f86e7c3b0a1ef8a2816acfda0347b",
-      "export_sha256": "2e8ac27187b2e10fbf33cd6f58d35871bc58d32ba263717c4644f5abc858e9a0",
-      "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
+      "source_sha256": "ec985d58792b7955f7dca4df28ab51b390dc6f0ae1540c4d6897532c099fd966",
+      "export_sha256": "424860c320095533f96b91beabdb03089c7af8b60002df0a3b8eabde23b27183",
+      "source_main": "aa91a9d60e0e7ce22cdae3cf70533ece46875546"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "745d66bb79fdf5a32232aead819463c51da9891e1765a37c77981b78adca83ca",
-      "export_sha256": "cb1cc1db294e1c74ae171d25dea88445641b6bfa29da2adc973e26f1b6b4c542",
-      "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
+      "source_sha256": "80643b6a4153a47632a7a323c86c057d4eed4d99a7b03436235e187517a30f71",
+      "export_sha256": "1d0574649159fb8a1f4f6a87336f510b08d7209dac2f040033fcb24659f68ff4",
+      "source_main": "aa91a9d60e0e7ce22cdae3cf70533ece46875546"
     },
     {
       "file": "memory-current-state.html",
@@ -194,8 +194,7 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html",
-    "review/p4-qwen-grant-composition-decision.md"
+    "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 18
+  "last_changed_omitted_local_link_count": 16
 }
