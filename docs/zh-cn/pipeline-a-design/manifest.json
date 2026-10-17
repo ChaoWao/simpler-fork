@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T06:02:47.460676+00:00",
+  "exported_at": "2026-10-17T06:05:57.981566+00:00",
   "source_main": "aa91a9d60e0e7ce22cdae3cf70533ece46875546",
   "documents": [
     {
@@ -19,8 +19,8 @@
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "8365a225c6c8dfc2f8b19ee8bd7a2084f01b8506f09756f76dce82a785e150c0",
-      "export_sha256": "d2025ce4d6b4f466c4da498e3642227759c14dfcc2eb2c27e067ae8f075bf068",
+      "source_sha256": "74845013e7cf78d2ac713d615ef7cc119b716e4338650cb3c2377156e13ca40a",
+      "export_sha256": "a2895bde5683e8d59fa2378294c1e8a1cd00c985da97962d7598d51538cb9508",
       "source_main": "aa91a9d60e0e7ce22cdae3cf70533ece46875546"
     },
     {
@@ -193,8 +193,7 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md",
     "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 16
+  "last_changed_omitted_local_link_count": 12
 }
