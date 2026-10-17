@@ -1,6 +1,6 @@
 # Preparation refusal: source lifetime retirement
 
-Baseline: main `aa91a9d60e0e7ce22cdae3cf70533ece46875546` (#2610), branch `fix/prepare-refusal-source-retirement`. [PR #2612](https://github.com/hw-native-sys/simpler/pull/2612), original head `e18ff1064deaa976267b5c75004517fc73ae4da4`; ready for review, not merged. The original-head local validation and CI pass. Current rebase validation is recorded separately below.
+Baseline: main `aa91a9d60e0e7ce22cdae3cf70533ece46875546` (#2610), branch `fix/prepare-refusal-source-retirement`. [PR #2612](https://github.com/hw-native-sys/simpler/pull/2612), original head `e18ff1064deaa976267b5c75004517fc73ae4da4`; merged as main `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` (#2612). The original-head local validation and CI pass. Current rebase validation is recorded separately below.
 
 ## Exact problem and intended behavior
 
@@ -53,3 +53,8 @@ CodeRabbit's only review nit says the retry arm is not enabled by the scene scri
 PR #2612 now targets main `0eda81c931f982a4f8149b1cac4cda272ec3d8fb`, head `de70972847000d3bcc19894c87d6c6557f0248b7`. The runtime_c_api.h comment conflict preserves both the module/thread non-reentrant-prepare contract and the per-attempt release contract. Range-diff shows no changed product behavior beyond taking main; the two added test assertions consume the exact release epoch for the new callback-exception and invalid-config cleanup tests. Nested/pre-reservation refusals still assert untouched/empty storage.
 
 The original head completed CI with 19 successful checks and 1 skipped check, including A5 hardware UT. Those results and the original full sweeps above remain attributed to e18ff106, not to the rebased head. On the rebased head, the six native-admission/lane C++ targets and all changed-file hooks pass. Rebuilt full C++ UT passes 327/327 targets. Full Linux Python UT passes 3415 / 115 skipped in 138.25 s. Exclusive A3 task `task_20261017_011016_38869462780` passes all 12 stateful/budget Resource cases plus 38 C ABI tests / 21 architecture deselections in 149.06 s; exit 0 and lock released. A session-timeout target was observed with PPID 1 during the full UT run; it was absent at the post-suite cleanup check, so no termination was needed this time. The source head remains frozen throughout. New CI is triggered by the lease-protected update of the original PR branch.
+
+
+## Merge receipt
+
+#2612 merged as 49ae1ef1. Its failed-prepare proof is delivered. The next [NotStarted launch retirement](../unstarted-launch-source-retirement/REPORT.md) extends the same contract to pre-execution setup after successful prepare, with ordinary/joined error priority and predecessor retention tested separately.

@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `aa91a9d6`：#2610 已合入。** 当前 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
+**2026-10-17 / main `49ae1ef1`：#2612 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -189,9 +189,19 @@ init contract 仍只验证、不保留；`context_generation` 仍只验证非零
 原始四个故障缺少当时的 PID 对照，尚不能排除或确认该原因。
 
 
-### #2612：准备拒绝的 source 退休（待合入）
+### #2612：准备拒绝的 source 退休（已合入）
 
 原验证 head `e18ff1064deaa976267b5c75004517fc73ae4da4` 从原 native host slot 返回本次 epoch 的清理证明，经同一 lane、公开 Worker 和兼容 ChipWorker.run 消费。干净拒绝只释放本次引用；未知/失败清理保留引用并拒绝后续 native admission。Linux Python 3415 passed、C++ 327 targets passed；两 runtime 实际 C ABI 与同 Worker/Buffer 重试的 6 个 A3 用例通过。最终提交双 sim 全量通过（61/57 个 Resource 场景及各自 L2）；A3 完整 C ABI 38 passed，普通 sweep 的 151 个 Resource 场景及两套 L2 均通过，锁已释放。CI 未完成，不将本地 A3 结果当作 A5 上板结论。详见[证据](reviews/prepare-refusal-source-retirement/REPORT.md)。
 
 
 2026-10-17：#2612 已 rebase 到 main `0eda81c9`（#2611），新 head `de709728`。只合并两段 C API 合同说明，并为主线新增的两条干净失败测试补充 exact-epoch 证明消费；不改变原 PR 产品语义。新 head 的 Python 3415 passed / 115 skipped、重新构建的 C++ 327 targets、A3 状态/预算 12 场景与 C ABI 38 项均通过。新 CI 重新运行；旧 head 的完整 sim / onboard sweep 保留原归属。
+
+
+### 当前：NotStarted launch 的 source 退休
+
+准备成功后的启动 setup 失败也可能明确没有入队任何执行任务。当前候选复用同一 host-slot epoch 证明、RunPreparationRefused 和 source 消费者，闭合真实 event 创建失败后的同 Worker/Buffer 重试；保留原错误，partial/unknown/清理失败不获得新证明。TMR/HBG × owned/borrowed 一起验证，详见[本轮证据](reviews/unstarted-launch-source-retirement/REPORT.md)。#2605 继续负责框架 adapter，#2588 继续负责 DFX，不重复各自 driver 或 collector 工作。
+
+
+### 下一处独立缺口：启动异常后的执行所有权
+
+CPU 负对照确认：launch backend 若在入队后、返回 ActiveExecution 前抛异常，不能从空 active 指针推断无设备工作。当前 A3/A5 返回前的 ActiveExecution 分配是需审计的真实抛异常位置；应在 launch 提交前建立 owner，或在异常路径保留并隔离已提交事务的所有权。#2614 只保证此类异常拿不到新的 no-submission 证明，不宣称修复旧 finalization 的全部保留行为。下笔功能应覆盖真实消费者、异常前后进度与资源保留负对照；该模型不是 AIV 根因证据。
