@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-16 / main `aa91a9d6`：#2610 已合入，borrowed 内部 workspace 管理与预算已交付。当前 [#2612](https://github.com/hw-native-sys/simpler/pull/2612) 闭合准备拒绝后的 source 退休证明（验证中，未合入）；不把原先“保守永久保留”当作最终设计。**
+**2026-10-17 / main `0eda81c9`：#2610 已合入，borrowed 内部 workspace 管理与预算已交付。当前 [#2612](https://github.com/hw-native-sys/simpler/pull/2612) 闭合准备拒绝后的 source 退休证明（rebase 至 #2611，未合入）；不把原先“保守永久保留”当作最终设计。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 

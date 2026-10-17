@@ -191,4 +191,7 @@ init contract 仍只验证、不保留；`context_generation` 仍只验证非零
 
 ### #2612：准备拒绝的 source 退休（待合入）
 
-head `e18ff1064deaa976267b5c75004517fc73ae4da4` 从原 native host slot 返回本次 epoch 的清理证明，经同一 lane、公开 Worker 和兼容 ChipWorker.run 消费。干净拒绝只释放本次引用；未知/失败清理保留引用并拒绝后续 native admission。Linux Python 3415 passed、C++ 327 targets passed；两 runtime 实际 C ABI 与同 Worker/Buffer 重试的 6 个 A3 用例通过。最终提交双 sim 全量通过（61/57 个 Resource 场景及各自 L2）；A3 完整 C ABI 38 passed，普通 sweep 的 151 个 Resource 场景及两套 L2 均通过，锁已释放。CI 未完成，不将本地 A3 结果当作 A5 上板结论。详见[证据](reviews/prepare-refusal-source-retirement/REPORT.md)。
+原验证 head `e18ff1064deaa976267b5c75004517fc73ae4da4` 从原 native host slot 返回本次 epoch 的清理证明，经同一 lane、公开 Worker 和兼容 ChipWorker.run 消费。干净拒绝只释放本次引用；未知/失败清理保留引用并拒绝后续 native admission。Linux Python 3415 passed、C++ 327 targets passed；两 runtime 实际 C ABI 与同 Worker/Buffer 重试的 6 个 A3 用例通过。最终提交双 sim 全量通过（61/57 个 Resource 场景及各自 L2）；A3 完整 C ABI 38 passed，普通 sweep 的 151 个 Resource 场景及两套 L2 均通过，锁已释放。CI 未完成，不将本地 A3 结果当作 A5 上板结论。详见[证据](reviews/prepare-refusal-source-retirement/REPORT.md)。
+
+
+2026-10-17：#2612 已 rebase 到 main `0eda81c9`（#2611），新 head `de709728`。只合并两段 C API 合同说明，并为主线新增的两条干净失败测试补充 exact-epoch 证明消费；不改变原 PR 产品语义。新 head 的 Python 3415 passed / 115 skipped、重新构建的 C++ 327 targets、A3 状态/预算 12 场景与 C ABI 38 项均通过。新 CI 重新运行；旧 head 的完整 sim / onboard sweep 保留原归属。

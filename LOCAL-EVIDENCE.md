@@ -1226,14 +1226,6 @@
 
 引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
 
-<a id="artifact-9695e1b1df64"></a>
-
-## 9695e1b1df64
-
-原引用：`review/codex-p4-native-reentry-publication.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-976cc1a40fa4"></a>
 
 ## 976cc1a40fa4

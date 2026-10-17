@@ -1,6 +1,6 @@
 # Simpler 运行时设计资料
 
-2026-10-16 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
+2026-10-17 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
 
 ## 从这里开始
 
@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `aa91a9d60e0e7ce22cdae3cf70533ece46875546`，含已合入 #2610 与 Pipeline A #2596；API 层次的完整源码清单仍固定其页内注明的 `e6d546d4` 基线，不能把路线更新当作 API 全面重审。
-- 本次记录的待合入工作为 [#2612](https://github.com/hw-native-sys/simpler/pull/2612)，head `e18ff1064deaa976267b5c75004517fc73ae4da4`。修订验证及限制见对应报告；CI 状态以报告注明的查询时刻为准。
+- 最新路线状态固定 main `0eda81c931f982a4f8149b1cac4cda272ec3d8fb`，含已合入 #2610、#2611 与 Pipeline A #2596；API 层次的完整源码清单仍固定其页内注明的 `e6d546d4` 基线，不能把路线更新当作 API 全面重审。
+- 本次记录的待合入工作为 [#2612](https://github.com/hw-native-sys/simpler/pull/2612)，head `de70972847000d3bcc19894c87d6c6557f0248b7`。修订验证及限制见对应报告；CI 状态以报告注明的查询时刻为准。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。

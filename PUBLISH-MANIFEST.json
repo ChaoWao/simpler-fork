@@ -1,8 +1,8 @@
 {
-  "snapshot_date": "2026-10-16",
+  "snapshot_date": "2026-10-17",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "aa91a9d60e0e7ce22cdae3cf70533ece46875546",
+  "latest_roadmap_source_baseline": "0eda81c931f982a4f8149b1cac4cda272ec3d8fb",
   "pending_pr": 2612,
   "files": [
     {
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "93fdf516f41389846af955f7c40641cfb55735784e2fcf279fc715113caf2344",
-      "published_sha256": "c7839c5cff42be751332900ca59b48c6b1661ed4447a259a559cdfd01464d386",
-      "bytes": 54480
+      "source_sha256": "7627f346204e9ca2043526f980182783acee7bdbf756ee27428ea983f9fda21d",
+      "published_sha256": "5b6fe243a602751914333ce644a882aa4f9deb47f538b7f0530c61dea719c7f8",
+      "bytes": 54487
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1616e1d72ff267bb80a05c678ff4e6ec6cf158f51ca06e8fbfe211831b5ef2b5",
-      "published_sha256": "01e28f5752a47c0df8dbb3588ca62895ef9e883b119079483da9fb65510f104b",
-      "bytes": 25239
+      "source_sha256": "88a08894bcf26128e282059ec38b2c22349dd8c5e77c72696639443de3f42b99",
+      "published_sha256": "e1c00b5f31fd62235d9c755fedce2b55983820bdd6339a77d59ec018b11a716f",
+      "bytes": 25699
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "675c1d2eb651b144dfc784cabf9f749073070d1bfd7799c0e328d601219513f4",
-      "published_sha256": "1e6bfbdbf35fbed9a1c5a0fb7b28184c83a7f543e3a23873e707fe62982ed77c",
-      "bytes": 69993
+      "source_sha256": "f8591a1b9abe70fe17724bf581a2bece25c9e6f80644d45f0e0f90693b460e65",
+      "published_sha256": "d7d922ef9b3bf7a4bf87b629a0e431fc357a6a2ac71f244373abab044fac5593",
+      "bytes": 70000
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -113,8 +113,8 @@
     {
       "path": "kernel-mode-unified-design.html",
       "source_collection": "kernel-design",
-      "source_sha256": "f3bdcee88ec90a1145aa61d4701a8afde2f7184b3cc6c9ee36d51857bf9f3498",
-      "published_sha256": "ea3527c62379e49fcc03385296a2738e2731a947349f6f57098453c8c83ed7d9",
+      "source_sha256": "2fe2bdd8133676bcc8c2e36a67764bf3784e7e9d8189df99ee563422681626ca",
+      "published_sha256": "51f4b9407541a39fda4b53761c84bae77b2d7a5876b3db77f50065aa9bf84101",
       "bytes": 54592
     },
     {
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "85976a2ef009effb7d38f5f9e866479a037517d553a159e604a5571bdf8d2bd1",
-      "published_sha256": "a437d0cf51f72fe36b5274fdd998206994542bb4c6a17047b114c43a16faf771",
-      "bytes": 50714
+      "source_sha256": "666fd7abc2dcc50c0cdcc5b875bea44ce4b57cce275a4ec783be78b44124c751",
+      "published_sha256": "c630182adf4c118c3d0ceb9dad7d291d27202249eaca1999f59c8b88e70e941e",
+      "bytes": 51907
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "dbe192bb31d5e53aa6a79139a3a264a7351a807100661243521d1b7500b34e03",
-      "published_sha256": "18804339ba49979ebb98bcdb543a93677eeca29423481fb941f51a8f0ae42973",
-      "bytes": 22672
+      "source_sha256": "54e852632754ad7badc4631d37be67ea7256dbe772813b25f16271216580182f",
+      "published_sha256": "22c8727314a956b72e4e70491a3960221ad9c74dff0fdd84786ab10295d48a43",
+      "bytes": 24000
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -491,9 +491,9 @@
     {
       "path": "reviews/prepare-refusal-source-retirement/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "12be5760412990fa6fbee923c9f00b70fed3ab269409466340d4183c84f6a4d8",
-      "published_sha256": "12be5760412990fa6fbee923c9f00b70fed3ab269409466340d4183c84f6a4d8",
-      "bytes": 7876
+      "source_sha256": "32892e7966dbfd44493c134ade61f7fc7661787077438947985681667b3de4d7",
+      "published_sha256": "32892e7966dbfd44493c134ade61f7fc7661787077438947985681667b3de4d7",
+      "bytes": 9362
     },
     {
       "path": "reviews/public-borrowed-worker/REPORT.md",
