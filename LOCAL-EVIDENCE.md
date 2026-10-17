@@ -234,6 +234,14 @@
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
+<a id="artifact-1c9d82e1637e"></a>
+
+## 1c9d82e1637e
+
+原引用：`review/codex-dfx-args-progress-publication.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-1cb9ca3b8733"></a>
 
 ## 1cb9ca3b8733
@@ -681,6 +689,14 @@
 原引用：`cmake.log`
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
+
+<a id="artifact-52413a2cbbb6"></a>
+
+## 52413a2cbbb6
+
+原引用：`review/pr2609-ci-source-outage.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-5375d0121f9c"></a>
 
@@ -1473,14 +1489,6 @@
 原引用：`s2-main-d49730f3/dfx-a5.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
-
-<a id="artifact-c17737e28135"></a>
-
-## c17737e28135
-
-原引用：`review/codex-dfx-macos-ceiling-fix.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-c2757df29bb4"></a>
 

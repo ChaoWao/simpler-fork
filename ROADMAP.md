@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-16 / main `17129ba49`：#2606 已合入，公开跨 caller-stream DEVICE 数据链已补齐；当前修复 borrowed HBG 空图后不能增长的 eager 缺陷；#2607 已关闭，未交付新能力。**
+**2026-10-16 / main `e6d546d4`：#2608 与 Pipeline A #2596 已合入；当前推进 borrowed 内部 workspace 管理与既有预算入口的完整接线。#2607 已撤回，不复活版本化能力查询。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -34,7 +34,9 @@
 
 已合入 [PR #2606](https://github.com/hw-native-sys/simpler/pull/2606) 的 K2c 验收增量：同一 public Worker 的三次调用按 caller stream A → B → A 连接。每条边由 caller record/wait 事件和 D2D 复制承接前次 DEVICE 输出；后继输入先写入毒值，漏掉复制必须得到错误结果。全部 caller 结果在首次成功 RunHandle wait/poll 前读取；caller copy/event wait 在释放 raw allocation/event 前须另有完成证明。已有 #2605 负责固定形状框架接入，本笔不重复该 driver，也不据显式流链通过宣布后台发射队列合格。见[当前证据](reviews/public-caller-chain/REPORT.md)。
 
-[PR #2607](https://github.com/hw-native-sys/simpler/pull/2607) 已关闭，未合入。其 version/size/flags 查询仅提前拒绝现有入口已能拒绝的操作，并重引入历史已删除的内部版本协商；测试通过不构成功能交付。S3 不再要求查询或版本协议，模块寿命按实际使用者推进。当前 [PR #2608](https://github.com/hw-native-sys/simpler/pull/2608) 以 [borrowed eager arena 增长](reviews/borrowed-eager-arena-growth/REPORT.md) 闭合真实缺陷：空图 → 非空／更大图 → 缩小／空图，无预热，保持外部状态与 caller 顺序；分配失败不破坏旧 bank。
+[PR #2607](https://github.com/hw-native-sys/simpler/pull/2607) 已关闭，未合入。其 version/size/flags 查询仅提前拒绝现有入口已能拒绝的操作，并重引入历史已删除的内部版本协商；测试通过不构成功能交付。S3 不再要求查询或版本协议，模块寿命按实际使用者推进。已合入 [PR #2608](https://github.com/hw-native-sys/simpler/pull/2608) 以 [borrowed eager arena 增长](reviews/borrowed-eager-arena-growth/REPORT.md) 闭合真实缺陷：空图 → 非空／更大图 → 缩小／空图，无预热，保持外部状态与 caller 顺序；分配失败不破坏旧 bank。
+
+当前 [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610) 的 [borrowed workspace 预算接线](reviews/borrowed-workspace-budget/REPORT.md) 复用同一 manager、既有 `workspace_budget_bytes` 与 report：两种设备所有权策略都管理 simpler 内部 arena；可选预算限制内部四类 region，绝不计 caller tensor 为内部 workspace。实测拒绝路径暴露既有公开 native 异常 source 保留缺口：没有返回 RunHandle 时，close 不会释放这份未证实 source；当前保守保留，不能宣称立即可重试或可释放。后续须传递真实未提交／已完成证明，不能凭异常或 reset 推断。#2596 是按 endpoint 资源证明决定 admission 的已交付增量，不能据一笔合入宣布 Pipeline A 全路线已完成。
 
 初版 `149c8997` 的 Linux 验证：完整 Python UT 3275 passed / 91 skipped；初版最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
 

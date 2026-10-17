@@ -39,3 +39,7 @@ Current head `dbc9bc6c9c8b8adfb046b6b7e57c2fb3355a769e` differs from the fully s
 [Successful full A3 run](../../LOCAL-EVIDENCE.md#artifact-60f2fa56285d), [initial stamp-mismatch sweep](../../LOCAL-EVIDENCE.md#artifact-e4371e151cff), [final focused checks](../../LOCAL-EVIDENCE.md#artifact-0b7622b279b0).
 
 [Current-head A3 stateful rerun](../../LOCAL-EVIDENCE.md#artifact-38ba90682acb). All local tasks have exited and released their device locks. No A5 hardware run is claimed.
+
+## Merge receipt
+
+User confirmed merge; GitHub main is `e6d546d4c6a98e1a87bc80cd0418806630c027f9` (#2608). Historical measurements above retain their original tested heads. Pipeline A automatic resource admission #2596 (`a2b0ad2a`) is also in this main; it does not by itself complete every Pipeline A expansion or the capture route.

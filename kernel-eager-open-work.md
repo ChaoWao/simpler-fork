@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `17129ba49`：#2606 已合入；#2607 已关闭且未合入。** 版本化能力查询没有增加执行能力，并违反同仓内部格式不预设协商的既有判断。当前 [PR #2608](https://github.com/hw-native-sys/simpler/pull/2608) 修复 [borrowed HBG eager 的 arena 增长](reviews/borrowed-eager-arena-growth/REPORT.md)，交付无需非空预热的连续空／大／小图调用，资源失败回滚与实际上板结果必须一起验收。#2605 的框架集成、partial/fault/DFX 与图保活仍分别记账。
+**2026-10-16 / main `e6d546d4`：#2608 和 #2596 已合入。** borrowed eager 允许空／大／小图自然增长，Pipeline A 按资源证明自动 admission 已进入主线。当前 [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610) 的 [内部 workspace 管理与预算](reviews/borrowed-workspace-budget/REPORT.md) 复用既有入口推进；不加 capability/version 结构。#2607 保持撤回。预算不足的实测已暴露公开 native 异常永久保留 source 的既有缺口，下一笔以真实 no-submission/completion 证明闭合它；不得将所有异常都视为安全拒绝。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
