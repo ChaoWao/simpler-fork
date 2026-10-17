@@ -1,6 +1,6 @@
 # Borrowed internal workspace management and budget
 
-Baseline: main `e6d546d4c6a98e1a87bc80cd0418806630c027f9`, including #2608 and Pipeline A #2596. Branch `feat/borrowed-workspace-budget`, draft [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610), head `086fe83ed152a9489da7cefb9a595e548c94ded7`. Full committed-head sweeps and CI are in progress.
+Baseline: main `e6d546d4c6a98e1a87bc80cd0418806630c027f9`, including #2608 and Pipeline A #2596. Branch `feat/borrowed-workspace-budget`, [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610), head `086fe83ed152a9489da7cefb9a595e548c94ded7`. Local committed-head validation passes; the PR is ready for review. CI is partly complete and has no known red jobs at this query.
 
 ## Functional scope
 
@@ -33,7 +33,17 @@ Carry actual no-submission/completion evidence through the existing native error
 - Changed-file hooks pass, including clang-tidy, pyright and Markdown.
 - Final committed head rebuilt; focused host checks: 151 passed, 7.56 s.
 - Exclusive A3 working-content integration `task_20261016_190013_416590820251`: all 12 stateful/budget resource jobs pass, exit 0, 59.70 s.
-- Final committed-head A3 task `task_20261016_190420_530193363` holds devices 8–11; lifecycle, stateful and full ordinary sweep run sequentially with occupancy/PID snapshots and isolated ASCEND logs. Still in progress.
+- Final committed-head A3 task `task_20261016_190420_530193363` holds devices 8–11; lifecycle, stateful and full ordinary sweep run sequentially with occupancy/PID snapshots and isolated ASCEND logs. Completed with exit 0; see the final receipt below.
 - Full A3/A5 simulator sweeps pass on the committed head (177.69 / 172.38 s). A3 dispatches 61 Resource jobs and both L2 groups; A5 dispatches 57 Resource jobs and both L2 groups. Resource jobs include skips and are not individual test-pass counts. No local A5 hardware qualification is claimed.
 
-Final committed-head A3 lifecycle phase passes: 34 inline cases and three dispatched management cases, exit 0 (75.96 s). All 12 stateful/budget Resource jobs pass again, exit 0 (14.95 s). The full ordinary A3 sweep is still running.
+Final committed-head A3 lifecycle phase passes: 34 inline cases and three dispatched management cases, exit 0 (75.96 s). All 12 stateful/budget Resource jobs pass again, exit 0 (14.95 s). The full ordinary A3 sweep subsequently passed; see the final receipt below.
+
+## Final committed-head receipt
+
+Exclusive task `task_20261016_190420_530193363` completed with exit 0 and released devices 8–11. Lifecycle and 12 stateful/budget Resource jobs pass. The full CI-shaped ordinary A3 sweep passes in 614.52 s: 151 Resource jobs (including skips), HBG L2 43 passed / 1 skipped, and TMR L2 group PASS. The final parent pytest summary includes an inline test and does not count dispatched Resource/L2 children as one flat pass total. HEAD and source were frozen throughout.
+
+CI A5 onboard [job 117281309076](https://github.com/hw-native-sys/simpler/actions/runs/38993424314/job/117281309076) passes. Its completed job log was read through the GitHub jobs/logs endpoint: all six new borrowed budget arms, all six existing stateful arms and both ordinary L2 groups pass. This is A5 CI hardware evidence, not a local A5 run. A3 hardware UT, network1, DeepSeek and some simulator/packaging jobs also pass at this query; remaining CI is still pending/running.
+
+No capture/replay or AIV fix is claimed. The public prepare-failure source-retirement gap remains explicit follow-up work; passing budget-refusal tests assert conservative retention rather than pretending Buffer.close succeeded.
+
+Local artifacts: [full A3 sweep](../../LOCAL-EVIDENCE.md#artifact-9348ff465cf3), [task and lock receipt](../../LOCAL-EVIDENCE.md#artifact-4f5452d28bb9), [lifecycle](../../LOCAL-EVIDENCE.md#artifact-f102c5a2c706), [stateful cases](../../LOCAL-EVIDENCE.md#artifact-8de9bdced51a), [A5 CI log](../../LOCAL-EVIDENCE.md#artifact-eae920b7db8b), [Python UT](../../LOCAL-EVIDENCE.md#artifact-c2714fa56583), [C++ UT](../../LOCAL-EVIDENCE.md#artifact-4154da3f4dd8), [A3 simulator](../../LOCAL-EVIDENCE.md#artifact-d30c635bbfae), [A5 simulator](../../LOCAL-EVIDENCE.md#artifact-bb507310f4e4), [hooks](../../LOCAL-EVIDENCE.md#artifact-a67644cee6ec). Occupancy/PID snapshots and isolated ASCEND logs remain at the task's local evidence root and are excluded from both PR and design backup.

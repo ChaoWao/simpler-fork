@@ -570,6 +570,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/README.md](probes/README.md)。材料未收录。
 
+<a id="artifact-4154da3f4dd8"></a>
+
+## 4154da3f4dd8
+
+原引用：`cpp-ut.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-41e37c2f59de"></a>
 
 ## 41e37c2f59de
@@ -673,6 +681,14 @@
 原引用：`early-rollback-r2/pr2587-rollback-final-tests.log`
 
 引用文档：[reviews/context-bound-buffer-source/REPORT.md](reviews/context-bound-buffer-source/REPORT.md)。材料未收录。
+
+<a id="artifact-4f5452d28bb9"></a>
+
+## 4f5452d28bb9
+
+原引用：`board-task.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
 
 <a id="artifact-504a662d1ee4"></a>
 
@@ -1146,6 +1162,14 @@
 
 引用文档：[reviews/runtime-capability-contract/REPORT.md](reviews/runtime-capability-contract/REPORT.md)。材料未收录。
 
+<a id="artifact-8de9bdced51a"></a>
+
+## 8de9bdced51a
+
+原引用：`board-stateful.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-8df2cb816793"></a>
 
 ## 8df2cb816793
@@ -1194,6 +1218,14 @@
 
 引用文档：[reviews/context-state-preflight-final/REPORT.md](reviews/context-state-preflight-final/REPORT.md)。材料未收录。
 
+<a id="artifact-9348ff465cf3"></a>
+
+## 9348ff465cf3
+
+原引用：`board-full.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-9629b78010ca"></a>
 
 ## 9629b78010ca
@@ -1201,6 +1233,14 @@
 原引用：`ci-fix-final-feedback.json`
 
 引用文档：[reviews/public-borrowed-worker/REPORT.md](reviews/public-borrowed-worker/REPORT.md)。材料未收录。
+
+<a id="artifact-9695e1b1df64"></a>
+
+## 9695e1b1df64
+
+原引用：`review/codex-p4-native-reentry-publication.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-976cc1a40fa4"></a>
 
@@ -1338,6 +1378,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/README.md](probes/README.md)。材料未收录。
 
+<a id="artifact-a67644cee6ec"></a>
+
+## a67644cee6ec
+
+原引用：`hooks.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-a7e737161e76"></a>
 
 ## a7e737161e76
@@ -1458,6 +1506,14 @@
 
 引用文档：[kernel-mode-design.md](kernel-mode-design.md), [probes/publication-results/REPORT.md](probes/publication-results/REPORT.md)。材料未收录。
 
+<a id="artifact-bb507310f4e4"></a>
+
+## bb507310f4e4
+
+原引用：`a5sim.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-bc28526ab2a0"></a>
 
 ## bc28526ab2a0
@@ -1489,6 +1545,14 @@
 原引用：`s2-main-d49730f3/dfx-a5.log`
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
+
+<a id="artifact-c2714fa56583"></a>
+
+## c2714fa56583
+
+原引用：`python-ut.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
 
 <a id="artifact-c2757df29bb4"></a>
 
@@ -1641,6 +1705,14 @@
 原引用：`a3sim-full.log`
 
 引用文档：[reviews/borrowed-eager-arena-growth/REPORT.md](reviews/borrowed-eager-arena-growth/REPORT.md)。材料未收录。
+
+<a id="artifact-d30c635bbfae"></a>
+
+## d30c635bbfae
+
+原引用：`a3sim.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
 
 <a id="artifact-d31ef39bc40d"></a>
 
@@ -1866,6 +1938,14 @@
 
 引用文档：[reviews/s2-main-d49730f3.md](reviews/s2-main-d49730f3.md)。材料未收录。
 
+<a id="artifact-eae920b7db8b"></a>
+
+## eae920b7db8b
+
+原引用：`ci-a5.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
+
 <a id="artifact-ed9c93316455"></a>
 
 ## ed9c93316455
@@ -1921,6 +2001,14 @@
 原引用：`a3sim-full.log`
 
 引用文档：[reviews/empty-eager-completion/REPORT.md](reviews/empty-eager-completion/REPORT.md)。材料未收录。
+
+<a id="artifact-f102c5a2c706"></a>
+
+## f102c5a2c706
+
+原引用：`board-lifecycle.log`
+
+引用文档：[reviews/borrowed-workspace-budget/REPORT.md](reviews/borrowed-workspace-budget/REPORT.md)。材料未收录。
 
 <a id="artifact-f12685450fb1"></a>
 

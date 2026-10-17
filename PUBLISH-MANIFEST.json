@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "2276d0cda336c24721f44b9c96d64adbe7655c140055709e784726f7e5382499",
-      "published_sha256": "28f9c52a15051c0d0f33e1518c76637eddfd616c8926a84bb734b0c9135b76b2",
-      "bytes": 50282
+      "source_sha256": "b8b3621b0a49fcf5b18e7400fcf5cbde0c9f1795a50a956260aa2a1fa284158e",
+      "published_sha256": "4adade7f231ec64985e7f5675cf729ee71b308ee580fa99135071e832d5b352f",
+      "bytes": 50679
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "71192b5b99847abc563d86562dc37b2e2b8e3505b96ced744d9ef904a6feb889",
-      "published_sha256": "b984ce7c1a134bdae9f1e5702fa1951b00302822fc17e25fb1c087d912e1479e",
-      "bytes": 22385
+      "source_sha256": "7409d1222284e4da47685490a5b319137075ea9e63010585e4d1585bacee8853",
+      "published_sha256": "c7ad6cd6f09d0b291e00ba722759c584e107a868d245da715a5c23104cf46071",
+      "bytes": 22533
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -260,9 +260,9 @@
     {
       "path": "reviews/borrowed-workspace-budget/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "a5f60111fedf1d6e3e720229f7577db6fc182de5448eeeada0a139c952a571dc",
-      "published_sha256": "a5f60111fedf1d6e3e720229f7577db6fc182de5448eeeada0a139c952a571dc",
-      "bytes": 4511
+      "source_sha256": "1e3e272864c1f0ca6124941025772792e9198294c510da27c526d26db08fca9f",
+      "published_sha256": "11802acc7606206506bb4e18545240ead21ea6ab5ca76ca3bc192b946b2345ab",
+      "bytes": 6642
     },
     {
       "path": "reviews/callable-fault-dfx/REPORT.md",
