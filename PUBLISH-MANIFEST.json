@@ -491,9 +491,9 @@
     {
       "path": "reviews/prepare-refusal-source-retirement/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "c7d2360973be8cfec13d021400874ac64493152623f79fad493b03e749f8d1e3",
-      "published_sha256": "c7d2360973be8cfec13d021400874ac64493152623f79fad493b03e749f8d1e3",
-      "bytes": 7406
+      "source_sha256": "12be5760412990fa6fbee923c9f00b70fed3ab269409466340d4183c84f6a4d8",
+      "published_sha256": "12be5760412990fa6fbee923c9f00b70fed3ab269409466340d4183c84f6a4d8",
+      "bytes": 7876
     },
     {
       "path": "reviews/public-borrowed-worker/REPORT.md",

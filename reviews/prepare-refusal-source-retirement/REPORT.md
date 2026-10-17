@@ -40,7 +40,7 @@ All changed-file hooks pass, including clang-tidy, formatting and pyright. Final
 - Full a5sim Resource dispatch: 57/57 cases pass; L2 HBG 16 passed; L2 TMR 30 passed. Command exits 0 in 171.83 s.
 - Exclusive A3 task `task_20261016_233418_222780629259` holds devices 8–11 with an isolated ASCEND log root. Full C ABI hardware suite: 38 passed / 21 deselected in 89.47 s. The ordinary non-SDMA/non-fault scene sweep passes: 151/151 Resource cases, L2 HBG 43 passed / 1 skipped, L2 TMR 60 passed, plus one parent test. Exit 0 in 594.81 s. The task releases all four locks. No AIV or other scene failure occurred in this run.
 
-CI has been triggered on the same head. At the post-local-sweep query, pre-commit and network1 pass; other jobs are pending, with no failed checks yet. A5 onboard is not available locally; its result must be read from CI before claiming A5 validation. Original logs remain local. No AIV fix or capture support is claimed.
+CI has been triggered on the same head. At the post-local-sweep query, pre-commit, network1, DeepSeek, A3 hardware UT, packaging and A5 onboard pass; remaining jobs are pending, with no failed checks yet. A5 onboard is not available locally. Completed CI A5 scene job [117332139023](https://github.com/hw-native-sys/simpler/actions/runs/39010295132/job/117332139023) was read through its logs endpoint: both `refused-host_build_graph` and `refused-tensormap_and_ringbuffer` arms pass, including the new Buffer.close behavior, alongside the ordinary scene corpus. The dedicated public-retry/failed-release C ABI arms run in hardware UT, whose A5 result is still pending; the scene job is not substituted for that coverage. Original logs remain local. No AIV fix or capture support is claimed.
 
 
 ## Review follow-up
