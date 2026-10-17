@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-10-16T22:03:03.632493+00:00",
-  "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1",
+  "exported_at": "2026-10-17T01:36:34.446030+00:00",
+  "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85",
   "documents": [
     {
       "file": "runtime-design-principles.md",
@@ -12,16 +12,16 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "59db3c5b3cd14b13d42687c2d91f5934f758c624a632dcdb4f815cb280a987ed",
-      "export_sha256": "a838c45c49b231b805257d4d3cef64c4ae60adacef2bef75a1216ec59809c2e7",
-      "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
+      "source_sha256": "e365eb6df78ca3b963b28376f34a1ccdc8adbdafc29c4fe23171eecbe2c5ed75",
+      "export_sha256": "29f4ee23d95084a9655da029f525f7f6d3dc282857bd2365e425ac98a7a31d0a",
+      "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "1e57ac7aec5e0a5d5602313d8e939b708706d039f9b6feca8269bf2328ed3f70",
-      "export_sha256": "6d422ace089a20a448254bda0283e828d025795a882bfad9ec218891d362e553",
-      "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
+      "source_sha256": "57722d9971c06db905b3f710be8629f0f393b4d367c0ef21748cb5d1c4a1a1ee",
+      "export_sha256": "1e28cdb8a980841a5ab9e94e9b83920f0448e6c765af79f3e37b7b09620f66a5",
+      "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85"
     },
     {
       "file": "memory-current-state.html",
@@ -89,9 +89,9 @@
     {
       "file": "review/p4-auto-resource-admission-decision.md",
       "source_document": ".docs/review/p4-auto-resource-admission-decision.md",
-      "source_sha256": "67fc2681eb5cae2527ec2764f9aa6bbef7506e7876dbffa766454391ea9140b8",
-      "export_sha256": "6e23b4f94842113c672a3ef47ed66a4ac0491c4cd9a1cdf9a092c031e29b6acf",
-      "source_main": "17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1"
+      "source_sha256": "627ed734cba1756500792f42b6bf709d5ae4eb8a179bd42b76cf3bf611362b32",
+      "export_sha256": "f133ff8c7b4ae6a912dfc2c35d4a7ce9fc80e5c46555df4b1165ff8d12005f6c",
+      "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85"
     },
     {
       "file": "review/p4-auto-resource-admission-manager-review-r21.md",
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/p4-auto-resource-admission-decision.md"
   ],
-  "last_changed_omitted_local_link_count": 16
+  "last_changed_omitted_local_link_count": 18
 }

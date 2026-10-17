@@ -1,7 +1,7 @@
 # Pipeline A 设计资料
 
 本分支保存重要设计资料的可阅读快照，来源为 manager 管理的本地设计文件。
-最近同步的主线基线：`17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1`。文档导出日期：2026-10-16。
+最近同步的主线基线：`a2b0ad2ade8a3cecb1517f2ee937626773f7aa85`。文档导出日期：2026-10-17。
 HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 
 ## 先读什么
@@ -43,7 +43,7 @@ HTML 可下载后用浏览器打开；Markdown 可直接在 GitHub 阅读。
 - [普通异步：解除固定 2/3 套资源限制](review/p4-dynamic-run-resources-decision.md)
 - [普通异步：默认按资源准入与背压](review/p4-qwen-grant-composition-decision.md)
 
-### 默认自动准入（已批准，实施中）
+### 默认自动准入（已合入，组合验收另列）
 
 - [完整实施合同](review/p4-auto-resource-admission-decision.md)
 - [设计收口评审及勘误](review/p4-auto-resource-admission-manager-review-r21.md)
