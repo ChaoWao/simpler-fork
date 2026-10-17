@@ -2,13 +2,13 @@
 
 设计归档快照：状态与阅读顺序见[索引](README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-核对时间：2026-10-17T13:08:22.405235+00:00。主线基线：`2ee57567d01d0d86d5afb605f15e644a06a16200`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+核对时间：2026-10-17T13:16:42.342763+00:00。主线基线：`2ee57567d01d0d86d5afb605f15e644a06a16200`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
 
 本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](README.md#archive-boundary)，不能作为当前待办。
 
 设计方向更新：默认自动资源准入；PR/CI证据仍以以上核对时间为准。
 
-DFX #2588已更新为5cab632f（main 2ee，单提交），新CI在途，尚未Ready。已修复不支持ArgsDump的请求被拒绝后误关闭子进程的问题：在验证并占有本次准备存储后，经现有清理流程提供精确epoch释放回执；仍拒绝不支持的能力，保留占用存储、递归调用及清理失败保护。七个新增主机回归各首次通过，提交前检查通过；完整Python/设备场景仍待新CI。此前A5按run绑定PMU/泳道配置修复已保留。上一提交A3 HBG首run的513条PMU记录再次全零，已打印核的控制读回由7变2；根因独立未解，不能归因卡或驱动。原ArgsDump处理超时本轮未复现，不等于已修复。A5 HBG ArgsDump继续延期。PMU定位继续：原作者正在准备正常逐任务计数开关与持续开启的匹配对照，先核变量隔离、证据区分力及不重复既有测试的边界；本阶段仅私有源码与方案，不执行新设备实验。 8条反馈已关闭，A5 HBG ArgsDump延期。 #2596当前提交与历史CI分开记录，见下。
+DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。A5板端已验证拒绝不支持ArgsDump后仍可继续运行、flush和关闭；HBG/TMR归属场景及六项DFX smokes通过，七项新增主机回归首次通过。A3与仿真尚在途。A3 PMU全零根因仍未解决，旧ArgsDump处理超时未证实修复；A5 HBG ArgsDump本身仍不支持。PMU对照正在当前5cab私有基线上准备，保留真实前后继提前入队；旧诊断基线禁止带PMU joined，不能直接复用。当前仅移植观测和准备有限对照方案，尚未构建或执行。 8条反馈已关闭，A5 HBG ArgsDump延期。 #2596当前提交与历史CI分开记录，见下。
 
 外部接口整合：[#2599](https://github.com/hw-native-sys/simpler/pull/2599)公开直接L2的borrowed context/caller-stream eager接口；[#2600](https://github.com/hw-native-sys/simpler/pull/2600)修复PMU关闭及部分初始化失败时的资源清理。前者不等于本地L3自动准入，后者尚未证明能解决本线PMU全零；各由原作者负责。前者#2599已合入main，后者#2600仍开放；实际差异已核，后续整合需保留各自接口与测试。
 
@@ -20,7 +20,7 @@ native重入修复#2611已合入0eda81c93；合入补丁与已审ef4700483一致
 
 测试维护#2613已合入main 2ee57567d：删除SIMPLER_UT_TRB_RUNTIME，HBG/TMR专属测试独立组织，保留15个目标和248个既有实例，并补全HBG Runtime默认图描述符的三个初值。合入树与已审30ed1de42完全一致；合入前18项成功、1跳过，macOS 326和Ubuntu 327个CTest目标全部通过。本轮仅核对合入源码，未重跑测试；不代表Qwen自动组合或DFX已验收。
 
-DFX #2588已更新为5cab632f（main 2ee，单提交），新CI在途，尚未Ready。已修复不支持ArgsDump的请求被拒绝后误关闭子进程的问题：在验证并占有本次准备存储后，经现有清理流程提供精确epoch释放回执；仍拒绝不支持的能力，保留占用存储、递归调用及清理失败保护。七个新增主机回归各首次通过，提交前检查通过；完整Python/设备场景仍待新CI。此前A5按run绑定PMU/泳道配置修复已保留。上一提交A3 HBG首run的513条PMU记录再次全零，已打印核的控制读回由7变2；根因独立未解，不能归因卡或驱动。原ArgsDump处理超时本轮未复现，不等于已修复。A5 HBG ArgsDump继续延期。PMU定位继续：原作者正在准备正常逐任务计数开关与持续开启的匹配对照，先核变量隔离、证据区分力及不重复既有测试的边界；本阶段仅私有源码与方案，不执行新设备实验。
+DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。A5板端已验证拒绝不支持ArgsDump后仍可继续运行、flush和关闭；HBG/TMR归属场景及六项DFX smokes通过，七项新增主机回归首次通过。A3与仿真尚在途。A3 PMU全零根因仍未解决，旧ArgsDump处理超时未证实修复；A5 HBG ArgsDump本身仍不支持。PMU对照正在当前5cab私有基线上准备，保留真实前后继提前入队；旧诊断基线禁止带PMU joined，不能直接复用。当前仅移植观测和准备有限对照方案，尚未构建或执行。
 
 ## 当前结论
 
@@ -53,7 +53,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | ---- | -------- | -------- | ------------------ |
 | P0 · 测量基线 | 已有基线，最终性能验收未完成 | [#2262](https://github.com/hw-native-sys/simpler/pull/2262) | 已有设备时基与观测工具；同负载、同设备条件下的端到端正确性、吞吐、长尾和资源峰值报告仍待交付。 |
 | P1 · run 私有资源 | 有界普通路径已交付 | [#2268](https://github.com/hw-native-sys/simpler/pull/2268) / [#2275](https://github.com/hw-native-sys/simpler/pull/2275) / [#2283](https://github.com/hw-native-sys/simpler/pull/2283) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) | 计时、arena、结果与终态按 run 保留。动态资源表由 #2571 扩展；不能用历史固定容量验收替代组合验收。 |
-| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588已更新为5cab632f（main 2ee，单提交），新CI在途，尚未Ready。已修复不支持ArgsDump的请求被拒绝后误关闭子进程的问题：在验证并占有本次准备存储后，经现有清理流程提供精确epoch释放回执；仍拒绝不支持的能力，保留占用存储、递归调用及清理失败保护。七个新增主机回归各首次通过，提交前检查通过；完整Python/设备场景仍待新CI。此前A5按run绑定PMU/泳道配置修复已保留。上一提交A3 HBG首run的513条PMU记录再次全零，已打印核的控制读回由7变2；根因独立未解，不能归因卡或驱动。原ArgsDump处理超时本轮未复现，不等于已修复。A5 HBG ArgsDump继续延期。PMU定位继续：原作者正在准备正常逐任务计数开关与持续开启的匹配对照，先核变量隔离、证据区分力及不重复既有测试的边界；本阶段仅私有源码与方案，不执行新设备实验。 8条反馈已关闭，A5 HBG ArgsDump延期；不外推未验收collector。 |
+| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。A5板端已验证拒绝不支持ArgsDump后仍可继续运行、flush和关闭；HBG/TMR归属场景及六项DFX smokes通过，七项新增主机回归首次通过。A3与仿真尚在途。A3 PMU全零根因仍未解决，旧ArgsDump处理超时未证实修复；A5 HBG ArgsDump本身仍不支持。PMU对照正在当前5cab私有基线上准备，保留真实前后继提前入队；旧诊断基线禁止带PMU joined，不能直接复用。当前仅移植观测和准备有限对照方案，尚未构建或执行。 8条反馈已关闭，A5 HBG ArgsDump延期；不外推未验收collector。 |
 | P2 E1 · 健康消费者 | 已合入，不再是“下一项” | [#2303](https://github.com/hw-native-sys/simpler/pull/2303) / [#2354](https://github.com/hw-native-sys/simpler/pull/2354) / [#2374](https://github.com/hw-native-sys/simpler/pull/2374) | callback owner、故障证据及匹配设备代际的停止准入已交付；通知不自动归属某个 run，通知缺席不证明成功。 |
 | P2 E2 · 完成与安全退休 | 批准的有界 program 范围已完成 | [#2272](https://github.com/hw-native-sys/simpler/pull/2272) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) / [#2330](https://github.com/hw-native-sys/simpler/pull/2330) / [#2379](https://github.com/hw-native-sys/simpler/pull/2379) / [#2391](https://github.com/hw-native-sys/simpler/pull/2391) / [#2411](https://github.com/hw-native-sys/simpler/pull/2411) | 有效本 run 完成证据与 Ok 判定走正常分支；错误、Partial 或停止未知保留对应回退/隔离。不得外推所有故障形态都无同步。 |
 | P3 · FIFO / build / host 访问 | 已合入；步骤一有界集成验收完成 | [#2314](https://github.com/hw-native-sys/simpler/pull/2314) / [#2356](https://github.com/hw-native-sys/simpler/pull/2356) / [#2399](https://github.com/hw-native-sys/simpler/pull/2399) / [#2406](https://github.com/hw-native-sys/simpler/pull/2406) | 保持 parent FIFO、recorder/build 所有权及调用方 host 就绪合同。扩大准入后仍需对应组合回归，不自动推导跨 run host 数据依赖。 |
@@ -67,7 +67,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | ------ | ----------- | ---------- |
 | R1 · 容量扩展收口 | #2571 已合入 → main 源码基线已核 | 合入补丁核验完成；历史CI不冒充最新main重测，后续集中组合验收。 |
 | R2 · 动态资源 × 真实 Qwen | R1 + 已合入 #2471/#2511/#2568 | 组合验证自动准入、transport/执行背压、持续 refill、DEVICE 最后消费者、失败/关闭；组件分别通过不等于组合已通过；旧4/2与固定N+1示例方案撤回；#2596的77460ea26已完成静审、CI及反馈闭环，已合入；随后完成Qwen自动模式组合验收。#2592已合入1a8a3ee2，合入补丁与已审93b7b4c3一致；最终CI18成功、1跳过，macOS重跑成功。作者板端证据为六请求636步、619条joined相邻边、608条refill，数值与最后消费者检查通过，小窗口和失败关闭对照完成。范围限固定形状、单A3 HBG端点、关闭诊断，替换请求设显式排干检查点；不代表自动资源准入或任意动态请求已验收。本轮未重测。 自动准入已合入；native重入修复#2611已合入0eda81c93，补丁核验一致，不重复#2592 driver。 |
-| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588已更新为5cab632f（main 2ee，单提交），新CI在途，尚未Ready。已修复不支持ArgsDump的请求被拒绝后误关闭子进程的问题：在验证并占有本次准备存储后，经现有清理流程提供精确epoch释放回执；仍拒绝不支持的能力，保留占用存储、递归调用及清理失败保护。七个新增主机回归各首次通过，提交前检查通过；完整Python/设备场景仍待新CI。此前A5按run绑定PMU/泳道配置修复已保留。上一提交A3 HBG首run的513条PMU记录再次全零，已打印核的控制读回由7变2；根因独立未解，不能归因卡或驱动。原ArgsDump处理超时本轮未复现，不等于已修复。A5 HBG ArgsDump继续延期。PMU定位继续：原作者正在准备正常逐任务计数开关与持续开启的匹配对照，先核变量隔离、证据区分力及不重复既有测试的边界；本阶段仅私有源码与方案，不执行新设备实验。 8条反馈已关闭，A5 HBG ArgsDump延期。 |
+| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。A5板端已验证拒绝不支持ArgsDump后仍可继续运行、flush和关闭；HBG/TMR归属场景及六项DFX smokes通过，七项新增主机回归首次通过。A3与仿真尚在途。A3 PMU全零根因仍未解决，旧ArgsDump处理超时未证实修复；A5 HBG ArgsDump本身仍不支持。PMU对照正在当前5cab私有基线上准备，保留真实前后继提前入队；旧诊断基线禁止带PMU joined，不能直接复用。当前仅移植观测和准备有限对照方案，尚未构建或执行。 8条反馈已关闭，A5 HBG ArgsDump延期。 |
 | R4 · 固定形状 vLLM eager | 普通异步组合边界成立；目标 workload / ABI / 输出合同固定 | 外部#2605已开放：固定形状单A3 HBG、borrowed L2/caller stream；作者报告CPU及四种caller-stream硬件变体通过，真实模型与性能尚未验收，不覆盖本地L3自动准入。 |
 | R5 · 约定动态请求范围 | 固定形状 eager + 明确 batch / request lifecycle 范围 | 逐项约定准入、取消、失败、回收和资源背压；不宣称无限请求或无限内存。 |
 | R6 · capture / replay | 准备产物、参数绑定、graph 引用寿命及目标 SDK 合同成立 | 后续独立能力；当前普通异步不以 capture 实现为前置。 |
