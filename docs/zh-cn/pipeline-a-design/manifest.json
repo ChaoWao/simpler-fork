@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T02:45:27.544218+00:00",
+  "exported_at": "2026-10-17T02:47:05.397931+00:00",
   "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "1bebfc636a58fc99f08c01cb8a4fbb60f663a0ac6da7aad2e56ef81e5e38845b",
-      "export_sha256": "d3d0be17c84d48d897a4f9887db957804e9c44786184196c7a4cf1d8f7369213",
+      "source_sha256": "6ef753a113d5bd8924cdd0d33a1b1c3ec23d4a2afe240a249e6d6817010e12fe",
+      "export_sha256": "26f22f26e8d6b10dffad254f91a13a06a38f32866329cf8490f38fc60b5c13a7",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "bfa9237daa25afc83c2d2d93003fbfd26068bd80df21b4905efb8fc1fc4c7686",
-      "export_sha256": "38433e045923365d284da0146a4107be0273ff0fb5148c586b78393683075fc5",
+      "source_sha256": "2a70334ea0f5e6a70960571ec74f975b0b3ddb9ed0f3379840f68cfaa64a9bb6",
+      "export_sha256": "f82d1c1b34bf73763c2091a81204d05928f6685446b1043d934b60b676530a15",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
@@ -193,7 +193,8 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "review/p4-qwen-grant-composition-decision.md"
+    "run-pipeline-track-a.md",
+    "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 1
+  "last_changed_omitted_local_link_count": 17
 }
