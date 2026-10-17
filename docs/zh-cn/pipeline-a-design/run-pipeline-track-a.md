@@ -2,13 +2,13 @@
 
 设计归档快照：状态与阅读顺序见[索引](README.md)。设计约束、历史合同和当前实现须分别阅读。
 
-核对时间：2026-10-17T14:14:18.002425+00:00。主线基线：`2ee57567d01d0d86d5afb605f15e644a06a16200`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+核对时间：2026-10-17T14:40:28.124168+00:00。主线基线：`2ee57567d01d0d86d5afb605f15e644a06a16200`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
 
 本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](README.md#archive-boundary)，不能作为当前待办。
 
 设计方向更新：默认自动资源准入；PR/CI证据仍以以上核对时间为准。
 
-DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、索引与初始化审计未发现可证明的根因。原作者正核对单次运行与提前入队的host启动/设备执行边界，设计针对控制值变化的判别；不追加设备重跑，尚未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期。 #2596当前提交与历史CI分开记录，见下。
+DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、初始化、启动边界及实际RTS/HAL静态审计已完成，仍未证明根因。当前阻塞是匹配版本的PMU寄存器/上下文契约或实现资料；已请求可读入口。没有在途诊断任务，不盲重跑，未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期。 #2596当前提交与历史CI分开记录，见下。
 
 外部接口整合：[#2599](https://github.com/hw-native-sys/simpler/pull/2599)公开直接L2的borrowed context/caller-stream eager接口；[#2600](https://github.com/hw-native-sys/simpler/pull/2600)修复PMU关闭及部分初始化失败时的资源清理。前者不等于本地L3自动准入，后者尚未证明能解决本线PMU全零；各由原作者负责。前者#2599已合入main，后者#2600仍开放；实际差异已核，后续整合需保留各自接口与测试。
 
@@ -20,7 +20,7 @@ native重入修复#2611已合入0eda81c93；合入补丁与已审ef4700483一致
 
 测试维护#2613已合入main 2ee57567d：删除SIMPLER_UT_TRB_RUNTIME，HBG/TMR专属测试独立组织，保留15个目标和248个既有实例，并补全HBG Runtime默认图描述符的三个初值。合入树与已审30ed1de42完全一致；合入前18项成功、1跳过，macOS 326和Ubuntu 327个CTest目标全部通过。本轮仅核对合入源码，未重跑测试；不代表Qwen自动组合或DFX已验收。
 
-DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、索引与初始化审计未发现可证明的根因。原作者正核对单次运行与提前入队的host启动/设备执行边界，设计针对控制值变化的判别；不追加设备重跑，尚未归因驱动或卡损坏。
+DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、初始化、启动边界及实际RTS/HAL静态审计已完成，仍未证明根因。当前阻塞是匹配版本的PMU寄存器/上下文契约或实现资料；已请求可读入口。没有在途诊断任务，不盲重跑，未归因驱动或卡损坏。
 
 ## 当前结论
 
@@ -53,7 +53,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | ---- | -------- | -------- | ------------------ |
 | P0 · 测量基线 | 已有基线，最终性能验收未完成 | [#2262](https://github.com/hw-native-sys/simpler/pull/2262) | 已有设备时基与观测工具；同负载、同设备条件下的端到端正确性、吞吐、长尾和资源峰值报告仍待交付。 |
 | P1 · run 私有资源 | 有界普通路径已交付 | [#2268](https://github.com/hw-native-sys/simpler/pull/2268) / [#2275](https://github.com/hw-native-sys/simpler/pull/2275) / [#2283](https://github.com/hw-native-sys/simpler/pull/2283) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) | 计时、arena、结果与终态按 run 保留。动态资源表由 #2571 扩展；不能用历史固定容量验收替代组合验收。 |
-| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、索引与初始化审计未发现可证明的根因。原作者正核对单次运行与提前入队的host启动/设备执行边界，设计针对控制值变化的判别；不追加设备重跑，尚未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期；不外推未验收collector。 |
+| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、初始化、启动边界及实际RTS/HAL静态审计已完成，仍未证明根因。当前阻塞是匹配版本的PMU寄存器/上下文契约或实现资料；已请求可读入口。没有在途诊断任务，不盲重跑，未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期；不外推未验收collector。 |
 | P2 E1 · 健康消费者 | 已合入，不再是“下一项” | [#2303](https://github.com/hw-native-sys/simpler/pull/2303) / [#2354](https://github.com/hw-native-sys/simpler/pull/2354) / [#2374](https://github.com/hw-native-sys/simpler/pull/2374) | callback owner、故障证据及匹配设备代际的停止准入已交付；通知不自动归属某个 run，通知缺席不证明成功。 |
 | P2 E2 · 完成与安全退休 | 批准的有界 program 范围已完成 | [#2272](https://github.com/hw-native-sys/simpler/pull/2272) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) / [#2330](https://github.com/hw-native-sys/simpler/pull/2330) / [#2379](https://github.com/hw-native-sys/simpler/pull/2379) / [#2391](https://github.com/hw-native-sys/simpler/pull/2391) / [#2411](https://github.com/hw-native-sys/simpler/pull/2411) | 有效本 run 完成证据与 Ok 判定走正常分支；错误、Partial 或停止未知保留对应回退/隔离。不得外推所有故障形态都无同步。 |
 | P3 · FIFO / build / host 访问 | 已合入；步骤一有界集成验收完成 | [#2314](https://github.com/hw-native-sys/simpler/pull/2314) / [#2356](https://github.com/hw-native-sys/simpler/pull/2356) / [#2399](https://github.com/hw-native-sys/simpler/pull/2399) / [#2406](https://github.com/hw-native-sys/simpler/pull/2406) | 保持 parent FIFO、recorder/build 所有权及调用方 host 就绪合同。扩大准入后仍需对应组合回归，不自动推导跨 run host 数据依赖。 |
@@ -67,7 +67,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | ------ | ----------- | ---------- |
 | R1 · 容量扩展收口 | #2571 已合入 → main 源码基线已核 | 合入补丁核验完成；历史CI不冒充最新main重测，后续集中组合验收。 |
 | R2 · 动态资源 × 真实 Qwen | R1 + 已合入 #2471/#2511/#2568 | 组合验证自动准入、transport/执行背压、持续 refill、DEVICE 最后消费者、失败/关闭；组件分别通过不等于组合已通过；旧4/2与固定N+1示例方案撤回；#2596的77460ea26已完成静审、CI及反馈闭环，已合入；随后完成Qwen自动模式组合验收。#2592已合入1a8a3ee2，合入补丁与已审93b7b4c3一致；最终CI18成功、1跳过，macOS重跑成功。作者板端证据为六请求636步、619条joined相邻边、608条refill，数值与最后消费者检查通过，小窗口和失败关闭对照完成。范围限固定形状、单A3 HBG端点、关闭诊断，替换请求设显式排干检查点；不代表自动资源准入或任意动态请求已验收。本轮未重测。 自动准入已合入；native重入修复#2611已合入0eda81c93，补丁核验一致，不重复#2592 driver。 |
-| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、索引与初始化审计未发现可证明的根因。原作者正核对单次运行与提前入队的host启动/设备执行边界，设计针对控制值变化的判别；不追加设备重跑，尚未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期。 |
+| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588当前5cab632f（main 2ee，单提交）尚未Ready。CI全部完成：17成功、1跳过、1失败，仅A3板端PMU失败；A5拒绝不支持ArgsDump后继续run/flush/close、HBG/TMR归属和六项smokes通过，七项新增主机回归首次通过。A5 HBG ArgsDump功能仍延期，历史ArgsDump处理超时仍单列未解。新PMU对照已完成A/B/B/A四对、八个run：七个run计数全正，最后正常策略A的第二个run有513条全零；数值和真实提前入队检查均通过，设备健康与清理通过。各轮初始控制状态和物理核选择不一致，正式结论为无因果结论，不能称B策略修复。失败run保存旧MMIO控制值时读到13（其余为0）；此前已执行事件选择器和计数范围初始化，不能称进入run前已是13。写入启用值后及派发前为7，首次计数时为2。映射、初始化、启动边界及实际RTS/HAL静态审计已完成，仍未证明根因。当前阻塞是匹配版本的PMU寄存器/上下文契约或实现资料；已请求可读入口。没有在途诊断任务，不盲重跑，未归因驱动或卡损坏。 8条反馈已关闭，A5 HBG ArgsDump延期。 |
 | R4 · 固定形状 vLLM eager | 普通异步组合边界成立；目标 workload / ABI / 输出合同固定 | 外部#2605已开放：固定形状单A3 HBG、borrowed L2/caller stream；作者报告CPU及四种caller-stream硬件变体通过，真实模型与性能尚未验收，不覆盖本地L3自动准入。 |
 | R5 · 约定动态请求范围 | 固定形状 eager + 明确 batch / request lifecycle 范围 | 逐项约定准入、取消、失败、回收和资源背压；不宣称无限请求或无限内存。 |
 | R6 · capture / replay | 准备产物、参数绑定、graph 引用寿命及目标 SDK 合同成立 | 后续独立能力；当前普通异步不以 capture 实现为前置。 |
