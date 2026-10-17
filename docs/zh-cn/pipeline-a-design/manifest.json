@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T02:47:05.397931+00:00",
+  "exported_at": "2026-10-17T03:11:54.796193+00:00",
   "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "6ef753a113d5bd8924cdd0d33a1b1c3ec23d4a2afe240a249e6d6817010e12fe",
-      "export_sha256": "26f22f26e8d6b10dffad254f91a13a06a38f32866329cf8490f38fc60b5c13a7",
+      "source_sha256": "c4d41de3c66315604219ff7f41d87a6d789c42efc16fa83f20911406f37402b0",
+      "export_sha256": "a04f9814750c66fa30293800c1bc352d3003537eb4c89ee225a47907b176c50c",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "2a70334ea0f5e6a70960571ec74f975b0b3ddb9ed0f3379840f68cfaa64a9bb6",
-      "export_sha256": "f82d1c1b34bf73763c2091a81204d05928f6685446b1043d934b60b676530a15",
+      "source_sha256": "55a555b54ae097da15594876b3fd32bff67c755f7036d620a7043ce1adfef09f",
+      "export_sha256": "dcaa23b01537f7446e8bb6be3c2e38bce76fbcb3d39caf37fb19efb056057a41",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
@@ -82,8 +82,8 @@
     {
       "file": "review/p4-qwen-grant-composition-decision.md",
       "source_document": ".docs/review/p4-qwen-grant-composition-decision.md",
-      "source_sha256": "8cf2d9e92bf427d7ee03ca1bb5aca4f8e354196e04b49a75cd7e9a724bb86b35",
-      "export_sha256": "5eb9fa45bd5884d389832b2c1d2efcdfbbd8652332bd4a22161c0b0ffd69112c",
+      "source_sha256": "bbdaf422191801533a19fc5f49793cf73f94258d2a0a04fc33579a3db6baf49d",
+      "export_sha256": "13547ec78c2493b706af192466ae7a6448c75bad299a0ef1f68afc09afa813d2",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
@@ -194,7 +194,8 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html"
+    "run-pipeline-track-a.html",
+    "review/p4-qwen-grant-composition-decision.md"
   ],
-  "last_changed_omitted_local_link_count": 17
+  "last_changed_omitted_local_link_count": 18
 }
