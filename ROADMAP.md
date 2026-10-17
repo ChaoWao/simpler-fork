@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-16 / main `e6d546d4`：#2608 与 Pipeline A #2596 已合入；当前推进 borrowed 内部 workspace 管理与既有预算入口的完整接线。#2607 已撤回，不复活版本化能力查询。**
+**2026-10-16 / main `aa91a9d6`：#2610 已合入，borrowed 内部 workspace 管理与预算已交付。当前 [#2612](https://github.com/hw-native-sys/simpler/pull/2612) 闭合准备拒绝后的 source 退休证明（验证中，未合入）；不把原先“保守永久保留”当作最终设计。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -36,7 +36,9 @@
 
 [PR #2607](https://github.com/hw-native-sys/simpler/pull/2607) 已关闭，未合入。其 version/size/flags 查询仅提前拒绝现有入口已能拒绝的操作，并重引入历史已删除的内部版本协商；测试通过不构成功能交付。S3 不再要求查询或版本协议，模块寿命按实际使用者推进。已合入 [PR #2608](https://github.com/hw-native-sys/simpler/pull/2608) 以 [borrowed eager arena 增长](reviews/borrowed-eager-arena-growth/REPORT.md) 闭合真实缺陷：空图 → 非空／更大图 → 缩小／空图，无预热，保持外部状态与 caller 顺序；分配失败不破坏旧 bank。
 
-当前 [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610) 的 [borrowed workspace 预算接线](reviews/borrowed-workspace-budget/REPORT.md) 复用同一 manager、既有 `workspace_budget_bytes` 与 report：两种设备所有权策略都管理 simpler 内部 arena；可选预算限制内部四类 region，绝不计 caller tensor 为内部 workspace。实测拒绝路径暴露既有公开 native 异常 source 保留缺口：没有返回 RunHandle 时，close 不会释放这份未证实 source；当前保守保留，不能宣称立即可重试或可释放。后续须传递真实未提交／已完成证明，不能凭异常或 reset 推断。#2596 是按 endpoint 资源证明决定 admission 的已交付增量，不能据一笔合入宣布 Pipeline A 全路线已完成。
+已合入 [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610) 的 [borrowed workspace 预算接线](reviews/borrowed-workspace-budget/REPORT.md) 复用同一 manager、既有 `workspace_budget_bytes` 与 report：两种设备所有权策略都管理 simpler 内部 arena；可选预算限制内部四类 region，绝不计 caller tensor 为内部 workspace。实测拒绝路径暴露既有公开 native 异常 source 保留缺口：没有返回 RunHandle 时，close 不会释放这份未证实 source；当前保守保留，不能宣称立即可重试或可释放。后续须传递真实未提交／已完成证明，不能凭异常或 reset 推断。#2596 是按 endpoint 资源证明决定 admission 的已交付增量，不能据一笔合入宣布 Pipeline A 全路线已完成。
+
+当前 [准备拒绝后的 source 退休](reviews/prepare-refusal-source-retirement/REPORT.md) 以本次 run_epoch 的实际清理结果跨 native/绑定/Python 传递：C ABI 保留原错误码，clean refusal 只释放本次引用；deferred wait 与兼容同步入口消费同一事实。缺失／旧证明、清理失败或部分入队继续保留，不能靠消息文本或 carrier 清零推断。证明不撤销 host 编排或已完成同步复制的副作用。完整验证通过后交付，不把新异常分类单独当功能。
 
 初版 `149c8997` 的 Linux 验证：完整 Python UT 3275 passed / 91 skipped；初版最终提交重建后 253 项相关测试通过；A2/A3 与 A5 通信 sim 4/3 场景；task-submit 上板 5 个通信场景加 1 个 HBG domain-cleanup/FIFO 场景通过。原始证据、失败注入边界和任务记录见[报告](reviews/chip-child-communicator/REPORT.md)。本笔不是完整板测 sweep，也不开放 public borrowed eager。此前 #2589 的[证据](reviews/direct-native-chip-worker/REPORT.md)继续保留原 head。
 

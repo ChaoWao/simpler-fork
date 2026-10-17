@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-16 / main `e6d546d4`：#2608 和 #2596 已合入。** borrowed eager 允许空／大／小图自然增长，Pipeline A 按资源证明自动 admission 已进入主线。当前 [PR #2610](https://github.com/hw-native-sys/simpler/pull/2610) 的 [内部 workspace 管理与预算](reviews/borrowed-workspace-budget/REPORT.md) 复用既有入口推进；不加 capability/version 结构。#2607 保持撤回。预算不足的实测已暴露公开 native 异常永久保留 source 的既有缺口，下一笔以真实 no-submission/completion 证明闭合它；不得将所有异常都视为安全拒绝。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
+**2026-10-16 / main `aa91a9d6`：#2610 已合入。** 当前 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -187,3 +187,8 @@ init contract 仍只验证、不保留；`context_generation` 仍只验证非零
 测试前、复现期间及故障当时保留带时间戳的队列与 NPU 实际进程快照，并核对设备映射、PID/PPID 与自身 Worker 子进程树。
 持有 task-submit 锁不能替代这项核对；退出后的空进程表也不能排除当时的抢占。
 原始四个故障缺少当时的 PID 对照，尚不能排除或确认该原因。
+
+
+### #2612：准备拒绝的 source 退休（待合入）
+
+head `e18ff1064deaa976267b5c75004517fc73ae4da4` 从原 native host slot 返回本次 epoch 的清理证明，经同一 lane、公开 Worker 和兼容 ChipWorker.run 消费。干净拒绝只释放本次引用；未知/失败清理保留引用并拒绝后续 native admission。Linux Python 3415 passed、C++ 327 targets passed；两 runtime 实际 C ABI 与同 Worker/Buffer 重试的 6 个 A3 用例通过。最终提交双 sim 全量通过（61/57 个 Resource 场景及各自 L2）；A3 完整 C ABI 38 passed，普通 sweep 的 151 个 Resource 场景及两套 L2 均通过，锁已释放。CI 未完成，不将本地 A3 结果当作 A5 上板结论。详见[证据](reviews/prepare-refusal-source-retirement/REPORT.md)。

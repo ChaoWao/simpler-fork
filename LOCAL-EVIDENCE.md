@@ -706,14 +706,6 @@
 
 引用文档：[probes/queued-prepared-results/REPORT.md](probes/queued-prepared-results/REPORT.md)。材料未收录。
 
-<a id="artifact-52413a2cbbb6"></a>
-
-## 52413a2cbbb6
-
-原引用：`review/pr2609-ci-source-outage.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-5375d0121f9c"></a>
 
 ## 5375d0121f9c

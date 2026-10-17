@@ -47,3 +47,7 @@ CI A5 onboard [job 117281309076](https://github.com/hw-native-sys/simpler/action
 No capture/replay or AIV fix is claimed. The public prepare-failure source-retirement gap remains explicit follow-up work; passing budget-refusal tests assert conservative retention rather than pretending Buffer.close succeeded.
 
 Local artifacts: [full A3 sweep](../../LOCAL-EVIDENCE.md#artifact-9348ff465cf3), [task and lock receipt](../../LOCAL-EVIDENCE.md#artifact-4f5452d28bb9), [lifecycle](../../LOCAL-EVIDENCE.md#artifact-f102c5a2c706), [stateful cases](../../LOCAL-EVIDENCE.md#artifact-8de9bdced51a), [A5 CI log](../../LOCAL-EVIDENCE.md#artifact-eae920b7db8b), [Python UT](../../LOCAL-EVIDENCE.md#artifact-c2714fa56583), [C++ UT](../../LOCAL-EVIDENCE.md#artifact-4154da3f4dd8), [A3 simulator](../../LOCAL-EVIDENCE.md#artifact-d30c635bbfae), [A5 simulator](../../LOCAL-EVIDENCE.md#artifact-bb507310f4e4), [hooks](../../LOCAL-EVIDENCE.md#artifact-a67644cee6ec). Occupancy/PID snapshots and isolated ASCEND logs remain at the task's local evidence root and are excluded from both PR and design backup.
+
+## Merge receipt and follow-up
+
+#2610 merged as main `aa91a9d60e0e7ce22cdae3cf70533ece46875546`. Its historical source-retention limitation remains a fact of that head. The [preparation refusal retirement candidate](../prepare-refusal-source-retirement/REPORT.md) addresses it using actual per-attempt native release evidence; it is not yet a merged capability.
