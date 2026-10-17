@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T02:11:37.606823+00:00",
+  "exported_at": "2026-10-17T02:45:27.544218+00:00",
   "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "492055e7a76219a962f3fdc3800d7db0de03169ca8bb7411f7dbd9d7731d15d6",
-      "export_sha256": "95e0c9a86d6d5c59a9073856f2a0743e4b4df81485388ce327abe1c4a747c52e",
+      "source_sha256": "1bebfc636a58fc99f08c01cb8a4fbb60f663a0ac6da7aad2e56ef81e5e38845b",
+      "export_sha256": "d3d0be17c84d48d897a4f9887db957804e9c44786184196c7a4cf1d8f7369213",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "975eab7f5c30af467ffd727c8a482ea14d13a3c8648f4098c402421982c1a714",
-      "export_sha256": "6e143b624d6ad08d192ee5d243553247342cda04c3fa28026de908aef2d448b3",
+      "source_sha256": "bfa9237daa25afc83c2d2d93003fbfd26068bd80df21b4905efb8fc1fc4c7686",
+      "export_sha256": "38433e045923365d284da0146a4107be0273ff0fb5148c586b78393683075fc5",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
@@ -82,9 +82,9 @@
     {
       "file": "review/p4-qwen-grant-composition-decision.md",
       "source_document": ".docs/review/p4-qwen-grant-composition-decision.md",
-      "source_sha256": "5af85bc17eee602a61c3c6c73356fa8acdb71c001cefd457e541468f62972014",
-      "export_sha256": "7d277d669bf9195cdfec05649d7c20f333c2a23bbd72a63c991bfb231fdfb779",
-      "source_main": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b"
+      "source_sha256": "8cf2d9e92bf427d7ee03ca1bb5aca4f8e354196e04b49a75cd7e9a724bb86b35",
+      "export_sha256": "5eb9fa45bd5884d389832b2c1d2efcdfbbd8652332bd4a22161c0b0ffd69112c",
+      "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
       "file": "review/p4-auto-resource-admission-decision.md",
@@ -193,7 +193,7 @@
     "Markdown layout normalized for repository lint; empty table headers labelled"
   ],
   "last_changed_documents": [
-    "run-pipeline-track-a.md"
+    "review/p4-qwen-grant-composition-decision.md"
   ],
-  "last_changed_omitted_local_link_count": 10
+  "last_changed_omitted_local_link_count": 1
 }
