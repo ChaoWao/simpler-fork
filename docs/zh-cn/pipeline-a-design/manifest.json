@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T01:36:34.446030+00:00",
+  "exported_at": "2026-10-17T01:42:50.689760+00:00",
   "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "e365eb6df78ca3b963b28376f34a1ccdc8adbdafc29c4fe23171eecbe2c5ed75",
-      "export_sha256": "29f4ee23d95084a9655da029f525f7f6d3dc282857bd2365e425ac98a7a31d0a",
+      "source_sha256": "12f3750aa0d6819be523458bc4f7c4eba7fe3c55ab20cd02bb452887a59d9dae",
+      "export_sha256": "5f374eaeecdce4c30e0590f1c646645685210863bef943f3f4dd8ead255768ac",
       "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "57722d9971c06db905b3f710be8629f0f393b4d367c0ef21748cb5d1c4a1a1ee",
-      "export_sha256": "1e28cdb8a980841a5ab9e94e9b83920f0448e6c765af79f3e37b7b09620f66a5",
+      "source_sha256": "66fd858cf5b1e71dad56b83d95d7aa3a129bdfbcae98610f068a392b3cfd3ed0",
+      "export_sha256": "dbf2e38624856af6c0973cc77b7929fa2bd2367a037dc88774bb16ec4e60dada",
       "source_main": "a2b0ad2ade8a3cecb1517f2ee937626773f7aa85"
     },
     {
@@ -194,8 +194,7 @@
   ],
   "last_changed_documents": [
     "run-pipeline-track-a.md",
-    "run-pipeline-track-a.html",
-    "review/p4-auto-resource-admission-decision.md"
+    "run-pipeline-track-a.html"
   ],
-  "last_changed_omitted_local_link_count": 18
+  "last_changed_omitted_local_link_count": 16
 }
