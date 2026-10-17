@@ -1,6 +1,6 @@
 # Unstarted launch: retire this invocation's source references
 
-Baseline: main `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` (#2612). Branch `fix/release-unstarted-launch-sources`; [PR #2614](https://github.com/hw-native-sys/simpler/pull/2614), current head `bc46b441e7c3e475e541d8a2f1950f922fc2de15`; submitted for review, not merged.
+Baseline: main `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` (#2612). Branch `fix/release-unstarted-launch-sources`; [PR #2614](https://github.com/hw-native-sys/simpler/pull/2614), current head `fc24b0d0a9a20262a1223f700151b5e67150b0cd`; submitted for review, not merged.
 
 ## Exact behavior
 
@@ -50,3 +50,10 @@ Revision bc46b441 changes only that Python regression assertion (one file, 3 add
 Task `task_20261017_021653_32225722924` exits 0 on frozen head bc46b441 and releases all four locks (devices 8–11). After the 46-case C ABI suite, the CI-shaped non-SDMA scene command completes in 610.14 s: all 151 Resource dispatch jobs exit successfully, L2 HBG has 43 passed / 1 skipped, L2 TMR has 60 passed, and the remaining parent item passes (204 items are delegated/deselected by the harness). Resource dispatch counts include inherited SceneTestCase placeholders that self-skip when no CASES match; they are not 151 independent test assertions. The custom device-result chain is separately dispatched and passes. No unexpected AIV failure is observed in this run. Before/after NPU occupancy and queue snapshots remain with the isolated local task evidence.
 
 CI query at 2026-10-17 09:29 UTC: no red checks. A5 onboard scenes, A3 hardware UT, both A5 simulator jobs, network/DeepSeek scenes, packaging and profiling smoke are successful; A3 scenes/simulators, host UT and A5 hardware UT are still running. The successful A5 onboard job log was downloaded and checked; that scene result is not evidence that the separately scheduled A5 hardware-UT refusal matrix has finished. PR remains submitted for review, not merged.
+
+
+## Rebase onto #2613
+
+Current parent is main `2ee57567d01d0d86d5afb605f15e644a06a16200`; current candidate head is `fc24b0d0a9a20262a1223f700151b5e67150b0cd`. The sole conflict comes from #2613 moving the native-admission fixture out of the common test file. Keep its split: launch refusal/partial/throw injection moves to support/native_admission/fixture.h, while all four regression tests remain in common/platform/test_native_admission.cpp and execute under all four runtime/architecture targets. No retired runtime selector macro or duplicate backend assertions are restored. Range-diff changes only this test layout; the PR production patch remains identical. Main contributes its separate three-field HBG graph-descriptor initialization.
+
+All changed-file hooks pass. The editable extension/runtime binaries are rebuilt at the new head. Full rebuilt C++ UT passes 327/327 targets in 88.13 s. Exclusive A3 task `task_20261017_034334_292562022153` on device 8 passes all 8 public refusal/retry arms (TMR/HBG × owned/borrowed × prepare/launch), 33.08 s, exit 0 and lock released; occupancy snapshots and isolated logs are retained. Full Linux Python UT passes 3415 / 127 skipped in 137.05 s. All 23 native-admission test names are retained across the common/HBG files, and byte comparison confirms production/Python/docs/scene-test patches match the prior PR exactly. The original branch is updated with an explicit force-with-lease against bc46b441; CI restarts for the new head. Prior complete scene/simulator sweeps remain attributed to their original heads; they are not claimed rerun by this rebase.

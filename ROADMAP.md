@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-17 / main `49ae1ef1`：#2612 已合入，准备失败的 source 退休证明已交付。当前 [#2614](https://github.com/hw-native-sys/simpler/pull/2614) 闭合 [NotStarted launch 的清理与重试](reviews/unstarted-launch-source-retirement/REPORT.md)：准备成功不代表 kernel 已入队，干净的启动拒绝也须按实际证明退回本次引用。**
+**2026-10-17 / main `2ee57567`：#2612 已合入，准备失败的 source 退休证明已交付。当前 [#2614](https://github.com/hw-native-sys/simpler/pull/2614) 闭合 [NotStarted launch 的清理与重试](reviews/unstarted-launch-source-retirement/REPORT.md)：准备成功不代表 kernel 已入队，干净的启动拒绝也须按实际证明退回本次引用。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 

@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-17 / main `49ae1ef1`：#2612 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
+**2026-10-17 / main `2ee57567`：#2612 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 

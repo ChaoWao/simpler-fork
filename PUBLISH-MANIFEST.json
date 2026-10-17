@@ -2,7 +2,7 @@
   "snapshot_date": "2026-10-17",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "49ae1ef1be8ab1e995ab12e1967721ef1421b86e",
+  "latest_roadmap_source_baseline": "2ee57567d01d0d86d5afb605f15e644a06a16200",
   "pending_pr": 2614,
   "files": [
     {
@@ -22,8 +22,8 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "fccb49f9cb4d545d8ec155d25cbc3acb1c51d880fe754e4a1790b35a6d2ac7df",
-      "published_sha256": "35aeb3ddc94cac8eec7fdbdcbeb65959f74dad17039f5e25e9b597ac681ec4af",
+      "source_sha256": "4d80a10078993d152c36a45f4fee3c5185439013faf9448e9965334cebfbf725",
+      "published_sha256": "81399c86c61f9b299be62cadbeebc63427fda789b039b57262ce10fa0aff4c1d",
       "bytes": 54616
     },
     {
@@ -78,8 +78,8 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "04ed9ac189bd583fe3fb725eba58898f2629ff5aa552f3388a7cfe7539cab745",
-      "published_sha256": "20fa49747f076e32a76beb1571e6e2905de83aa17bedfb1a7dbb6b1e90549423",
+      "source_sha256": "7b074b43573807aa58602635dd9b3cd753e138f83c46b09f3b885c648fe10709",
+      "published_sha256": "c520a31966153792b4916ad696af580f80ddaa2c6feffa197db2f468dd75e258",
       "bytes": 26931
     },
     {
@@ -99,8 +99,8 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "94b46b4a0fa72fbc2f8c0c1bfebe5f53c8ddb2a328e641599470708d59dfef06",
-      "published_sha256": "73bde39f2fdc75e6418b3c6557e68188bab95d28e2e1424a8da6189887debc97",
+      "source_sha256": "776d37e099eb1cb417d65e6242239ae91c3fe9690ce91886badb74efc4fe03e7",
+      "published_sha256": "298b39363f4d735c4c351bd9f6ecdc66491d7c02b91de59b2968ea6a7bf9f9cf",
       "bytes": 70182
     },
     {
@@ -113,8 +113,8 @@
     {
       "path": "kernel-mode-unified-design.html",
       "source_collection": "kernel-design",
-      "source_sha256": "0fced822f540b6ebba1425615e98eb996f69d1ea05a3e977deec193c04366706",
-      "published_sha256": "5a1ba9106d727977dcb376cee3b411831225913e990a90b4ade75f1b69fe65d5",
+      "source_sha256": "cf809c7bc0e1aee6e2105c7fc217456d38cefe19b89b10b219677bad24b39044",
+      "published_sha256": "b8aa43beb53c41d819014bda32974f3ed4152ba9f21b6566f1582fbb30f20226",
       "bytes": 54592
     },
     {
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "7579bbf19922404f36ff22408fa21259f95b8896f8860a28e7548d3d49a26cba",
-      "published_sha256": "341c23a930c94b40fdcc85bca35a434925b7820746c2be9db3030348682463ee",
-      "bytes": 51828
+      "source_sha256": "44a4106ada3941dbc35b3d40e51b007659c8d52a004444b20cd37099f63595bb",
+      "published_sha256": "426de589344dc4f1036694a2c42a6b5d330cd22c40bcf82683992031a78f0e23",
+      "bytes": 50996
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "1d20c74923612031e63eb753c9fdaf8b8c4b519fb221eefd8b7ea75bb4d362b7",
-      "published_sha256": "562d18a0ddc7a7656f2ee482f8de5b6de0ce7d682a63a23449416879f6cade09",
-      "bytes": 23902
+      "source_sha256": "47fd67232da11b798b3fabdd0cd087f6ebf9728c4e176e2a7e1d6e3c7287898c",
+      "published_sha256": "bd7ed1d3b320042af13025c4e017de1f19d6552e6d018ca7c7b59abf044c435c",
+      "bytes": 23094
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -561,9 +561,9 @@
     {
       "path": "reviews/unstarted-launch-source-retirement/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "92ea5e3baa3824030cea31f7346073163c8b9b6ab40a31ccae9a61b5a64e1e22",
-      "published_sha256": "92ea5e3baa3824030cea31f7346073163c8b9b6ab40a31ccae9a61b5a64e1e22",
-      "bytes": 8689
+      "source_sha256": "904323c751ffd0c7cf87281fd0fc5d9cd2aa02117e52b2bde8046089d6a8804f",
+      "published_sha256": "904323c751ffd0c7cf87281fd0fc5d9cd2aa02117e52b2bde8046089d6a8804f",
+      "bytes": 10301
     },
     {
       "path": "runtime-design-principles.md",
