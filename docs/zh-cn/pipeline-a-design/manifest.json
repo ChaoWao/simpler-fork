@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-10-17T03:11:54.796193+00:00",
+  "exported_at": "2026-10-17T03:23:23.961311+00:00",
   "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9",
   "documents": [
     {
@@ -12,15 +12,15 @@
     {
       "file": "run-pipeline-track-a.md",
       "source_document": ".docs/run-pipeline-track-a.md",
-      "source_sha256": "c4d41de3c66315604219ff7f41d87a6d789c42efc16fa83f20911406f37402b0",
-      "export_sha256": "a04f9814750c66fa30293800c1bc352d3003537eb4c89ee225a47907b176c50c",
+      "source_sha256": "c571f65e4fa770e37cd97f22fce0477d572f86e7c3b0a1ef8a2816acfda0347b",
+      "export_sha256": "2e8ac27187b2e10fbf33cd6f58d35871bc58d32ba263717c4644f5abc858e9a0",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
       "file": "run-pipeline-track-a.html",
       "source_document": ".docs/run-pipeline-track-a.html",
-      "source_sha256": "55a555b54ae097da15594876b3fd32bff67c755f7036d620a7043ce1adfef09f",
-      "export_sha256": "dcaa23b01537f7446e8bb6be3c2e38bce76fbcb3d39caf37fb19efb056057a41",
+      "source_sha256": "745d66bb79fdf5a32232aead819463c51da9891e1765a37c77981b78adca83ca",
+      "export_sha256": "cb1cc1db294e1c74ae171d25dea88445641b6bfa29da2adc973e26f1b6b4c542",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
@@ -82,8 +82,8 @@
     {
       "file": "review/p4-qwen-grant-composition-decision.md",
       "source_document": ".docs/review/p4-qwen-grant-composition-decision.md",
-      "source_sha256": "bbdaf422191801533a19fc5f49793cf73f94258d2a0a04fc33579a3db6baf49d",
-      "export_sha256": "13547ec78c2493b706af192466ae7a6448c75bad299a0ef1f68afc09afa813d2",
+      "source_sha256": "458df1a799d4f31a992773fbba39d831f71601c33bdfd6ad5f058a06ae192b28",
+      "export_sha256": "b76fd9e3515b6dd33a46e8ef46c92dc484cac8863fd61743ceec4ebca3f5dbb6",
       "source_main": "e6d546d4c6a98e1a87bc80cd0418806630c027f9"
     },
     {
