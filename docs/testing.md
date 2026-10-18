@@ -587,8 +587,12 @@ cmake --build tests/ut/cpp/build --parallel 4
 python tests/lint/check_ut_cpp_axis.py
 ```
 
-CI runs it in the `ut` job, right after ctest. It is not a pre-commit hook —
-it reads a configured build, which pre-commit does not have.
+CI runs it in the `ut` job, right after ctest, on the Linux leg only — the
+answer is a property of the include paths the CMakeLists compose rather than of
+the host, and the Linux build graph is the superset (a non-Linux configure drops
+`test_thread_scheduling.cpp`, whose wrapped `sched_*` symbols are a GNU ld
+feature). It is not a pre-commit hook — it reads a configured build, which
+pre-commit does not have.
 
 #### Where the stand-ins come from
 

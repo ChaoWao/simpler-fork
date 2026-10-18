@@ -35,7 +35,7 @@ shape. The executable job bodies live in reusable workflows:
 NPU unit-test bodies are split one workflow per architecture so each job
 renders only its own steps. Shared step scaffolding that is safe to run
 after checkout lives in composite actions under `.github/actions/`
-(`apt-install`, `cache-pip`, `setup-gcc-15`, `setup-venv`, and the three `network1-*` actions).
+(`apt-install`, `cache-pip`, `cache-ccache`, `setup-gcc-15`, `setup-venv`, and the three `network1-*` actions).
 `setup-gcc-15` accepts a complete, pre-provisioned GCC 15 toolchain on any
 Linux runner; automatic installation of missing Linux tools is Ubuntu-only,
 while macOS installation uses Homebrew. `_packaging.yml` deliberately retains
@@ -390,10 +390,11 @@ excludes orchestration, callable ABI, `func_id`,
 signature, and owning test class, so callables that reference the same kernel
 path can share its artifact.
 
-This cache complements rather than replaces `ccache`: the packaging workflow
-uses `ccache` for supported CMake compiler invocations, while scene-test cache
-entries also retain serialized callables and final incore bytes, including the
-CCEC/linker and ELF-section processing used by onboard builds.
+This cache complements rather than replaces `ccache`: the packaging and
+no-hardware-UT workflows use `ccache` for supported CMake compiler invocations,
+while scene-test cache entries also retain serialized callables and final
+incore bytes, including the CCEC/linker and ELF-section processing used by
+onboard builds.
 
 Entries are content-addressed and therefore never overwritten, so a run prunes
 entries whose last use is more than 14 days old before it exits. Without that,
@@ -438,6 +439,24 @@ weak fallback links fine and then hangs, so ctest only reaches it by timing
 out. The first reads the build's compile lines, so that job configures with
 `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`. See
 [testing.md](testing.md#how-many-times-a-case-is-built).
+
+The two checks are scoped differently, by what decides their answer. The axis
+check reads which configurations each case is built for, which the include
+paths this repository's CMakeLists compose decide, so it runs on the Linux leg
+only — and Linux is the leg that can establish it, because its build graph is
+the superset: a non-Linux configure drops `test_thread_scheduling.cpp`, whose
+wrapped `sched_*` symbols are a GNU ld feature. The stub-linkage check runs on
+every leg, because which archive member resolves a symbol, and whether a weak
+definition wins, is decided by the platform's linker instead.
+
+That job also uses `ccache` through `CMAKE_CXX_COMPILER_LAUNCHER`, with the
+directory restored and saved by the `cache-ccache` composite action. The
+launcher is passed only when `ccache` is on `PATH`, so a runner whose package
+manager could not serve it still builds; the step prints `ccache --show-stats`
+after the build, which is the only place a restored-but-unusable cache is
+distinguishable from a cold one. Self-hosted runners keep their home directory
+between runs, so the emergency CPU lane uses the on-disk cache and skips the
+upload.
 
 ### `examples/` — Small examples (sim + onboard)
 
