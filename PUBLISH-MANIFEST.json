@@ -1,9 +1,9 @@
 {
-  "snapshot_date": "2026-10-17",
+  "snapshot_date": "2026-10-18",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "8b466791f374e1286b0936f8eaebffb9bf32d44b",
-  "pending_pr": 2615,
+  "latest_roadmap_source_baseline": "ce493639b45fb2ddf173e5198c78b6978567ed1c",
+  "pending_pr": 2618,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1216f48a216785993eedcbc1f34160d42f94a26db293e57b59d87ca5f1ee0b8b",
-      "published_sha256": "149393207a8d415eebcea4250e2ae7d8cc714298a77e931eaf431704fac14eb6",
-      "bytes": 54641
+      "source_sha256": "5005b5380357c32f11e9045c7a17c61b00ba03c23b588d0fe3f3b1ea152ddc50",
+      "published_sha256": "d48e93f5c12bd61bc80c942baed9cc13369d20db7797b3ab79e9c75bd21630f6",
+      "bytes": 54789
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "90101af763b8e59a1ef152653a33d2d39b69d8bf9ea0d94274401c9aa10b3de6",
-      "published_sha256": "e1bd13e00064922427ff94dd4b98323782fae5d17f5c8a3cc01566ab9320a5f6",
-      "bytes": 27259
+      "source_sha256": "e32aca3f162ae3e9ae793b326b7edea9b2edece0dacb526484f592e224771124",
+      "published_sha256": "81ab22ba6880a089ac090e597cca3664b1e1be37b4bce7bd51c905a92a26f4e8",
+      "bytes": 28199
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "d4bd70f50a6eaa08cc5330e6847ae0b7e6770d0278156158cde34e1a7af78414",
-      "published_sha256": "1433b2ef8f219b1b2ff90b724ac6355dd0a439e41e0445d627d98bf63bb75bc7",
-      "bytes": 70231
+      "source_sha256": "ee71c58aa3ed4d8727e1db1167b84b7f5cad5c70f39b527cd32e6d90ee56d643",
+      "published_sha256": "2a8e152b2491233a0886b9e7feef88a36ea3b1c4e1716c73354f15575bda1669",
+      "bytes": 70340
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -113,8 +113,8 @@
     {
       "path": "kernel-mode-unified-design.html",
       "source_collection": "kernel-design",
-      "source_sha256": "8cf440d032cd27612478eefacdbdbfae92484d24c6141252342a8d23581ec520",
-      "published_sha256": "b26798fdc57f05bbfb85497f841d36139503eb0abd203aa65518d7807008306f",
+      "source_sha256": "834a32627e585a0df69fd7d510892c877f139ad68ce0cbc64f9f385b3d360e00",
+      "published_sha256": "7b0d5e7d789d04ef07535e062a5ad4c89a7d5114704e917487e6fccd9630d566",
       "bytes": 54592
     },
     {
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "3eeb6a691c4556708494ce85f9e2858ceba5001ac66ad742d5d8364b8d89fe46",
-      "published_sha256": "950d8afbcdb82eb68d7f14d371cda6aa7793e4819fd3390f1eb0a7222a528f7f",
-      "bytes": 52285
+      "source_sha256": "119fb114bdc8e6e841fe8b3e8c2916559c3f190535c002908d7db8df156c0757",
+      "published_sha256": "6c10619d7809fc0b34709957bcd5f4dc818e03adfcd2df710720ec419ac0c351",
+      "bytes": 53116
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "3f20a63f74effce98691212fb935a51102e22adf3aa6efc4f97913ecb22e6c3b",
-      "published_sha256": "9be141eb97155535130d0ddcf8219d56482a013a20caa01dfce80c6ed6be786b",
-      "bytes": 25299
+      "source_sha256": "68b186626bd3da0f3c64c0036b21e0d3895fe2f4475f53025161ca75afacc422",
+      "published_sha256": "9524e3482c9e66c5640394c7a7a0362396d89a6298b9f40dbcaadf459426ea3d",
+      "bytes": 26238
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -398,6 +398,13 @@
       "bytes": 939
     },
     {
+      "path": "reviews/inherited-chip-run-lane/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "54154d2a3e3c979c1eba6995073f0808e08060cc09342a8a63e21b7d8fbdfa61",
+      "published_sha256": "54154d2a3e3c979c1eba6995073f0808e08060cc09342a8a63e21b7d8fbdfa61",
+      "bytes": 4497
+    },
+    {
       "path": "reviews/issue2460-tensor-buffer-design.md",
       "source_collection": "kernel-design",
       "source_sha256": "53294720134e7a728526b1ec40f347072da82ded3f99bf8a6c42517c95a34d6a",
@@ -428,9 +435,9 @@
     {
       "path": "reviews/launch-exception-ownership/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "7bed74fe38e2dd49666851968cf05a90189c0adac03bf41d0b1c9e152069cce9",
-      "published_sha256": "7bed74fe38e2dd49666851968cf05a90189c0adac03bf41d0b1c9e152069cce9",
-      "bytes": 9738
+      "source_sha256": "f9909efddce558463333c3ceed91c17136ed69f03f23fb138c83bb85024dfc72",
+      "published_sha256": "f9909efddce558463333c3ceed91c17136ed69f03f23fb138c83bb85024dfc72",
+      "bytes": 9948
     },
     {
       "path": "reviews/leased-context-validation/REPORT.md",

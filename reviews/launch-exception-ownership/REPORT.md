@@ -64,3 +64,8 @@ PR #2615 is restored Ready after this full local validation. Initial 1577929f ev
 ## CI snapshot
 
 At 2026-10-18 03:39:05 UTC, head 0e488390 has no red checks. Build/pre-commit, both packaging jobs, profiling smoke, network/DeepSeek, both hardware UT jobs, A5 onboard scenes and three simulator jobs are successful. A3 onboard scenes, both host UT jobs and A3 simulator on macOS remain running. These are job-level statuses; no unreported per-case count is inferred from them. PR is Ready and mergeable, not merged.
+
+
+## Merge receipt
+
+PR #2615 merged as `ce493639b45fb2ddf173e5198c78b6978567ed1c`. Reported validation remains on its original heads, including final `0e488390`; no new mainline sweep is inferred from merging.

@@ -66,14 +66,6 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
-<a id="artifact-06da1cb300b8"></a>
-
-## 06da1cb300b8
-
-原引用：`review/codex-dfx-pmu-rts-provenance-audit.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
 <a id="artifact-07114129f728"></a>
 
 ## 07114129f728
@@ -297,6 +289,14 @@
 原引用：`backup/20260918-doc-consolidation/kernel-mode-tmr-flow.md`
 
 引用文档：[kernel-mode-tmr-flow.md](kernel-mode-tmr-flow.md), [kernel-mode-unified-design.html](kernel-mode-unified-design.html)。材料未收录。
+
+<a id="artifact-2082897f3ac4"></a>
+
+## 2082897f3ac4
+
+原引用：`review/codex-dfx-pmu-copyback-deferral-design.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
 <a id="artifact-2124a1dad321"></a>
 
