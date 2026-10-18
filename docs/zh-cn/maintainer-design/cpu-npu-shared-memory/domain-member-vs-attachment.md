@@ -1,6 +1,6 @@
 # 域成员、rank 与 attachment：三个概念该怎么分
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：🔒 **设计裁决**。回答一个具体问题：`GlobalDomainMember` 该加什么维度。
 > **结论与提问不同向** —— 该加的维度不在成员上。
@@ -19,12 +19,12 @@
 
 ## 1. 结论
 
-| 问 | 答 |
-| -- | -- |
-| `GlobalDomainMember` 该加 `deployment` 吗？ | ❌ **不该** —— DEVICE 内不分引擎（§2），HOST 进不了这张表（§3） |
-| 那该加 `address_space` 吗？ | ❌ **也不该** —— 按 §3，该表恒为 DEVICE，字段恒真 |
-| 缺的到底是什么？ | **attachment 这一轴**（§4）。域的 wire 上只有「谁是 rank」，没有「谁挂在这块 window 上」 |
-| §10 那条要求作废了吗？ | **没有。** 它的 `worker_path` 那半独立成立（§5.3），`deployment` 那半落在 attachment 上 |
+ | 问 | 答 |
+ | -- | -- |
+ | `GlobalDomainMember` 该加 `deployment` 吗？ | ❌ **不该** —— DEVICE 内不分引擎（§2），HOST 进不了这张表（§3） |
+ | 那该加 `address_space` 吗？ | ❌ **也不该** —— 按 §3，该表恒为 DEVICE，字段恒真 |
+ | 缺的到底是什么？ | **attachment 这一轴**（§4）。域的 wire 上只有「谁是 rank」，没有「谁挂在这块 window 上」 |
+ | §10 那条要求作废了吗？ | **没有。** 它的 `worker_path` 那半独立成立（§5.3），`deployment` 那半落在 attachment 上 |
 
 ## 2. ✅ DEVICE 内不分引擎 —— 访问能力上 AICPU ≡ AICORE
 
@@ -45,10 +45,10 @@ if query.consumer.deployment is not HOST_CPU or not query.same_node:
 
 **`EndpointDeployment` 并不因此作废** —— 它管的是另外两件事，都不是「能不能访问」：
 
-| 用途 | 归属 | 例 |
-| ---- | ---- | -- |
-| 谁有权发起 / 谁拥有控制路径 | **归属**，不是访问 | `comm_region::validate_single_owner_region_shape` 拒非 `DEVICE_AICPU` provider —— 因为 worker-chip region 由 AICPU 侧控制路径创建，不是因为 AICore 够不着 GM |
-| 发哪些 cache maintenance 指令 | **每个访问点**的属性 | a2a3：AICore 写→AICPU 自动可见；host DMA/SDMA 写→AICPU 须 `cache_invalidate_range`；AICore 自身 cache 不 `dcci` 数据到不了 GM（见 `docs/hardware/cache-coherency.md`） |
+ | 用途 | 归属 | 例 |
+ | ---- | ---- | -- |
+ | 谁有权发起 / 谁拥有控制路径 | **归属**，不是访问 | `comm_region::validate_single_owner_region_shape` 拒非 `DEVICE_AICPU` provider —— 因为 worker-chip region 由 AICPU 侧控制路径创建，不是因为 AICore 够不着 GM |
+ | 发哪些 cache maintenance 指令 | **每个访问点**的属性 | a2a3：AICore 写→AICPU 自动可见；host DMA/SDMA 写→AICPU 须 `cache_invalidate_range`；AICore 自身 cache 不 `dcci` 数据到不了 GM（见 `docs/hardware/cache-coherency.md`） |
 
 两者都不是成员表的字段：前者属 attachment，后者属 W4 的 arch 抽象。
 
@@ -56,13 +56,13 @@ if query.consumer.deployment is not HOST_CPU or not query.same_node:
 
 五处把「成员」和「HCCL rank」焊成同一个东西：
 
-| 位置 | 约束 |
-| ---- | ---- |
-| `global_comm_domain::validate_member_table` | 要求 `domain_rank` 稠密等于 `range(len(members))` ⇒ **成员下标 ≡ rank** |
-| `global_comm_domain::validate_descriptor_table`（由 `Worker::_import_global_domain_node` 以 `rank_count=len(command.members)` 调用） | **每个成员必须有且仅有一个 descriptor** ＝ 一块导出的 window |
-| `Worker::_prepare_global_domain_node` | 按 `member.local_worker_id` 向 `WorkerType.NEXT_LEVEL` 发 `CTRL_GLOBAL_DOMAIN_PREPARE` ⇒ **每个成员必须是一个 chip 子进程**；`local_worker_id` 是**路由地址**，不是坐标 |
-| `Worker::_allocate_global_domain` | `global_device_rank` 取自 `node.global_device_ranks[local_worker_id]` ⇒ 每个成员必须是一张卡 |
-| `global_comm_domain::GLOBAL_DOMAIN_MAX_RANKS` ＝ 64 | ＝ `task_interface::COMM_MAX_RANK_NUM`，是 `CommContext.windowsIn[]`/`windowsOut[]` 的**定长数组 ABI**，不是成员数上限 |
+ | 位置 | 约束 |
+ | ---- | ---- |
+ | `global_comm_domain::validate_member_table` | 要求 `domain_rank` 稠密等于 `range(len(members))` ⇒ **成员下标 ≡ rank** |
+ | `global_comm_domain::validate_descriptor_table`（由 `Worker::_import_global_domain_node` 以 `rank_count=len(command.members)` 调用） | **每个成员必须有且仅有一个 descriptor** ＝ 一块导出的 window |
+ | `Worker::_prepare_global_domain_node` | 按 `member.local_worker_id` 向 `WorkerType.NEXT_LEVEL` 发 `CTRL_GLOBAL_DOMAIN_PREPARE` ⇒ **每个成员必须是一个 chip 子进程**；`local_worker_id` 是**路由地址**，不是坐标 |
+ | `Worker::_allocate_global_domain` | `global_device_rank` 取自 `node.global_device_ranks[local_worker_id]` ⇒ 每个成员必须是一张卡 |
+ | `global_comm_domain::GLOBAL_DOMAIN_MAX_RANKS` ＝ 64 | ＝ `task_interface::COMM_MAX_RANK_NUM`，是 `CommContext.windowsIn[]`/`windowsOut[]` 的**定长数组 ABI**，不是成员数上限 |
 
 而 [hardware-constraints.md](hardware-constraints.md) §5 已定：**CPU 不能当 HCCL rank**
 （每 rank 必须 `aclrtSetDevice` 绑一张卡），"host 加入通信域只能是同一逻辑域上的一种
@@ -111,11 +111,11 @@ window base 存进 `_GlobalNodeDomainState.local_window_bases`，
 
 ### 5.1 三个概念归位
 
-| 概念 | 是什么 | 载体 | 基数 |
-| ---- | ------ | ---- | ---- |
-| **rank** | 导出一块 window、参与 fabric peer import 的设备 | 现有 `GlobalDomainMember`，**不加字段** | 1..64（ABI 硬限） |
-| **attachment** | 挂在这个域的 window 上做读写的端点 | ✅ **已交付（#1879 `5cb8110d`）**，与 `members` 平行 | ⛔ ~~每个 rank 隐含一条 PROVIDER；host 各自一条 CONSUMER~~ —— **实际是 receiver-node × rank 矩阵（M×N）**，见 §5.2 抬头更正 ① |
-| **deployment** | 谁发起 / 发哪些维护指令 | attachment 的字段，**不是 rank 的字段** | — |
+ | 概念 | 是什么 | 载体 | 基数 |
+ | ---- | ------ | ---- | ---- |
+ | **rank** | 导出一块 window、参与 fabric peer import 的设备 | 现有 `GlobalDomainMember`，**不加字段** | 1..64（ABI 硬限） |
+ | **attachment** | 挂在这个域的 window 上做读写的端点 | ✅ **已交付（#1879 `5cb8110d`）**，与 `members` 平行 | ⛔ ~~每个 rank 隐含一条 PROVIDER；host 各自一条 CONSUMER~~ —— **实际是 receiver-node × rank 矩阵（M×N）**，见 §5.2 抬头更正 ① |
+ | **deployment** | 谁发起 / 发哪些维护指令 | attachment 的字段，**不是 rank 的字段** | — |
 
 按 [§4 规则 4](../README.md)（1:1 不新增名字）：rank 与 attachment 基数不同
 （一个 rank 可以被多个端点 attach），**配得上两个名字**；而 `deployment` 与
@@ -183,10 +183,10 @@ DomainAttachment {
 的 `control_payload` child index）、`device_ids` 的下标、`global_device_ranks` 的下标
 —— **三重承重**。两条路：
 
-| 做法 | 代价 |
-| ---- | ---- |
-| 加一个自描述 `worker_path` **并列**保留索引 | 便宜，但两个标识并存，需明写哪个是权威 |
-| 用 path 替换索引 | 需补 path→child 解析，且 `Worker::_global_local_members` 的按节点过滤要改写 |
+ | 做法 | 代价 |
+ | ---- | ---- |
+ | 加一个自描述 `worker_path` **并列**保留索引 | 便宜，但两个标识并存，需明写哪个是权威 |
+ | 用 path 替换索引 | 需补 path→child 解析，且 `Worker::_global_local_members` 的按节点过滤要改写 |
 
 ⇒ **这条应与 attachment 分开立项**，不要因为都源自 §10 就捆成一件。
 
@@ -202,12 +202,12 @@ skew，也不存在兼容悬崖**。加字段就是撞版本号。
 
 ## 6. 与既有文档的对表
 
-| 文档 | 需要改什么 |
-| ---- | ---------- |
-| [issue #1836](https://github.com/hw-native-sys/simpler/issues/1836) | ⚠️ 正文列的两条动机中，**「同一 chip 的两个 deployment 视图（`DEVICE_AICORE` vs `DEVICE_AICPU`）没有拼写方式」不成立** —— 按 §2，两者访问能力相同，不需要在成员上拼写。**另一条动机（`HOST_CPU` 参与者没有拼写方式）成立**，但落点是 attachment 而非成员字段 |
-| [w2-w5-inversion.md](w2-w5-inversion.md) §1 | 病因写作「缺的正是 `deployment` 那一维」。**症状描述正确，归因需换**：缺的是 attachment 轴；`deployment` 在成员上是塌缩的 |
-| [domain-membership.md](domain-membership.md) §10 | §10 讲的是**端点**的表达形式，正确；需补一句划清边界：域的 `members` 是 **rank 表**不是端点集，端点集由 attachment 表达 |
-| [work-breakdown.md](work-breakdown.md) | W2 的「成员选择器」应明确产出 attachment，而非给 `GlobalDomainMember` 加字段 |
+ | 文档 | 需要改什么 |
+ | ---- | ---------- |
+ | [issue #1836](https://github.com/hw-native-sys/simpler/issues/1836) | ⚠️ 正文列的两条动机中，**「同一 chip 的两个 deployment 视图（`DEVICE_AICORE` vs `DEVICE_AICPU`）没有拼写方式」不成立** —— 按 §2，两者访问能力相同，不需要在成员上拼写。**另一条动机（`HOST_CPU` 参与者没有拼写方式）成立**，但落点是 attachment 而非成员字段 |
+ | [w2-w5-inversion.md](w2-w5-inversion.md) §1 | 病因写作「缺的正是 `deployment` 那一维」。**症状描述正确，归因需换**：缺的是 attachment 轴；`deployment` 在成员上是塌缩的 |
+ | [domain-membership.md](domain-membership.md) §10 | §10 讲的是**端点**的表达形式，正确；需补一句划清边界：域的 `members` 是 **rank 表**不是端点集，端点集由 attachment 表达 |
+ | [work-breakdown.md](work-breakdown.md) | W2 的「成员选择器」应明确产出 attachment，而非给 `GlobalDomainMember` 加字段 |
 
 ## 7. 未决
 

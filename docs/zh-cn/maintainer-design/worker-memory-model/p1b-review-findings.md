@@ -1,6 +1,6 @@
 # P1-B（PR #1453）修补清单
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：⬜ **review 产出，面向 PR 作者**。这是「要改什么」；
 > 「改成什么样」见 [p1b-corrected-design.md](p1b-corrected-design.md)（最终设计）。
@@ -109,13 +109,13 @@ INPUT 改成 OUTPUT**；普通 COW rehost **固定生成 `READWRITE`**；两个�
 **现状**：`infer_deps` 本地路径 `TensorKey::local_host(hash(identity))` ——
 **buffer 粒度，不含 `worker_id` / `offset_begin`**。
 
-| 场景 | 结果 |
-| ---- | ---- |
-| device 分片到 N chip | ✅ 并行（键含 `worker_id`） |
-| **host buffer 切 N 片给 N worker** | ❌ **串行**（同键 WAW） |
+ | 场景 | 结果 |
+ | ---- | ---- |
+ | device 分片到 N chip | ✅ 并行（键含 `worker_id`） |
+ | **host buffer 切 N 片给 N worker** | ❌ **串行**（同键 WAW） |
 
 ⚠️ **重要限定（修正早前表述）**：这**只是并行度退化，正确性上反而是修复**。
-详见[最终设计 §4.3](p1b-corrected-design.md)。
+详见[最终设计 §4.3](p1b-corrected-design.md#43-与旧世界的对照identity-键是正确性修复)。
 
 ⚠️ **设计耦合**：现在的粗键**误打误撞在替 §5 兜底**（同 backing 的任意重叠写都被串行）。
 **若为恢复分片并行而精化到 offset 粒度，必须同时实现 footprint 重叠判定，
@@ -127,10 +127,10 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 
 ## 7. 拓扑与容量
 
-| 项 | 现状 | 修补 |
-| -- | ---- | ---- |
-| **L4 仅含 local L3 时 `create_buffer` 被拒** `[R]` | 查 `_chip_shms`/`_sub_shms`，**未查 `_next_level_shms`** | 补上；**并修测试** —— `test_l4_reexport.py:48` 加 dummy SUB **掩盖了正常 L4→L3 拓扑** |
-| **`PATH_MAX_BYTES = 64`** `[C]` | 标注 "revisit before final freeze" | 叠加 §1 后**从容量问题升级为越界触发面**。若采纳[最终设计 §1](p1b-corrected-design.md#1-数据结构)的 path 驻留化，该问题**结构性消失** |
+ | 项 | 现状 | 修补 |
+ | -- | ---- | ---- |
+ | **L4 仅含 local L3 时 `create_buffer` 被拒** `[R]` | 查 `_chip_shms`/`_sub_shms`，**未查 `_next_level_shms`** | 补上；**并修测试** —— `test_l4_reexport.py:48` 加 dummy SUB **掩盖了正常 L4→L3 拓扑** |
+ | **`PATH_MAX_BYTES = 64`** `[C]` | 标注 "revisit before final freeze" | 叠加 §1 后**从容量问题升级为越界触发面**。若采纳[最终设计 §1](p1b-corrected-design.md#1-数据结构)的 path 驻留化，该问题**结构性消失** |
 
 ## 8. 【要求】尽可能拆分 PR
 
@@ -143,13 +143,13 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 
 ### 8.1 建议的拆法
 
-| — | 内容 | 来源 | 规模 | 能否独立 land |
-| - | ---- | ---- | ---- | ------------- |
-| **PR-1** ⭐ | **ABI 地基**：三类型 + codec + registry + view 代数 + `create_buffer` + 测试 | commit 1 | `+1680/−72` | ✅ **几乎纯新增，行为零变更** |
-| **PR-2** | capability matrix + `access⊆granted` 守卫 | commit 7 | +128 | ✅ 纯增量校验 |
-| **PR-3** | device 内存所有权 Orchestrator→Worker | commit 4 | ~300 | 🟡 依赖 PR-1 类型，**不依赖 wire flip** |
-| **PR-4** | 删 `create_host_buffer` / MAP_HOST 子系统 | commit 6 一部分 | ~250 | 🟡 删独立子系统 |
-| **PR-5** | **wire flip + 全部消费端适配** | commit 2/3/5 + 6 剩余 | ~1800 core + 3400 test | ❌ **拆不动**（原子切换） |
+ | — | 内容 | 来源 | 规模 | 能否独立 land |
+ | - | ---- | ---- | ---- | ------------- |
+ | **PR-1** ⭐ | **ABI 地基**：三类型 + codec + registry + view 代数 + `create_buffer` + 测试 | commit 1 | `+1680/−72` | ✅ **几乎纯新增，行为零变更** |
+ | **PR-2** | capability matrix + `access⊆granted` 守卫 | commit 7 | +128 | ✅ 纯增量校验 |
+ | **PR-3** | device 内存所有权 Orchestrator→Worker | commit 4 | ~300 | 🟡 依赖 PR-1 类型，**不依赖 wire flip** |
+ | **PR-4** | 删 `create_host_buffer` / MAP_HOST 子系统 | commit 6 一部分 | ~250 | 🟡 删独立子系统 |
+ | **PR-5** | **wire flip + 全部消费端适配** | commit 2/3/5 + 6 剩余 | ~1800 core + 3400 test | ❌ **拆不动**（原子切换） |
 
 ### 8.2 拆分的判据（每个 PR 都要能回答）
 
@@ -179,40 +179,40 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 
 **判据**：
 
-| 情况 | 处置 |
-| ---- | ---- |
-| 有真实调用点 | ✅ 保留 |
-| 无调用点，但有**明确的近期场景 + 时间点** | 🟡 保留，但在文档中写明该场景 |
-| 无调用点、无明确场景 | ❌ **删** —— 冻结前删是免费的，冻结后是破坏性变更 |
+ | 情况 | 处置 |
+ | ---- | ---- |
+ | 有真实调用点 | ✅ 保留 |
+ | 无调用点，但有**明确的近期场景 + 时间点** | 🟡 保留，但在文档中写明该场景 |
+ | 无调用点、无明确场景 | ❌ **删** —— 冻结前删是免费的，冻结后是破坏性变更 |
 
 ### 9.1 待论证清单
 
 #### 枚举值
 
-| 项 | 待答 |
-| -- | ---- |
-| `BackendKind::REMOTE_SIDECAR` | P1 **直接 decode-reject**。为什么现在就占枚举位？P2 再加会破坏什么？ |
-| `FORK_SHM` vs `POSIX_SHM` | 都是 host 共享内存，**各自的适用场景边界**是什么？何时该选哪个？ |
-| `VMM_WINDOW` vs `DEVICE_MALLOC` | 都是 device，**区别的使用场景**？消费者物化路径完全相同（都是取 body 里的 VA），那么这个区分在**执行层面**买到了什么？ |
-| `AccessMode::WRITE`（只写不读） | 哪个真实场景用它？与 `READWRITE` 的差别在哪被执行？ |
-| `Visibility::PRIVATE` / `SHARED` | **grep 结果：bindings 中出现 0 次，无任何判定点。**要么给出执行点，要么删 |
+ | 项 | 待答 |
+ | -- | ---- |
+ | `BackendKind::REMOTE_SIDECAR` | P1 **直接 decode-reject**。为什么现在就占枚举位？P2 再加会破坏什么？ |
+ | `FORK_SHM` vs `POSIX_SHM` | 都是 host 共享内存，**各自的适用场景边界**是什么？何时该选哪个？ |
+ | `VMM_WINDOW` vs `DEVICE_MALLOC` | 都是 device，**区别的使用场景**？消费者物化路径完全相同（都是取 body 里的 VA），那么这个区分在**执行层面**买到了什么？ |
+ | `AccessMode::WRITE`（只写不读） | 哪个真实场景用它？与 `READWRITE` 的差别在哪被执行？ |
+ | `Visibility::PRIVATE` / `SHARED` | **grep 结果：bindings 中出现 0 次，无任何判定点。**要么给出执行点，要么删 |
 
 #### 字段
 
-| 项 | 待答 |
-| -- | ---- |
-| `abi_version` + `descriptor_version` | **两个**版本号。多版本共存的场景是什么？（见[设计 §6](p1b-corrected-design.md#6-版本策略不携带版本号)：本系统无滚动升级，偏斜由 `SIMPLER_BUILD_COMMIT` 承担） |
-| `owner_instance_id` 16 B | 为什么是 16 B 而不是 8 B？碰撞预算是按什么算的？ |
-| `body[96]` | 实际用量：`POSIX_SHM` 是 shm 名（短），其余是**一个 u64**。96 B 是按什么场景定的？ |
-| `PATH_MAX_BYTES = 64` | 按最深的**现实**路径量过吗？（叠加 §1 后它还是越界触发面） |
+ | 项 | 待答 |
+ | -- | ---- |
+ | `abi_version` + `descriptor_version` | **两个**版本号。多版本共存的场景是什么？（见[设计 §6](p1b-corrected-design.md#6-版本策略不携带版本号)：本系统无滚动升级，偏斜由 `SIMPLER_BUILD_COMMIT` 承担） |
+ | `owner_instance_id` 16 B | 为什么是 16 B 而不是 8 B？碰撞预算是按什么算的？ |
+ | `body[96]` | 实际用量：`POSIX_SHM` 是 shm 名（短），其余是**一个 u64**。96 B 是按什么场景定的？ |
+ | `PATH_MAX_BYTES = 64` | 按最深的**现实**路径量过吗？（叠加 §1 后它还是越界触发面） |
 
 #### API 表面
 
-| 项 | 待答 |
-| -- | ---- |
-| `create_buffer` / `alloc_shared_tensor` / `alloc_child_tensor` | **三个**分配入口的边界是什么？用户如何判断该用哪个？ |
-| `make_ref_arg` / `make_tensor_ref` | 两个的区别与各自场景？ |
-| view 代数 6 个方法（`slice`/`transpose`/`permute`/`view`/`reshape`/`ref`） | 每个当前**有 in-repo 调用点吗**？无调用点的，是否可以先不进 P1？ |
+ | 项 | 待答 |
+ | -- | ---- |
+ | `create_buffer` / `alloc_shared_tensor` / `alloc_child_tensor` | **三个**分配入口的边界是什么？用户如何判断该用哪个？ |
+ | `make_ref_arg` / `make_tensor_ref` | 两个的区别与各自场景？ |
+ | view 代数 6 个方法（`slice`/`transpose`/`permute`/`view`/`reshape`/`ref`） | 每个当前**有 in-repo 调用点吗**？无调用点的，是否可以先不进 P1？ |
 
 > **我的判断已写在[设计 §7](p1b-corrected-design.md#7-化简的账)**（可减重 ~47%），
 > 但**结论应由作者论证后自行得出** —— 本节要的是**论证过程**，不是接受我的结论。
@@ -220,21 +220,21 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 
 ## 10. 文档一致性 `[C]`
 
-| 项 | 问题 | 修补 |
-| -- | ---- | ---- |
-| **规范性引用不可达** | `src/common/task_interface/buffer_handle.h` 声明权威 schema 是 `.docs/L3-new/...`，但 **`.gitignore:31` 忽略 `.docs`**，PR 未提交其中任何文件 —— **wire ABI 的权威定义对他人与 CI 都不可达** | 指向 **PR 内新增的** `docs/buffer-handle-abi.md`（+119 行，**尚未在 main 上**，随本 PR 一同落地），或把字段表内联进 header |
-| **缺迁移映射** | `create_host_buffer` / `free_host_buffer` / `orch.malloc` / `orch.device_handle` **硬删除、无 deprecation 垫片** | 加旧→新映射表 + release notes |
+ | 项 | 问题 | 修补 |
+ | -- | ---- | ---- |
+ | **规范性引用不可达** | `src/common/task_interface/buffer_handle.h` 声明权威 schema 是 `.docs/L3-new/...`，但 **`.gitignore:31` 忽略 `.docs`**，PR 未提交其中任何文件 —— **wire ABI 的权威定义对他人与 CI 都不可达** | 指向 **PR 内新增的** `docs/buffer-handle-abi.md`（+119 行，**尚未在 main 上**，随本 PR 一同落地），或把字段表内联进 header |
+ | **缺迁移映射** | `create_host_buffer` / `free_host_buffer` / `orch.malloc` / `orch.device_handle` **硬删除、无 deprecation 垫片** | 加旧→新映射表 + release notes |
 
 ## 11. 执行顺序建议
 
-| 优先级 | 做什么 | 为什么 |
-| ------ | ------ | ------ |
-| **0** | **§9 逐项论证** + **§8 拆 PR** | 都是**决定「做什么」**的前置：论证结果会改变要实现的字段集，拆分决定评审单元。**先做这两件，后面的工作量才是确定的** |
-| **1** | [设计 §1](p1b-corrected-design.md#1-数据结构) 的 **path 移出 identity** | **一刀两得**：减重 + **结构性消灭 §1 越界类**；冻结后再改=破坏性变更 |
-| **2** | §1 validator + §2 endpoint 检查 | 越界与段错误必须先堵 |
-| **3** | 其余 ABI 化简（[设计 §7](p1b-corrected-design.md#7-化简的账)） | 同属冻结前窗口 |
-| **4** | §3 generation + 逃逸禁止 | 已发布语义不可事后收紧 |
-| **5** | §5 + §6 **一起做** | 单独做任一个都会出事 |
+ | 优先级 | 做什么 | 为什么 |
+ | ------ | ------ | ------ |
+ | **0** | **§9 逐项论证** + **§8 拆 PR** | 都是**决定「做什么」**的前置：论证结果会改变要实现的字段集，拆分决定评审单元。**先做这两件，后面的工作量才是确定的** |
+ | **1** | [设计 §1](p1b-corrected-design.md#1-数据结构) 的 **path 移出 identity** | **一刀两得**：减重 + **结构性消灭 §1 越界类**；冻结后再改=破坏性变更 |
+ | **2** | §1 validator + §2 endpoint 检查 | 越界与段错误必须先堵 |
+ | **3** | 其余 ABI 化简（[设计 §7](p1b-corrected-design.md#7-化简的账)） | 同属冻结前窗口 |
+ | **4** | §3 generation + 逃逸禁止 | 已发布语义不可事后收紧 |
+ | **5** | §5 + §6 **一起做** | 单独做任一个都会出事 |
 
 ### 两条顺序上的关键依赖
 
@@ -249,11 +249,11 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 这个 PR 的**方向和核心结构是对的**（见[设计 §0](p1b-corrected-design.md#0-概念模型三层而不是一个-tensor)），
 问题集中在三类：
 
-| 类 | 内容 | 性质 |
-| -- | ---- | ---- |
-| **安全** | §1 越界 · §2 段错误 · §3 生命周期 · §4 裸 VA | **摘 draft 的门槛** |
-| **精度** | §5 alias + §6 依赖键（**必须一起做**） | 正确性与并行度的取舍 |
-| **规模** | §8 拆 PR · §9 论证每项新增 | **冻结前的最后窗口** |
+ | 类 | 内容 | 性质 |
+ | -- | ---- | ---- |
+ | **安全** | §1 越界 · §2 段错误 · §3 生命周期 · §4 裸 VA | **摘 draft 的门槛** |
+ | **精度** | §5 alias + §6 依赖键（**必须一起做**） | 正确性与并行度的取舍 |
+ | **规模** | §8 拆 PR · §9 论证每项新增 | **冻结前的最后窗口** |
 
 **最需要作者主动做的是 §9** —— 其余各条我已给出具体修法，唯独「这个字段/枚举值到底需不需要」
 只有作者知道预期场景。**冻结之后，这个问题就再也没有便宜的答案了。**
@@ -266,27 +266,27 @@ remote 路径在用）；② 同时实现 byte-range 重叠判定；③ 过渡�
 
 本清单的基线是 PR #1453；#1453 按 §8 拆分后，**PR-1 = #1599** 已提交。逐条状态：
 
-| § | 内容 | #1599 状态 |
-| - | ---- | ---------- |
-| §1 | 一个 validator，三个边界 | 🟡 **2/3** —— 构造 + builder 有；**materialize 无**（详见[设计](p1b-corrected-design.md)顶部 review ②）。越界类问题按 §1 建议**结构性消失**（path 已移出 identity，identity 定长） |
-| §2 | endpoint × `address_space` 能力矩阵 | ❌ **未做**。`ImportRegistry.materialize` 照旧把 device VA 当本进程 base 返回；PR 的"不做清单"里也没提这一项 |
-| §3 | generation / 生命周期 | 🟡 `generation` 从 1 起 + validator 拒 0 ✅；`release_buffer` / in-flight retain / scope 逃逸 ❌（PR 明示不在范围）。当前 `buffer_id` 单调不复用，故 generation 恒为 1 |
-| §4 | `copy_to` / `copy_from` | ❌ 未触及 |
-| §5 | access 与 alias | 🟡 ②最小授权（`FORK_COW ⇒ READ`）✅ 且在 decode 处执行；①提交点复验、③重叠写串行/拒绝 ❌（无 wire，够不到） |
-| §6 | 依赖键精度 | ❌ 未触及（仍是地址键）。`tensors_overlap` 已提供，但**零调用点且被溢出击穿** |
-| §7 | `create_buffer` 未查 `_next_level_shms` | ❌ **未修** —— 新方法 `worker.py:8261` 照抄了 `create_host_buffer` 的旧谓词（`level >= 3 and not _chip_shms and not _sub_shms`）。**只有 L3 子进程的 L4 拓扑会被直接拒绝**，且新方法没有任何测试 |
-| §8 | 拆 PR | ✅ 已按 PR-1 拆出，Core churn 1200 行 / 15 文件，且近乎纯新增 |
-| §9 | 逐项论证每个新增 | ❌ **未答**。`wrap_fork_inherited` / `wrap_vmm_window` / `remote_sidecar_tensor` / `host_ptr_nbytes` / `tensors_overlap` 五个符号在全仓 **零调用点、零测试**；`Worker.create_buffer` 亦无测试。冻结前是删除的最后窗口 |
-| §10 | 文档一致性 | 🟡 `docs/buffer-abi.md` 已进仓 + mkdocs（规范性引用可达，本条解决）；但新增 3 处 stale：`buffer.py:430` 与 `test_buffer.py:9,13` 引用**并不存在**的 `pack`/`unpack`，`docs/buffer-abi.md:141` 写 `simpler.task_interface.Tensor`（与同文件 §Status 和 `test_wire_tensor_stays_off_the_public_submit_surface` 自相矛盾） |
+ | § | 内容 | #1599 状态 |
+ | - | ---- | ---------- |
+ | §1 | 一个 validator，三个边界 | 🟡 **2/3** —— 构造 + builder 有；**materialize 无**（详见[设计](p1b-corrected-design.md)顶部 review ②）。越界类问题按 §1 建议**结构性消失**（path 已移出 identity，identity 定长） |
+ | §2 | endpoint × `address_space` 能力矩阵 | ❌ **未做**。`ImportRegistry.materialize` 照旧把 device VA 当本进程 base 返回；PR 的"不做清单"里也没提这一项 |
+ | §3 | generation / 生命周期 | 🟡 `generation` 从 1 起 + validator 拒 0 ✅；`release_buffer` / in-flight retain / scope 逃逸 ❌（PR 明示不在范围）。当前 `buffer_id` 单调不复用，故 generation 恒为 1 |
+ | §4 | `copy_to` / `copy_from` | ❌ 未触及 |
+ | §5 | access 与 alias | 🟡 ②最小授权（`FORK_COW ⇒ READ`）✅ 且在 decode 处执行；①提交点复验、③重叠写串行/拒绝 ❌（无 wire，够不到） |
+ | §6 | 依赖键精度 | ❌ 未触及（仍是地址键）。`tensors_overlap` 已提供，但**零调用点且被溢出击穿** |
+ | §7 | `create_buffer` 未查 `_next_level_shms` | ❌ **未修** —— 新方法 `worker.py:8261` 照抄了 `create_host_buffer` 的旧谓词（`level >= 3 and not _chip_shms and not _sub_shms`）。**只有 L3 子进程的 L4 拓扑会被直接拒绝**，且新方法没有任何测试 |
+ | §8 | 拆 PR | ✅ 已按 PR-1 拆出，Core churn 1200 行 / 15 文件，且近乎纯新增 |
+ | §9 | 逐项论证每个新增 | ❌ **未答**。`wrap_fork_inherited` / `wrap_vmm_window` / `remote_sidecar_tensor` / `host_ptr_nbytes` / `tensors_overlap` 五个符号在全仓 **零调用点、零测试**；`Worker.create_buffer` 亦无测试。冻结前是删除的最后窗口 |
+ | §10 | 文档一致性 | 🟡 `docs/buffer-abi.md` 已进仓 + mkdocs（规范性引用可达，本条解决）；但新增 3 处 stale：`buffer.py:430` 与 `test_buffer.py:9,13` 引用**并不存在**的 `pack`/`unpack`，`docs/buffer-abi.md:141` 写 `simpler.task_interface.Tensor`（与同文件 §Status 和 `test_wire_tensor_stays_off_the_public_submit_surface` 自相矛盾） |
 
 ### 13.1 新增缺陷（不在原 §1–§12 里）
 
-| # | 内容 | 严重度 |
-| - | ---- | ------ |
-| **N1** | `tensor_extent_bytes` 溢出 ⇒ `validate_tensor` 接受 footprint 远超 backing 的视图（一维即可触发，Python 可达，已实测） | **必修** —— 布局中立，冻结前修最便宜 |
-| **N2** | `BufferDescriptor::operator==` 用未 clamp 的 `body_len` 做 `memcmp`；今天不可达（构造即校验），但这是本头文件唯一一处"长度字段界定读取范围" | 应修 |
-| **N3** | `BufferDescriptor` / `Tensor` 定义了值相等却没绑值哈希（nanobind 在建类型后才挂方法，`__hash__` 仍是 identity 哈希）；`__eq__` 未用 `nb::is_operator()`，与异类比较会抛 `TypeError` 而非返回 `NotImplemented` | 建议 |
-| **N4** | `remote_sidecar_tensor` 用 `owner_worker_id` 构造 `owner_instance_id`，与 `mint_owner_instance_id` 上方"必须全宽随机"的不变量直接冲突 ⇒ 同一远端 worker 的两次 incarnation 得到相同 identity | 建议（P2 前登记） |
+ | # | 内容 | 严重度 |
+ | - | ---- | ------ |
+ | **N1** | `tensor_extent_bytes` 溢出 ⇒ `validate_tensor` 接受 footprint 远超 backing 的视图（一维即可触发，Python 可达，已实测） | **必修** —— 布局中立，冻结前修最便宜 |
+ | **N2** | `BufferDescriptor::operator==` 用未 clamp 的 `body_len` 做 `memcmp`；今天不可达（构造即校验），但这是本头文件唯一一处"长度字段界定读取范围" | 应修 |
+ | **N3** | `BufferDescriptor` / `Tensor` 定义了值相等却没绑值哈希（nanobind 在建类型后才挂方法，`__hash__` 仍是 identity 哈希）；`__eq__` 未用 `nb::is_operator()`，与异类比较会抛 `TypeError` 而非返回 `NotImplemented` | 建议 |
+ | **N4** | `remote_sidecar_tensor` 用 `owner_worker_id` 构造 `owner_instance_id`，与 `mint_owner_instance_id` 上方"必须全宽随机"的不变量直接冲突 ⇒ 同一远端 worker 的两次 incarnation 得到相同 identity | 建议（P2 前登记） |
 
 ### 13.2 结论
 

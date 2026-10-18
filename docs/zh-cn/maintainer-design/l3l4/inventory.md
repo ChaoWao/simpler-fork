@@ -1,6 +1,6 @@
 # Issue / PR 关联总表
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` 跨节说明 + §E + 附录 + §F。
 
@@ -67,55 +67,55 @@
 
 ### A. 已合并能力栈（构成各诉求的既有基线）
 
-| 栈 | PR（全 MERGED，除注明） | 推进了哪条诉求到什么状态 |
-| -- | ----------------------- | ------------------------ |
-| **Remote-L3 worker**（从 #866 拆栈） | #1006 契约 · #1007 import descriptor · #1008 wire codec · #1009 endpoint eligibility · #1010 C++ facade · #1011 Python session | A.1 / D.4：从零到"契约 + 四层骨架（identity→wire→eligibility→facade→session）已合并"。⚠️ **此处此前写「仅 sim 打通」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那条 transport 从来是真 TCP socket，`"sim"` 只是个撒谎的名字（现已正名 `host_tcp`）；#1688 更给出**双机真硬件**的 L4 mixed-L3 用例与 CI job。**当前边界**：host_tcp 属控制 transport；主路径为 mpirun，A3 Fabric 共享窗口已有数据面。原生通信 backend 验收见 DS-5；SHMEM 仅为实现参考。承接情况已变：⛔ #866/#711 仍 CLOSED-未合并，但 **#1688 已 merged**；#1456 亦已 merged `60ab6ab9`（2026-08-11），其后继 #1623 `cc9bfc45` / #1624 `43094d44` 亦在 main（`68d137fdf` 复核）。 |
-| **Comm-domain**（HCCL 动态域 + L3-Host↔L2 在途通信） | #817 Option A · #809/#813 类型/清理 · #1334 VMM 跨进程窗口(#1037) · #1015 设计 · #1305 a2a3 onboard · #1277 a5 onboard；**#1291 CLOSED-未合并** | D.1 完整落地；D.3 的一半（L3 Host CPU 与本卡 L2 AICPU 共享控制域）。#1291（把 onboard 数据路径统一搬到 L3 Host mapped-region）虽 CLOSED-未合并，但其目标已在 main 实现（`l3-l2-orch-comm.md:48`：sim+onboard 均在 L3 Host 走同一 mapped 路径）；域生命周期仍 run-scoped（=#824 未解）。 |
-| **L3-L2 message-queue** | #1130 底座 · #1187 示例 · #1236 L2 input window | D.2：一个持久 L2 orch run 与 L3 交换一串 input/output 消息，免每 task 停/起 L2；为 C.1 的"L2 常驻"提供通信载体。当前仅 **SPSC**；#755 MPMC 设计已 CLOSED-未合并。 |
-| **Memory / host-buffer + runtime-arena** | #1256 post-fork zero-copy · #1390 暴露给 SubWorker · #1234/#1193 arena 复用 · #1322 prewarm · #1245 去 local-ready-buffer（#1198 已回滚，不计） | B.kind3（host 侧）权威落地；arena 预热服务 C.1（eager）与 #984/#545 perf。 |
-| **Distributed 基座 + 集合通信例库** | #444 fork+shm 进程模型/group task · #807 allreduce 2..16 · #888 broadcast/all2all · #842 AllGather/ReduceScatter · #1267 all2all push-lowering | D.1/D.5 的可运行通信语义与 group-dispatch 基线；#444 的 fork+shm 同时是 A（拉起下级）与 C.1（进程隔离）的底座。局限：集合对端仍 device-only（NPU↔NPU）。 |
-| **L4 递归组合 + 错误传播** | #583 递归 Worker(`_child_worker_loop`) · #605 L4 错误传播 | A 的本地多层组合（L4 fork 并递归驱动本地 L3→L2，child 异常端到端上抛）。局限：仅本地、同机、同进程树 fork。 |
-| **启动 readiness 协议** | #1396（merged `35b76c53`） | C.1 前置：init 从"无界自旋 + 失败静默退出"改为**有界 READY 边界**——INIT_READY/INIT_FAILED + `_await_children_ready`(deadline + `waitpid`) + `_abort_hierarchical` 回滚，覆盖三 edge。 |
-| **eager 递归 init** | **#1397（merged `483d97e3`，2026-07-19）** | **C.1 完整落地**：eager 递归 `init()`（返回即 full-tree READY）+ 删 5 lazy trigger + 单一 startup epoch deadline + `_abort_hierarchical` 扩为 SIGTERM/killpg 子树回收 + prewarm-before-READY + `child_memory` guard + SceneTest rehost。取代 #1381。 |
-| **生命周期加固（第一批）** | **#1398（merged `0ffb88f8`，2026-07-21）** | **P0.2 narrowed slice**：单一权威 5-state `_Lifecycle`（无 CLOSING）+ terminal single-shot `close()` + **INITIALIZING close = fail-fast**（active-cancel 未做）+ leased-op admission + eligibility 校验 + L2 两并发 init（第二个立即报错，非串行）+ 两段式 child shutdown。**deferred**：register/unregister admission、cooperative cancel、可重试账本、ChipWorker gate（P0.2.md（本地参考：`../P0.2/done-followup.md`） follow-up）。见 done-P0.2.md（本地参考：`../P0.2/done.md`）。 |
-| **P0.3 remote startup budget** | **✅ #1420 形状 + #1432 收尾（`effffe52` + `8fd7c27e`）** | C.1 remote 分支：activation-after-fork（`_activate_remote_sessions`）+ 去 per-remote full-timeout 复制 + `startup_remaining_s` duration wire + remote monotonic clock。**#1420 交付形状，4 实现缺陷全闭**：#1426 校验前移 + #1427 daemon-send + **#1432** R2+R4（单 root deadline 硬墙 + attach/runtime timeout 拆分，一个耦合 PR）；validation-ordering 证据 #1426 mock 补上 → **P0.3 实现缺陷 4/4 全闭**。**里程碑 acceptance 未满**：roadmap 记 **P0.3 PARTIAL**，唯一剩余门 = full-hierarchy failure-injection 零残留回归（test-coverage follow-up），send-未确认歧义 = P2。见 §D.4 / `KNOWN_ISSUES.md`（已移除 R2/R4）。 |
-| **SceneTest arg-name 校验** | **#1422（merged `4dbcc9c8`，2026-07-21）** | rehost correctness：`TaskArgsBuilder` 拒绝 duplicate / builder-member-shadowing arg name（原子、mutation 前），闭合 `_originals` name-keyed rollback 的 use-after-free。 |
-| **whole-run FIFO admission** | **#1541（merged `9a2a5f71`）** | C.3/E：negotiated pipeline lease 在 callback 前提供 backpressure；只有 whole-run FIFO head 执行，run-owned resource teardown 与 cleanup publication failure-safe。取代 #1467 launch acceptance 作为下一 callback gate。 |
-| **progressable native-run lifecycle（B3a）** | **#1574（merged `87dce627`）** | E：交付 `prepare/launch/poll/wait/finalize`、sticky launch wakeup、run-owned Runtime/DFX identity 与 token guard。single-frame child 仍 blocking、每个 DeviceRunner 仍只有一个 unfinished native run；B3b 尚未实现。 |
+ | 栈 | PR（全 MERGED，除注明） | 推进了哪条诉求到什么状态 |
+ | -- | ----------------------- | ------------------------ |
+ | **Remote-L3 worker**（从 #866 拆栈） | #1006 契约 · #1007 import descriptor · #1008 wire codec · #1009 endpoint eligibility · #1010 C++ facade · #1011 Python session | A.1 / D.4：从零到"契约 + 四层骨架（identity→wire→eligibility→facade→session）已合并"。⚠️ **此处此前写「仅 sim 打通」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那条 transport 从来是真 TCP socket，`"sim"` 只是个撒谎的名字（现已正名 `host_tcp`）；#1688 更给出**双机真硬件**的 L4 mixed-L3 用例与 CI job。**当前边界**：host_tcp 属控制 transport；主路径为 mpirun，A3 Fabric 共享窗口已有数据面。原生通信 backend 验收见 DS-5；SHMEM 仅为实现参考。承接情况已变：⛔ #866/#711 仍 CLOSED-未合并，但 **#1688 已 merged**；#1456 亦已 merged `60ab6ab9`（2026-08-11），其后继 #1623 `cc9bfc45` / #1624 `43094d44` 亦在 main（`68d137fdf` 复核）。 |
+ | **Comm-domain**（HCCL 动态域 + L3-Host↔L2 在途通信） | #817 Option A · #809/#813 类型/清理 · #1334 VMM 跨进程窗口(#1037) · #1015 设计 · #1305 a2a3 onboard · #1277 a5 onboard；**#1291 CLOSED-未合并** | D.1 完整落地；D.3 的一半（L3 Host CPU 与本卡 L2 AICPU 共享控制域）。#1291（把 onboard 数据路径统一搬到 L3 Host mapped-region）虽 CLOSED-未合并，但其目标已在 main 实现（`l3-l2-orch-comm.md:48`：sim+onboard 均在 L3 Host 走同一 mapped 路径）；域生命周期仍 run-scoped（=#824 未解）。 |
+ | **L3-L2 message-queue** | #1130 底座 · #1187 示例 · #1236 L2 input window | D.2：一个持久 L2 orch run 与 L3 交换一串 input/output 消息，免每 task 停/起 L2；为 C.1 的"L2 常驻"提供通信载体。当前仅 **SPSC**；#755 MPMC 设计已 CLOSED-未合并。 |
+ | **Memory / host-buffer + runtime-arena** | #1256 post-fork zero-copy · #1390 暴露给 SubWorker · #1234/#1193 arena 复用 · #1322 prewarm · #1245 去 local-ready-buffer（#1198 已回滚，不计） | B.kind3（host 侧）权威落地；arena 预热服务 C.1（eager）与 #984/#545 perf。 |
+ | **Distributed 基座 + 集合通信例库** | #444 fork+shm 进程模型/group task · #807 allreduce 2..16 · #888 broadcast/all2all · #842 AllGather/ReduceScatter · #1267 all2all push-lowering | D.1/D.5 的可运行通信语义与 group-dispatch 基线；#444 的 fork+shm 同时是 A（拉起下级）与 C.1（进程隔离）的底座。局限：集合对端仍 device-only（NPU↔NPU）。 |
+ | **L4 递归组合 + 错误传播** | #583 递归 Worker(`_child_worker_loop`) · #605 L4 错误传播 | A 的本地多层组合（L4 fork 并递归驱动本地 L3→L2，child 异常端到端上抛）。局限：仅本地、同机、同进程树 fork。 |
+ | **启动 readiness 协议** | #1396（merged `35b76c53`） | C.1 前置：init 从"无界自旋 + 失败静默退出"改为**有界 READY 边界**——INIT_READY/INIT_FAILED + `_await_children_ready`(deadline + `waitpid`) + `_abort_hierarchical` 回滚，覆盖三 edge。 |
+ | **eager 递归 init** | **#1397（merged `483d97e3`，2026-07-19）** | **C.1 完整落地**：eager 递归 `init()`（返回即 full-tree READY）+ 删 5 lazy trigger + 单一 startup epoch deadline + `_abort_hierarchical` 扩为 SIGTERM/killpg 子树回收 + prewarm-before-READY + `child_memory` guard + SceneTest rehost。取代 #1381。 |
+ | **生命周期加固（第一批）** | **#1398（merged `0ffb88f8`，2026-07-21）** | **P0.2 narrowed slice**：单一权威 5-state `_Lifecycle`（无 CLOSING）+ terminal single-shot `close()` + **INITIALIZING close = fail-fast**（active-cancel 未做）+ leased-op admission + eligibility 校验 + L2 两并发 init（第二个立即报错，非串行）+ 两段式 child shutdown。**deferred**：register/unregister admission、cooperative cancel、可重试账本、ChipWorker gate（P0.2.md（本地参考：`../P0.2/done-followup.md`） follow-up）。见 done-P0.2.md（本地参考：`../P0.2/done.md`）。 |
+ | **P0.3 remote startup budget** | **✅ #1420 形状 + #1432 收尾（`effffe52` + `8fd7c27e`）** | C.1 remote 分支：activation-after-fork（`_activate_remote_sessions`）+ 去 per-remote full-timeout 复制 + `startup_remaining_s` duration wire + remote monotonic clock。**#1420 交付形状，4 实现缺陷全闭**：#1426 校验前移 + #1427 daemon-send + **#1432** R2+R4（单 root deadline 硬墙 + attach/runtime timeout 拆分，一个耦合 PR）；validation-ordering 证据 #1426 mock 补上 → **P0.3 实现缺陷 4/4 全闭**。**里程碑 acceptance 未满**：roadmap 记 **P0.3 PARTIAL**，唯一剩余门 = full-hierarchy failure-injection 零残留回归（test-coverage follow-up），send-未确认歧义 = P2。见 §D.4 / `KNOWN_ISSUES.md`（已移除 R2/R4）。 |
+ | **SceneTest arg-name 校验** | **#1422（merged `4dbcc9c8`，2026-07-21）** | rehost correctness：`TaskArgsBuilder` 拒绝 duplicate / builder-member-shadowing arg name（原子、mutation 前），闭合 `_originals` name-keyed rollback 的 use-after-free。 |
+ | **whole-run FIFO admission** | **#1541（merged `9a2a5f71`）** | C.3/E：negotiated pipeline lease 在 callback 前提供 backpressure；只有 whole-run FIFO head 执行，run-owned resource teardown 与 cleanup publication failure-safe。取代 #1467 launch acceptance 作为下一 callback gate。 |
+ | **progressable native-run lifecycle（B3a）** | **#1574（merged `87dce627`）** | E：交付 `prepare/launch/poll/wait/finalize`、sticky launch wakeup、run-owned Runtime/DFX identity 与 token guard。single-frame child 仍 blocking、每个 DeviceRunner 仍只有一个 unfinished native run；B3b 尚未实现。 |
 
 ### B. 2026-07-17 当时的 OPEN PR 摘要（历史快照 + 当前状态）
 
 > 本表保留当时的在途脉络；第一列直接标出本轮已核实的现况，不能据表名把条目
 > 推断为当前 OPEN。未逐项标注的条目仍须以 `gh` 现况为准。
 
-| PR | 对齐 | 目标 |
-| -- | ---- | ---- |
-| ~~#1381~~ | **CLOSED — superseded by #1397** | 早期最小 eager patch（贡献者，`eager-l2-worker-init`）。目标已由 #1397（merged `483d97e3`，完整事务化递归版）完全覆盖且范围更广。**已于 2026-07-19 关闭**（附 superseded 说明 comment）。 |
-| ~~#1003~~ **MERGED** | C.1（TASK 阶段，补 #1396） | 修 L3 chip child 发 TASK_DONE 前退出导致父进程无限轮询挂死。#1396 覆盖 init，#1003 覆盖 dispatch/TASK。 |
-| ~~#866~~ **CLOSED-未合并** | A.1 / D.4 / D.5 | remote Worker(level=3) C++ 历史原型；设计骨架以 merged #1006–#1011 为准。 |
-| ~~#711~~ **CLOSED-未合并** | A.1 / D.4 | L4→L3 + RXE 历史路线；不要派生第二套 remote stack。 |
-| ~~**#803**~~ **CLOSED-未合并** | **D.1 / D.2 / D.3** | L3↔L2 host-device communication 历史原型；当前代码基线是 merged #1015/#1305/#1277。 |
-| ~~**#861**~~ **CLOSED-未合并** | **D.3 底层原语 / B.kind3** | `HostDeviceMappedRegion` 历史设计；需求仍由当前 shared-memory 设计承接。 |
-| ~~#755~~ **CLOSED-未合并** | D.1 / D.2 | MPMC 语义历史草案（docs-only，无 main 落地）。 |
-| ~~#1345~~ **merged `ee40a7f0`** | C.3 相邻 | 最终 scope = barrier-free per-thread scheduler init（早期 "skip handshake barrier" draft 描述已过时）；不作 C.2/C.3 callable 统一基线。 |
-| #1379 | D.2 / C | Pipelined orchestration：token N+1 编排与 token N 调度/执行重叠（per-token 背压式 L3↔L2 交互，含 Perfetto 证据）。 |
-| ~~#1392~~ **merged `ca000263`** | D（A5 传输后端） | A5 URMA backend 完整 submit/CQ/host-overlay 链路；当前仍 capability/workspace gated，且不是 Remote CommDomain/window bootstrap。 |
-| ~~**#1090**~~ **CLOSED-未合并** | **E（历史并行原型）** | `TASK_RUNNING` + register lane + L2 direct worker；只作设计审计，当前 B3 基线是 #1541/#1574。 |
-| #1137 | C.3 对照 | 把 a2a3 L2 tmr 的"逐 consumer RMW 通知"wiring 改成 polling readiness（中位 −16.9%）——理解 L2 自由调度的最新权威实现，是 C.3 要在 L3 简化掉那套的**对照基线**（非同层）。 |
+ | PR | 对齐 | 目标 |
+ | -- | ---- | ---- |
+ | ~~#1381~~ | **CLOSED — superseded by #1397** | 早期最小 eager patch（贡献者，`eager-l2-worker-init`）。目标已由 #1397（merged `483d97e3`，完整事务化递归版）完全覆盖且范围更广。**已于 2026-07-19 关闭**（附 superseded 说明 comment）。 |
+ | ~~#1003~~ **MERGED** | C.1（TASK 阶段，补 #1396） | 修 L3 chip child 发 TASK_DONE 前退出导致父进程无限轮询挂死。#1396 覆盖 init，#1003 覆盖 dispatch/TASK。 |
+ | ~~#866~~ **CLOSED-未合并** | A.1 / D.4 / D.5 | remote Worker(level=3) C++ 历史原型；设计骨架以 merged #1006–#1011 为准。 |
+ | ~~#711~~ **CLOSED-未合并** | A.1 / D.4 | L4→L3 + RXE 历史路线；不要派生第二套 remote stack。 |
+ | ~~**#803**~~ **CLOSED-未合并** | **D.1 / D.2 / D.3** | L3↔L2 host-device communication 历史原型；当前代码基线是 merged #1015/#1305/#1277。 |
+ | ~~**#861**~~ **CLOSED-未合并** | **D.3 底层原语 / B.kind3** | `HostDeviceMappedRegion` 历史设计；需求仍由当前 shared-memory 设计承接。 |
+ | ~~#755~~ **CLOSED-未合并** | D.1 / D.2 | MPMC 语义历史草案（docs-only，无 main 落地）。 |
+ | ~~#1345~~ **merged `ee40a7f0`** | C.3 相邻 | 最终 scope = barrier-free per-thread scheduler init（早期 "skip handshake barrier" draft 描述已过时）；不作 C.2/C.3 callable 统一基线。 |
+ | #1379 | D.2 / C | Pipelined orchestration：token N+1 编排与 token N 调度/执行重叠（per-token 背压式 L3↔L2 交互，含 Perfetto 证据）。 |
+ | ~~#1392~~ **merged `ca000263`** | D（A5 传输后端） | A5 URMA backend 完整 submit/CQ/host-overlay 链路；当前仍 capability/workspace gated，且不是 Remote CommDomain/window bootstrap。 |
+ | ~~**#1090**~~ **CLOSED-未合并** | **E（历史并行原型）** | `TASK_RUNNING` + register lane + L2 direct worker；只作设计审计，当前 B3 基线是 #1541/#1574。 |
+ | #1137 | C.3 对照 | 把 a2a3 L2 tmr 的"逐 consumer RMW 通知"wiring 改成 polling readiness（中位 −16.9%）——理解 L2 自由调度的最新权威实现，是 C.3 要在 L3 简化掉那套的**对照基线**（非同层）。 |
 
 > 注：**#1190（L3 post-fork host-buffer registration）实际 CLOSED-未合并**（早期方案，已被 merged #1256/#1390 取代），此前误列为 open，已从本表移除。
 
 ### C. Issue → 诉求映射（含已关闭的历史证据）
 
-| Issue | 对齐 | 诉求 |
-| ----- | ---- | ---- |
-| **#824** | D.1/D.5 + C.3 | 通信域跨 `Worker.run` 持久化；当前由 RunHandle-owned `_RunResources` 在 run finalization 中清理，仍不能跨 run 存活。 |
-| #984 | C.2/C.3 + D.2 | Streaming orchestrator：量化 per-task submit 热路径（去 TensorMap 把 lookup+dep+insert 从 23.4%→4.7%）——评估"tmr 能否精简"的量化基线。 |
-| ~~#1341~~ **CLOSED** | C.3 实证 | 单 AICPU 调度线程囤 running+pending 饿死 sibling——**直接佐证"L3 改成 submit 时用户指定 worker、不搞 L2 式自由调度"**（Issue 已 CLOSED，仅作论据）。 |
-| #1388 | C.3 张力 | TensorMap 扩为 READER/WRITER 追踪器自动推导 WAR——**方向与 C.3 相反**（L2 侧继续增强 auto-dep），需注意张力。 |
-| #545 | C.3/D.2 | tmr runtime 整体性能优化伞状追踪（orchestrator 专项已拆到 #984）。 |
-| ~~**#1105**~~ **CLOSED** | **C.3 / E（历史 HOL 证据）** | 旧 eligible-endpoint requeue 机制已由 #1436 删除；保留为 directed-scheduling 的历史动机。 |
-| #995 | 横切 | DFX 能力总览（Args Dump / L2 Swimlane / DepGen 等）——C/D 改造与 perf 分析的诊断底座。 |
+ | Issue | 对齐 | 诉求 |
+ | ----- | ---- | ---- |
+ | **#824** | D.1/D.5 + C.3 | 通信域跨 `Worker.run` 持久化；当前由 RunHandle-owned `_RunResources` 在 run finalization 中清理，仍不能跨 run 存活。 |
+ | #984 | C.2/C.3 + D.2 | Streaming orchestrator：量化 per-task submit 热路径（去 TensorMap 把 lookup+dep+insert 从 23.4%→4.7%）——评估"tmr 能否精简"的量化基线。 |
+ | ~~#1341~~ **CLOSED** | C.3 实证 | 单 AICPU 调度线程囤 running+pending 饿死 sibling——**直接佐证"L3 改成 submit 时用户指定 worker、不搞 L2 式自由调度"**（Issue 已 CLOSED，仅作论据）。 |
+ | #1388 | C.3 张力 | TensorMap 扩为 READER/WRITER 追踪器自动推导 WAR——**方向与 C.3 相反**（L2 侧继续增强 auto-dep），需注意张力。 |
+ | #545 | C.3/D.2 | tmr runtime 整体性能优化伞状追踪（orchestrator 专项已拆到 #984）。 |
+ | ~~**#1105**~~ **CLOSED** | **C.3 / E（历史 HOL 证据）** | 旧 eligible-endpoint requeue 机制已由 #1436 删除；保留为 directed-scheduling 的历史动机。 |
+ | #995 | 横切 | DFX 能力总览（Args Dump / L2 Swimlane / DepGen 等）——C/D 改造与 perf 分析的诊断底座。 |
 
 ### D. 已完成的去重 / 关闭结论
 
@@ -144,50 +144,50 @@
 
 ### F.1 当时的 24 个 OPEN PR
 
-| PR | draft | relevance | title / 归属 |
-| -- | ----- | --------- | ------------ |
-| #711（现 **CLOSED-未合并**） | | **direct** A.1/D.4 | Python distributed L4→L3 dispatch（含 RXE 数据面） |
-| #755（现 **CLOSED-未合并**） | | **direct** D.1/D.2/E | L3/L2 multichannel MPMC 设计（docs-only，无落地文件） |
-| #803（现 **CLOSED-未合并**） | | **direct** D.1/D.2/D.3 | L3/L2 host-device communication（C-ABI + a2a3 onboard） |
-| #861（现 **CLOSED-未合并**） | | **direct** D.3/B | L3/L2 host-device mapped region 设计 |
-| #866（现 **CLOSED-未合并**） | | **direct** A.1/D.4/D.5 | remote L3 worker（历史 head 为 C++ 实现） |
-| #906 | | adjacent perf | [WIP] A5 performance opt |
-| #986 | draft | unrelated | Paged Attention benchmark vs pypto |
-| #1003 | ✅ **MERGED** | **direct** C.1/E | Fix L3 worker child-exit hangs |
-| #1090（现 **CLOSED-未合并**） | | **direct** E | async chip callable register/run overlap（TASK_RUNNING + register lane） |
-| #1137 | | adjacent C.3 对照 | Replace wiring with polling readiness（L2 tmr，−16.9%） |
-| #1238 | draft | adjacent perf | 2O+2S Pipline |
-| #1243 | | adjacent perf | prefetch dispatch buffers + inline timestamp |
-| #1266 | draft | unrelated | pto-isa spmd_paged_attention_highperf |
-| #1309 | | unrelated | test: block_dim=0 auto |
-| #1345 | draft | adjacent C.3/E | Decouple Orchestrator from handshaking |
-| #1362 | | unrelated DFX | dfx: report drained slot count |
-| #1363 | | adjacent D.2 观测 | dfx: split async-wait scheduler phase |
-| #1377 | | unrelated DFX | deps_viewer creator edges |
-| #1379 | | **direct** D.2/E/C | pipelined orchestration across tokens/requests |
-| #1381 | | **direct** C.1 | start L2 worker hierarchy eagerly in Worker.init() |
-| #1382 | | unrelated DFX | l2-swimlane phase-record granularity |
-| #1384 | | unrelated DFX | deps_viewer scroll/zoom |
-| #1392 | ✅ **MERGED** | **direct** D.2/D backend | A5 URMA deferred completion backend（当前 capability/workspace gated） |
-| #1395 | | unrelated DFX | deps_viewer scroll/zoom（与 #1384 重复） |
+ | PR | draft | relevance | title / 归属 |
+ | -- | ----- | --------- | ------------ |
+ | #711（现 **CLOSED-未合并**） | | **direct** A.1/D.4 | Python distributed L4→L3 dispatch（含 RXE 数据面） |
+ | #755（现 **CLOSED-未合并**） | | **direct** D.1/D.2/E | L3/L2 multichannel MPMC 设计（docs-only，无落地文件） |
+ | #803（现 **CLOSED-未合并**） | | **direct** D.1/D.2/D.3 | L3/L2 host-device communication（C-ABI + a2a3 onboard） |
+ | #861（现 **CLOSED-未合并**） | | **direct** D.3/B | L3/L2 host-device mapped region 设计 |
+ | #866（现 **CLOSED-未合并**） | | **direct** A.1/D.4/D.5 | remote L3 worker（历史 head 为 C++ 实现） |
+ | #906 | | adjacent perf | [WIP] A5 performance opt |
+ | #986 | draft | unrelated | Paged Attention benchmark vs pypto |
+ | #1003 | ✅ **MERGED** | **direct** C.1/E | Fix L3 worker child-exit hangs |
+ | #1090（现 **CLOSED-未合并**） | | **direct** E | async chip callable register/run overlap（TASK_RUNNING + register lane） |
+ | #1137 | | adjacent C.3 对照 | Replace wiring with polling readiness（L2 tmr，−16.9%） |
+ | #1238 | draft | adjacent perf | 2O+2S Pipline |
+ | #1243 | | adjacent perf | prefetch dispatch buffers + inline timestamp |
+ | #1266 | draft | unrelated | pto-isa spmd_paged_attention_highperf |
+ | #1309 | | unrelated | test: block_dim=0 auto |
+ | #1345 | draft | adjacent C.3/E | Decouple Orchestrator from handshaking |
+ | #1362 | | unrelated DFX | dfx: report drained slot count |
+ | #1363 | | adjacent D.2 观测 | dfx: split async-wait scheduler phase |
+ | #1377 | | unrelated DFX | deps_viewer creator edges |
+ | #1379 | | **direct** D.2/E/C | pipelined orchestration across tokens/requests |
+ | #1381 | | **direct** C.1 | start L2 worker hierarchy eagerly in Worker.init() |
+ | #1382 | | unrelated DFX | l2-swimlane phase-record granularity |
+ | #1384 | | unrelated DFX | deps_viewer scroll/zoom |
+ | #1392 | ✅ **MERGED** | **direct** D.2/D backend | A5 URMA deferred completion backend（当前 capability/workspace gated） |
+ | #1395 | | unrelated DFX | deps_viewer scroll/zoom（与 #1384 重复） |
 
 ### F.2 当时的 16 个 OPEN Issue
 
-| Issue | relevance | title / 归属 |
-| ----- | --------- | ------------ |
-| #545 | adjacent C.3/D.2 | Runtime performance optimization tracking |
-| #824 | **direct** D.1/D.5/C.3 | Support persistent communication domains across Worker.run |
-| #905 | unrelated DFX | A5 onboard self-managed perfmon L0 swimlane |
-| #984 | **direct** C.2/C.3/D.2 | Streaming orchestrator design space |
-| #995 | 横切 | [Tracking] DFX capability overview & roadmap |
-| #1105（现 **CLOSED**） | **direct** C.3/E | Group eligible endpoint reuse can leave scheduler requeueing forever |
-| #1209 | unrelated bug | a5 ST CANN driver exit-time SIGSEGV |
-| #1299 | unrelated DFX bug | L2 swimlane dispatch anchor on Sched lanes |
-| #1315 | adjacent D.2(a5) | Require upgraded a5 environment supporting sdma |
-| #1341 | adjacent C.3（**设备侧类比**） | AICPU scheduler one thread hoards slots |
-| #1351 | adjacent D.2(a5) | Extend PTO-ISA version guard to a5 sdma overlay |
-| #1375 | adjacent C.3/dep | Split wait/retain dependency semantics |
-| #1376 | adjacent C.3/dep | Reduce redundant WAIT edges with reachability bitmap |
-| #1386 | unrelated DFX bug | Qwen serving L2 swimlane no merged JSON |
-| #1388 | adjacent C.3 张力 | Track reader accesses in TensorMap → WAR |
-| #1389 | unrelated bug | A5 inlined-kernel pl.read/write all-zero sparse_attn |
+ | Issue | relevance | title / 归属 |
+ | ----- | --------- | ------------ |
+ | #545 | adjacent C.3/D.2 | Runtime performance optimization tracking |
+ | #824 | **direct** D.1/D.5/C.3 | Support persistent communication domains across Worker.run |
+ | #905 | unrelated DFX | A5 onboard self-managed perfmon L0 swimlane |
+ | #984 | **direct** C.2/C.3/D.2 | Streaming orchestrator design space |
+ | #995 | 横切 | [Tracking] DFX capability overview & roadmap |
+ | #1105（现 **CLOSED**） | **direct** C.3/E | Group eligible endpoint reuse can leave scheduler requeueing forever |
+ | #1209 | unrelated bug | a5 ST CANN driver exit-time SIGSEGV |
+ | #1299 | unrelated DFX bug | L2 swimlane dispatch anchor on Sched lanes |
+ | #1315 | adjacent D.2(a5) | Require upgraded a5 environment supporting sdma |
+ | #1341 | adjacent C.3（**设备侧类比**） | AICPU scheduler one thread hoards slots |
+ | #1351 | adjacent D.2(a5) | Extend PTO-ISA version guard to a5 sdma overlay |
+ | #1375 | adjacent C.3/dep | Split wait/retain dependency semantics |
+ | #1376 | adjacent C.3/dep | Reduce redundant WAIT edges with reachability bitmap |
+ | #1386 | unrelated DFX bug | Qwen serving L2 swimlane no merged JSON |
+ | #1388 | adjacent C.3 张力 | Track reader accesses in TensorMap → WAR |
+ | #1389 | unrelated bug | A5 inlined-kernel pl.read/write all-zero sparse_attn |

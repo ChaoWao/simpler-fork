@@ -1,6 +1,6 @@
 # 访问、完成与资源退休契约
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 
 本文是 [分线契约 C/D](../track-boundaries.md) 的细化，规定各 consumer 的目标验收；**不是已实现声明**。实施状态和唯一归属见 [work-items](../work-items.md) §6。来源快照与取舍见 [跨方案评估](../review/2026-09-28-cross-plan-lessons.md)。
 
@@ -25,11 +25,11 @@
 
 ## 2. 完成事实与消费边
 
-| 事实 | 证明内容 | 允许的动作 |
-| ---- | -------- | ---------- |
-| `SourceReadDone` | 这一段不再读取源 | 解除这一段的源使用引用；其他使用仍须保留 |
-| `DestinationReady` | 目的完整且对实际消费者可见 | 放行依赖这份数据的消费；不是 consumer 已完成 |
-| `OperationQuiescent` | 所有已发起步骤均不再访问相关资源 | 允许失败清理或退休对应使用；不是数据成功 |
+ | 事实 | 证明内容 | 允许的动作 |
+ | ---- | -------- | ---------- |
+ | `SourceReadDone` | 这一段不再读取源 | 解除这一段的源使用引用；其他使用仍须保留 |
+ | `DestinationReady` | 目的完整且对实际消费者可见 | 放行依赖这份数据的消费；不是 consumer 已完成 |
+ | `OperationQuiescent` | 所有已发起步骤均不再访问相关资源 | 允许失败清理或退休对应使用；不是数据成功 |
 
 run 业务结果、执行域是否可继续接纳、资源是否已静止分别记录。异常、取消请求、超时、send 返回、event 被触发，都不能单独推导上述所有事实。逻辑事实可由同一后端证明同时满足，不要求三个物理 event。
 
@@ -66,13 +66,13 @@ allocation owner 与 use/grant 持有者分开。外部借用不转移物理 all
 
 RA-16 按实际 owner、预算域、写入时刻和最后使用者管理内部 workspace。评审至少覆盖以下资源：
 
-| 资源 | 最后使用者要求 |
-| ---- | -------------- |
-| 调用描述/值快照、frame 数据 | 覆盖最后读取该字段的准备或设备步骤；不能与同 frame 的状态字段混为一个寿命 |
-| upload 源与 staging | 保留到 DMA 不再读取；host API 返回不自动授予覆盖权 |
-| 执行 scratch、控制/结果记录 | 按 kernel、copyback、finalizer 或 collector 的实际最后读取退休 |
-| 旧版本、graph 保留块 | 覆盖图存活与在飞 replay；一次 eager stream 完成不释放图引用 |
-| release-unconfirmed/quarantined 块 | 持续计费并拒绝复用，直到取得所需的释放/静止证明 |
+ | 资源 | 最后使用者要求 |
+ | ---- | -------------- |
+ | 调用描述/值快照、frame 数据 | 覆盖最后读取该字段的准备或设备步骤；不能与同 frame 的状态字段混为一个寿命 |
+ | upload 源与 staging | 保留到 DMA 不再读取；host API 返回不自动授予覆盖权 |
+ | 执行 scratch、控制/结果记录 | 按 kernel、copyback、finalizer 或 collector 的实际最后读取退休 |
+ | 旧版本、graph 保留块 | 覆盖图存活与在飞 replay；一次 eager stream 完成不释放图引用 |
+ | release-unconfirmed/quarantined 块 | 持续计费并拒绝复用，直到取得所需的释放/静止证明 |
 
 实际占用包括活跃块、必要旧版本、保留块和对齐开销。HOST/pinned、DEVICE、代码/配置常量及 provider 自有资源按各自合同核算；不能漏账、重复计算共享 backing，或通过统一预算强迫所有资源进入同一物理池。
 
@@ -86,13 +86,13 @@ Capture 要求被捕获的操作及等待边能由 device replay 完成。普通
 
 每条访问路径交付时必须同时证明正常回收与失败保留，不能等 U4 再补安全。验收使用真实 producer/consumer 入口；fake 复用同一协议合同，但不得直接手填期望的产物字段冒充生产链路。
 
-| 归属/交接 | 必测反例 | 配对阳性对照 |
-| --------- | -------- | ------------ |
-| RA-3/RA-13；DS-3 | 后一个参数无效，前一个参数不得先复制；预检后源关闭；源 identity 被目标接入重新创建 | 合法整组绑定，授权范围内 submit，跨 Worker 保持 identity |
-| DS-3 → RA-15/RA-16 | send 返回但 receiver 未 commit；H2D 仍读中间块；第二段失败；旧完成记录晚到 | 对应 ready 后消费、最后读取后回收；同 backing 连续两次 copy 正确 |
-| EX-7 → RA-16 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
-| RA-13 → RA-15 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
-| RA-15/RA-12；DS-4 | 独立 grant 仍有效、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个 grant 不伤及另一个 |
-| RA-16；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
+ | 归属/交接 | 必测反例 | 配对阳性对照 |
+ | --------- | -------- | ------------ |
+ | RA-3/RA-13；DS-3 | 后一个参数无效，前一个参数不得先复制；预检后源关闭；源 identity 被目标接入重新创建 | 合法整组绑定，授权范围内 submit，跨 Worker 保持 identity |
+ | DS-3 → RA-15/RA-16 | send 返回但 receiver 未 commit；H2D 仍读中间块；第二段失败；旧完成记录晚到 | 对应 ready 后消费、最后读取后回收；同 backing 连续两次 copy 正确 |
+ | EX-7 → RA-16 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
+ | RA-13 → RA-15 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
+ | RA-15/RA-12；DS-4 | 独立 grant 仍有效、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个 grant 不伤及另一个 |
+ | RA-16；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
 
 CPU fake 证明协议、引用与拒绝路径；device cache visibility 必须有相应硬件证据。模拟器的外部地址与 onboard native allocator 登记内地址分别标明，不能互相代替证明。DFX 若承诺 run 返回时产物完整，异步收集必须保持该合同或明确交付新的 flush 边界；DFX 实现仍按 work-items §7 归属。

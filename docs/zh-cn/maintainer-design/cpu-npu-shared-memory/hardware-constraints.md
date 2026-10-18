@@ -1,6 +1,6 @@
 # CPU↔NPU 共享内存：硬件与平台约束（参考）
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：📋 **约束参考**（本设计的地基）。这是
 > [cpu-npu-shared-memory.md](../cpu-npu-shared-memory.md) 的 §1 展开。
@@ -15,12 +15,12 @@
 
 CUDA UVM 是四个能力的合集；本平台只提供其中第一项，且**不是契约**：
 
-| UVM 能力 | `halHostRegister(DEV_SVM_MAP_HOST)` |
-| -------- | ----------------------------------- |
-| ① 同一 VA 两侧可解引用 | 🟡 **实测 identity，但 HAL 契约不保证** |
-| ② 自动页迁移（谁访问搬给谁） | ❌ 数据**永远留在 HBM**，host 每次访问走 PCIe |
-| ③ 硬件/运行时管理的一致性 | ❌ 必须手工 cache maintenance + 顺序原语（§3） |
-| ④ 超额分配 / 换页 | ❌ 物理钉死，不够即硬失败（§4） |
+ | UVM 能力 | `halHostRegister(DEV_SVM_MAP_HOST)` |
+ | -------- | ----------------------------------- |
+ | ① 同一 VA 两侧可解引用 | 🟡 **实测 identity，但 HAL 契约不保证** |
+ | ② 自动页迁移（谁访问搬给谁） | ❌ 数据**永远留在 HBM**，host 每次访问走 PCIe |
+ | ③ 硬件/运行时管理的一致性 | ❌ 必须手工 cache maintenance + 顺序原语（§3） |
+ | ④ 超额分配 / 换页 | ❌ 物理钉死，不够即硬失败（§4） |
 
 ✅ 依据：
 `src/a2a3/platform/onboard/host/device_runner.cpp::DeviceRunner::register_device_memory_to_host`
@@ -69,13 +69,13 @@ CUDA UVM 是四个能力的合集；本平台只提供其中第一项，且**不
 因此下述仓库内的 "a5 没有 halHostRegister" 断言**待 W0 结论后再处置**（若 W0 通过，
 它们即为过时结论）：
 
-| 过时断言位置 | 内容 |
-| ------------ | ---- |
-| `src/a5/platform/include/common/kernel_args.h::KernelArgs::scope_stats_data_base` | "a5 has no halHostRegister — host keeps a separate shadow and refreshes it via `rtMemcpy DEVICE_TO_HOST`" |
-| `src/a5/platform/onboard/host/device_runner.cpp::DeviceRunner::init_scope_stats` / `init_dep_gen` | "No halHostRegister on a5" |
-| `src/a5/platform/include/common/pmu_profiling.h` 的 streaming-buffer design 注释 | "a5 has no halHostRegister (DAV_3510)" |
-| `src/common/platform/onboard/host/device_runner_base.h::DeviceRunnerBase::register_device_memory_to_host` | "a5 onboard has no host-map path" |
-| `src/common/platform/include/host/profiler_base.h` 的 `SVM vs host-shadow paths`、`ProfilerBase::release_one_buffer` / `alloc_paired_buffer` | 收集器按"非 SVM 平台"分支 |
+ | 过时断言位置 | 内容 |
+ | ------------ | ---- |
+ | `src/a5/platform/include/common/kernel_args.h::KernelArgs::scope_stats_data_base` | "a5 has no halHostRegister — host keeps a separate shadow and refreshes it via `rtMemcpy DEVICE_TO_HOST`" |
+ | `src/a5/platform/onboard/host/device_runner.cpp::DeviceRunner::init_scope_stats` / `init_dep_gen` | "No halHostRegister on a5" |
+ | `src/a5/platform/include/common/pmu_profiling.h` 的 streaming-buffer design 注释 | "a5 has no halHostRegister (DAV_3510)" |
+ | `src/common/platform/onboard/host/device_runner_base.h::DeviceRunnerBase::register_device_memory_to_host` | "a5 onboard has no host-map path" |
+ | `src/common/platform/include/host/profiler_base.h` 的 `SVM vs host-shadow paths`、`ProfilerBase::release_one_buffer` / `alloc_paired_buffer` | 收集器按"非 SVM 平台"分支 |
 
 ✅ **关键有利事实**：a2a3 侧的 `halHostRegister` 是通过
 **`dlopen("ascend_hal")` + `dlsym`** 动态取得的
@@ -109,11 +109,11 @@ CUDA UVM 是四个能力的合集；本平台只提供其中第一项，且**不
 
 ### 2.2 其它三条能力状态同样应下调
 
-| 说法 | 更正 | 依据 |
-| ---- | ---- | ---- |
-| "a2a3 SDMA 已启用" | ❌ **是 opt-in**：`Worker(..., enable_sdma: bool = False)`，默认关；`Worker._init_level2` / `_start_hierarchical` 从 `_config.get("enable_sdma", False)` 传入。⚠️ **仅限 a2a3** —— a5 自 #1615（`63f47a11`）起 **default-on** | `python/simpler/worker.py::Worker.__init__` / `_init_level2` / `_start_hierarchical` |
-| "a5 URMA 可用" | 🟡 **代码在，但被编译期 capability gate 挡住**：`option(SIMPLER_ENABLE_PTO_URMA_WORKSPACE ... OFF)`，`comm_hccl.cpp` 里是 `#ifdef` 分支；且与 `SIMPLER_ENABLE_PTO_SDMA_WORKSPACE` **互斥**。⚠️ #1615 后 **SDMA 侧成了默认那一支**，URMA 是须显式选的备选 | `src/a5/platform/onboard/host/CMakeLists.txt` 中两个同名 option 及互斥 guard |
-| "数据 window 仅 VMM" | ❌ **漏了 A3 Fabric V2**：a2a3 的 per-rank symmetric window pool 在 A3 上走 **Fabric handles**（`create_local_fabric_window` / `export_fabric_window` / `ACL_MEM_SHARE_HANDLE_TYPE_FABRIC`），ACL VMM 是无 Fabric 支持的平台的回退 | `src/a2a3/platform/onboard/host/comm_hccl.cpp::create_local_fabric_window` / `export_fabric_window` |
+ | 说法 | 更正 | 依据 |
+ | ---- | ---- | ---- |
+ | "a2a3 SDMA 已启用" | ❌ **是 opt-in**：`Worker(..., enable_sdma: bool = False)`，默认关；`Worker._init_level2` / `_start_hierarchical` 从 `_config.get("enable_sdma", False)` 传入。⚠️ **仅限 a2a3** —— a5 自 #1615（`63f47a11`）起 **default-on** | `python/simpler/worker.py::Worker.__init__` / `_init_level2` / `_start_hierarchical` |
+ | "a5 URMA 可用" | 🟡 **代码在，但被编译期 capability gate 挡住**：`option(SIMPLER_ENABLE_PTO_URMA_WORKSPACE ... OFF)`，`comm_hccl.cpp` 里是 `#ifdef` 分支；且与 `SIMPLER_ENABLE_PTO_SDMA_WORKSPACE` **互斥**。⚠️ #1615 后 **SDMA 侧成了默认那一支**，URMA 是须显式选的备选 | `src/a5/platform/onboard/host/CMakeLists.txt` 中两个同名 option 及互斥 guard |
+ | "数据 window 仅 VMM" | ❌ **漏了 A3 Fabric V2**：a2a3 的 per-rank symmetric window pool 在 A3 上走 **Fabric handles**（`create_local_fabric_window` / `export_fabric_window` / `ACL_MEM_SHARE_HANDLE_TYPE_FABRIC`），ACL VMM 是无 Fabric 支持的平台的回退 | `src/a2a3/platform/onboard/host/comm_hccl.cpp::create_local_fabric_window` / `export_fabric_window` |
 
 > ### ⚠️ SDMA：两个 open 项方向相反（2026-08-03 记录）
 >
@@ -131,7 +131,7 @@ CUDA UVM 是四个能力的合集；本平台只提供其中第一项，且**不
 > 的 async-DMA workspace 行已同步，`docs/a5-sdma-overlay.md` 已删除。
 >
 > ⚠️ **「默认开之前至少要证明 a5 没有同样的退化」这条前置未见兑现** ——
-> #1615 的验证只有 `test_runtime_builder.py`（45 passed）＋ pre-commit，**没有
+> \#1615 的验证只有 `test_runtime_builder.py`（45 passed）＋ pre-commit，**没有
 > a5 上的 AICore 故障恢复计时**。#1425 的修法在 **#1664**（`Fixes #1425`，仍 open）：
 > fatal 时发布 device-poison、放弃 device-backed handle，a2a3 SDMA fatal 路径等
 > `max(10 s, op-execute timeout + 5 s)` 再 reset —— 作者明写这是 CANN 9.0.0 +

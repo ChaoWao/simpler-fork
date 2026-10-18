@@ -1,9 +1,9 @@
 # simpler Worker 内存模型（目标设计）
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > 本文规定内存模型契约，实施状态只见 [work-items.md](work-items.md)。
-> 核验基线：`upstream/main@8aae172e5`。Buffer/Tensor wire 与 canonical identity 已在 main，
+> 核验基线：`upstream/main@937c57efc`。Buffer/Tensor wire 与 canonical identity 已在 main，
 > 公共入口包含 `Worker.create_buffer`、`Tensor(buffer, shapes=...)` 与 `Buffer.tensor` 兼容转发；不能再用「裸指针＋bool」概括当前实现。
 > 调用策略按 #2460 收敛到 TaskArgs 条目；设计布局的历史证据不代表所有 backend 已验收。
 > 关系：本文是 [l3l4.md](l3l4.md)
@@ -38,8 +38,7 @@
    `BufferHandle` 是 owner-side 生命周期对象；跨进程/跨机传的是
    `Tensor` 内嵌的 descriptor 值拷贝。每个 endpoint 用 descriptor 里的
    `backend_kind` + body 在自己地址空间物化。**不携带版本号**（§3）。
-4. **能力门控，不静默降级。** 不支持的 address_space × backend 组合（如 A2/A3
-   上跨机 device 直访）在 dispatch 前**显式失败**，不悄悄回退到 host staging。
+4. **能力门控，不静默降级。** 不支持的 address_space × backend × topology 组合在 dispatch 前**显式失败**，不悄悄回退到 host staging。
 
 ### 1.1 词汇表 —— **五个概念,不多不少**
 
@@ -51,19 +50,19 @@
 >
 > ⚠️ **订正（2026-08-04，`~~LocalTensor~~` 废弃）**：本节此前把「某端点物化出的
 > 本地地址描述」命名为 `LocalTensor`。**该名字作废** —— 它与
-> [`../.claude/rules/codestyle.md`](https://github.com/hw-native-sys/simpler/blob/11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b/.claude/rules/codestyle.md) **规则 13**
+> [`../.claude/rules/codestyle.md`](https://github.com/hw-native-sys/simpler/blob/937c57efc71ad01a01c3a72072df075d2a5dd24f/.claude/rules/codestyle.md) **规则 13**
 > 及作者的 [`feature_roadmap.md`](feature_roadmap.md) 词汇表直接冲突，后者明写
 > `ChipTensor`「**也不创造 `L2Tensor`/`LocalTensor` 同义词**」。
 > 更根本的是**它违反本节自己的 1:1 判据**：物化形态**没有一个统一的第五类**，
 > 每个 endpoint context 各有其名（下表），`LocalTensor` 只是一把不该存在的伞。
 
-| 名字 | 是什么 | torch 有吗 |
-| ---- | ------ | ---------- |
-| **`Buffer`** | 一块有身份、有 owner、有 lifecycle 的内存 | ✅ `Storage` |
-| **`Tensor`** | `Buffer` 上的视图（`+byte_offset/shape/stride/dtype`），跨 edge 走线，**不含地址** | ✅ `Tensor` |
-| **`CanonicalBufferIdentity`**；（wire 类型名 `CanonicalIdentity`） | 跨进程稳定的身份 | ❌ |
-| **`Attachment`** | `(endpoint, Buffer)` 的访问关系 + capability。**不在 public surface**（§5.7 决策 C）——有域时经 `AttachmentPlan` 批量声明，worker 树上由**传播本身**建立 | ❌ |
-| **物化形态**（**不是单一类型**） | 由消费 endpoint 的 context 命名：Chip → **`ChipTensor`**（带 GM 地址的 POD）· Python SUB → **`MappedArg`** · L4→L3 纯转发 → **不物化** | ❌ |
+ | 名字 | 是什么 | torch 有吗 |
+ | ---- | ------ | ---------- |
+ | **`Buffer`** | 一块有身份、有 owner、有 lifecycle 的内存 | ✅ `Storage` |
+ | **`Tensor`** | `Buffer` 上的视图（`+byte_offset/shape/stride/dtype`），跨 edge 走线，**不含地址** | ✅ `Tensor` |
+ | **`CanonicalBufferIdentity`**；（wire 类型名 `CanonicalIdentity`） | 跨进程稳定的身份 | ❌ |
+ | **`Attachment`** | `(endpoint, Buffer)` 的访问关系 + capability。**不在 public surface**（§5.7 决策 C）——有域时经 `AttachmentPlan` 批量声明，worker 树上由**传播本身**建立 | ❌ |
+ | **物化形态**（**不是单一类型**） | 由消费 endpoint 的 context 命名：Chip → **`ChipTensor`**（带 GM 地址的 POD）· Python SUB → **`MappedArg`** · L4→L3 纯转发 → **不物化** | ❌ |
 
 **最小性证明**：后三个概念**全部且仅仅来自「跨进程」这一件事** ——
 
@@ -77,16 +76,16 @@
 
 #### 判据：只有基数不是 1:1，才配拥有独立名字
 
-| 关系 | 基数 | 判定 |
-| ---- | ---- | ---- |
-| `Buffer` → `Tensor` | **1 : N** | ✅ 一块内存，多个视图 |
-| `Tensor` → 物化形态 | **1 : N** | ✅ 一个视图，每个消费端点物化一份 —— **但每份按 context 命名**（`ChipTensor` / `MappedArg`），**不是一个叫 `LocalTensor` 的通用类型** |
-| `Buffer` → `Attachment` | **1 : N** | ✅ 一块内存，每个端点一种访问关系 |
-| `Buffer` ↔ `BufferHandle` | 1 : 1 | ❌ 同一物；`BufferHandle` 仅在讨论「谁持有资源」时出现 |
-| `Tensor` ↔ ~~`BufferRef`~~ / ~~`TensorView`~~ | 1 : 1 | ❌ **已废弃** |
-| `Buffer` ↔ ~~`Backing`~~ / ~~`MemoryResource`~~ | 1 : 1 | ❌ **已废弃** |
-| `ChipTensor` ↔ ~~`LocalTensor`~~ / ~~`L2Tensor`~~ | 1 : 1 | ❌ **已废弃（2026-08-04）** —— 同义词，见本节开头的订正 |
-| `CanonicalBufferIdentity` ↔ `CanonicalIdentity` | 1 : 1 | ⚠️ **显式配对的例外**——概念名／wire 类型名，须成对出现，见[总纲 §1](logical-physical-separation.md) |
+ | 关系 | 基数 | 判定 |
+ | ---- | ---- | ---- |
+ | `Buffer` → `Tensor` | **1 : N** | ✅ 一块内存，多个视图 |
+ | `Tensor` → 物化形态 | **1 : N** | ✅ 一个视图，每个消费端点物化一份 —— **但每份按 context 命名**（`ChipTensor` / `MappedArg`），**不是一个叫 `LocalTensor` 的通用类型** |
+ | `Buffer` → `Attachment` | **1 : N** | ✅ 一块内存，每个端点一种访问关系 |
+ | `Buffer` ↔ `BufferHandle` | 1 : 1 | ❌ 同一物；`BufferHandle` 仅在讨论「谁持有资源」时出现 |
+ | `Tensor` ↔ ~~`BufferRef`~~ / ~~`TensorView`~~ | 1 : 1 | ❌ **已废弃** |
+ | `Buffer` ↔ ~~`Backing`~~ / ~~`MemoryResource`~~ | 1 : 1 | ❌ **已废弃** |
+ | `ChipTensor` ↔ ~~`LocalTensor`~~ / ~~`L2Tensor`~~ | 1 : 1 | ❌ **已废弃（2026-08-04）** —— 同义词，见本节开头的订正 |
+ | `CanonicalBufferIdentity` ↔ `CanonicalIdentity` | 1 : 1 | ⚠️ **显式配对的例外**——概念名／wire 类型名，须成对出现，见[总纲 §1](logical-physical-separation.md) |
 
 > ##### 新增类型名之前先问：它与最近的已有概念是不是 1:1
 >
@@ -103,13 +102,13 @@
 #### ⚠️ 连带强制：设备侧 POD 必须让名
 
 `Tensor` 这个名字曾被**设备侧 POD**（`tensor.h`）占着。按
-[`codestyle.md`](https://github.com/hw-native-sys/simpler/blob/11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b/.claude/rules/codestyle.md) 规则 13 的三 context 命名：
+[`codestyle.md`](https://github.com/hw-native-sys/simpler/blob/937c57efc71ad01a01c3a72072df075d2a5dd24f/.claude/rules/codestyle.md) 规则 13 的三 context 命名：
 
-| context | 名字 |
-| ------- | ---- |
-| L3+ 递归调度：`Buffer` 上的视图，跨 edge 走线 | **`Tensor`**（无前缀） |
-| L2 chip runtime：物化出 GM 地址的 POD，不跨 edge | **`ChipTensor`** |
-| L0 core：消费上面那个 `ChipTensor` | **不新建 `CoreTensor`** |
+ | context | 名字 |
+ | ------- | ---- |
+ | L3+ 递归调度：`Buffer` 上的视图，跨 edge 走线 | **`Tensor`**（无前缀） |
+ | L2 chip runtime：物化出 GM 地址的 POD，不跨 edge | **`ChipTensor`** |
+ | L0 core：消费上面那个 `ChipTensor` | **不新建 `CoreTensor`** |
 
 这是**公开 Python 名的破坏性改名**，迁移说明必须显式列出受影响面
 （`isinstance`、类型标注、`from _task_interface import Tensor`）。
@@ -128,19 +127,19 @@
 > 现在 `buffer.h` 的线上视图叫 `Tensor`、`tensor.h` 的设备 POD 叫 `ChipTensor`，
 > **名字本身就是区分**，引用不再需要层次限定。
 >
-> #1681 同时把数字层级标识符整体迁走（`L3L2Queue*` → `WorkerChipQueue*`、
+> \#1681 同时把数字层级标识符整体迁走（`L3L2Queue*` → `WorkerChipQueue*`、
 > `L3L2Region*` → `WorkerChipRegion*`、`L3HostMappedRegion*` →
 > `WorkerHostMappedRegion*` 等），**无兼容别名**，wire 值不变。
 > 设备日志文本与架构叙述保留 `L3-L2` 拼写 —— 规则 13 允许拓扑描述用数字层级。
 
 ## 2. 四类内存 = edge-scoped 角色
 
-| Kind | 含义 | 目标表示 | 分配入口 |
-| ---- | ---- | -------- | -------- |
-| **1** | 本次 run 借用的参数 | `Tensor` | 从上级 kind3/kind4 handle 构造 ref，再传入 `submit(...args)` |
-| **2** | 当前 Worker local | `LocalBuffer`（local-only；**由 Worker 侧登记，不是 handle 字段**） | 普通 host/torch tensor，显式 local-only 标记 |
-| **3** | 与选中下级 shared | `SharedBuffer` | `Worker.create_buffer` / `alloc_shared_tensor` |
-| **4** | 某个下级私有（child-device） | `ChildBuffer` | `Worker.alloc_child_tensor` + `copy_to`/`copy_from` |
+ | Kind | 含义 | 目标表示 | 分配入口 |
+ | ---- | ---- | -------- | -------- |
+ | **1** | 本次 run 借用的参数 | `Tensor` | 从上级 kind3/kind4 handle 构造 ref，再传入 `submit(...args)` |
+ | **2** | 当前 Worker local | `LocalBuffer`（local-only；**由 Worker 侧登记，不是 handle 字段**） | 普通 host/torch tensor，显式 local-only 标记 |
+ | **3** | 与选中下级 shared | `SharedBuffer` | `Worker.create_buffer` / `alloc_shared_tensor` |
+ | **4** | 某个下级私有（child-device） | `ChildBuffer` | `Worker.alloc_child_tensor` + `copy_to`/`copy_from` |
 
 **递归规则（edge-scoped，模型核心）**：
 
@@ -176,15 +175,15 @@ import 时由归属身份 + endpoint/session registry 推导。对齐 feature_ro
 
 ### 3.2 typed descriptor + owner handle 治好的当前缺陷（动机记录，非字段表）
 
-| 当前缺陷（`file:line` = 现状） | typed handle 如何解 |
-| ------------------------------ | ------------------- |
-| kind1 不校验来源 | 稳定 `buffer_id` + canonical identity 可按 id 验证 |
-| fork 后未注册指针在 child 不可见；slot 复用（ABA） | `generation` 失配即拒 |
-| `_rewrite_blob_host_addrs` 曾按数值区间猜、会误改 device VA（#1397 的 `child_memory` skip 是 band-aid） | typed `address_space` 是正解 |
-| `child_memory` 只 1 bit、无 owner（`tensor.h:107`，byte 43）→ device 地址可送错 worker | 归属身份（**guard ②：✅ #1430 `c8c7b735`**，§9）；worker path 跨 epoch 复用 ⇒ 必须带 `owner_instance_id` |
-| 裸指针无 size | `nbytes` |
-| `TensorArgType`（依赖/权限）与 `ArgDirection`（H2D/D2H）语义二元 | `access` 收敛 |
-| 每 backend 物化方式靠约定 | `backend_kind` + 自描述 body |
+ | 当前缺陷（`file:line` = 现状） | typed handle 如何解 |
+ | ------------------------------ | ------------------- |
+ | kind1 不校验来源 | 稳定 `buffer_id` + canonical identity 可按 id 验证 |
+ | fork 后未注册指针在 child 不可见；slot 复用（ABA） | `generation` 失配即拒 |
+ | `_rewrite_blob_host_addrs` 曾按数值区间猜、会误改 device VA（#1397 的 `child_memory` skip 是 band-aid） | typed `address_space` 是正解 |
+ | `child_memory` 只 1 bit、无 owner（`tensor.h:107`，byte 43）→ device 地址可送错 worker | 归属身份（**guard ②：✅ #1430 `c8c7b735`**，§9）；worker path 跨 epoch 复用 ⇒ 必须带 `owner_instance_id` |
+ | 裸指针无 size | `nbytes` |
+ | `TensorArgType`（依赖/权限）与 `ArgDirection`（H2D/D2H）语义二元 | `access` 收敛 |
+ | 每 backend 物化方式靠约定 | `backend_kind` + 自描述 body |
 
 > **两处曾经列出、后被权威文档删除的字段，及其理由**（记录于此以免有人再加回来）：
 > · **`abi_version`** —— 偏斜检测由**构建版本一致性检查**承担（同一棵树编译出的
@@ -223,11 +222,11 @@ capability validation 门控。
 
 ## 9. 落地节奏
 
-| 步 | 内容 | 何时 |
-| -- | ---- | ---- |
-| guard ① | `_rewrite_blob_host_addrs` 排除 `child_memory`/device VA（数值撞 host range 也不改写） | **✅ 已交付（#1397，`worker.py:470` via `TENSOR_CHILD_MEMORY_OFFSET`）** |
-| guard ② | 拒绝**歧义/错-worker** child_memory 下发（解析后**唯一** eligible target 放行；**零/多/wrong-worker/stale-before-reuse 才拒**，严格 ABA 留 P1）+ typed `(worker_id,ptr)` provenance | **✅ 已交付（#1430 `c8c7b735`）**——旧 ABI 上独立补；`free`/`release_domain` 均 revoke-before-native-free |
-| **P1** | 上面整个 owner `BufferHandle` 生命周期 + `BufferDescriptor`/`Tensor` 字段 ABI（含 `owner_instance_id`、`generation`、显式 strides；**无版本号**）分步落地；远程字段在 local backend 保持 inert | **schema/owner-identity 可并行设计；wire flip + `release_buffer`/`close` 集成以 P0.2 follow-up 为 merge gate** |
+ | 步 | 内容 | 何时 |
+ | -- | ---- | ---- |
+ | guard ① | `_rewrite_blob_host_addrs` 排除 `child_memory`/device VA（数值撞 host range 也不改写） | **✅ 已交付（#1397，`worker.py:470` via `TENSOR_CHILD_MEMORY_OFFSET`）** |
+ | guard ② | 拒绝**歧义/错-worker** child_memory 下发（解析后**唯一** eligible target 放行；**零/多/wrong-worker/stale-before-reuse 才拒**，严格 ABA 留 P1）+ typed `(worker_id,ptr)` provenance | **✅ 已交付（#1430 `c8c7b735`）**——旧 ABI 上独立补；`free`/`release_domain` 均 revoke-before-native-free |
+ | **P1** | 上面整个 owner `BufferHandle` 生命周期 + `BufferDescriptor`/`Tensor` 字段 ABI（含 `owner_instance_id`、`generation`、显式 strides；**无版本号**）分步落地；远程字段在 local backend 保持 inert | **schema/owner-identity 可并行设计；wire flip + `release_buffer`/`close` 集成以 P0.2 follow-up 为 merge gate** |
 
 wire 变更清单（P1 必经）：`tensor.h`（offset 43 的 `child_memory` 字段）、
 `python/bindings/task_interface.cpp`、`runtime_maker.cpp`、`remote_wire.h/.cpp`

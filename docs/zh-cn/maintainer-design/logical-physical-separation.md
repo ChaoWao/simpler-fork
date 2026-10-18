@@ -1,6 +1,6 @@
 # 总纲：逻辑组件 ⊥ 物理资源
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > **状态**：📐 **设计原理**（非某个特性的设计文档）。它统摄 worker 模型、通信域、
 > 内存模型三块 —— 这三块现在分散在不同文档里各说各的，本文给它们一个共同的判据。
@@ -43,15 +43,15 @@ DomainRegionSet = ResourceBundle 中按 owner 组织的 Buffer-backed entry 子�
 
 ## 2. 我们此前每一条发现，都是它的实例
 
-| 发现 | 在本原理下是什么 |
-| ---- | ---------------- |
-| **worker 的 level 是逻辑概念** | Worker 是逻辑组件；level 是编排树位置，**与部署正交** |
-| **potential / actual capability 分层** | 就是那条**绑定规则**本身（规范形式 = `AttachmentPlan`）；互连矩阵只覆盖 potential 的必要门槛 |
-| **`Buffer` vs `Tensor`** | `Buffer`/backing = 物理 allocation；`Tensor` = 逻辑视图（**`BufferRef` / `TensorView` 两名已废弃，统一为 `Tensor`**）。owner-side `BufferHandle` 只管理生命周期；一个 Buffer 可被多个 `Tensor` 引用 |
-| **不含 level 的互连矩阵** | 绑定规则的**查找表** |
-| **`ResourceBundle`** | **一个逻辑域组合多种异构资源**；`DomainRegionSet` 只收纳其中按 owner 组织的 Buffer-backed entries，communicator/adapter state 仍属于 bundle |
-| **`halHostRegister` 不支持 VMM VA** | **物理资源有固有能力边界** —— 逻辑层不能许诺硬件给不了的 |
-| **CPU 不能当 HCCL rank** | CPU 是**访问视图**，不是额外 rank |
+ | 发现 | 在本原理下是什么 |
+ | ---- | ---------------- |
+ | **worker 的 level 是逻辑概念** | Worker 是逻辑组件；level 是编排树位置，**与部署正交** |
+ | **potential / actual capability 分层** | 就是那条**绑定规则**本身（规范形式 = `AttachmentPlan`）；互连矩阵只覆盖 potential 的必要门槛 |
+ | **`Buffer` vs `Tensor`** | `Buffer`/backing = 物理 allocation；`Tensor` = 逻辑视图（**`BufferRef` / `TensorView` 两名已废弃，统一为 `Tensor`**）。owner-side `BufferHandle` 只管理生命周期；一个 Buffer 可被多个 `Tensor` 引用 |
+ | **不含 level 的互连矩阵** | 绑定规则的**查找表** |
+ | **`ResourceBundle`** | **一个逻辑域组合多种异构资源**；`DomainRegionSet` 只收纳其中按 owner 组织的 Buffer-backed entries，communicator/adapter state 仍属于 bundle |
+ | **`halHostRegister` 不支持 VMM VA** | **物理资源有固有能力边界** —— 逻辑层不能许诺硬件给不了的 |
+ | **CPU 不能当 HCCL rank** | CPU 是**访问视图**，不是额外 rank |
 
 ## 3. 检验标准（最有用的部分）
 
@@ -59,44 +59,44 @@ DomainRegionSet = ResourceBundle 中按 owner 组织的 Buffer-backed entry 子�
 
 回头看，我们抓到的每个问题都能用这一句解释：
 
-| 问题 | 焊死了什么 |
-| ---- | ---------- |
-| `create_worker_chip_region` / `create_worker_chip_queue` | **层级（逻辑）** 焊进了 **传输（物理）** |
-| `worker.py` 的 `level == 2 ⇒ ChipWorker ⇒ NPU` | **编排位置（逻辑）** 焊进了 **部署（物理）** |
-| 「一块内存同时 VMM-import + host-register」 | **逻辑域** 许诺了 **物理资源**给不了的能力 |
-| `FORK_SHM` 一个标签两种写语义 | **两种物理资源**（`MAP_SHARED` / COW）焊进了 **一个逻辑分类** |
-| 依赖键用 `Tensor.data`（物化地址） | **物理地址** 冒充了 **逻辑身份** |
+ | 问题 | 焊死了什么 |
+ | ---- | ---------- |
+ | `create_worker_chip_region` / `create_worker_chip_queue` | **层级（逻辑）** 焊进了 **传输（物理）** |
+ | `worker.py` 的 `level == 2 ⇒ ChipWorker ⇒ NPU` | **编排位置（逻辑）** 焊进了 **部署（物理）** |
+ | 「一块内存同时 VMM-import + host-register」 | **逻辑域** 许诺了 **物理资源**给不了的能力 |
+ | `FORK_SHM` 一个标签两种写语义 | **两种物理资源**（`MAP_SHARED` / COW）焊进了 **一个逻辑分类** |
+ | 依赖键用 `Tensor.data`（物化地址） | **物理地址** 冒充了 **逻辑身份** |
 
 **用法**：评审任何新 API 时问一句 —— *它的参数里，哪些是逻辑的、哪些是物理的？
 两者是不是被一个名字/一个枚举绑死了？*
 
 ## 4. 三处应用
 
-| 领域 | 逻辑组件 | 物理资源 | 绑定判据 | 文档 |
-| ---- | -------- | -------- | -------- | ---- |
-| **Worker 模型** | Worker（level=编排树位置） | CPU 进程 / NPU chip | 部署 | [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) §2 |
-| **通信域** | 域成员（`EndpointId`） | `ResourceBundle` 中的 Buffer、communicator、adapter state 与相关互连；`DomainRegionSet` 只是 Buffer-backed entry 子集 | `AttachmentPlan`：`(member, CanonicalBufferIdentity) → capability + attachment`，配合 `TransportPlan` 选路（互连矩阵只是必要门槛） | 同上 §3/§4 |
-| **内存模型** | `Tensor`（视图，跨 edge 走线的就是它） | `Buffer` 的 backing；`BufferHandle` 只是 owner-side 管理对象 | capability 组合 | [worker-memory-model/p1b-corrected-design.md](worker-memory-model/p1b-corrected-design.md) §0 |
+ | 领域 | 逻辑组件 | 物理资源 | 绑定判据 | 文档 |
+ | ---- | -------- | -------- | -------- | ---- |
+ | **Worker 模型** | Worker（level=编排树位置） | CPU 进程 / NPU chip | 部署 | [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) §2 |
+ | **通信域** | 域成员（`EndpointId`） | `ResourceBundle` 中的 Buffer、communicator、adapter state 与相关互连；`DomainRegionSet` 只是 Buffer-backed entry 子集 | `AttachmentPlan`：`(member, CanonicalBufferIdentity) → capability + attachment`，配合 `TransportPlan` 选路（互连矩阵只是必要门槛） | 同上 §3/§4 |
+ | **内存模型** | `Tensor`（视图，跨 edge 走线的就是它） | `Buffer` 的 backing；`BufferHandle` 只是 owner-side 管理对象 | capability 组合 | [worker-memory-model/p1b-corrected-design.md](worker-memory-model/p1b-corrected-design.md) §0 |
 
 ## 5. 一条重要的推论：**降级必须显式，或语义等价**
 
 逻辑组件请求某种能力，而物理资源给不了时，只有两个正当出路：
 
-| 出路 | 前提 |
-| ---- | ---- |
-| **显式失败** | 总是正当 |
-| **降级到另一种物理实现** | **必须语义等价** —— 否则就是静默改变行为 |
+ | 出路 | 前提 |
+ | ---- | ---- |
+ | **显式失败** | 总是正当 |
+ | **降级到另一种物理实现** | **必须语义等价** —— 否则就是静默改变行为 |
 
 在本仓的具体形态，**判据是 Buffer identity**。用
 [feature_roadmap.md](feature_roadmap.md) 规范的 `TransportPlan` adapter 命名
 （**不要另造名字**）：
 
-| adapter | 语义 | Buffer identity | 可否作为等价选路 |
-| ------- | ---- | --------------- | ---------------- |
-| **HCCL collective** | 对指定的既有 Buffer 执行 device collective | adapter 本身不创建新 Buffer identity | ⛔ collective 的操作语义不同 |
-| **direct-map / device-peer** | 另一端点直接映射 / peer 访问同一个 canonical Buffer | **保持原 identity** | ✅ 仅与同一 Buffer 上等效读写的 owner-delegated copy 互换 |
-| **owner-delegated copy** | 委派 owner 读写**同一个既有 canonical Buffer** | **保持原 identity** | ✅ 仅与同一 Buffer 上等效读写的 direct-map 互换 |
-| **explicit transfer** | **分配目标 Buffer 并复制过去** | **创建新 identity** | ⛔ **不在等价关系内** |
+ | adapter | 语义 | Buffer identity | 可否作为等价选路 |
+ | ------- | ---- | --------------- | ---------------- |
+ | **HCCL collective** | 对指定的既有 Buffer 执行 device collective | adapter 本身不创建新 Buffer identity | ⛔ collective 的操作语义不同 |
+ | **direct-map / device-peer** | 另一端点直接映射 / peer 访问同一个 canonical Buffer | **保持原 identity** | ✅ 仅与同一 Buffer 上等效读写的 owner-delegated copy 互换 |
+ | **owner-delegated copy** | 委派 owner 读写**同一个既有 canonical Buffer** | **保持原 identity** | ✅ 仅与同一 Buffer 上等效读写的 direct-map 互换 |
+ | **explicit transfer** | **分配目标 Buffer 并复制过去** | **创建新 identity** | ⛔ **不在等价关系内** |
 
 - **direct-map ↔ owner-delegated copy 的等价范围**（见
   [cpu-npu-shared-memory.md §1.2](cpu-npu-shared-memory.md)）严格限于：两者作用在

@@ -1,6 +1,6 @@
 # 用户面契约：分配 API 与 `Buffer` 的可见性
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > 来源：原 [`worker-memory-model.md`](../worker-memory-model.md) §5。
 
@@ -14,12 +14,12 @@
 
 契约来源：[#2460](https://github.com/hw-native-sys/simpler/issues/2460)（正文 2026-09-28）；实施归属 RA-13/RA-14，状态只见 work-items.md。
 
-| 对象 | 用户可见契约 |
-| ---- | ------------ |
-| Buffer | 存储 identity、capacity、HOST/DEVICE、owner/backend/grant；用户可持有 |
-| Tensor | 同一 backing 的 dtype/shape/stride/offset 几何视图，不承载可变调用策略 |
-| TaskArgs 条目 | 本次调用 direction/tag 与显式 transfer request |
-| runtime binding | 私有 endpoint-local 解析、地址与 retention；ChipTensor 可作为迁移期内部 ABI，旧入口经兼容适配 |
+ | 对象 | 用户可见契约 |
+ | ---- | ------------ |
+ | Buffer | 存储 identity、capacity、HOST/DEVICE、owner/backend/grant；用户可持有 |
+ | Tensor | 同一 backing 的 dtype/shape/stride/offset 几何视图，不承载可变调用策略 |
+ | TaskArgs 条目 | 本次调用 direction/tag 与显式 transfer request |
+ | runtime binding | 私有 endpoint-local 解析、地址与 retention；ChipTensor 可作为迁移期内部 ABI，旧入口经兼容适配 |
 
 描述性 Tensor 不自动取得 allocation ownership；保留它或 Python wrapper 不延长 HeapRing scope。
 
@@ -27,9 +27,9 @@
 
 ### 5.2 API 契约与已交付边界
 
-代码口径为 `upstream/main@8aae172e556b94160cb7b7df54eb4e3f454db555`：公共 `Tensor(buffer, shapes=..., dtype=..., strides=..., byte_offset=...)` 由 #2479/#2480 提供，`Buffer.tensor(...)` 是兼容转发；`python/bindings/task_interface.cpp::make_tensor_view` 共用几何与范围 validator。构造复制 descriptor，不分配/搬运 backing。`TaskArgs.add_tensor(..., transfer=...)` 保持调用条目级 request；`Worker.create_buffer` 与 `alloc_shared_tensor` 的 owner/HeapRing 边界不变。
+代码口径为 `upstream/main@937c57efc71ad01a01c3a72072df075d2a5dd24f`：公共 `Tensor(buffer, shapes=..., dtype=..., strides=..., byte_offset=...)` 由 #2479/#2480 提供，`Buffer.tensor(...)` 是兼容转发；`python/bindings/task_interface.cpp::make_tensor_view` 共用几何与范围 validator。构造复制 descriptor，不分配/搬运 backing。`TaskArgs.add_tensor(..., transfer=...)` 保持调用条目级 request；`Worker.create_buffer` 与 `alloc_shared_tensor` 的 owner/HeapRing 边界不变。
 
-目标分层遵循 §5.1。#2482 已提供 `Buffer.wrap(address=..., nbytes=..., location=worker.device_location)` 源登记与 direct-L2 submit 时接入；location 只认可本进程同一 Program Worker incarnation，不接管外部 RTS context，不自动赋予跨 Worker/Remote 授权。close 拒绝在飞或未知完成的 source uses，外部分配由调用方保活和回收。其余 consumer 与兼容移除边界见 [RA-13/RA-14](../work-items.md)。无论入口形状如何，必须保留有效源登记、provenance 校验与 accepted-use retention。Remote wire 拒绝门不替代 network→H2D 验收。
+目标分层遵循 §5.1。#2482 已提供 `Buffer.wrap(address=..., nbytes=..., location=worker.device_location)` 源登记与 direct-L2 submit 时接入；#2587 将 location 身份推进到 native environment，#2578/#2599 提供 borrowed RTS 接入；这不自动赋予跨 Worker/Remote 授权，也不转移外部分配或 borrowed context 的 ownership。close 拒绝在飞或未知完成的 source uses，外部分配由调用方保活和回收。#2612/#2614 补齐 prepare 失败与未启动 launch 的可证明释放；执行异常的后续仍归 #2615/RA-15。其余 consumer 与兼容移除边界见 [RA-13/RA-14](../work-items.md)。无论入口形状如何，必须保留有效源登记、provenance 校验与 accepted-use retention。Remote wire 拒绝门不替代 network→H2D 验收。
 
 显式 COPY 写入已有 destination 时保持该 destination identity；只有新分配 destination 才有新 identity。
 
@@ -56,11 +56,11 @@
 
 ### 5.5 三条连带契约
 
-| 项 | 契约 |
-| -- | ---- |
-| **统一字节访问** | 用户读写数据一律经 `view.memoryview()` / `view.torch()`，**不得暴露底层 `SharedMemory` 对象**。理由有二：① 暴露对象等于允许用户从 owner 背后释放；② device backing 上根本没有 shm 对象，**暴露它会让用户代码按 backend 分叉** |
-| **`copy_to` / `copy_from` 收视图，不收指针** | 否则 kind4 的 device 指针必须外露，**直接违反「`Tensor` 不携带已物化地址」**。收视图还顺带覆盖区间准入——视图天然就是 `base + byte_offset + extent`，provenance 校验退化为 identity 查表，不必再按指针数值区间判定 |
-| **所有权不变** | simpler 自有 Buffer 由对应 owner 管理，close 经最后使用者证明回收；外部借用保留原 allocation owner，内部登记不自动保活调用方内存。`Tensor` 是不可变描述性值，wrapper/GC 不替代 accepted-use/grant retention。scope-managed backing 仍服从 HeapRing 生命周期 |
+ | 项 | 契约 |
+ | -- | ---- |
+ | **统一字节访问** | 用户读写数据一律经 `view.memoryview()` / `view.torch()`，**不得暴露底层 `SharedMemory` 对象**。理由有二：① 暴露对象等于允许用户从 owner 背后释放；② device backing 上根本没有 shm 对象，**暴露它会让用户代码按 backend 分叉** |
+ | **`copy_to` / `copy_from` 收视图，不收指针** | 否则 kind4 的 device 指针必须外露，**直接违反「`Tensor` 不携带已物化地址」**。收视图还顺带覆盖区间准入——视图天然就是 `base + byte_offset + extent`，provenance 校验退化为 identity 查表，不必再按指针数值区间判定 |
+ | **所有权不变** | simpler 自有 Buffer 由对应 owner 管理，close 经最后使用者证明回收；外部借用保留原 allocation owner，内部登记不自动保活调用方内存。`Tensor` 是不可变描述性值，wrapper/GC 不替代 accepted-use/grant retention。scope-managed backing 仍服从 HeapRing 生命周期 |
 
 ### 5.6 `release_buffer` 事务顺序（roadmap §2.4）
 
@@ -75,10 +75,10 @@ submit 接纳时保留本次实际使用的 backing/attachment，不靠保存描
 
 simpler 管理的 owner registry **必须区分两种 lifetime**；外部借用只记录授权与使用保留，不接管外部 allocation 的回收策略：
 
-| lifetime | 归属 | 关联 |
-| -------- | ---- | ---- |
-| **persistent owner-managed Buffer** | Worker，跨 run 存活 | 这正是 issue #824 / [cpu-npu-shared-memory/work-breakdown.md](../cpu-npu-shared-memory/work-breakdown.md) W3 的 per-worker 归属（两种寿命之一） |
-| **run / scope-managed BufferLease** | 单次 run | 与 `_RunResources` 的 per-run 所有权对齐 |
+ | lifetime | 归属 | 关联 |
+ | -------- | ---- | ---- |
+ | **persistent owner-managed Buffer** | Worker，跨 run 存活 | 这正是 issue #824 / [cpu-npu-shared-memory/work-breakdown.md](../cpu-npu-shared-memory/work-breakdown.md) W3 的 per-worker 归属（两种寿命之一） |
+ | **run / scope-managed BufferLease** | 单次 run | 与 `_RunResources` 的 per-run 所有权对齐 |
 
 > **一个扁平的 handle 字典不满足本节**——它既表达不了两种 lifetime，也没有 retain
 > 计数可言。
@@ -96,11 +96,11 @@ worker 树上由**传播本身**建立（两个上下文见下）。
 
 **三条依据**：
 
-| # | 依据 |
-| - | ---- |
-| ① | **attach 是跨进程控制流量**。public 化后它必须自带 `_control_reservation` / 事务性 / 回滚 / `generation` / poison —— 而**域已经有这整套**（#1456 的 2PC）。再开一条 public 路径 = 第二份实现 |
-| ② ⭐ | [`graph-execution-contract.md`](../worker-memory-model/graph-execution-contract.md) **R2** 要求节点退休与所有相关使用引用共同满足回收条件；attachment 是其中跨进程的一类。域代管该引用，不意味着替代 DMA/copyback 或 graph/replay 的保留；用户能手调 `detach_buffer` ⇒ 用户可减掉正被远端读的引用，R2 退化为「用户别做傻事」 |
-| ③ | 域今天在**成员与 buffer 两个维度都不可变**（`GlobalDomainCommand` 携带定长 member 表 + 固定 buffer 列表，2PC 一次定死）⇒ 逐条 attach **没有可作用的对象**。⚠️ **仅对域成立**，见下 |
+ | # | 依据 |
+ | - | ---- |
+ | ① | **attach 是跨进程控制流量**。public 化后它必须自带 `_control_reservation` / 事务性 / 回滚 / `generation` / poison —— 而**域已经有这整套**（#1456 的 2PC）。再开一条 public 路径 = 第二份实现 |
+ | ② ⭐ | [`graph-execution-contract.md`](../worker-memory-model/graph-execution-contract.md) **R2** 要求节点退休与所有相关使用引用共同满足回收条件；attachment 是其中跨进程的一类。域代管该引用，不意味着替代 DMA/copyback 或 graph/replay 的保留；用户能手调 `detach_buffer` ⇒ 用户可减掉正被远端读的引用，R2 退化为「用户别做傻事」 |
+ | ③ | 域今天在**成员与 buffer 两个维度都不可变**（`GlobalDomainCommand` 携带定长 member 表 + 固定 buffer 列表，2PC 一次定死）⇒ 逐条 attach **没有可作用的对象**。⚠️ **仅对域成立**，见下 |
 
 **代价（已接受）**：域建好之后才出现的 Buffer、成员后加入、capability 变更，
 都只能用**建新域 / 换代**表达。可接受的理由：持久域的价值是**窗口复用**，
@@ -114,10 +114,10 @@ buffer 是窗口内的稳定切片而非每 run 新建（#824 的「复用前清
 
 **结论仍然不变，但树的理由是另一条**：
 
-| 上下文 | Attachment 怎么建立 | 引用持有者 | 为什么不需要 public `attach_buffer` |
-| ------ | ------------------- | ---------- | ----------------------------------- |
-| **CommDomain**（成员间） | `AttachmentPlan` 建域时**批量声明**，2PC | 域 | 依据 ①②③ |
-| **Worker 树**（父→子） | **传播即 attach** —— 即 §2 递归规则的「子必须在下一条 edge 上重新 export/import/map」 | **Worker** | 依据 ①② ＋ **传播本身已是声明，再 attach 是同一件事声明两遍** |
+ | 上下文 | Attachment 怎么建立 | 引用持有者 | 为什么不需要 public `attach_buffer` |
+ | ------ | ------------------- | ---------- | ----------------------------------- |
+ | **CommDomain**（成员间） | `AttachmentPlan` 建域时**批量声明**，2PC | 域 | 依据 ①②③ |
+ | **Worker 树**（父→子） | **传播即 attach** —— 即 §2 递归规则的「子必须在下一条 edge 上重新 export/import/map」 | **Worker** | 依据 ①② ＋ **传播本身已是声明，再 attach 是同一件事声明两遍** |
 
 依据 ①（attach 是跨进程控制流量、已有既成机制）与 ②（R2 要求引用所有者唯一 ——
 树上是 Worker，同样**不是用户**）**两边都成立**；只有 ③ 是域专属的。
@@ -171,10 +171,10 @@ kind2 = 普通 local tensor，打 local-only 标记，`submit` / `add_tensor` �
 
 **那份 Attachment 从哪来，取决于 edge 处在哪个上下文**——见 §5.7 的两个上下文表：
 
-| edge 的上下文 | Attachment 来源 |
-| ------------- | --------------- |
-| 成员间（**有域**） | `AttachmentPlan` 中该 `(member EndpointId, CanonicalBufferIdentity)` 的条目 |
-| **父 → 子（worker 树，无域）** | **传播本身建立**——即 §2 递归规则里那句「子必须在下一条 edge 上重新 export/import/map」 |
+ | edge 的上下文 | Attachment 来源 |
+ | ------------- | --------------- |
+ | 成员间（**有域**） | `AttachmentPlan` 中该 `(member EndpointId, CanonicalBufferIdentity)` 的条目 |
+ | **父 → 子（worker 树，无域）** | **传播本身建立**——即 §2 递归规则里那句「子必须在下一条 edge 上重新 export/import/map」 |
 
 ### 5.9 分配归属：由 **fork 时序**决定，不由 API 口味决定（2026-08-05 讨论产出）
 
@@ -195,11 +195,11 @@ kind2 = 普通 local tensor，打 local-only 标记，`submit` / `add_tensor` �
 是[设计 §2](../worker-memory-model/p1b-corrected-design.md) 里**唯一真正建立映射的 backend**；
 `FORK_*` 的恒等物化前提（同 VA）只在 fork 之前分配时成立。
 
-| 场景 | 谁分配 | 入口 | 拷贝 |
-| ---- | ------ | ---- | ---- |
-| 输出 buffer、scene test 输入、KV cache / ring、control region / arena、一块 backing 切 N 个视图 | **Worker** | `alloc_shared_tensor` / `create_buffer` | 无 |
-| pre-fork 的大块 foreign 内存（预加载权重、上游 pipeline 交来的 tensor） | torch / 外部 | `wrap_fork_inherited` | 无（**必须 pre-fork**） |
-| fork 之后才拿到的 foreign torch tensor | torch | 只能 rehost | **有**——今天 scene test 的唯一路径 |
+ | 场景 | 谁分配 | 入口 | 拷贝 |
+ | ---- | ------ | ---- | ---- |
+ | 输出 buffer、scene test 输入、KV cache / ring、control region / arena、一块 backing 切 N 个视图 | **Worker** | `alloc_shared_tensor` / `create_buffer` | 无 |
+ | pre-fork 的大块 foreign 内存（预加载权重、上游 pipeline 交来的 tensor） | torch / 外部 | `wrap_fork_inherited` | 无（**必须 pre-fork**） |
+ | fork 之后才拿到的 foreign torch tensor | torch | 只能 rehost | **有**——今天 scene test 的唯一路径 |
 
 **输出 buffer 是最强的一格**，也最容易被忽略：它根本没有"原始 torch 数据"可转，你是在申请一块空内存
 给 kernel 写。今天 `_RehostedTaskArgs` 对输出照做一遍 `create_host_buffer` + `frombuffer`，

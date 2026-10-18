@@ -1,6 +1,6 @@
 # 内存模型对 Graph Execution 层的要求
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **这份文档是什么。** [`../worker-memory-model.md`](../worker-memory-model.md)
 > 把依赖正确性的三件套 **#1375 / #1376 / #1388** 路由给了 Graph Execution
@@ -21,11 +21,11 @@
 
 ## 0. 三个 issue 与它们的内部顺序
 
-| Issue | 做什么 | 性质 |
-| ----- | ------ | ---- |
-| **#1388** | TensorMap 从「只记 writer」扩成 **outstanding-access tracker**，自动导出 **WAR** 边 | **能力增强** —— #1306 的仓库裁决为显式表达 WAR 的性能取舍；#1388 请求自动推导，不能把该取舍列为现役正确性缺陷 |
-| **#1375** | 把一条物理依赖边上耦合的两个语义拆开：**WAIT**（就绪）/ **RETAIN**（生命周期） | **表示能力** —— 传递约减的前置 |
-| **#1376** | 有界可达位图（`BL=64`）做 WAIT 边的传递约减 | **优化** —— issue 自述 **blocked by #1375** |
+ | Issue | 做什么 | 性质 |
+ | ----- | ------ | ---- |
+ | **#1388** | TensorMap 从「只记 writer」扩成 **outstanding-access tracker**，自动导出 **WAR** 边 | **能力增强** —— #1306 的仓库裁决为显式表达 WAR 的性能取舍；#1388 请求自动推导，不能把该取舍列为现役正确性缺陷 |
+ | **#1375** | 把一条物理依赖边上耦合的两个语义拆开：**WAIT**（就绪）/ **RETAIN**（生命周期） | **表示能力** —— 传递约减的前置 |
+ | **#1376** | 有界可达位图（`BL=64`）做 WAIT 边的传递约减 | **优化** —— issue 自述 **blocked by #1375** |
 
 顺序是 **#1375 → #1376**；**#1388 与它们正交**（改的是 TensorMap 的记录内容，
 不是边的语义），但落在同一批文件上。
@@ -35,10 +35,10 @@
 不变量 5（本地参考：`../runtime-v2-hbg/graph-execution.md`）
 已经在**节点集**那一层做过的切分：
 
-| GE 的计数器 | 回答的问题 |
-| ----------- | ---------- |
-| `remaining_nodes` | **语义完成** —— 整张图什么时候算做完 |
-| `retired_nodes` | **资源回收** —— 那块内存什么时候可以复用 |
+ | GE 的计数器 | 回答的问题 |
+ | ----------- | ---------- |
+ | `remaining_nodes` | **语义完成** —— 整张图什么时候算做完 |
+ | `retired_nodes` | **资源回收** —— 那块内存什么时候可以复用 |
 
 > *"`remaining_nodes` and `retired_nodes` are not interchangeable — semantic
 > completion and resource reclamation happen at different times."*
@@ -51,12 +51,12 @@
 
 GE 的内存模型表把四类内存分得很清楚，其中两类的 lifetime 写的是 **caller-owned**：
 
-| GE 的内存类别 | GE 给的 lifetime |
-| ------------- | ---------------- |
-| **Boundary tensors**（图 I/O） | **caller-owned** |
-| Internal intermediates（`TensorCreateInfo` 产出） | 绑在 outer task 上，全节点完成后才回收 |
-| `OUTPUT_EXISTING` 写入的目标 | **caller-owned** |
-| Internal nodes 的 TaskArgs 存储 | 绑在 execution block 上 |
+ | GE 的内存类别 | GE 给的 lifetime |
+ | ------------- | ---------------- |
+ | **Boundary tensors**（图 I/O） | **caller-owned** |
+ | Internal intermediates（`TensorCreateInfo` 产出） | 绑在 outer task 上，全节点完成后才回收 |
+ | `OUTPUT_EXISTING` 写入的目标 | **caller-owned** |
+ | Internal nodes 的 TaskArgs 存储 | 绑在 execution block 上 |
 
 ⇒ **GE 把 boundary 的生命周期整个委托出去了，而它委托给的那个「caller」，
 就是内存模型。** 这就是接缝。以下六条要求全部落在这条接缝上，或落在
@@ -120,10 +120,10 @@ W3）simpler 管理的 owner 只能属于二者之一：**per-orch**（run 边�
 
 **依据.** 这是两个地方的**同一个判断**，今天各用各的单位：
 
-| 出处 | 今天用什么 |
-| ---- | ---------- |
-| GE 的 **alias partition**（boundary contract） | **地址** —— *"An internal tensor is matched to its boundary slot **by address**; when two slots alias, first-match resolves it by lowest index"* |
-| **#1388** 的 WAR 推导 | "overlapping tensor **regions**"（单位未定义） |
+ | 出处 | 今天用什么 |
+ | ---- | ---------- |
+ | GE 的 **alias partition**（boundary contract） | **地址** —— *"An internal tensor is matched to its boundary slot **by address**; when two slots alias, first-match resolves it by lowest index"* |
+ | **#1388** 的 WAR 推导 | "overlapping tensor **regions**"（单位未定义） |
 
 而内存模型的**物化形态**（Chip 上即 `ChipTensor`）说的正是：**同一块物理内存在
 不同进程有不同的本地地址，但只有一个 `CanonicalBufferIdentity`。**

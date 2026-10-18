@@ -1,25 +1,25 @@
 # simpler 核心设计快照
 
-发布日期：2026-10-15。本目录是维护者本地设计材料的可分享快照，覆盖资源与访问（RA）、分布式会话与通信域（DS）、执行与常驻运行（EX）的契约和实施边界。
+发布日期：2026-10-18。本目录是维护者本地设计材料的可分享快照，覆盖资源与访问（RA）、分布式会话与通信域（DS）、执行与常驻运行（EX）的契约和实施边界。
 
 ## 阅读顺序
 
-| 目的 | 入口 |
-| ---- | ---- |
-| 理解物理资源与逻辑 Worker 的关系 | [核心原理](logical-physical-separation.md) |
-| 理解三条实施线和四处交接合同 | [分线边界](track-boundaries.md) |
-| 查看 P1/P2/P3 的目标与退出条件 | [总路线图](feature_roadmap.md) |
-| 理解 Buffer、Tensor、Attachment 与授权 | [内存模型](worker-memory-model.md) · [用户接口](worker-memory-model/user-surface.md) |
-| 理解最后使用者、完成事实和释放条件 | [访问、完成与资源退休](worker-memory-model/access-retirement-contract.md) |
-| 理解跨节点启动、建域与数据访问 | [L3/L4 总览](l3l4.md) · [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口) |
-| 查看工作项及验收归属快照 | [工作项](work-items.md) · [目标覆盖](goal-coverage.md) |
-| 查看图形看板 | [roadmap.html](roadmap.html)；下载后用浏览器打开 |
+ | 目的 | 入口 |
+ | ---- | ---- |
+ | 理解物理资源与逻辑 Worker 的关系 | [核心原理](logical-physical-separation.md) |
+ | 理解三条实施线和四处交接合同 | [分线边界](track-boundaries.md) |
+ | 查看 P1/P2/P3 的目标与退出条件 | [总路线图](feature_roadmap.md) |
+ | 理解 Buffer、Tensor、Attachment 与授权 | [内存模型](worker-memory-model.md) · [用户接口](worker-memory-model/user-surface.md) |
+ | 理解最后使用者、完成事实和释放条件 | [访问、完成与资源退休](worker-memory-model/access-retirement-contract.md) |
+ | 理解跨节点启动、建域与数据访问 | [L3/L4 总览](l3l4.md) · [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口) |
+ | 查看工作项及验收归属快照 | [工作项](work-items.md) · [目标覆盖](goal-coverage.md) |
+ | 查看图形看板 | [roadmap.html](roadmap.html)；下载后用浏览器打开 |
 
 ## 快照范围
 
 - 本次只发布设计材料。主 checkout 的 `.docs` 仍为维护真源，保持 gitignored；此目录不作为第二份实时状态表。
-- 分支起点为 upstream/main `11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b`。文档的全量状态核验基线仍是 `01bf24bfa8a997c89210258c5954c4105843d783`；通信定点与 CI 证据基线见 D.4。分支起点不等于全部设计已经重新验收。
-- 本地清单的两项 PR 覆盖检查仍存在缺口；这里不宣称当前 open/merged 登记完整，也不将旧 PR 状态自动继承到新 head。
+- 分支起点为 upstream/main `11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b`。文档全量状态核验基线为 `937c57efc71ad01a01c3a72072df075d2a5dd24f`；79 条 main 合入、28 个 main open PR、60 个 open issue 已登记。硬件与 CI 证据保留各自测试 SHA，分支起点不等于硬件验收基线。
+- 本地 11 条守卫全绿；34 个实施项、364 个来源编号及 77 个文档载体均有归属。非空合入区间、缺登记/缺编号负对照与桌面/窄屏浏览器检查通过；目标有归属不等于全部实现。
 - kernel 模式、HBG 内部实现、DFX 内部实现和外部仓算子开发不属于 RA/DS/EX 实施范围；保留相关交接契约。
 - 原文指向未选入的调查、任务记录或工具时，以“本地参考”显示；核心设计之间的链接保留。完整文件与来源摘要见 [来源清单](SOURCE-MANIFEST.json)。
 
@@ -33,13 +33,13 @@
 
 ## 已知更正与证据边界
 
-以下结论经 2026-10-14 对具名代码复核；原始历史调查不得覆盖这些结论。
+以下结论已在 2026-10-18 全量复核中保留或更正；历史调查不得覆盖工作项的当前结论。
 
 1. `68d137fdf` 的 `_allocate_global_domain` 已对 MPI 与普通节点 ABORT 失败调用 `_record_unreclaimable`，并有故障注入测试。历史“只写 stderr、缺 poison”的判断已失效；这不等于远端窗口已完成确定性回收。
 2. 同一基线上 A5 TMR 已有 RDMA completion backend 和 poll/retire 接入，不能写成“backend 空槽”。建链、提交、完成及平台覆盖应分别验收。
-3. `#2496`、`#2497` 是 issue；`#2120`、`#2026` 在当次查询时是面向 main 的开放 PR。issue 存在不等于实现 PR 已在飞。
+3. `#2496`、`#2497` 是 issue；`#2120`、`#2026` 在本轮查询时仍是面向 main 的开放 PR。`#2594` 的七条建域验收已归 DS-6 联验相关 RA/DS 项；`#2598` 的 cleanup 观测归 DS-1，不等于资源已回收。
 4. 能力选择复用已有判定入口，按 backend 增量接入；不等待全部引擎完成才定义契约。不以新增 `HOST_MAPPED` 名字作为 copy-capable host attachment 的必需前置。
-5. `simpler-pr-list.html` 是另一份待校准排期草案，其“42 个 PR / 14 个立即开工”不作为本快照的交付承诺，未收入本目录。
+5. `simpler-pr-list.html` 是历史候选排期；其 42 项及本地别名均已纳入目标覆盖。历史数量和“立即开工”声明不作为当前交付承诺，该页面未收入本目录。
 
 核验入口：[ABORT 失败处理](https://github.com/hw-native-sys/simpler/blob/68d137fdfd435d8067f0efd9836cb428da3e700a/python/simpler/worker.py#L10827)、[故障注入测试](https://github.com/hw-native-sys/simpler/blob/68d137fdfd435d8067f0efd9836cb428da3e700a/tests/ut/py/test_global_comm_domain.py#L669)、[RDMA completion 接入](https://github.com/hw-native-sys/simpler/blob/68d137fdfd435d8067f0efd9836cb428da3e700a/src/a5/runtime/tensormap_and_ringbuffer/runtime/async_wait.h#L95)。
 

@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -14,6 +14,7 @@
 > **上游原理**：[`logical-physical-separation.md`](logical-physical-separation.md) §1 的
 > `potential = deployment × interconnect × backing × runtime` 公式与 §3 的检验标准。
 > **实施状态真源**是 [`work-items.md`](work-items.md)；README 负责登记与里程碑。本文只谈分线判断，不记进度。
+>
 >
 > **新增 2026-08-07，由用户指出。** §3 的检验标准是拿来查 API 的；本文说的是它的
 > **上一层用法** —— 它同时决定工作**怎么分线**。我此前只用了前者，代价见下。
@@ -56,11 +57,11 @@ DS-5 承接各原生 backend 的能力验收；SHMEM 仅为实现参考，不增
 RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 backend 生效。
 实现证据集中在 [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口)，状态仍只记 work-items。
 
-| 线 | 前缀 | 统一负责 | **不负责**（交给谁） |
-| -- | ---- | -------- | -------------------- |
-| **资源与访问** | `RA-` | Buffer/Tensor · 所有权 · Attachment · capability 判定与 view · adapter 选择 · copy/Transfer · arena · 预算 · **用户可见的访问结果** | 跨节点会话与 rank（`DS`）· 谁在什么时候跑（`EX`） |
-| **分布式会话与通信域** | `DS-` | session/lease · 成员与 rank · 建域事务 · 远端回收 · 通信 profile · 规模扩展 | **capability 判定本身**（`RA`，它是唯一权威，`DS` 只消费）· 常驻循环（`EX`） |
-| **执行与常驻运行** | `EX-` | admission · 异步准备 · control 响应 · completion/finalize · STOP/drain | 资源身份与访问权（`RA`）· 跨节点事务（`DS`） |
+ | 线 | 前缀 | 统一负责 | **不负责**（交给谁） |
+ | -- | ---- | -------- | -------------------- |
+ | **资源与访问** | `RA-` | Buffer/Tensor · 所有权 · Attachment · capability 判定与 view · adapter 选择 · copy/Transfer · arena · 预算 · **用户可见的访问结果** | 跨节点会话与 rank（`DS`）· 谁在什么时候跑（`EX`） |
+ | **分布式会话与通信域** | `DS-` | session/lease · 成员与 rank · 建域事务 · 远端回收 · 通信 profile · 规模扩展 | **capability 判定本身**（`RA`，它是唯一权威，`DS` 只消费）· 常驻循环（`EX`） |
+ | **执行与常驻运行** | `EX-` | admission · 异步准备 · control 响应 · completion/finalize · STOP/drain | 资源身份与访问权（`RA`）· 跨节点事务（`DS`） |
 
 ⚠️ **本重组明确排除 kernel 模式与 HBG 硬件需求。** runtime/调度器、DFX、Qwen 跨仓、CI
 **不进这三条线** —— 它们仍按 [`README.md`](README.md) §1.1 占行，但不受本节的交接契约管辖。
@@ -72,21 +73,21 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
 
 #### 契约 A —— 域生命周期：`RA-12` ⟷ `DS-4`，共享一份设计
 
-| — | 归属 | 内容 |
-| - | ---- | ---- |
-| 本地独立 ownership | **`RA-12`** | 把域从 `_RunResources` 的账本转成 Worker 级 owner；显式、可枚举的 registry；admission / retain-release / budget / close-journal 锁序 |
-| 远端 lease、断连与回收 | **`DS-4`** | lease 续约与超时 · 断连后的资源回收 · epoch 代际 |
+ | — | 归属 | 内容 |
+ | - | ---- | ---- |
+ | 本地独立 ownership | **`RA-12`** | 把域从 `_RunResources` 的账本转成 Worker 级 owner；显式、可枚举的 registry；admission / retain-release / budget / close-journal 锁序 |
+ | 远端 lease、断连与回收 | **`DS-4`** | lease 续约与超时 · 断连后的资源回收 · epoch 代际 |
 
 ⛔ **只有一份生命周期设计文档，两项共用**；`DS-4` 不得自建第三种 owner-lifetime。
 本地 owner 转移不要求远端 lease 先完成；DS-4 的完整退出条件仍需远端事务与回收证据。PR 登记和实现范围见 RA-12。
 
 #### 契约 B —— 同步原语 vs 常驻循环：`RA-11` ⟷ `EX-2`，三方切分
 
-| — | 归属 |
-| - | ---- |
-| 同步原语（publish/observe/wait，由 counter `notify/test/wait` 提升为 Buffer-backed Attachment 通用 API）＋ 首个有界 SPSC 示例 | **`RA-11`**，只此一份工作项与验收清单 |
-| queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
-| 常驻循环本身的契约（`orch_fn` while 循环 · STOP · drain） | **`EX-2`** |
+ | — | 归属 |
+ | - | ---- |
+ | 同步原语（publish/observe/wait，由 counter `notify/test/wait` 提升为 Buffer-backed Attachment 通用 API）＋ 首个有界 SPSC 示例 | **`RA-11`**，只此一份工作项与验收清单 |
+ | queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
+ | 常驻循环本身的契约（`orch_fn` while 循环 · STOP · drain） | **`EX-2`** |
 
 ⇒ **`RA-11` 与 `EX-2` 不重复排期**：前者做原语，后者做循环，示例同时用到两者。
 
@@ -102,16 +103,18 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
 issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry，而不是绕过它直接 unlink/free**」；
 `RA-12` 负责 **Worker 级的域 owner registry**。两件事都要一个「谁拥有、谁能关」的登记表。
 
-| — | 归属 | 登记的是什么 |
-| - | ---- | ------------ |
-| Buffer / allocation 的 close 与物理释放 | **`RA-15`** | owner / import / attachment 的 use 记录 ＋ cleanup journal |
-| 域（CommDomain）的 per-worker ownership | **`RA-12`**（远端半 `DS-4`，契约 A） | 域 handle 的 owner 转移 ＋ admission / retain-release / budget |
+ | — | 归属 | 登记的是什么 |
+ | - | ---- | ------------ |
+ | Buffer / allocation 的 close 与物理释放 | **`RA-15`** | owner / import / attachment 的 use 记录 ＋ cleanup journal |
+ | 域（CommDomain）的 per-worker ownership | **`RA-12`**（远端半 `DS-4`，契约 A） | 域 handle 的 owner 转移 ＋ admission / retain-release / budget |
 
 **共同约束**：统一逻辑关闭、接纳使用、最后使用证明与可重试清理规则，清理义务可组合且恰好履行一次；allocation owner 与 attachment/grant/graph 的使用持有者分开。互不协调的 owner-lifetime 与 close journal 才是 `P2-D` 要避免的问题，表的数量本身不能证明正确。
 
 ⛔ **组织形状仍待裁决**：一个 registry，或服从同一生命周期权威的类型化 registry。推荐后者作为可选实现形状；具体 owner、锁序、journal 组合和独立 grant 的关闭合同须在 `U4` 动工前明确。此待决项不阻止各 consumer 先交付已有的在飞保护与失败保留。
 
 **资源边界补充**：RA-7 拆的是 L3 hierarchical HeapRing；RA-16 管 device context 的 ExecScratch/HostStaging；RA-15 管用户 Buffer 的 logical close。三者的容量和最后使用者证明不能互相代替。EX-7 扩大 admission 时消费 RA-16 的资源约束，但本地 L3 #2464 不是 #2466 的硬前置。accepted/prepare/enqueue/执行容量分别核算；旧版本、graph 引用与释放失败块的计费，以及部分提交的最后使用者证明，见 [共同契约 §3–§5](worker-memory-model/access-retirement-contract.md)。
+
+**#2594 域接口交接**：主归属 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。#2120 与 #2594 共用域 owner 合同；#2598 的三种清理结果仅为 DS-1 观测，不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
 
 **U4 交接门**：U1a → U1b → U2a → U2b；U1b → U3；U2b 与 U3 的 network→H2D 合并验收 → U4。工作项是聚合归属，U1b/U2a 不能被聚合依赖误读成循环；本表中的 RA-15 同时依赖 RA-13 与 DS-3。契约 D 的裁决不因 #2440/#2452 的 workspace ledger 存在而自动解决。
 
@@ -145,13 +148,13 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 
 **实际状态（每条都可 grep 复核，0 命中一律附阳性对照）**：
 
-| 原表写的 | 代码里的实际 |
-| -------- | ------------ |
-| `RegionAccessService`（计划 region 时） | ✅ 存在，但**全仓只有 1 个 evaluator**（`_evaluate_host_vmm_copy`，`comm_endpoints.py:636`）＋ **1 个调用点**（`:811`）⇒ 是「一个函数求值一次」，不是「五次中的一次」 |
-| `ImportContext`（物化 import 时） | ✅ 存在，但**只有 2 个字段**（`buffer.py:562-563`：`is_host_endpoint` ＋ `owning_chip_instance_id`），与上者**只共享一个字符串枚举** |
-| `AttachmentPlan`（建域时） | ⛔ **此名不存在**。真名 `MemberAttachmentPlan`（`comm_endpoints.py:540`），**且它自带 `adapter_kind` ＋ `adapter_profile`**（`:543-544`）⇒ **原表分开列的「建域」与「选 adapter」两个时刻，代码里本就是同一个结构** |
-| `TransportPlan`（选 adapter 时） | ⛔ **全仓 0 命中**（阳性对照：`MemberAttachmentPlan` 在 `comm_endpoints.py` 7 处 ＋ `comm_region.py` 3 处 ⇒ 搜索有效）。代码、注释、docs 皆无 |
-| `comm_profile`（跨节点断言） | ⚠️ 存在，**但不是同一个函数** —— 见 §1b |
+ | 原表写的 | 代码里的实际 |
+ | -------- | ------------ |
+ | `RegionAccessService`（计划 region 时） | ✅ 存在，但**全仓只有 1 个 evaluator**（`_evaluate_host_vmm_copy`，`comm_endpoints.py:636`）＋ **1 个调用点**（`:811`）⇒ 是「一个函数求值一次」，不是「五次中的一次」 |
+ | `ImportContext`（物化 import 时） | ✅ 存在，但**只有 2 个字段**（`buffer.py:562-563`：`is_host_endpoint` ＋ `owning_chip_instance_id`），与上者**只共享一个字符串枚举** |
+ | `AttachmentPlan`（建域时） | ⛔ **此名不存在**。真名 `MemberAttachmentPlan`（`comm_endpoints.py:540`），**且它自带 `adapter_kind` ＋ `adapter_profile`**（`:543-544`）⇒ **原表分开列的「建域」与「选 adapter」两个时刻，代码里本就是同一个结构** |
+ | `TransportPlan`（选 adapter 时） | ⛔ **全仓 0 命中**（阳性对照：`MemberAttachmentPlan` 在 `comm_endpoints.py` 7 处 ＋ `comm_region.py` 3 处 ⇒ 搜索有效）。代码、注释、docs 皆无 |
+ | `comm_profile`（跨节点断言） | ⚠️ 存在，**但不是同一个函数** —— 见 §1b |
 
 ⇒ **真相**：**一个函数在一处求值，外加约十几个各自独立的门，横跨两种语言，靠注释与惯例
 而非构造彼此对齐。** 「五处分散所以要收拢」这个前提本身不成立。
@@ -197,10 +200,10 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 ⛔ **「词汇两两零交集」已过时 —— 交集是单向长出来的**（2026-09-07 重测 `f45d43a67`，
 原口径见下）：
 
-| 词 | `comm_endpoints.py` | `buffer.py` | `global_comm_domain.py` |
-| -- | ------------------- | ----------- | ----------------------- |
-| `deployment` | 44（原 41） | **8（原 0）** | **6（原 0）** |
-| `address_space` / `AddressSpace` | 1，仍只在 docstring | 21（原 23） | **8（原 0）** |
+ | 词 | `comm_endpoints.py` | `buffer.py` | `global_comm_domain.py` |
+ | -- | ------------------- | ----------- | ----------------------- |
+ | `deployment` | 44（原 41） | **8（原 0）** | **6（原 0）** |
+ | `address_space` / `AddressSpace` | 1，仍只在 docstring | 21（原 23） | **8（原 0）** |
 
 ⇒ **`deployment` 已经渗进另外两个模块，`AddressSpace` 没有渗回 `comm_endpoints.py`。**
 而「唯一的代码级联系是一个字符串枚举」这句**已经明确不对**：`buffer.py` 今天从
@@ -224,10 +227,10 @@ vocabulary, not a live registry object"* —— **后半句仍然对**（`Import
 
 #### 1b `comm_profile` 问的是另一个问题（名字撞了，函数没同一）
 
-| — | 入参 | 问什么 | 输出 |
-| - | ---- | ------ | ---- |
-| `_validate_global_comm_capability`（`worker.py:634`）· `resolve_global_comm_capability`（`global_comm_domain.py:132`） | **两个字符串** `(platform, comm_profile)` | 这块**硅**能不能实现这个 profile（`a3-fabric-v1` 要求真 A3、非 sim） | `raise` |
-| `_evaluate_host_vmm_copy`（`comm_endpoints.py:636`） | `(backend_kind, provider.deployment, consumer.deployment, same_node)` | 这**两个端点之间**能不能这样访问 | `RegionAccessDecision` |
+ | — | 入参 | 问什么 | 输出 |
+ | - | ---- | ------ | ---- |
+ | `_validate_global_comm_capability`（`worker.py:634`）· `resolve_global_comm_capability`（`global_comm_domain.py:132`） | **两个字符串** `(platform, comm_profile)` | 这块**硅**能不能实现这个 profile（`a3-fabric-v1` 要求真 A3、非 sim） | `raise` |
+ | `_evaluate_host_vmm_copy`（`comm_endpoints.py:636`） | `(backend_kind, provider.deployment, consumer.deployment, same_node)` | 这**两个端点之间**能不能这样访问 | `RegionAccessDecision` |
 
 **入参无一相同；一个非关系型、一个关系型。** 前者是**平台后端支持度**门，后者是**端点关系**门。
 ⇒ 它们被同一个词命名了（`resolve_global_comm_capability` vs `RegionAccessReasonCode`），
@@ -253,10 +256,10 @@ vocabulary, not a live registry object"* —— **后半句仍然对**（`Import
 > registry/owner authority 供给。**这不是「两边互不知情」，是「不合并的话判定函数永远拿不到
 > 它要的输入」** —— 比原理由硬，且不依赖那张表。
 
-| 原来的分线 | 它其实在做什么 |
-| ---------- | -------------- |
-| **CPU↔NPU 共享内存**（W0–W8） | capability 的**物理输入**（W0 部署探测、互连矩阵）＋ 判定引擎本身（W2 / #1696）＋ 域的成员/backing 载体 |
-| **worker 内存模型 P1** | capability 的**资源侧身份**（`BufferDescriptor` / `Tensor`，已冻结）＋ 第二个求值点（`ImportContext`） |
+ | 原来的分线 | 它其实在做什么 |
+ | ---------- | -------------- |
+ | **CPU↔NPU 共享内存**（W0–W8） | capability 的**物理输入**（W0 部署探测、互连矩阵）＋ 判定引擎本身（W2 / #1696）＋ 域的成员/backing 载体 |
+ | **worker 内存模型 P1** | capability 的**资源侧身份**（`BufferDescriptor` / `Tensor`，已冻结）＋ 第二个求值点（`ImportContext`） |
 
 ⛔ **L4 集群（`l3l4.md` 的 A–E 九章）不并入**，理由是**它问的根本是另一个问题**：
 
@@ -270,10 +273,10 @@ rank**，**无 `deployment`、无 `address_space`** —— ✅ 仍成立，而�
 
 ⛔ **两条已死，不要再照它们复核**：
 
-| 原依据 | 现状（实测 `d1eb826f`） |
-| ------ | ----------------------- |
-| `global_comm_domain.py` **零包内依赖**（只 import `enum`/`struct`/`dataclass`）；把 `EndpointDeployment`/`EndpointRegistry`/`RegionAccessService`/`AdapterKind`/`AttachmentRole` 一起 grep 它加四个 cluster 模块 ＝ **0 命中** | ⛔ **已死**：`:18` `from _task_interface import AddressSpace` · `:19` `from .comm_endpoints import AdapterKind, AdapterProfile, AttachmentRole` |
-| `_allocate_global_domain` **只调 `resolve_global_comm_capability`**，**从不碰 `RegionAccessService` / `EndpointRegistry`** | ⛔ **已死**：`_global_domain_attachment_matrix`（`worker.py:9173`）内部取 `self._get_endpoint_registry()` 并构造 `BackendResolver(registry, self._get_region_access_service())`（`:9190`），由 `_allocate_global_domain` 调用。⭐ **这条桥是 #1879 新建的** —— 该函数在 `5cb8110d~1` 上 **0 命中**（阳性对照：同 commit 同文件 `_allocate_global_domain` 1 命中 ⇒ grep 姿势没错） |
+ | 原依据 | 现状（实测 `d1eb826f`） |
+ | ------ | ----------------------- |
+ | `global_comm_domain.py` **零包内依赖**（只 import `enum`/`struct`/`dataclass`）；把 `EndpointDeployment`/`EndpointRegistry`/`RegionAccessService`/`AdapterKind`/`AttachmentRole` 一起 grep 它加四个 cluster 模块 ＝ **0 命中** | ⛔ **已死**：`:18` `from _task_interface import AddressSpace` · `:19` `from .comm_endpoints import AdapterKind, AdapterProfile, AttachmentRole` |
+ | `_allocate_global_domain` **只调 `resolve_global_comm_capability`**，**从不碰 `RegionAccessService` / `EndpointRegistry`** | ⛔ **已死**：`_global_domain_attachment_matrix`（`worker.py:9173`）内部取 `self._get_endpoint_registry()` 并构造 `BackendResolver(registry, self._get_region_access_service())`（`:9190`），由 `_allocate_global_domain` 调用。⭐ **这条桥是 #1879 新建的** —— 该函数在 `5cb8110d~1` 上 **0 命中**（阳性对照：同 commit 同文件 `_allocate_global_domain` 1 命中 ⇒ grep 姿势没错） |
 
 连带作废：「**两棵树只在 `worker.py` 一处相遇**」—— 它们现在也在 `global_comm_domain.py` 相遇。
 

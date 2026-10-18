@@ -1,6 +1,6 @@
 # 通信 review 与改造
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **当前启动/建域/数据面契约见 §D.4**（`68d137fdf`，2026-10-13）。§D.5 保留旧调查与反证史，不作为实施清单；状态只引 DS-1/DS-5/DS-6/DS-9/DS-10。
 >
@@ -23,6 +23,7 @@
 > 与本条相反极性 —— **别一起打折**），以及域生命周期仍 run-scoped（issue #824，
 > 归 P2-D，见 README §「每条 track 的下一步」）。
 >
+>
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §D + D.1–D.5。
 
 ## D. 通信 review 与改造
@@ -31,13 +32,13 @@
 > **当前定位基线为 `main@b69f4537`，函数/类型名是权威锚点。** 下方保留的裸
 > `file:line` 只用于复核原调查快照，行号漂移时不得据其否定同名函数/类型的当前语义。
 
-| 诉求 | 状态 | 一句话定性 |
-| ---- | ---- | ---------- |
-| **D.1** L3 为多 L2 建域 | 已实现(sim + a2a3/a5 onboard) | `orch.allocate_domain` 为同一 L3 下的 chip 子集建对称 device 窗口 |
-| **D.2** 同步/异步模型 | 同步已实现；异步按 capability 分层 | 集合=域内同步 barrier；host↔device=counter notify/wait；A2/A3 SDMA 默认关、显式 opt-in；**A5 SDMA 自 #1615 起默认开**（URMA 变显式备选） |
-| **D.3** 对端无感/host+device 同域 | 对称同域**未实现**;host↔L2 点对点**部分实现** | host 不是域内 rank；URMA backend 存在不等于 host-peer domain 已可用 |
-| **D.4** remote L3 通信 | 见 DS-6 | 主路径为 mpirun + MPI mailbox；A3 Fabric 共享窗口的数据访问独立于 task/control transport。见 §D.4。 |
-| **D.5** L4 为多 L3 建域 | 见 DS-9 / DS-10 | PREPARE_EXPORT/IMPORT/COMMIT/ABORT 已有；异构组合与生产回收按工作项验收。历史调查见 §D.5，当前契约见 §D.4。 |
+ | 诉求 | 状态 | 一句话定性 |
+ | ---- | ---- | ---------- |
+ | **D.1** L3 为多 L2 建域 | 已实现(sim + a2a3/a5 onboard) | `orch.allocate_domain` 为同一 L3 下的 chip 子集建对称 device 窗口 |
+ | **D.2** 同步/异步模型 | 同步已实现；异步按 capability 分层 | 集合=域内同步 barrier；host↔device=counter notify/wait；A2/A3 SDMA 默认关、显式 opt-in；**A5 SDMA 自 #1615 起默认开**（URMA 变显式备选） |
+ | **D.3** 对端无感/host+device 同域 | 对称同域**未实现**;host↔L2 点对点**部分实现** | host 不是域内 rank；URMA backend 存在不等于 host-peer domain 已可用 |
+ | **D.4** remote L3 通信 | 见 DS-6 | 主路径为 mpirun + MPI mailbox；A3 Fabric 共享窗口的数据访问独立于 task/control transport。见 §D.4。 |
+ | **D.5** L4 为多 L3 建域 | 见 DS-9 / DS-10 | PREPARE_EXPORT/IMPORT/COMMIT/ABORT 已有；异构组合与生产回收按工作项验收。历史调查见 §D.5，当前契约见 §D.4。 |
 
 ---
 
@@ -176,11 +177,11 @@ D.1 本身没有功能缺口。唯一牵连的是 **#824(OPEN)**:域窗口不跨
 
 ### D.4(a) 三个平面与现有实现
 
-| 平面 | 当前机制 | 证据与边界 |
-| ---- | -------- | ---------- |
-| 启动和任务控制 | L4-owned `mpirun`；rank 0 与 L4 共享 mailbox；rank 间 MPI dispatch | `add_mpirun_worker_group`、`docs/mpi-l3-mailbox.md`；无须预起 Simpler daemon，不建立每 rank 的 Simpler command/health TCP socket。MPI 自身可能使用 TCP，不能写成全栈不用 TCP。 |
-| 建域控制 | 全员 PREPARE_EXPORT，MPI allgather 交换 descriptor、IMPORT 状态；L4 协调 COMMIT/ABORT | `mpi_l3_session.py::MpiGlobalDomainExchange.prepare_import` 与 `global_comm_domain.py::GlobalDomainPhase`；full-group 用 MPI exchange，不能将其改写成待实现的 HCCL rootInfo 广播。 |
-| A3 HCCS 数据 | ACL VMM/Fabric V2 导出/导入共享窗口，生成 `CommContext`，kernel 经 TLOAD/MTE 读 peer window | `comm_global_domain_prepare/import`、`aclrtMemExportToShareableHandleV2`、`aclrtMemImportFromShareableHandleV2`；`global_tload_mixed_l3` 与 `global_tload_mpirun_l3` 为真实跨机内存访问用例。 |
+ | 平面 | 当前机制 | 证据与边界 |
+ | ---- | -------- | ---------- |
+ | 启动和任务控制 | L4-owned `mpirun`；rank 0 与 L4 共享 mailbox；rank 间 MPI dispatch | `add_mpirun_worker_group`、`docs/mpi-l3-mailbox.md`；无须预起 Simpler daemon，不建立每 rank 的 Simpler command/health TCP socket。MPI 自身可能使用 TCP，不能写成全栈不用 TCP。 |
+ | 建域控制 | 全员 PREPARE_EXPORT，MPI allgather 交换 descriptor、IMPORT 状态；L4 协调 COMMIT/ABORT | `mpi_l3_session.py::MpiGlobalDomainExchange.prepare_import` 与 `global_comm_domain.py::GlobalDomainPhase`；full-group 用 MPI exchange，不能将其改写成待实现的 HCCL rootInfo 广播。 |
+ | A3 HCCS 数据 | ACL VMM/Fabric V2 导出/导入共享窗口，生成 `CommContext`，kernel 经 TLOAD/MTE 读 peer window | `comm_global_domain_prepare/import`、`aclrtMemExportToShareableHandleV2`、`aclrtMemImportFromShareableHandleV2`；`global_tload_mixed_l3` 与 `global_tload_mpirun_l3` 为真实跨机内存访问用例。 |
 
 main 祖先链包含 #1456 `60ab6ab9b775247e797a26179ce71f0586b5c7c9`、
 \#1623 `cc9bfc453c74b1797a753a1d105a3a171b3061d7`、
@@ -195,14 +196,14 @@ main 祖先链包含 #1456 `60ab6ab9b775247e797a26179ce71f0586b5c7c9`、
 
 以下行号固定于 `68d137fdfd435d8067f0efd9836cb428da3e700a`，不能随工作树漂移解释：
 
-| 检查点 | 具名代码 | 能证明什么 |
-| ------ | -------- | ---------- |
-| 启动 | `worker.py:6070` 的 `_activate_mpirun_worker_groups` 构造 mpirun 命令并 `Popen`，READY 后 `add_mpi_group_mailbox` | 存在不经 Simpler daemon 的启动/派发实现 |
-| 全局建域 | `worker.py:10609`；`mpi_l3_session.py:107` 的 `prepare_import` 执行 PREPARE、descriptor allgather、IMPORT、status allgather；L4 发 COMMIT | 全组描述符交换已接入，不是仅有协议枚举 |
-| L2→ACL | `worker.py:2816` → `cw._impl.comm_global_domain_prepare`；`comm_hccl.cpp:1546/1609` | 真正分配并导入 peer Fabric 窗口；`:330/341` 调 ACL V2 export/import |
-| device context | `comm_global_domain_import` 将各 peer 的导入 VA 写入 `windowsIn/windowsOut`，上传 `CommContext` | kernel 使用的是本地映射出的 peer 地址，不是远端原始 VA |
-| kernel | `global_tload_kernel.cpp:30/71/82`：peer base + offset → `TLOAD(peer_tile, peer_global)` → TADD → TSTORE | 核函数执行 peer-memory 读取和求和；数据不靠 MPI 在 host 端求和 |
-| 验金 | MPI 示例 `main.py:178/191/197`：逐 rank 回读 result，对 `rank_count * index + rank_bias` 比较 | 代码设计上检查所有 rank 的累计结果；但有下面的 NaN 检查缺口 |
+ | 检查点 | 具名代码 | 能证明什么 |
+ | ------ | -------- | ---------- |
+ | 启动 | `worker.py:6070` 的 `_activate_mpirun_worker_groups` 构造 mpirun 命令并 `Popen`，READY 后 `add_mpi_group_mailbox` | 存在不经 Simpler daemon 的启动/派发实现 |
+ | 全局建域 | `worker.py:10609`；`mpi_l3_session.py:107` 的 `prepare_import` 执行 PREPARE、descriptor allgather、IMPORT、status allgather；L4 发 COMMIT | 全组描述符交换已接入，不是仅有协议枚举 |
+ | L2→ACL | `worker.py:2816` → `cw._impl.comm_global_domain_prepare`；`comm_hccl.cpp:1546/1609` | 真正分配并导入 peer Fabric 窗口；`:330/341` 调 ACL V2 export/import |
+ | device context | `comm_global_domain_import` 将各 peer 的导入 VA 写入 `windowsIn/windowsOut`，上传 `CommContext` | kernel 使用的是本地映射出的 peer 地址，不是远端原始 VA |
+ | kernel | `global_tload_kernel.cpp:30/71/82`：peer base + offset → `TLOAD(peer_tile, peer_global)` → TADD → TSTORE | 核函数执行 peer-memory 读取和求和；数据不靠 MPI 在 host 端求和 |
+ | 验金 | MPI 示例 `main.py:178/191/197`：逐 rank 回读 result，对 `rank_count * index + rank_bias` 比较 | 代码设计上检查所有 rank 的累计结果；但有下面的 NaN 检查缺口 |
 
 路径相对仓库：kernel 位于 `examples/workers/l4/global_tload_mixed_l3/kernels/aiv/`；
 MPI 示例位于 `examples/workers/l4/global_tload_mpirun_l3/`；Python 实现位于 `python/simpler/`，
@@ -227,22 +228,22 @@ ACL backend 位于 `src/a2a3/platform/onboard/host/`。
 `examples tests/st --level 4 --platform a2a3 --require-pto-isa`。
 这是有条件的持续 PR CI，不表示每个 main 提交都单独执行或每条 PR 都跑双机。
 
-| NETWORK1 用例（均为 a2a3 / TMR） | 看护范围 | 归属 |
-| -------------------------------- | -------- | ---- |
-| `test_global_tload_mpirun_l3` | 两机各两卡，mpirun/mailbox、MPI descriptor exchange、全局共享窗口与 peer-TLOAD、结果回读 | DS-6 启动；DS-5 数据面 |
-| `test_global_tload_mixed_l3` | 本地 fork L3 + 远端 daemon L3，两机各一卡的共享窗口与 peer-TLOAD | DS-5 |
-| `test_compute_then_tload_mixed_l3` | 同一 Worker/domain 多轮先计算、后 peer-TLOAD；分别检查计算与通信结果 | DS-5 |
-| `test_vector_add_mixed_l3` | 混合 L3 的任务派发和计算正确性；不能单独证明 peer-memory 通信 | DS-6 |
-| `test_global_tload_mixed_l3_network1` | 重用 mixed TLOAD 的 tests/st 收集哨兵，确认该目录也受 NETWORK1 选择 | DS-5 验收入口，不是第五种 transport |
+ | NETWORK1 用例（均为 a2a3 / TMR） | 看护范围 | 归属 |
+ | -------------------------------- | -------- | ---- |
+ | `test_global_tload_mpirun_l3` | 两机各两卡，mpirun/mailbox、MPI descriptor exchange、全局共享窗口与 peer-TLOAD、结果回读 | DS-6 启动；DS-5 数据面 |
+ | `test_global_tload_mixed_l3` | 本地 fork L3 + 远端 daemon L3，两机各一卡的共享窗口与 peer-TLOAD | DS-5 |
+ | `test_compute_then_tload_mixed_l3` | 同一 Worker/domain 多轮先计算、后 peer-TLOAD；分别检查计算与通信结果 | DS-5 |
+ | `test_vector_add_mixed_l3` | 混合 L3 的任务派发和计算正确性；不能单独证明 peer-memory 通信 | DS-6 |
+ | `test_global_tload_mixed_l3_network1` | 重用 mixed TLOAD 的 tests/st 收集哨兵，确认该目录也受 NETWORK1 选择 | DS-5 验收入口，不是第五种 transport |
 
 **逐项日志样本**（PR 的 baseRefName 已核为 main；SHA 取 checkout 后 `git log -1 --format=%H`，不是只抄 API headSha）：
 
-| UTC 日期 / PR | 实际测试 SHA | 双机 job 的逐项结果 |
-| ------------- | ------------ | ------------------- |
-| 2026-10-12 / #2555 | `cd0287afe14d7e0d30b8e14ba974da7767f2d94c` | [job 114844848869](https://github.com/hw-native-sys/simpler/actions/runs/38259084452/job/114844848869)：五项均 PASS 且各有 `1 passed`；MPI 15.96s |
-| 2026-10-13 / #2562 | `85166d6c2df4d928db76e2f81ff733bc9e7029c9` | [job 115180581367](https://github.com/hw-native-sys/simpler/actions/runs/38362358570/job/115180581367)：五项均 PASS 且各有 `1 passed`；MPI 15.93s |
-| 2026-10-13 / #2543 | `1b77ad2ae2a37ed9805846c4e47f25135f01d72b` | [job 115197486707](https://github.com/hw-native-sys/simpler/actions/runs/38365437391/job/115197486707)：五项均 PASS 且各有 `1 passed`；MPI 16.00s |
-| 2026-10-13 / #2563 的该次提交 | `9ea0f50851d640e1691f14f4927bb3d2f782af60` | [job 115190933107](https://github.com/hw-native-sys/simpler/actions/runs/38365414293/job/115190933107)：五项 FAIL；mixed 路径报 `_submit_chip_run_materialized(): incompatible function arguments`；这是该次运行的提交接口错误，不据此断言主线 ACL backend 回归 |
+ | UTC 日期 / PR | 实际测试 SHA | 双机 job 的逐项结果 |
+ | ------------- | ------------ | ------------------- |
+ | 2026-10-12 / #2555 | `cd0287afe14d7e0d30b8e14ba974da7767f2d94c` | [job 114844848869](https://github.com/hw-native-sys/simpler/actions/runs/38259084452/job/114844848869)：五项均 PASS 且各有 `1 passed`；MPI 15.96s |
+ | 2026-10-13 / #2562 | `85166d6c2df4d928db76e2f81ff733bc9e7029c9` | [job 115180581367](https://github.com/hw-native-sys/simpler/actions/runs/38362358570/job/115180581367)：五项均 PASS 且各有 `1 passed`；MPI 15.93s |
+ | 2026-10-13 / #2543 | `1b77ad2ae2a37ed9805846c4e47f25135f01d72b` | [job 115197486707](https://github.com/hw-native-sys/simpler/actions/runs/38365437391/job/115197486707)：五项均 PASS 且各有 `1 passed`；MPI 16.00s |
+ | 2026-10-13 / #2563 的该次提交 | `9ea0f50851d640e1691f14f4927bb3d2f782af60` | [job 115190933107](https://github.com/hw-native-sys/simpler/actions/runs/38365414293/job/115190933107)：五项 FAIL；mixed 路径报 `_submit_chip_run_materialized(): incompatible function arguments`；这是该次运行的提交接口错误，不据此断言主线 ACL backend 回归 |
 
 \#2563 的失败对应 head `d095e1be74103a62b011977d0219d0ee9fa5d49f`；查询时其 head 已更新为
 `431de6742af870aa0b97534b560d5cd9ccaef283`，旧 job 不充当新 head 的评审结论。
@@ -304,6 +305,7 @@ HCCL rootInfo/barrier/teardown 调用，当前 A2/A3 CANN 9 构建从 `libhcomm`
 ## D.5 L4 为多个 L3 构建通信域
 
 > **该节 poison 缺口的旧判断已失效。** `68d137fdf` 的 MPI 与普通节点 ABORT 失败均调用 `_record_unreclaimable`，后续 admission 拒绝；`test_global_domain_abort_failure_preserves_primary_error_and_poisons_admission` 已在树上。保留历史调查供追溯，不作为新增 poison 实现任务；资源实际回收仍按 DS-4/DS-9 验收。
+>
 >
 > ## ⛔ 下方 (a)–(d) 是 **2026-07-17 的 pre-#1456 快照，且已过期两次**（2026-08-14 复核）
 >

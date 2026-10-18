@@ -209,12 +209,12 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-15 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-18 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
 <div class="viz-root">
 
 <h1>simpler · 设计轨道与在飞项全景</h1>
 <p class="sub">
-  全扫描基线 <code>upstream/main@01bf24bfa</code>（2026-10-07）；#2096 定点 <code>ae234fad0</code>（2026-10-08）·
+  全扫描基线 <code>upstream/main@937c57efc</code>（2026-10-18）；79 条 main 合入、28 open PR、60 open issue·
   实施状态见 <code>.docs/work-items.md</code>；PR/issue 登记与交付里程碑见 <code>.docs/README.md</code>。本页是两者的图形投影。
   <b>本轮变更</b>见页尾「变更日志」。
 </p>
@@ -313,7 +313,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-1",
           "nm": "device-id 逻辑→driver 翻译",
           "p": "todo",
-          "hnote": "🔵 <b>待实现</b>。本基线 <code>src/a2a3/platform/onboard/host/device_runner.cpp:1255</code> 的注册仍传裸 <code>device_id_</code>；<code>acl_to_hal_device_id</code> 在该文件 0 命中，阳性对照 <code>halHostRegister</code> 16 处。RA-3 的 direct-map 前置；树上 #1826 是同类修法。",
+          "hnote": "🔵 <b>device-id 翻译仍待实现</b>。本基线 <code>device_runner.cpp::register_device_memory_to_host</code> 仍将 <code>device_id_</code> 直接传给 <code>halHostRegister</code>；<code>acl_to_hal_device_id</code> 0 命中、阳性对照 <code>halHostRegister</code> 16 处。#2516 的 driver 声明与 #2539 的 A5 VMM logical ID 修复不等于此处转换。",
           "items": [],
           "doc": "work-items.md"
         },
@@ -321,7 +321,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-2",
           "nm": "a5 能否 host-map device 内存",
           "p": "todo",
-          "hnote": "⛔ <b>A5 direct-map 验收未满足</b>。#2496 OPEN 承接 A5 driver SVM 的支持版本、双向可见性、注册/注销、回收、HBG/DFX 接入与对比验收。main 的 A5 collector 仍传 register_cb=nullptr，HostTensorAccessor 以 acquire_child_memory_host_view 探测、失败走 DeviceCopy；copy-capable 分支可继续推进。跨进程注册是 #2497 / RA-3 的独立维度，不能由单进程 mapping 推导。",
+          "hnote": "⛔ <b>A5 direct-map 验收未满足</b>。#2496 OPEN 继续承接 driver SVM 版本、注册/注销、双向可见性与 consumer 验收。#2501 的 HBG HOST/NONE 是显式 host storage，不是 device GM 的 host mapping；copy-capable 分支仍可推进。",
           "items": [],
           "doc": "work-items.md",
           "health": "blocked"
@@ -330,7 +330,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-3",
           "nm": "本地 attachment adapter",
           "p": "flight",
-          "hnote": "🟡 <b>部分交付；U2a 迁移待实现</b>。本基线 <code>src/common/host_build_graph/host/host_tensor_access.cpp</code> 保留 #2212 的 child-memory 按需 mapping/copy；pure OUTPUT 与 runtime-created GM heap 无可读 region。<b>这类 GM heap 是 L2 device scratch，不是 RA-7 的 L3 hierarchical HeapRing。</b> #2460 正文已明确 U2a：拒绝隐式 cross-side get/set，双侧用户迁为显式双参数，全部受影响用例与限制同一交付单元；U1a 保留当前行为。它不是尚待二选一的设计问题。#2497 OPEN 承接另一进程独立注册同 backing：export/import grant、进程本地 VA、generation、可见性和退出回收均须联验；HOST_SVM_MAP 仍仅有命名机制，实际 producer/materializer 尚未实现。W1lite 仍可不等 a5 direct-map；本地访问需遵守 RA-10 的结果可见性。",
+          "hnote": "🟡 <b>U2a 显式 HOST 消费已交付 #2501 <code>121d807bb</code></b>。HostTensorAccessor 仅登记 HOST/NONE 的合法方向/范围；HBG DEVICE get/set 的隐式 mapping/copy 与 producer wait 已移除，PA/BGEMM/FIFO 等双侧消费者随 PR 迁移。原 <code>acquire_child_memory_host_view</code> 在该文件 0 命中，阳性对照 <code>AddressSpace::HOST</code> 与 <code>TensorTransfer::NONE</code> 各 1 处。U2a 合入不关闭全部本地 adapter：#2497 跨进程 registration 与 HOST_SVM_MAP producer/materializer、RA-1/RA-2 direct-map 仍待验收。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -339,7 +339,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-4",
           "nm": "arch cache maintenance 抽象",
           "p": "todo",
-          "hnote": "🔵 <b>stable 验收待交付</b>。范围是 cache maintenance 的平台语义及 publish/observe 可见性；#1822 的 Python 包装不替代此证据。a2a3 onboard 必须覆盖，不能从 host-ISA 分支推断双 arch 已通过。⛱ <b>挡住 <code>RA-11</code></b>。 #2273 的 cache-line 隔离缺口仍在：本基线 worker.py:2623–2635 顺序 carve，仅检查 window_size，未按 cache line padding；需与上层 window_size 计算协同。",
+          "hnote": "🔵 <b>stable 可见性与 cache-line 隔离仍待交付</b>。本基线 chip-child 建域仍按 <code>offset += int(nbytes)</code> 顺序 carve，只有 window_size 越界检查；#2273 OPEN。通用 cache maintenance、publish/observe 与两架构硬件可见性按本项验收；#2096 的专用模板不关闭本项。",
           "items": [],
           "doc": "work-items.md"
         },
@@ -356,7 +356,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-6",
           "nm": "跨任务依赖谓词",
           "p": "flight",
-          "hnote": "🟡 <b>canonical footprint 依赖已交付，扩展验收仍在</b>。<code>orchestrator.cpp 的 lookup_overlapping/tensor_footprint</code> 使用 <code>lookup_overlapping</code>/<code>tensor_footprint</code>；INPUT 仍为 lookup-only。#1810 已 CLOSED、未合入；#1388 仍 OPEN，WAR 是能力增强，不是已判定的正确性缺陷。<b>#2450 的同任务显式 writable alias 是另一条验收</b>：同 backing、聚合 footprint、嵌套传播、staging/copyback 约束、未声明重叠继续拒绝；全部归本项，不由 U1b 自动授权。本基线 <code>task_args_wire.h</code> 仍拒绝重叠写。ST-2 的旧 raw-VA 前提已不适用：<code>Worker.make_tensor_arg</code> 按 storage memoize identity；TensorMap UT 有同 key 不相交/相交/相邻案例，真实 submit 端到端证据归本项。",
+          "hnote": "🟡 <b>canonical footprint 依赖已有，显式 writable alias 仍待交付</b>。hierarchical <code>lookup_overlapping</code>/<code>tensor_footprint</code> 仍是依赖基座；main <code>task_args_wire.h::validate_submit_args</code> 仍拒绝同任务重叠写。#2450 已 CLOSED/COMPLETED，正文契约 KV-R1–R5 并未因此在 main 实现，继续归本项；#1388 OPEN 的 WAR 是能力扩展。ST-2 按共同 backing/实际 submit 验收，不恢复 raw-VA 假设。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -365,7 +365,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-7",
           "nm": "arena 拆分 ＋ accounting",
           "p": "todo",
-          "hnote": "🔵 <b>L3 arena 分离待实现</b>。本基线 <code>Worker.alloc_shared_tensor</code> 直接调用 <code>self._orch._o.alloc</code>，返回 <code>FORK_SHM</code> Buffer；其 backing 与 scope 回收仍由 hierarchical HeapRing 管。<code>SlotArena</code>/<code>SharedBufferArena</code>/<code>BufferSliceArena</code> 在 <code>src/</code>、<code>python/</code> 0 个文件，阳性对照 <code>HeapRing</code> 16 个文件。<b>device context 的 WorkspaceManager 归 RA-16，不能算本项完成。</b> ⛱ <b>挡住 <code>EX-5</code></b>；同步示例的资源基座归本项。",
+          "hnote": "🔵 <b>L3 arena 分离仍待实现</b>。<code>Worker.alloc_shared_tensor</code> 仍调用 <code>self._orch._o.alloc</code>，创建 FORK_SHM backing，scope 生命周期仍由 hierarchical HeapRing 管。worker.py 的 SlotArena/SharedBufferArena/BufferSliceArena 均 0 命中；阳性对照 alloc_shared_tensor 2 处、实际 alloc 调用 1 处。#2571/#2596 的 run resources 与 RA-16 workspace 不是此 arena。",
           "items": [],
           "doc": "work-items.md"
         },
@@ -373,7 +373,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-8",
           "nm": "endpoint 与 capability view",
           "p": "flight",
-          "hnote": "🟡 <b>判定和 attachment wire 已有，逐 backend 验收待补齐</b>。本基线 <code>buffer.py::select_adapter</code> 有 <code>select_adapter</code>；<code>global_comm_domain.py:215,647</code> 有 attachments 与校验。<code>worker.py</code> 的 <code>local_window_bases</code> 共 2 处，分别为字段和赋值，尚无访问消费者（阳性对照：同文件 <code>retain_after_run</code> 3 处）。本地拒绝路径服务 P1；逐 backend 访问物化和发布门服务 P3。",
+          "hnote": "🟡 <b>共同能力判定与 attachment wire 已有，消费组合仍需验收</b>。<code>select_adapter</code>、<code>_global_domain_attachment_matrix</code> 与 GlobalDomainAttachment 校验保留；worker.py 的 local_window_bases 仍为字段/赋值共 2 处，retain_after_run 阳性对照 4 处。#2594 的完整成员身份、rank、域引用须消费同一判定权威；SPL 机型/链路输入归本项，不另建选择器。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -407,7 +407,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-12",
           "nm": "本地 per-worker domain ownership",
           "p": "flight",
-          "hnote": "🟡 <b>owner 转移在飞 #2120</b>（OPEN，<code>cd69b1e0ecf9</code>）。main <code>worker.py</code> 中 <code>detach_persistent_domain</code> 0 命中，阳性对照 <code>retain_after_run</code> 3 处；现有保留寿命不等于独立 Worker ownership。与 DS-4 共用契约 A，与 RA-15 共用契约 D；用户尚未裁决两种资源 registry 的归一形状。",
+          "hnote": "🟡 <b>owner 转移仍在飞 #2120</b>（OPEN，<code>cd69b1e0ecf9</code>）；main <code>detach_persistent_domain</code> 0 命中，retain_after_run 阳性对照 4 处。L4 retained release 已能绑定后续正在构建的 run fence，仍不等于所有已接纳使用的 Worker 级 ownership。#2594 的复用、跨 run 和释放规则与本项共用 owner；契约 A/D 仍适用。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -416,7 +416,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-13",
           "nm": "四类内存模型统一成 ABI",
           "p": "flight",
-          "hnote": "🟡 <b>统一 ABI 部分交付</b>。#2198 <code>c7ae45924</code> 已把 Region backing 接入 canonical Buffer；#2467 <code>255d78568</code> 提供 direct-L2 snapshot、identity/grant 验证与 accepted-use 保留，#2474 <code>05b5c19a0</code> 说明释放 API 边界。#2478 <code>3121da336</code> 保留 mixed owned/external 中已知 allocation，完整覆盖只决定 joined admission；旧 #2475 评审 P1 的 native 根因已修复。#2479 <code>7b614764b</code> 提供 <code>Tensor(buffer, shape=..., dtype=...)</code>，兼容 <code>buffer.tensor</code> 共用 validator。#2475 已 CLOSED 未合入；#2482 <code>fcbf4f1d1</code> 已提供 Buffer.wrap 源登记与 submit-time L2 接入。location 仅支持本进程 direct-L2 Program Worker incarnation，调用方仍负责物理寿命；未知完成保留 source use，不能当作外部 RTS context/cross-Worker/Remote 授权已交付。U1b 仍需 Region、borrowed pointer、L3/L2 TaskArgs 与旧 ChipWorker 调用迁移；#2486 <code>22c009811</code> 已交付 ChipWorker.run 共享 HOST/H2D Tensor 参数，异常保留 imports 至成功 finalize，不含 standalone DEVICE source 接入；#2489 <code>833327f60</code> 在四个 program binder 前置拒绝不支持的 HOST strides/native start_offset，公共 byte_offset 仍由物化归入地址；U2b 的 HBG/TMR IO/retention 记录独立验收。ST-1/AF5 留在本项；#2146 OPEN <code>247689f4e3ba</code> 的 singleton stride 修复尚未合入，main <code>tensor.h::is_contiguous</code> 仍逐维比较 stride。",
+          "hnote": "🟡 <b>公共参数与 materialization 进一步收敛</b>。#2589 <code>a8c682a32</code> 与 #2595 <code>8c3b0e174</code> 分别让 direct L2、fork chip child 使用 native ChipWorker；#2597 <code>e994e106d</code> 使三类入口共用 <code>_materialize_chip_task_args</code>。#2587 <code>11eb5d2c9</code> 把 DEVICE source 登记绑定 native environment identity；#2612/#2614 细化失败后的 source-use 退休。旧 ChipStorage/ChipTensor ABI 兼容及 U2b 统一 IO 账本仍须单独验收；#2594 的域 Buffer/远端描述消费尚为设计。#2146 OPEN <code>247689f4e3ba</code>，公共 tensor.h 仍逐维比较 stride，ST-1 未被这些 PR 顺带关闭。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -425,7 +425,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-14",
           "nm": "API 收敛与迁移",
           "p": "flight",
-          "hnote": "🟡 <b>构造统一已有交付，调用迁移继续</b>。#2479 <code>7b614764b</code> 的 <code>Tensor(buffer, shape=...)</code> 与 <code>Buffer.tensor</code> 兼容转发已在 main，共用几何与范围验证。#2480 <code>4d0610fb7</code> 已合入 <code>shapes=</code> 对齐、入门 Worker 示例迁移与 Buffer 类型缓存；#2482 源侧 Buffer.wrap 已交付 direct-L2 有限范围。#2486 的 ChipWorker.run HOST/H2D consumer 已合入；完整旧 POD 退役、DEVICE 与其他消费者的迁移仍由 RA-13 验收。就绪依赖仅要求对应路径接口定型；最终退役核全部调用者，不等所有 backend 串行完成。",
+          "hnote": "🟡 <b>构造和 chip 消费入口已收敛，兼容退役未完成</b>。#2479/#2480 提供公共 Tensor(Buffer, shapes=...)；#2501 同批迁移 HOST 控制用户，#2597 共享私有物化转换。#2594 的域 API 改名/兼容归本项，域目标主归属 DS-6、ownership 归 RA-12；全消费者迁移后才移除旧 ABI，不等全部 backend 串行交付。",
           "items": [],
           "doc": "work-items.md",
           "health": "residual"
@@ -434,7 +434,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-15",
           "nm": "统一 logical close ＋ 物理释放",
           "p": "todo",
-          "hnote": "⛔ <b>U4 退出条件未满足</b>。host-backed <code>buffer.py::Buffer.close</code> 仍直接执行 <code>shm.close/unlink</code>；#2482 的 source registration 分支按锁拒绝在飞/未知完成的 close，不释放外部分配；<code>Worker.free</code> 与 direct-L2 accepted-use 登记共用 chip lock，host <code>release_buffer</code> 仍是采样后 close。#1689 cleanup journal、#2446 caller borrow、#2467 direct-L2 保留和 #2478 partial borrow 是现有基座，不等于统一 logical close。#1931 的 child allocation/free 可信记录归本项。U4 完整退出仍需 U2b/U3 的 network→H2D 联验及契约 D 的 owner/锁序/journal 组织；在飞保护随每条 consumer 先交付，普通 Tensor wrapper 不延长 HeapRing scope。",
+          "hnote": "⛔ <b>U4 完整退出条件未满足，但 consumer 保护在推进</b>。#2612 <code>49ae1ef1b</code> 仅在 verified prepare rollback 后释放 source refs；#2614 <code>8b466791f</code> 补未开始 launch 的 cleanup proof。#2615 OPEN <code>0e4883906340</code> 继续处理 backend launch 异常后的 execution owner，不算 main 交付。Buffer.close 仍直接执行 host shm.close/unlink，统一 owner/lock/journal、独立 grant、network→H2D 及 graph/replay 联验仍保留。#1931 child free 可信身份与 #2594 域最后使用者归本项交接。",
           "items": [],
           "doc": "work-items.md",
           "health": "blocked"
@@ -444,13 +444,13 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "nm": "device context workspace ownership 与预算",
           "items": [],
           "p": "flight",
-          "hnote": "🟡 <b>直接 L2 与 startup-root 本地 L3 的 workspace ownership 已交付</b>。#2440 <code>9ca91c522</code>、#2452 <code>a1ca296f8</code>、#2464 <code>818ee04d7</code>；main <code>_chip_children_manage_workspace</code> 仍按 device_ids 与 _is_startup_root 选择 child ownership，nested/remote/MPI 与 L3 byte budget 不属于该保证。#2473 <code>35e9331b5</code> 已在 C program-context init 统一安装四区 workspace，覆盖所有走该入口的 onboard program context；teardown proof 先消费再安装，retention probe 记录 device-drain 事实。Python startup-root 路由条件不再限制 native workspace manager 覆盖；nested/remote/MPI 端到端验收与 L3 byte budget 仍独立。退休按 run/completion/host-view 引用、未知执行隔离与实际 free 结果，不拆 RA-7 HeapRing，不接管 RA-15 用户 Buffer。",
+          "hnote": "🟡 <b>context 资源与预算已有进一步交付</b>。#2571 <code>78365f79c</code> 按 context grant 配置 run resources 并拆开传输帧/执行记录；#2596 <code>a2b0ad2ad</code> 提供四个 onboard program backend 的受限自动增长/trim/retry，#2610 <code>aa91a9d60</code> 将现有内部 workspace 管理与可选字节预算接入 borrowed eager。预算只覆盖 retained staging 和三类 pooled arena，caller tensor、代码、DFX、provider 不在其中；不等于整设备 OOM 恢复，也不替代 RA-7/RA-15。",
           "health": "residual",
           "doc": "work-items.md"
         }
       ],
       "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "本轮口径 <code>77132c7bf9b26171401739303270bc9251695505</code>；编号归属见 goal-coverage.md。"
+      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
     },
     {
       "name": "DS 分布式会话与通信域",
@@ -458,10 +458,11 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
         {
           "id": "DS-1",
           "nm": "MPI 会话的 session/epoch registry",
-          "p": "todo",
-          "hnote": "🟢 <b>session/epoch 生产契约待实现，无工作项前置</b>。2026-10-13 通信核验以 <code>68d137fdf</code> 为准；主路径由 L4 拥有 mpirun group，rank-side runtime 参与资源回收，不要求独立常驻 daemon。已有 mailbox READY/SHUTDOWN、group timeout 与进程组退出；仍需跨端 cleanup 确认、epoch/lease 和故障后资源可枚举性，不能以杀掉 launcher 代替远端资源已清理。",
+          "p": "flight",
+          "hnote": "🟡 <b>会话清理观测在飞，epoch/lease 生产闭环仍待验收</b>。#2598 OPEN <code>697771e29305</code> 区分 shutdown 命令、进程退出、资源释放三种结果，账本为 observation-only，TCP 路径可报告 UNKNOWN；不是失败后重试/远端 lease 的实现。main 的 session_cleanup_reports 0 命中，阳性对照 _release_remote_sessions 与 _close_mpirun_groups 各 2 处。主路径仍是 L4-owned mpirun，无独立 daemon 必需前置。",
           "items": [],
-          "doc": "work-items.md"
+          "doc": "work-items.md",
+          "health": "residual"
         },
         {
           "id": "DS-2",
@@ -494,7 +495,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-5",
           "nm": "A3 HCCS/RoCE ＋ A5 UB/URMA profile",
           "p": "flight",
-          "hnote": "🟡 <b>backend 部分交付</b>。A3 HCCS 共享窗口与 peer-TLOAD 已由 #1456 提供，#1623/#1624 补齐 MPI 启动/派发（<code>68d137fdf</code> 复核）；当前代码已核完整调用链；面向 main 的双机 PR CI 持续看护五项 NETWORK1 用例，10 月 12–13 日三个具名测试 SHA 均逐项 PASS（含 <code>1b77ad2a</code> / job <code>115197486707</code>）；不列为待首次打通。现有验金的全 NaN 误过已由 CPU 正反探针复现，强化验金归本项；证据见通信方案 D.4。沿用原生 ACL Runtime + PTO 共享窗口路径，参考 SHMEM 的实现效果；没有 SHMEM 库适配任务。#2157 已合入 A5 TMR RDMA/RoCE deferred completion；#2026（OPEN，<code>c3bbbd1e7084</code>）涉及默认 SDMA/URMA。P2 的 session/lease、profile 组合与故障验收仍需分别满足，不能把整项标 done，也不能把 DS-4 当作 backend 禁止开工的理由。",
+          "hnote": "🟡 <b>A3 Fabric 数据面与 A5 RDMA/RoCE backend 部分交付</b>。#1456/#1623/#1624 与 #2157 均在 main 祖先链；A5 comm_hccl.cpp 有 RDMA bootstrap/注册与 workspace producer，不能再列成空 provider。A3 五项 NETWORK1 的具名历史 PASS 见通信方案 D.4，本轮不声称当前 SHA 硬件重跑。MPI main.py 仍以 max_diff > 1e-3 验金；非有限值缺口继续归本项。A2/A5 跨机窗口与具体机型组合需分别验收；#2026 仍 OPEN。SHMEM 仅参考，不新增库依赖。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -503,7 +504,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-6",
           "nm": "mpirun 启动与发现 ＋ 跨-L3 域接口",
           "p": "flight",
-          "hnote": "🟡 <b>MPI 启动与 mailbox 派发已交付</b>（#1623 <code>cc9bfc45</code>、#1624 <code>43094d44</code>，核验 <code>68d137fdf</code>）。主路径是 L4-owned mpirun、rank 0 本地 mailbox 与 rank 间 MPI；不需 Simpler 常驻 daemon。MPI bootstrap 与 A3 Fabric V2 数据面独立；HCOMM/HCCL 按底层 backend 需要复用，不另设必选启动路线。剩余为部署/发现契约与跨-L3 接口验收；#1888 的 MPI direct 是另一派发方案，不是既有 MPI 路径的前置（PR 状态见登记基线）。",
+          "hnote": "🟡 <b>mpirun 启动/派发已交付，统一域 API 待交付</b>。#2593 <code>3351950f4</code> 将 communicator control state 保留在 chip child；main 仍区分 allocate_domain 与 allocate_global_domain。#2594 为统一成员/rank/查找/复用/Buffer/释放的主登记，RA-12/RA-13/RA-14/RA-15、DS-3/DS-9 分别承接子契约。#1888 OPEN 是 MPI direct 候选；部署/发现与共享窗口能力分开验收。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -529,7 +530,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-9",
           "nm": "成员事务执行（唯一设计归属）",
           "p": "flight",
-          "hnote": "🟡 <b>递归委派已交付 #2024；生产成员事务待验收</b>。本基线 GlobalDomainPhase 有 PREPARE_EXPORT/IMPORT/COMMIT/ABORT，不能写成事务从零。剩余要求是与 MPI session owner 的 epoch/lease、回滚、冻结成员及全员 READY 闭环；已有 PREPARE/IMPORT/COMMIT 不重复设计。⛱ <b>挡住 <code>DS-4</code> <code>DS-10</code></b>。",
+          "hnote": "🟡 <b>PREPARE/IMPORT/COMMIT/ABORT 事务已有，生产闭环未完成</b>。_allocate_global_domain 的普通/MPI ABORT 失败都调用 _record_unreclaimable；SPL-1.6 的“只写 stderr 后继续”已被源码反证。epoch/lease、冻结成员、全员 READY、失败资源可追踪仍需与 DS-1/DS-2 联验，不重复设计现有事务。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -554,7 +555,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
         }
       ],
       "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "通信路线定点核验 <code>68d137fdf</code>（2026-10-13）；其他状态见 work-items.md 的各自证据基线。"
+      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
     },
     {
       "name": "EX 执行与常驻运行",
@@ -563,7 +564,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "EX-1",
           "nm": "responsive local edge：覆盖面与验收",
           "p": "flight",
-          "hnote": "🟡 <b>窄 local lane 已交付，扩展验收未满足</b>。<code>run_two_frame_loop</code> 服务 control 与任务；<code>make_next_level_threads</code> 传 <code>entry.task_frame_count</code>，<code>make_sub_threads</code> 不传而使用默认单帧（函数内该参数 0 处，阳性对照邻接 NEXT_LEVEL 构造 1 处）。AF2/AF4 的 SUB 与 scheduler/control 约束仍属本项。nested、Local L4、A5、simulation、remote 的长期任务/control/cancel/health 是逐组合退出条件，不能以 local 双帧替代。#2116（OPEN，<code>6b8d56d4b54f</code>）是 control dispatch 扩展载体。",
+          "hnote": "🟡 <b>local mailbox/control 与 grant 传输已有，扩展组合验收未完成</b>。#2571 将固定请求帧与按 grant 的 run-state entries 分离；NEXT_LEVEL 构造传 entry.granted_sets，SUB 构造仍使用默认值。旧 task_frame_count 双帧描述已不适用于当前构造。#2116 OPEN <code>6b8d56d4b54f</code> 承接 control extension；nested/remote/sim 的长期任务、取消、health 按组合验收。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -615,14 +616,14 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "EX-7",
           "nm": "连续 run 共享 stream 的顺序契约",
           "p": "flight",
-          "hnote": "🟡 <b>有边界的 early enqueue 与三套资源容量已交付，真实 workload 接入仍部分完成</b>。#2419/#2446/#2449 是 FIFO、host-read 与多 successor 基座；#2466 <code>fb76a54d5</code> 支持 A3 HBG startup-root 本地 L3、单 local endpoint、无 SUB 的显式 pipeline_depth=3，默认资源深度仍 2。#2481 <code>5eb913c39</code> 支持 A5 HBG 显式 launch_depth=2；#2491 <code>67bce6291</code> 扩展到 A5 TMR，仅 host 提交重叠、整 operator 串行，cache miss/配置变化仍 fallback，错误只读本 run terminal record。#2471 <code>8e4dac671</code> 合入 DistinctSubmissionsOwnIdentityAndLease UT 与已有 A3 ST 注释，未增加 Qwen adapter 或完整 request-private KV 验收。#2447/#2456 已交付 Qwen depth-one 与 requested 2/effective 1 fallback；真实 Qwen clone-request 接线、同请求 DEVICE feedback、其他 backend/shape 与资源预算按本项/RA-16 联验。#2429 旧正文仍称 #2471 待合并，状态以 main 为准；#2459 distinct-row 不作为开始 clone 接线的前置。#2028 OPEN、#1987 历史 draft、#1967 activation 与 #2425 五项仍各按既有契约验收。",
+          "hnote": "🟡 <b>四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付</b>。#2560 <code>a89c1170c</code> 补 A3 TMR；#2571 <code>78365f79c</code> 拆分 transport/run lifetime；#2596 <code>a2b0ad2ad</code> 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 <code>0eda81c93</code> 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 RA-16；#2588 DFX、#2605 vLLM eager 是范围外在飞交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复仍在飞。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
         }
       ],
       "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "本轮口径 <code>77132c7bf9b26171401739303270bc9251695505</code>；编号归属见 goal-coverage.md。"
+      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
     },
     {
       "name": "Qwen 跨仓集成",
@@ -1985,6 +1986,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
       {
+        "t": "2026-10-18 · 937c57efc · 全量登记与目标归属复核",
+        "b": "<b>基线：</b>相对 01bf24bfa 新增 79 条 main 合入，28 main open PR、60 open issue。<b>判断失误：</b>此前通信定点更新掩盖登记积压；79 条中 65 条缺登记。旧缓存的 GH 状态绿不能证明刷新。U2a 已由 #2501 交付，Qwen clone/DEVICE/持续请求已有 #2511/#2568/#2592，不能继续列为下一段；#2596 的自动准入不等于真实 Qwen 自动组合验收。<b>新编号：</b>外部 #2429 新增 P6 和最终 Step 3 清单，候选 PR 页 42 项及本地别名此前未进来源全集；#2594 七条验收、#2598 三种 cleanup 观测均明确归属。<b>证伪：</b>候选页 ABORT 只写 stderr、RDMA provider 空白均与 main 冲突；已改为引用工作项，不按旧待办重复开发。#2450 关闭仍不证明 writable alias 已实现。<b>判据：</b>主归属与联验分开，源码/测试存在与实际硬件执行分开，观测账本不冒充资源回收闭环；非空区间、真实缺登记/缺归属负对照、浏览器渲染共同验收。<b>本轮自检：</b>逐 PR 归属集合断言抓到 #2543 漏填，写盘前补齐，不能靠总数相同跳过集合比对。逐页复核又抓到场景表与 backend 范例沿用旧事实：alloc_shared_tensor 返回 Buffer、fork 后可从已继承 arena 分配、A3 Fabric 已有实现；编号全覆盖不能替代示例与场景证据同步。依赖守卫也抓到更新工作项时漏带的三条门禁声明，已恢复，刷新正文不能丢退出条件。"
+      },
+      {
         "t": "2026-10-13 · 通信持续 CI 看护：查 PR 合并测试与逐项日志",
         "b": "<b>判断失误：</b>只查 main SHA 的 workflow 与个人是否跑过双机，漏掉面向 main 的 PR CI，把持续看护缩成历史一次 PASS。<b>证据：</b>配置基线 <code>68d137fdf</code> 的 NETWORK1 job 有变更门控；10 月 12–13 日 #2555/#2562/#2543 的实际 checkout <code>cd0287af</code>/<code>85166d6c</code>/<code>1b77ad2a</code> 五项均实际 PASS，含 MPI 四 rank peer-TLOAD 与先计算后通信。#2563 的旧测试 SHA <code>9ea0f508</code> 五项 FAIL，mixed 路径报告提交接口参数不兼容；不能移用到其新 head 或 main。<b>新判据：</b>workflow 触发 → 变更门控 → 用例选择 → 实际 checkout SHA → 非 skip 逐项结果；PASS 和失败一起登记。共用 suite 启动 daemon，不能把 MPI PASS 当作整机 daemon 缺席实验；NaN 验金与生产 lease/fault 退出条件仍单列。详见通信方案 D.4；不推进全目标扫描基线。"
       },
@@ -2366,7 +2371,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   },
   "delivery": {
     "title": "交付维度：用户已经能做什么",
-    "note": "⭐ <b>本节回答「用户能做什么、还缺哪项证据」，上面的轨道回答「谁在做、做到哪」。</b>两个维度共用一份工作项 —— 工作项的状态<b>只在 <code>work-items.md</code> 维护一份</b>，本节只引用 ID。<br>⛔ <b>「P3 被 P1 ＋ P2 双重前置」2026-09-07 作废</b>：P3 的承载工作项里 <code>RA-11</code>（#2096 在飞）与 <code>RA-8</code> 都不等 P2，<code>DS-7</code>（64-rank）是独立规模包。<b>依赖在工作项之间，不在阶段之间。</b>⇒ 由此推出：<b>P3 的用户模型必须从一开始参与设计</b>，否则 P1/P2 会各自做出本地与远端接口，最后由 P3 承担一次统一改造。",
+    "note": "⭐ <b>本节回答「用户能做什么、还缺哪项证据」，上面的轨道回答「谁在做、做到哪」。</b>两个维度共用一份工作项 —— 工作项的状态<b>只在 <code>work-items.md</code> 维护一份</b>，本节只引用 ID。<br>⛔ <b>「P3 被 P1 ＋ P2 双重前置」2026-09-07 作废</b>：P3 的承载工作项里 <code>RA-11</code>（#2096 已合入，父目标仍部分交付）与 <code>RA-8</code> 都不等 P2，<code>DS-7</code>（64-rank）是独立规模包。<b>依赖在工作项之间，不在阶段之间。</b>⇒ 由此推出：<b>P3 的用户模型必须从一开始参与设计</b>，否则 P1/P2 会各自做出本地与远端接口，最后由 P3 承担一次统一改造。",
     "items": [
       {
         "t": "P1 · 本地 Buffer–Attachment–Tensor 基础",

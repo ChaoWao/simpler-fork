@@ -1,13 +1,13 @@
 # Simpler 功能演进路线图
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > 状态：架构路线图。P0.1 eager-init core 与 P0.2 lifecycle/teardown
 > correctness 已交付；P0.2 的 admission、动态 eligibility、cooperative init
 > cancellation、retryable cleanup journal、recursive nested-SHM 回收、survivor
 > 覆盖和单一 teardown 编排已由 #1663/#1669/#1671/#1672/#1673/#1689 分批闭合。
 > P0.3 startup budget 与 full-hierarchy failure-injection/零残留证据已由
-> #1420/#1426/#1427/#1432/#1692 闭合。P1 的 Buffer–Attachment–Tensor 安全 cutover 尚未
+> \#1420/#1426/#1427/#1432/#1692 闭合。P1 的 Buffer–Attachment–Tensor 安全 cutover 尚未
 > 交付。各 PR/Issue 的实时状态和下一步只以 [.docs 状态看板](README.md) 为准；
 > 本文只保留架构契约和不会反转的一次性交付事实。；
 > 代码基线：upstream/main@3c64da8f，2026-08-05；本基线含 PR 1681 的
@@ -492,13 +492,13 @@ deployment、物理互连、allocation backend 和已建立的 attachment。
 统一词汇如下。`BufferHandle` 只是 owner 侧管理 `Buffer` 生命周期的 1:1 对象，
 不成为额外的用户概念，也不跨 edge：
 
-| 名称 | 契约 |
-| ---- | ---- |
-| `Buffer` | Host DDR、Device GM 等物理存储上的 owner-managed allocation；承载稳定 identity、size 和 lifecycle，不携带任一消费者的 local VA |
-| `CanonicalBufferIdentity` | 一个 Buffer incarnation 的全局逻辑身份；wire 名称为 `CanonicalIdentity`，由 `owner_instance_id + buffer_id + generation` 构成，不能退化成 owner-local `buffer_id` |
-| `Tensor` | `Buffer + byte_offset + shape + strides + dtype` 的地址无关逻辑视图，也是跨 edge 的值；`TensorView`/`BufferRef` 是已废弃词汇 |
-| `Attachment` | `(ExecutionEndpoint, Buffer)` 的访问关系；记录该 endpoint 的 capability、授权、lease 和 endpoint-local materialization |
-| `ChipTensor` | `Tensor` 在 Chip endpoint 上物化出的 GM-address-bearing POD；不跨 Worker edge，也不创造 `L2Tensor`/`LocalTensor` 同义词 |
+ | 名称 | 契约 |
+ | ---- | ---- |
+ | `Buffer` | Host DDR、Device GM 等物理存储上的 owner-managed allocation；承载稳定 identity、size 和 lifecycle，不携带任一消费者的 local VA |
+ | `CanonicalBufferIdentity` | 一个 Buffer incarnation 的全局逻辑身份；wire 名称为 `CanonicalIdentity`，由 `owner_instance_id + buffer_id + generation` 构成，不能退化成 owner-local `buffer_id` |
+ | `Tensor` | `Buffer + byte_offset + shape + strides + dtype` 的地址无关逻辑视图，也是跨 edge 的值；`TensorView`/`BufferRef` 是已废弃词汇 |
+ | `Attachment` | `(ExecutionEndpoint, Buffer)` 的访问关系；记录该 endpoint 的 capability、授权、lease 和 endpoint-local materialization |
+ | `ChipTensor` | `Tensor` 在 Chip endpoint 上物化出的 GM-address-bearing POD；不跨 Worker edge，也不创造 `L2Tensor`/`LocalTensor` 同义词 |
 
 软件标识符按拥有语义的 runtime domain 命名：L3+ 使用无前缀的 `Worker`、`Buffer`、
 `Tensor`、`TaskArgs`；L2 使用 `Chip*`；L0 使用 `Core*`。数字层级只用于拓扑
@@ -556,12 +556,12 @@ attachment 能力。同理，某个 host Worker 可以拥有 Device GM 的
 
 在此基础上，每层 Worker 都观察到四类**edge-scoped 逻辑角色**：
 
-| Kind | 含义 | 建议表示 |
-| ---- | ---- | -------- |
-| 1 | 当前 run 借用的参数 | Tensor |
-| 2 | 当前 Worker local | LocalBuffer |
-| 3 | 与选中的下级 shared | SharedBuffer |
-| 4 | 某个下级私有 | ChildBuffer |
+ | Kind | 含义 | 建议表示 |
+ | ---- | ---- | -------- |
+ | 1 | 当前 run 借用的参数 | Tensor |
+ | 2 | 当前 Worker local | LocalBuffer |
+ | 3 | 与选中的下级 shared | SharedBuffer |
+ | 4 | 某个下级私有 | ChildBuffer |
 
 这些 kind 不是物理存储类型，也不进入 Buffer identity。递归规则必须是
 edge-scoped：
@@ -648,14 +648,14 @@ ref 没有可由任意消费者直接解引用的通用地址字段，但严格 
 但 #1599 合入时一条未闭** —— 它们因此从「合入门」变成 **已发布 ABI 的收口清单**，
 逐条状态核于 `main@b535fa21`：
 
-| # | gate | 状态 | 分期 |
-| - | ---- | ---- | ---- |
-| G1 | view extent 的 offset/shape/stride/dtype 运算必须使用 checked add/multiply，拒绝 `uint64` wrap | ✅ **已闭 —— PR #1703 merged `02f90ef5`**（saturating 运算 ＋ 哨兵 `TENSOR_EXTENT_UNREPRESENTABLE` **按名拒绝**而非与 `nbytes` 比较 ＋ `tensors_overlap` 两端也饱和） | P1-A |
-| G2 | 每种 backend body 必须有 exact schema、reserved-byte 与 semantic validation；raw-address materialize 必须接收显式 `ImportContext` 并验证 fork/exact-owner-chip address domain，不能只凭 `backend_kind` | **schema 半 ✅ 已闭 —— PR #1704 merged `4d0de8ea`**：per-backend body switch（address-bearing 恰好 8 B 且非零基址 · `POSIX_SHM` 为 printable ASCII 无 `/` · `REMOTE_SIDECAR` 空）＋ reserved 尾字节必须为零，且该规则**同时覆盖 `Tensor` 过 `ndims` 的 `shapes`/`strides` 槽位**（`_pad` 显式排除 —— 它是 alignment slack，且 `CanonicalIdentity::_pad` 要故意容忍以保证同一 backing 两次 decode 键相同）。；✅ **`ImportContext` 半 —— PR #1744 merged `0c367015`（2026-08-08）**：新增 `ImportContext(is_host_endpoint, owning_chip_instance_id)`，`ImportRegistry.materialize()` 据此对 DEVICE_MALLOC/VMM_WINDOW 拒绝「host endpoint 一律拒」与「device endpoint 但 owner 对不上」两种情形。范围收窄自 `.docs` 早先的判断：不需要每个消费者进程都查询完整 `EndpointRegistry` —— chip 子进程本身不是 `Worker`（无自己的 `owner_instance_id`），只消费其**父** L3 Worker 铸的 device buffer，故「我是不是 owner chip」收窄成与**一个**已知 nonce 比对，父进程 fork 前就有。已接入三处 `ImportRegistry()` 构造点（`_sub_worker_loop` / `_run_chip_main_loop` / `_run_l2_materialized`）。两条新回归测试（`test_host_endpoint_materialize_refuses_a_device_tensor_directly` ／ `test_chip_materialization_refuses_a_foreign_chips_device_tensor`）直接喂 `materialize()`，绕开 submit，证明这条第二道防线真的挡得住。⚠️ **粒度上限（CodeRabbit review 发现，2026-08-08，已文档化未修复）**：`owner_instance_id` 按 Worker 铸一次不按 chip，故此检查是 Worker-grained——同一多卡 Worker（如 `device_ids=[0, 1]`）下的兄弟 chip 共享一个 nonce，本检查区分不了它们，只挡「别的 Worker」与「host endpoint」两种情形。 | schema 半 = P1-A ✅；`ImportContext` 半 = **P1-B/P1-C ✅ 已闭**（粒度上限见左栏，留作已知边界不阻塞） |
-| G3 | identity cache 必须绑定 semantic descriptor fingerprint，POSIX shm import 还须核对实际 object size；同一 identity 携带冲突 descriptor 必须拒绝 | ✅ **已闭 —— PR #1704 merged `4d0de8ea`**：`ImportedBuffer` 记住来源 descriptor，cache 命中时 field-wise 比对、**不等即拒且保留已发出的映射**（callers 可能已持有其地址）；`POSIX_SHM` 分支 map 后核对 `shm.size >= desc.nbytes`，不足即拒并先 `close()`。⇒ **G1 的「算得对」现在建立在真前提上** —— `nbytes` 不再只凭 owner 自报 | P1-A |
-| G4 | `owner_instance_id` 必须在实际 owner fork/adoption 之后生成，并拒绝同一 NEW Worker 被重复 adopt | ✅ **PR #1744 merged `0c367015`（2026-08-08）**。`init()` 在 `NEW -> INITIALIZING` 转换后重新 mint —— next-level child 的 `init()` 只会在 fork 出的进程内运行，故该 nonce 从不早于自己的 fork。`__init__` 里仍保留一次 mint 作兜底（本仓大量测试 harness 直接改 `_lifecycle` 而不走真 `init()`，需要一个格式合法的 nonce），但生产路径的身份一律以 `init()` 里那次为准。**「拒绝同一 NEW Worker 被重复 adopt」本就已被 `add_worker()` 的 `_topology_parent` 守卫 ＋ `init()` 自身的 NEW-only 重入检查覆盖**，未新增代码。⇒ 本 PR **同时**关了下一行 G2 的 `ImportContext` 半，见 [`README.md` §1.1 #1744 行](README.md) | P1-B（owner authority）✅ 已闭 |
-| G5 | mapping close 失败不能跳过 owner unlink，released handle 也不得继续派生 `Tensor` | ✅ **已闭 —— PR #1749 merged `919abfdf`（2026-08-09）**。⚠️ 范围核对：这条门原判断需要一整套全新 `release_buffer()` 公共 API ＋ 跨 submit 的 in-flight retain ＋ `buffer_id` 复用/generation bump ——重新逐字核对 gate 措辞后发现是误判：`Buffer.close()`（`python/simpler/buffer.py`）**早已存在**，测试套件里到处在用它做 `create_buffer()` 的释放路径，只是恰好带着这两条门点名的 bug（且两条都 0 测试覆盖）：① `shm.close()` 抛异常时 `unlink()` 被跳过、`self.shm` 也不清空——重试只会在同一处再炸一次，永远够不到 `unlink()`；② `close()` 从不标记「已释放」，`buffer.tensor(...)`/`to_descriptor()` 在 close 之后照常把descriptor 建出来，指向可能已被 unlink 的 backing。**#1749 只修这两条**：`close()` 改成先清 `self.shm` 并置 `closed=True`，再 `try/finally` 保证 `unlink()` 总跑；`to_descriptor()` 加 `closed` 守卫（`tensor()` 内部调它，一处守卫两条派生路径都堵）。⚠️ **`ImportRegistry.unregister`（曾经存在，0 调用点 0 测试）已由 PR #1747 merged `24d8e8fc`（2026-08-08）删除**——它是「import 随 handle 生命周期释放」这条不变量的落地位，但 `release_buffer()` 本身还不存在，留一个未测的空方法比没有更误导。**真正的 `release_buffer()`/in-flight retain/`buffer_id` 复用+generation bump 仍完全未建**（`generation` 全仓每处调用都硬编码 1，`_next_buffer_id()` 从不回收 id）——这是独立、更大、未设计的 P1-B「registry + lifetime」后续工作，不由 #1749 关闭，**接手时不要把 #1749 误读成那整块已经做完** | P1-B（lifetime） |
-| G6 | ~~`create_buffer` 首版若不支持 next-level owner delegation，public scope 必须明确限制为 L2/L3~~ | ✅ **已闭 —— #1703 merged `02f90ef5`**（`_next_level_shms` 参与子节点判定 ＋ 131 行新测试；`create_buffer` 此前零测试）。⚠️ **本 gate 的措辞预设了错误方向，应当重写** —— 实际缺陷不是「借 sub child 误称支持 L4」（放得太宽），而是**卡得太严**：next-level child 就是 fork 出的进程、按名 map `POSIX_SHM`，与 chip/sub child 无异，故子节点全为本地 L3 的 L4 被**误拒** | P1-A（是 bug 而非 scope 决策） |
+ | # | gate | 状态 | 分期 |
+ | - | ---- | ---- | ---- |
+ | G1 | view extent 的 offset/shape/stride/dtype 运算必须使用 checked add/multiply，拒绝 `uint64` wrap | ✅ **已闭 —— PR #1703 merged `02f90ef5`**（saturating 运算 ＋ 哨兵 `TENSOR_EXTENT_UNREPRESENTABLE` **按名拒绝**而非与 `nbytes` 比较 ＋ `tensors_overlap` 两端也饱和） | P1-A |
+ | G2 | 每种 backend body 必须有 exact schema、reserved-byte 与 semantic validation；raw-address materialize 必须接收显式 `ImportContext` 并验证 fork/exact-owner-chip address domain，不能只凭 `backend_kind` | **schema 半 ✅ 已闭 —— PR #1704 merged `4d0de8ea`**：per-backend body switch（address-bearing 恰好 8 B 且非零基址 · `POSIX_SHM` 为 printable ASCII 无 `/` · `REMOTE_SIDECAR` 空）＋ reserved 尾字节必须为零，且该规则**同时覆盖 `Tensor` 过 `ndims` 的 `shapes`/`strides` 槽位**（`_pad` 显式排除 —— 它是 alignment slack，且 `CanonicalIdentity::_pad` 要故意容忍以保证同一 backing 两次 decode 键相同）。；✅ **`ImportContext` 半 —— PR #1744 merged `0c367015`（2026-08-08）**：新增 `ImportContext(is_host_endpoint, owning_chip_instance_id)`，`ImportRegistry.materialize()` 据此对 DEVICE_MALLOC/VMM_WINDOW 拒绝「host endpoint 一律拒」与「device endpoint 但 owner 对不上」两种情形。范围收窄自 `.docs` 早先的判断：不需要每个消费者进程都查询完整 `EndpointRegistry` —— chip 子进程本身不是 `Worker`（无自己的 `owner_instance_id`），只消费其**父** L3 Worker 铸的 device buffer，故「我是不是 owner chip」收窄成与**一个**已知 nonce 比对，父进程 fork 前就有。已接入三处 `ImportRegistry()` 构造点（`_sub_worker_loop` / `_run_chip_main_loop` / `_run_l2_materialized`）。两条新回归测试（`test_host_endpoint_materialize_refuses_a_device_tensor_directly` ／ `test_chip_materialization_refuses_a_foreign_chips_device_tensor`）直接喂 `materialize()`，绕开 submit，证明这条第二道防线真的挡得住。⚠️ **粒度上限（CodeRabbit review 发现，2026-08-08，已文档化未修复）**：`owner_instance_id` 按 Worker 铸一次不按 chip，故此检查是 Worker-grained——同一多卡 Worker（如 `device_ids=[0, 1]`）下的兄弟 chip 共享一个 nonce，本检查区分不了它们，只挡「别的 Worker」与「host endpoint」两种情形。 | schema 半 = P1-A ✅；`ImportContext` 半 = **P1-B/P1-C ✅ 已闭**（粒度上限见左栏，留作已知边界不阻塞） |
+ | G3 | identity cache 必须绑定 semantic descriptor fingerprint，POSIX shm import 还须核对实际 object size；同一 identity 携带冲突 descriptor 必须拒绝 | ✅ **已闭 —— PR #1704 merged `4d0de8ea`**：`ImportedBuffer` 记住来源 descriptor，cache 命中时 field-wise 比对、**不等即拒且保留已发出的映射**（callers 可能已持有其地址）；`POSIX_SHM` 分支 map 后核对 `shm.size >= desc.nbytes`，不足即拒并先 `close()`。⇒ **G1 的「算得对」现在建立在真前提上** —— `nbytes` 不再只凭 owner 自报 | P1-A |
+ | G4 | `owner_instance_id` 必须在实际 owner fork/adoption 之后生成，并拒绝同一 NEW Worker 被重复 adopt | ✅ **PR #1744 merged `0c367015`（2026-08-08）**。`init()` 在 `NEW -> INITIALIZING` 转换后重新 mint —— next-level child 的 `init()` 只会在 fork 出的进程内运行，故该 nonce 从不早于自己的 fork。`__init__` 里仍保留一次 mint 作兜底（本仓大量测试 harness 直接改 `_lifecycle` 而不走真 `init()`，需要一个格式合法的 nonce），但生产路径的身份一律以 `init()` 里那次为准。**「拒绝同一 NEW Worker 被重复 adopt」本就已被 `add_worker()` 的 `_topology_parent` 守卫 ＋ `init()` 自身的 NEW-only 重入检查覆盖**，未新增代码。⇒ 本 PR **同时**关了下一行 G2 的 `ImportContext` 半，见 [`README.md` §1.1 #1744 行](README.md) | P1-B（owner authority）✅ 已闭 |
+ | G5 | mapping close 失败不能跳过 owner unlink，released handle 也不得继续派生 `Tensor` | ✅ **已闭 —— PR #1749 merged `919abfdf`（2026-08-09）**。⚠️ 范围核对：这条门原判断需要一整套全新 `release_buffer()` 公共 API ＋ 跨 submit 的 in-flight retain ＋ `buffer_id` 复用/generation bump ——重新逐字核对 gate 措辞后发现是误判：`Buffer.close()`（`python/simpler/buffer.py`）**早已存在**，测试套件里到处在用它做 `create_buffer()` 的释放路径，只是恰好带着这两条门点名的 bug（且两条都 0 测试覆盖）：① `shm.close()` 抛异常时 `unlink()` 被跳过、`self.shm` 也不清空——重试只会在同一处再炸一次，永远够不到 `unlink()`；② `close()` 从不标记「已释放」，`buffer.tensor(...)`/`to_descriptor()` 在 close 之后照常把descriptor 建出来，指向可能已被 unlink 的 backing。**#1749 只修这两条**：`close()` 改成先清 `self.shm` 并置 `closed=True`，再 `try/finally` 保证 `unlink()` 总跑；`to_descriptor()` 加 `closed` 守卫（`tensor()` 内部调它，一处守卫两条派生路径都堵）。⚠️ **`ImportRegistry.unregister`（曾经存在，0 调用点 0 测试）已由 PR #1747 merged `24d8e8fc`（2026-08-08）删除**——它是「import 随 handle 生命周期释放」这条不变量的落地位，但 `release_buffer()` 本身还不存在，留一个未测的空方法比没有更误导。**真正的 `release_buffer()`/in-flight retain/`buffer_id` 复用+generation bump 仍完全未建**（`generation` 全仓每处调用都硬编码 1，`_next_buffer_id()` 从不回收 id）——这是独立、更大、未设计的 P1-B「registry + lifetime」后续工作，不由 #1749 关闭，**接手时不要把 #1749 误读成那整块已经做完** | P1-B（lifetime） |
+ | G6 | ~~`create_buffer` 首版若不支持 next-level owner delegation，public scope 必须明确限制为 L2/L3~~ | ✅ **已闭 —— #1703 merged `02f90ef5`**（`_next_level_shms` 参与子节点判定 ＋ 131 行新测试；`create_buffer` 此前零测试）。⚠️ **本 gate 的措辞预设了错误方向，应当重写** —— 实际缺陷不是「借 sub child 误称支持 L4」（放得太宽），而是**卡得太严**：next-level child 就是 fork 出的进程、按名 map `POSIX_SHM`，与 chip/sub child 无异，故子节点全为本地 L3 的 L4 被**误拒** | P1-A（是 bug 而非 scope 决策） |
 
 ✅ **G1 ＋ G3 的耦合已解开**（#1704）：曾经的风险是「G1 算得对，但算的可能是假前提」——
 POSIX shm 不核对实际 object size ⇒ 「视图不越出 backing」建立在 owner 自报、经 wire 传来的
@@ -670,10 +670,10 @@ POSIX shm 不核对实际 object size ⇒ 「视图不越出 backing」建立在
 
 **另有 P1-A 自身的两条要求**（见下方 §5.6 P1-A 条）：
 
-| # | 要求 | 状态 |
-| - | ---- | ---- |
-| A1 | 冻结每 Tensor descriptor 大小时保留明确的 TaskArgs blob 上界与 256 accepted / 257 rejected 边界 | ✅ **已闭 —— PR #1704 merged `4d0de8ea`**：并列加了一条用 `sizeof(Tensor)`（144 B）的 `static_assert`，**未替换**现有 `ChipTensor`（128 B）那条 —— 今天 blob 确实装 `ChipTensor`，两条各守各的。实测 256×144＋header＋scalars = **37896 B** vs capacity **64016 B**，余 26120 B ⇒ 是 guard 而非正在发生的溢出。；_（下方为收口前的分析，保留以解释为何需要这条）_ 🟡 **两条断言都已有，但 blob 那条用错了类型**。256/257 边界见 `tests/ut/cpp/types/test_chip_max_tensor_args.cpp`；blob 上界见 `worker_manager.h:167` 的 `static_assert(MAILBOX_ARGS_CAPACITY >= …)` —— **它用 `sizeof(ChipTensor)`（128 B，存储型），而 wire 上是 `Tensor`（144 B）**。今天 blob 确实装 `ChipTensor` ⇒ 该断言对今天是对的；**#1453 cutover 后 blob 改装 `Tensor`，它就不再守着实际尺寸**。⇒ 需并列加一条用 `sizeof(pto::Tensor)` 的（**不替换**现有那条）。；**实测：容量不紧张** —— `MAILBOX_ARGS_CAPACITY ≈ 63.5 KiB`，256 × 144 B ＋ header ＋ scalars ≈ **37.0 KiB，余 ~27 KiB**（对照 `ChipTensor` 的 ≈ 33.0 KiB）⇒ **这是一条 guard，不是一处正在发生的溢出** |
-| A2 | local same-build 边界用 `SIMPLER_BUILD_COMMIT` 拒绝 skew | ✅ **已闭 —— 本条此前的判断有误，2026-08-05 更正**。原文写「全仓没有任何一处比较它」，**不成立**：`python/simpler/task_interface.py:95-133`（#1523 交付）拿 `__build_commit__` 与 `git rev-parse HEAD` 对，不等即 `raise ImportError`。**已实测撞到**（本轮 `reset --hard` 换 HEAD 后 pytest 直接被拦：_built from b535fa2108d9, but this source tree is at 29b3527…_）。再对 `buffer.h` 的原话——它声称的是「**会发生**的那种 skew（旧扩展配新 Python）由它挡住」，而这正是该检查做的事 ⇒ **注释准确，没有引用不存在的防线**。唯一边界是它只在 source-tree 装时跑（wheel 无 `.git`），但 wheel 里 Python 与扩展同出一个包，本就不可能 skew。⇒ **原「(a) 真去比对 / (b) 改注释，必须选一个」的要求撤销** |
+ | # | 要求 | 状态 |
+ | - | ---- | ---- |
+ | A1 | 冻结每 Tensor descriptor 大小时保留明确的 TaskArgs blob 上界与 256 accepted / 257 rejected 边界 | ✅ **已闭 —— PR #1704 merged `4d0de8ea`**：并列加了一条用 `sizeof(Tensor)`（144 B）的 `static_assert`，**未替换**现有 `ChipTensor`（128 B）那条 —— 今天 blob 确实装 `ChipTensor`，两条各守各的。实测 256×144＋header＋scalars = **37896 B** vs capacity **64016 B**，余 26120 B ⇒ 是 guard 而非正在发生的溢出。；_（下方为收口前的分析，保留以解释为何需要这条）_ 🟡 **两条断言都已有，但 blob 那条用错了类型**。256/257 边界见 `tests/ut/cpp/types/test_chip_max_tensor_args.cpp`；blob 上界见 `worker_manager.h:167` 的 `static_assert(MAILBOX_ARGS_CAPACITY >= …)` —— **它用 `sizeof(ChipTensor)`（128 B，存储型），而 wire 上是 `Tensor`（144 B）**。今天 blob 确实装 `ChipTensor` ⇒ 该断言对今天是对的；**#1453 cutover 后 blob 改装 `Tensor`，它就不再守着实际尺寸**。⇒ 需并列加一条用 `sizeof(pto::Tensor)` 的（**不替换**现有那条）。；**实测：容量不紧张** —— `MAILBOX_ARGS_CAPACITY ≈ 63.5 KiB`，256 × 144 B ＋ header ＋ scalars ≈ **37.0 KiB，余 ~27 KiB**（对照 `ChipTensor` 的 ≈ 33.0 KiB）⇒ **这是一条 guard，不是一处正在发生的溢出** |
+ | A2 | local same-build 边界用 `SIMPLER_BUILD_COMMIT` 拒绝 skew | ✅ **已闭 —— 本条此前的判断有误，2026-08-05 更正**。原文写「全仓没有任何一处比较它」，**不成立**：`python/simpler/task_interface.py:95-133`（#1523 交付）拿 `__build_commit__` 与 `git rev-parse HEAD` 对，不等即 `raise ImportError`。**已实测撞到**（本轮 `reset --hard` 换 HEAD 后 pytest 直接被拦：_built from b535fa2108d9, but this source tree is at 29b3527…_）。再对 `buffer.h` 的原话——它声称的是「**会发生**的那种 skew（旧扩展配新 Python）由它挡住」，而这正是该检查做的事 ⇒ **注释准确，没有引用不存在的防线**。唯一边界是它只在 source-tree 装时跑（wheel 无 `.git`），但 wheel 里 Python 与扩展同出一个包，本就不可能 skew。⇒ **原「(a) 真去比对 / (b) 改注释，必须选一个」的要求撤销** |
 
 收口任务：`tasks/task-p1a-close-merge-gates.md`（本地参考：`tasks/task-p1a-close-merge-gates.md`）。
 这些不改变 P1-B registry/lifetime、Attachment 或 wire cutover 仍未交付的边界。
@@ -1319,19 +1319,19 @@ HCOMM、domain 和 concurrency 等关键词，并人工审阅候选的标题和 
 
 ### 5.2 历史快照中的直接相关开放项
 
-| Item | 关联 | 建议 |
-| ---- | ---- | ---- |
-| [PR 1003][pr-1003] | post-READY child-exit hang | 后续已由 bdf6feda 对应修复进入 main |
-| [PR 1090][pr-1090] | async run/register lane | 作为 EdgeChannel 执行基础 |
-| [PR 1379][pr-1379] | concurrent Worker.run | 与 PR 1090 统一后再合入 |
-| [PR 1436][pr-1436] | required exact NEXT_LEVEL placement + per-worker queue | 后续已由 fee284e8 连同 mixed local/remote 与反序 group-mapping 回归进入 main |
-| [Issue 824][issue-824] | persistent CommDomain | Global L4 domain 前置 |
-| [Issue 1105][issue-1105] | endpoint requeue hang | 与定向 queue 一起修 |
-| [PR 711][pr-711] | gRPC 控制面 + RXE/verbs 数据面 | 合流，避免形成第二套 remote stack |
-| [PR 866][pr-866] | Remote L3 monolith | 保留缺口后关闭 |
-| [PR 755][pr-755] | multichannel MPMC 设计 | 提取 lane 语义 |
-| [PR 803][pr-803] | C ABI + a2a3 onboard host-device comm | 核对 multi-lane 等功能差集，非整体 superseded |
-| [PR 861][pr-861] | host-device mapped-region 原语 | 核对与已合并栈的功能差集，保留独有缺口 |
+ | Item | 关联 | 建议 |
+ | ---- | ---- | ---- |
+ | [PR 1003][pr-1003] | post-READY child-exit hang | 后续已由 bdf6feda 对应修复进入 main |
+ | [PR 1090][pr-1090] | async run/register lane | 作为 EdgeChannel 执行基础 |
+ | [PR 1379][pr-1379] | concurrent Worker.run | 与 PR 1090 统一后再合入 |
+ | [PR 1436][pr-1436] | required exact NEXT_LEVEL placement + per-worker queue | 后续已由 fee284e8 连同 mixed local/remote 与反序 group-mapping 回归进入 main |
+ | [Issue 824][issue-824] | persistent CommDomain | Global L4 domain 前置 |
+ | [Issue 1105][issue-1105] | endpoint requeue hang | 与定向 queue 一起修 |
+ | [PR 711][pr-711] | gRPC 控制面 + RXE/verbs 数据面 | 合流，避免形成第二套 remote stack |
+ | [PR 866][pr-866] | Remote L3 monolith | 保留缺口后关闭 |
+ | [PR 755][pr-755] | multichannel MPMC 设计 | 提取 lane 语义 |
+ | [PR 803][pr-803] | C ABI + a2a3 onboard host-device comm | 核对 multi-lane 等功能差集，非整体 superseded |
+ | [PR 861][pr-861] | host-device mapped-region 原语 | 核对与已合并栈的功能差集，保留独有缺口 |
 
 [PR 1381][pr-1381] 已关闭且未合入；其 eager/full-tree READY 主体已由
 [PR 1397][pr-1397] 交付，不再作为实现基线。独有 hardening 缺口统一进入
@@ -1810,9 +1810,9 @@ P0.1 eager core 的完成口径：
 
 完整 P0.3 simulation remote correctness 的退出条件（**已由 #1692 满足**）：
 
-> #1426 已满足 numeric timeout 的 parent/daemon pre-resource 子条件；#1427 已满足
+> \#1426 已满足 numeric timeout 的 parent/daemon pre-resource 子条件；#1427 已满足
 > daemon per-connection exception isolation 和 local-send-failure runner 回收子条件；
-> #1432 已满足 single-root hard wall、最终 READY gate 和 attach/runtime timeout
+> \#1432 已满足 single-root hard wall、最终 READY gate 和 attach/runtime timeout
 > separation。#1692 已补齐 local child READY 后的 remote open timeout、
 > later-remote failure 和 open-success/attach-failure 的 PID/PGID/SHM/session
 > 零残留回归，并证明 daemon 仍能接受下一请求。发送成功但 parent 未确认的歧义
@@ -2042,14 +2042,14 @@ transaction 约束。
 
 **逐条承载**（2026-09-08 补，真源 `.docs/work-items.md`；P1 已在 `.docs/README.md` §2.-1 有同款表）：
 
-| P2 退出条件（逐条） | 承载 |
-| ------------------- | ---- |
-| 一个 L4 能创建、复用和销毁跨 Local/Remote L3 的通信域 | `DS-10` |
-| 任意 rank 部分失败时完成**确定性清理** | `DS-9`（PREPARE/COMMIT/ABORT ＋ 回滚） |
-| ACK'd remote 标 confirmed-clean；未 ACK 明确返回 cleanup-unconfirmed；finite lease 最终回收 | `DS-4` |
-| CANCEL/SHUTDOWN 重传具有**幂等 terminal outcome** | `DS-9` |
-| 健康长任务不会被 command deadline 冒充为 session health failure（三者必须相互独立） | `DS-4` |
-| remote direct Attachment 与 explicit Transfer 在 identity / completion / 可观测 data-path 上严格区分 | `DS-3`（本地那半＝`RA-5`） |
+ | P2 退出条件（逐条） | 承载 |
+ | ------------------- | ---- |
+ | 一个 L4 能创建、复用和销毁跨 Local/Remote L3 的通信域 | `DS-10` |
+ | 任意 rank 部分失败时完成**确定性清理** | `DS-9`（PREPARE/COMMIT/ABORT ＋ 回滚） |
+ | ACK'd remote 标 confirmed-clean；未 ACK 明确返回 cleanup-unconfirmed；finite lease 最终回收 | `DS-4` |
+ | CANCEL/SHUTDOWN 重传具有**幂等 terminal outcome** | `DS-9` |
+ | 健康长任务不会被 command deadline 冒充为 session health failure（三者必须相互独立） | `DS-4` |
+ | remote direct Attachment 与 explicit Transfer 在 identity / completion / 可观测 data-path 上严格区分 | `DS-3`（本地那半＝`RA-5`） |
 
 ⇒ **六条全部有承载，且都在 `DS` 线内**（`RA-5` 是它的本地对应物）。
 
@@ -2087,14 +2087,14 @@ remote session/transfer/attachment plan，P3 才把它们组合成用户可选�
 
 ⭐ **六项的实施归属与验收拆分**（真源 [`work-items.md`](work-items.md)，此处只列映射）：
 
-| — | 归属 | 验收怎么拆 |
-| - | ---- | ---------- |
-| **①** endpoint 与 capability view | `RA-8` | 与 P1/W2 共同设计，**逐 backend 交付** |
-| **②** 多 backing / adapter 的 ResourceBundle | 本地半 `RA-9` · 跨节点半 `DS-10` | 先定义组合与失败语义，**先验收本地域，再验收跨节点域** |
-| **③** 暴露 plan / capability / completion | `RA-10` | **随每条访问路径一起交付**，成为 P1/P2 的接口要求，不单独排一段 |
-| **④** 最小同步原语与 SPSC queue | `RA-11`（原语）· 上层库（schema/policy）· `EX-2`（常驻循环） | 与 W4①/W6 **合成同一工作包**，不重复排期 |
-| **⑤** 64-rank 上限改造 | `DS-7` | **独立的规模扩展工作包**，不阻塞小规模域先行交付 |
-| **⑥** 验收后才发 capability view | **不是工作项，是约束** | 加在 `RA-8` 上并传导到 `RA-9`/`RA-10` |
+ | — | 归属 | 验收怎么拆 |
+ | - | ---- | ---------- |
+ | **①** endpoint 与 capability view | `RA-8` | 与 P1/W2 共同设计，**逐 backend 交付** |
+ | **②** 多 backing / adapter 的 ResourceBundle | 本地半 `RA-9` · 跨节点半 `DS-10` | 先定义组合与失败语义，**先验收本地域，再验收跨节点域** |
+ | **③** 暴露 plan / capability / completion | `RA-10` | **随每条访问路径一起交付**，成为 P1/P2 的接口要求，不单独排一段 |
+ | **④** 最小同步原语与 SPSC queue | `RA-11`（原语）· 上层库（schema/policy）· `EX-2`（常驻循环） | 与 W4①/W6 **合成同一工作包**，不重复排期 |
+ | **⑤** 64-rank 上限改造 | `DS-7` | **独立的规模扩展工作包**，不阻塞小规模域先行交付 |
+ | **⑥** 验收后才发 capability view | **不是工作项，是约束** | 加在 `RA-8` 上并传导到 `RA-9`/`RA-10` |
 
 ⇒ ⭐ **本地异构域与 SPSC 示例无需等待全部远端可靠性工作完成**；跨节点异构域仍必须过
 session、事务及故障清理验收；64-rank 扩展也不阻塞小规模域。
@@ -2111,14 +2111,14 @@ session、事务及故障清理验收；64-rank 扩展也不阻塞小规模域�
 
 **逐条承载**（2026-09-08 补）：
 
-| P3 退出条件（逐条） | 承载 |
-| ------------------- | ---- |
-| 用户选逻辑 endpoint、操作与允许的 data-path policy | `RA-8`（endpoint 与 capability view） |
-| runtime 内部执行 AttachmentPlan，向用户暴露最终 capability / Transport choice 与 completion | `RA-10` |
-| **不暴露可手工 detach 的 live Attachment handle** | **约束**（§6 表，加在 `RA-10` 上）——`Attachment` 不是用户概念，2026-08-03 裁决 |
-| 不支持的 engine/protocol/capability 组合**明确失败** | `RA-8` 的本地拒绝路径（同时也是 P1 的一条退出条件） |
-| `copy_to`/`copy_from` 保持既有 identity 且 completion 可观察；Transfer 的新 identity 必须显式可见 | `RA-5` |
-| **不以「统一内存」名义提供隐式 coherence** | **约束**（§6 表，加在 `RA-5`/`RA-10` 上） |
+ | P3 退出条件（逐条） | 承载 |
+ | ------------------- | ---- |
+ | 用户选逻辑 endpoint、操作与允许的 data-path policy | `RA-8`（endpoint 与 capability view） |
+ | runtime 内部执行 AttachmentPlan，向用户暴露最终 capability / Transport choice 与 completion | `RA-10` |
+ | **不暴露可手工 detach 的 live Attachment handle** | **约束**（§6 表，加在 `RA-10` 上）——`Attachment` 不是用户概念，2026-08-03 裁决 |
+ | 不支持的 engine/protocol/capability 组合**明确失败** | `RA-8` 的本地拒绝路径（同时也是 P1 的一条退出条件） |
+ | `copy_to`/`copy_from` 保持既有 identity 且 completion 可观察；Transfer 的新 identity 必须显式可见 | `RA-5` |
+ | **不以「统一内存」名义提供隐式 coherence** | **约束**（§6 表，加在 `RA-5`/`RA-10` 上） |
 
 ⇒ **四条是工作项、两条是约束**；约束不建格（建了就是永远做不完的格），
 写在 `.docs/work-items.md` §6。

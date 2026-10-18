@@ -1,6 +1,6 @@
 # W2 端点模型 ↔ P1-B `ImportContext`：收敛计划
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > **状态**：⬜ **计划**。本文只做**依赖识别与合入排序**，不含实现者 prompt。
 > **触发**：2026-08-07 review PR #1696（`24370ad7`）时发现一条**未被任何文档记录的跨里程碑依赖**。
@@ -19,7 +19,7 @@
 > 写作时（01:49）我记的是「**#1453** wire flip，**硬前置 ＝ 不变量 5**」。两小时后核对
 > 看板才发现两处都变了：；
 > ① **wire flip 已由 #1729 承接**（`c9f5db5e`，125 files，2026-08-07T03:54 仍在动）；
-> #1453 是原 omnibus DRAFT，07-30 后未动。；
+> \#1453 是原 omnibus DRAFT，07-30 后未动。；
 > ② **用户裁决 A（2026-08-07）已解除该硬前置** —— 提交时那道防线本就落了
 > （host endpoint 行由 `_reject_device_args` ＋ `mapped_args_from_blob` 双重拒绝，chip 行由
 > `_child_prov_check_dispatch` 按精确 `(target_worker_id, ptr)` 键 fail-closed），
@@ -36,25 +36,25 @@
 ### PR #1696 造的端点注册表，就是 P1-B 卡了一周的那张 endpoint 矩阵 —— 但两边互不知情
 
 放着不管，仓库会长出**两张 endpoint 矩阵**：一张决定「能不能计划」，一张决定「能不能物化」，
-随时可以对不上。这是 [`ci-change-detection.md`](https://github.com/hw-native-sys/simpler/blob/11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b/.claude/rules/ci-change-detection.md) §1
+随时可以对不上。这是 [`ci-change-detection.md`](https://github.com/hw-native-sys/simpler/blob/937c57efc71ad01a01c3a72072df075d2a5dd24f/.claude/rules/ci-change-detection.md) §1
 「一套词汇」原则在更高一层的失效，也是本轮 review 已抓过一次的同类错误
 （`BackendKind` 双词汇，作者已改对）。
 
 ## 1. 现状（2026-08-07）
 
-| 条目 | 状态 | 卡在哪 |
-| ---- | ---- | ------ |
-| **P1-A** wire ABI 冻结 | ✅ DONE（#1599 `b535fa21` ＋ #1703 ＋ #1704） | — |
-| **G2 schema 半** | ✅ 已闭（#1704 `4d0de8ea`） | — |
-| **G2 `ImportContext` 半** | 🔴 未闭 | 需 registry/owner authority 供 endpoint 上下文 |
-| **G4** `owner_instance_id` mint 时机 | 🔴 未闭 | 在 `Worker.__init__` 里 mint，早于任何 fork |
-| **G5** close 失败不跳 unlink | 🔴 未闭 | 与本文正交 |
-| **§9 不变量 5** device ref 只到 owner chip | 🔴 未强制 | ＝ `ImportContext` 半 |
-| **#1453** P1-B wire flip | 🔵 DRAFT，**07-30 后未动** | ⛔ **已被 #1729 承接** —— 见抬头更正 |
-| **#1729** P1-B wire flip（现役） | 🔵 OPEN `c9f5db5e`，125f | 🟡 **不再被不变量 5 硬阻**（裁决 A） |
-| **#1696** W2 端点模型 | 🔵 OPEN `24370ad7`，**CI 全绿** | 3 条 blocker（§3） |
-| **W0** a5 host-map 探测 | 🚧 未核实 | 无前置，**无人认领** |
-| **W1 / W4 / W6** 平台链 | ⬜ 未开工 | 全卡在 W0 |
+ | 条目 | 状态 | 卡在哪 |
+ | ---- | ---- | ------ |
+ | **P1-A** wire ABI 冻结 | ✅ DONE（#1599 `b535fa21` ＋ #1703 ＋ #1704） | — |
+ | **G2 schema 半** | ✅ 已闭（#1704 `4d0de8ea`） | — |
+ | **G2 `ImportContext` 半** | 🔴 未闭 | 需 registry/owner authority 供 endpoint 上下文 |
+ | **G4** `owner_instance_id` mint 时机 | 🔴 未闭 | 在 `Worker.__init__` 里 mint，早于任何 fork |
+ | **G5** close 失败不跳 unlink | 🔴 未闭 | 与本文正交 |
+ | **§9 不变量 5** device ref 只到 owner chip | 🔴 未强制 | ＝ `ImportContext` 半 |
+ | **#1453** P1-B wire flip | 🔵 DRAFT，**07-30 后未动** | ⛔ **已被 #1729 承接** —— 见抬头更正 |
+ | **#1729** P1-B wire flip（现役） | 🔵 OPEN `c9f5db5e`，125f | 🟡 **不再被不变量 5 硬阻**（裁决 A） |
+ | **#1696** W2 端点模型 | 🔵 OPEN `24370ad7`，**CI 全绿** | 3 条 blocker（§3） |
+ | **W0** a5 host-map 探测 | 🚧 未核实 | 无前置，**无人认领** |
+ | **W1 / W4 / W6** 平台链 | ⬜ 未开工 | 全卡在 W0 |
 
 ⇒ 共享内存设计的**链 A（W0→W1→W4→W6）整条停摆**；#1696 是当前唯一在动的一环，
 且意外压在 P1-B 关键路径上。
@@ -69,11 +69,11 @@
 
 而 §5.2 已经把那张矩阵画好了：
 
-| endpoint | HOST | DEVICE |
-| -------- | ---- | ------ |
-| L2 chip | ✅ | ✅ **仅其 owner chip** |
-| Python SUB（host 进程） | ✅ | ❌ **提交时拒绝** |
-| L4→L3 转发 | ✅ 不物化，仅 re-export | ✅ 同左 |
+ | endpoint | HOST | DEVICE |
+ | -------- | ---- | ------ |
+ | L2 chip | ✅ | ✅ **仅其 owner chip** |
+ | Python SUB（host 进程） | ✅ | ❌ **提交时拒绝** |
+ | L4→L3 转发 | ✅ 不物化，仅 re-export | ✅ 同左 |
 
 **#1696 造的就是这个形状**：按 `(path, deployment)` 索引的端点注册表，
 ＋ 裁决 `(provider endpoint, consumer endpoint, backend_kind)` 的 `RegionAccessService`。
@@ -83,7 +83,7 @@
 真实依赖链：
 
 ```text
-#1696（W2 端点注册表）
+\#1696（W2 端点注册表）
    └─→ G2 ImportContext 半（endpoint × address_space 门）
           └─→ #1453 wire flip（P1-B 出口）
 ```
@@ -95,11 +95,11 @@ PR #1696 也不知道自己在给 P1-B 供货。
 
 不是排期偏好，是结构性的 —— 判定「device ref 只到其 owner chip」所需的信息**不在 wire 上**：
 
-| 字段 | 为什么不够 |
-| ---- | ---------- |
-| `owner_instance_id` | 不透明 nonce，不含位置信息 |
-| `owner_worker_path_id` | 按设计 *"DIAGNOSTIC id only … takes part in **no** routing, visibility or identity decision"* |
-| `address_space` | 只有 HOST / DEVICE 两值，**不区分哪张卡** |
+ | 字段 | 为什么不够 |
+ | ---- | ---------- |
+ | `owner_instance_id` | 不透明 nonce，不含位置信息 |
+ | `owner_worker_path_id` | 按设计 *"DIAGNOSTIC id only … takes part in **no** routing, visibility or identity decision"* |
+ | `address_space` | 只有 HOST / DEVICE 两值，**不区分哪张卡** |
 
 ⇒ 只能由 registry / owner authority 供上下文。**既然只能有一个 registry 权威，就不该有两个矩阵。**
 
@@ -156,10 +156,10 @@ lazy 只是把失败推迟，不是消除。
 
 ### 3.4 ⚠️ 待澄清（本目录看板已预先登记）
 
-| # | 内容 | 状态 |
-| - | ---- | ---- |
-| ① `EndpointId` 缺 `session_id` | [README.md](README.md) 第 63 行登记 | ✅ **本次已修** —— `EndpointIdentity(session_instance_id, registry_epoch, endpoint_id)` |
-| ② `level < 3` 门控 | 同上 | ⚠️ **仍未答复**。`_require_ready_for_region_planning` 保留该门，且**现在还覆盖了 planning**（比单纯建 registry 更贴近 §2.3 那条线）。加一行注释写明「这是 §2.4 控制树可见性，不是 §2.3 能力判定」即可永久关闭 |
+ | # | 内容 | 状态 |
+ | - | ---- | ---- |
+ | ① `EndpointId` 缺 `session_id` | [README.md](README.md) 第 63 行登记 | ✅ **本次已修** —— `EndpointIdentity(session_instance_id, registry_epoch, endpoint_id)` |
+ | ② `level < 3` 门控 | 同上 | ⚠️ **仍未答复**。`_require_ready_for_region_planning` 保留该门，且**现在还覆盖了 planning**（比单纯建 registry 更贴近 §2.3 那条线）。加一行注释写明「这是 §2.4 控制树可见性，不是 §2.3 能力判定」即可永久关闭 |
 
 > ⚠️ **看板本身过期**：README 第 63 行仍写「5 files / +960 −2」「capability cache 桩」，
 > 是 force-push 前那版；现为 1720 行，capability cache 已被 `RegionAccessService` 取代，
@@ -171,10 +171,10 @@ lazy 只是把失败推迟，不是消除。
 
 ### 决定 ①：endpoint 矩阵谁拥有
 
-| 方案 | 代价 | 风险 |
-| ---- | ---- | ---- |
-| **A. W2 注册表升级为唯一 authority**，`ImportContext` 作消费者 | W2 补 `owner_instance_id → owner endpoint` 绑定表 | #1696 范围小幅扩大 |
-| B. 两边各建各的 | 现在最省 | **两张矩阵长期漂移** |
+ | 方案 | 代价 | 风险 |
+ | ---- | ---- | ---- |
+ | **A. W2 注册表升级为唯一 authority**，`ImportContext` 作消费者 | W2 补 `owner_instance_id → owner endpoint` 绑定表 | #1696 范围小幅扩大 |
+ | B. 两边各建各的 | 现在最省 | **两张矩阵长期漂移** |
 
 **建议 A** —— 理由见 §2「为什么信息只能来自 registry」。
 
@@ -190,13 +190,13 @@ lazy 只是把失败推迟，不是消除。
 
 ## 5. 合入顺序
 
-| 阶段 | 内容 | 规模 | 退出条件 |
-| ---- | ---- | ---- | -------- |
-| **0** | 决定 ① ②（用户拍板） | 半天 | 两条决定写入本文 |
-| **1** | #1696 收口：§3.1 删死代码＋注明桥 · §3.2 `_backend_kind_for_provider` 收 `part`（或从 `VMM_WINDOW` 的 counter 候选里删 `HOST_SVM_MAP`）· §3.3 恢复/替换测试 · §3.4② 加注释 | 1–2 天 | CI 绿 ＋ 4 条 ＋ G4 行补 W2 波及说明 |
-| **2** | **G4 收口**：mint 点移到 fork/adoption 之后，拒绝重复 adopt | 2–3 天 | G4 转 ✅；两处身份 mint 时机一致且有测试 |
-| **3** | **`ImportContext` 半**：`materialize` 收显式 endpoint 上下文 · 用 W2 注册表实现 §5.2 判定 · 补 `owner_instance_id → owner endpoint` 绑定 · 两道防线（提交时拒绝＋materialize 兜底） | ~1 周 | 不变量 5 转 ✅；§9 由 7/8 → 8/8；G2 全闭 |
-| **4** | ~~**#1453 评估**~~ ⛔ **已作废** —— wire flip 由 **#1729** 承接且**不再被本链阻塞**（裁决 A，见抬头更正）。本阶段改为：**`ImportContext` 落地后回头补 P1-B 的第二道防线**（chip 行的 `materialize` 兜底 ＋ 一条「绕过 submit 直接喂 blob 仍被拒」的用例），把 §9 不变量 5 从「声明」变成「强制」 | 待评估 | 不变量 5 转 ✅ |
+ | 阶段 | 内容 | 规模 | 退出条件 |
+ | ---- | ---- | ---- | -------- |
+ | **0** | 决定 ① ②（用户拍板） | 半天 | 两条决定写入本文 |
+ | **1** | #1696 收口：§3.1 删死代码＋注明桥 · §3.2 `_backend_kind_for_provider` 收 `part`（或从 `VMM_WINDOW` 的 counter 候选里删 `HOST_SVM_MAP`）· §3.3 恢复/替换测试 · §3.4② 加注释 | 1–2 天 | CI 绿 ＋ 4 条 ＋ G4 行补 W2 波及说明 |
+ | **2** | **G4 收口**：mint 点移到 fork/adoption 之后，拒绝重复 adopt | 2–3 天 | G4 转 ✅；两处身份 mint 时机一致且有测试 |
+ | **3** | **`ImportContext` 半**：`materialize` 收显式 endpoint 上下文 · 用 W2 注册表实现 §5.2 判定 · 补 `owner_instance_id → owner endpoint` 绑定 · 两道防线（提交时拒绝＋materialize 兜底） | ~1 周 | 不变量 5 转 ✅；§9 由 7/8 → 8/8；G2 全闭 |
+ | **4** | ~~**#1453 评估**~~ ⛔ **已作废** —— wire flip 由 **#1729** 承接且**不再被本链阻塞**（裁决 A，见抬头更正）。本阶段改为：**`ImportContext` 落地后回头补 P1-B 的第二道防线**（chip 行的 `materialize` 兜底 ＋ 一条「绕过 submit 直接喂 blob 仍被拒」的用例），把 §9 不变量 5 从「声明」变成「强制」 | 待评估 | 不变量 5 转 ✅ |
 
 **阶段 2 为何排在 1 之后**：#1696 合入后，G4 的影响面才完整可见（buffer 身份 ＋ endpoint 身份两处）。
 反过来先做 G4，#1696 rebase 时要再改一次同一处。
@@ -209,11 +209,11 @@ lazy 只是把失败推迟，不是消除。
 
 ### 并行轨道（不占关键路径）
 
-| 轨道 | 何时可开 | 说明 |
-| ---- | -------- | ---- |
-| **W0** a5 host-map 探测 | **立刻** | 无前置、**XS 规模**，却是链 A 唯一的塞子 ⇒ **当前最划算的一件事** |
-| **a2a3 logical→driver id gate** | **立刻** | work-breakdown 明写「不受 W0 阻塞，应独立先修」，是既有 correctness 缺口 |
-| **G5** close 失败不跳 unlink | 随时 | P1-B lifetime，与端点矩阵正交 |
+ | 轨道 | 何时可开 | 说明 |
+ | ---- | -------- | ---- |
+ | **W0** a5 host-map 探测 | **立刻** | 无前置、**XS 规模**，却是链 A 唯一的塞子 ⇒ **当前最划算的一件事** |
+ | **a2a3 logical→driver id gate** | **立刻** | work-breakdown 明写「不受 W0 阻塞，应独立先修」，是既有 correctness 缺口 |
+ | **G5** close 失败不跳 unlink | 随时 | P1-B lifetime，与端点矩阵正交 |
 
 ```text
 现在 ─┬─ 阶段0 决定①②（半天）
@@ -227,13 +227,13 @@ lazy 只是把失败推迟，不是消除。
 
 ## 6. 风险
 
-| 风险 | 应对 |
-| ---- | ---- |
-| **决定 ① 拖着不定，两边各写一套矩阵** | **最贵的失败模式** —— 一旦两套都有测试就很难合并。阶段 0 必须先于阶段 1 结束 |
-| `.docs` 不在仓库里，作者看不到 G4 / `ImportContext` 这两条 | review 评论必须**摘录结论**，不能只给链接 |
-| 看板过期（§3.4 注） | 随本文更新 README 第 63 行 |
-| #1453 静置 8 天，作者可能已转向 | 阶段 3 开始前确认还有人接，否则 P1-B 出口无人走 |
-| W0 长期无人认领 | XS 却卡整条链 A；每拖一天，W1 是「翻门控」还是「移植实现」就多不知道一天 |
+ | 风险 | 应对 |
+ | ---- | ---- |
+ | **决定 ① 拖着不定，两边各写一套矩阵** | **最贵的失败模式** —— 一旦两套都有测试就很难合并。阶段 0 必须先于阶段 1 结束 |
+ | `.docs` 不在仓库里，作者看不到 G4 / `ImportContext` 这两条 | review 评论必须**摘录结论**，不能只给链接 |
+ | 看板过期（§3.4 注） | 随本文更新 README 第 63 行 |
+ | #1453 静置 8 天，作者可能已转向 | 阶段 3 开始前确认还有人接，否则 P1-B 出口无人走 |
+ | W0 长期无人认领 | XS 却卡整条链 A；每拖一天，W1 是「翻门控」还是「移植实现」就多不知道一天 |
 
 ## 7. 与其它文档的关系
 

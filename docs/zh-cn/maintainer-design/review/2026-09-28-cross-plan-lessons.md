@@ -1,6 +1,6 @@
 # 两套方案的借鉴评估
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 
 日期：2026-09-28。性质：来源评估与取舍记录；当前吸收的目标约束以 [访问与退休契约](../worker-memory-model/access-retirement-contract.md)、[用户面](../worker-memory-model/user-surface.md) 和 [分线 C/D](../track-boundaries.md) 为准。下文保留评估时的建议口径；工作项状态只见 [work-items](../work-items.md)。
 
@@ -16,14 +16,14 @@
 
 ## 建议及唯一归属
 
-| 借鉴点 | 主要来源 | 归属与交接 | 建议性质 |
-| ------ | -------- | ---------- | -------- |
-| 完成事实分别证明，未知静止时保留资源 | K 访问契约 §3；A 执行协议 §3、§5 | DS-3 的复制；RA-15 的使用保留；EX-7 的提交/退休；RA-16 的 workspace | 既有验收细化 |
-| 源登记与目标 attachment 分离，view 无搬运副作用 | K 参数政策 §1.4、§6.1.2 | RA-13 公共 ABI、RA-14 调用迁移；Remote 接入由 DS-3 承接 | 公共接口建议，待采纳 |
-| 生命周期合同统一，allocation owner 与 use/grant 引用分清 | K 映射契约；A 内存原则；本地 GE-R1/R2 | 契约 D：RA-15 ↔ RA-12，域保留交 DS-4 | 对待决问题的建议答案，非裁决 |
-| 按最后消费者与实际字节记账，容量不授予复用权 | A 内存原则；K 准备/提交；A 原则 G3/G4 | RA-16；EX-7 消费账本；RA-7 保持 HeapRing 边界 | 既有验收细化 |
-| 全调用/全路径预检，部分副作用不可假装回滚 | K 参数政策 §6.2；K 访问契约 §3；A 执行协议 §3 | RA-3/RA-13 的本地 consumer、DS-3 的远端路径；退休交 RA-15/RA-16 | 随 consumer 交付的安全门 |
-| 用真实 producer 与滞后 consumer 验证复用边界 | A DFX 验证；A DFX 矩阵；K 访问契约 §6 | EX-7/RA-16 联验；DFX 自身交付保持 work-items §7 外部归属 | 验证方法，不新开 DFX 工作项 |
+ | 借鉴点 | 主要来源 | 归属与交接 | 建议性质 |
+ | ------ | -------- | ---------- | -------- |
+ | 完成事实分别证明，未知静止时保留资源 | K 访问契约 §3；A 执行协议 §3、§5 | DS-3 的复制；RA-15 的使用保留；EX-7 的提交/退休；RA-16 的 workspace | 既有验收细化 |
+ | 源登记与目标 attachment 分离，view 无搬运副作用 | K 参数政策 §1.4、§6.1.2 | RA-13 公共 ABI、RA-14 调用迁移；Remote 接入由 DS-3 承接 | 公共接口建议，待采纳 |
+ | 生命周期合同统一，allocation owner 与 use/grant 引用分清 | K 映射契约；A 内存原则；本地 GE-R1/R2 | 契约 D：RA-15 ↔ RA-12，域保留交 DS-4 | 对待决问题的建议答案，非裁决 |
+ | 按最后消费者与实际字节记账，容量不授予复用权 | A 内存原则；K 准备/提交；A 原则 G3/G4 | RA-16；EX-7 消费账本；RA-7 保持 HeapRing 边界 | 既有验收细化 |
+ | 全调用/全路径预检，部分副作用不可假装回滚 | K 参数政策 §6.2；K 访问契约 §3；A 执行协议 §3 | RA-3/RA-13 的本地 consumer、DS-3 的远端路径；退休交 RA-15/RA-16 | 随 consumer 交付的安全门 |
+ | 用真实 producer 与滞后 consumer 验证复用边界 | A DFX 验证；A DFX 矩阵；K 访问契约 §6 | EX-7/RA-16 联验；DFX 自身交付保持 work-items §7 外部归属 | 验证方法，不新开 DFX 工作项 |
 
 ### 完成不能压成一个成功标志
 
@@ -97,17 +97,17 @@ Capture 可以提供反向约束：某操作在 eager 可用，不代表 host RP
 
 以下链接是只读来源；摘要只锚定这些内容哈希。来源里的 PR 状态、测试数字及旧代码缺口不作为本板当前交付证据。
 
-| 来源 | SHA256 |
-| ---- | ------ |
-| A 原则（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/runtime-design-principles.md`） | `2db712250850cd48c22c53147fefdf0f69be35c3c1abf1d26a72d7e00be37cb3` |
-| A 内存原则（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/workspace-memory-principles.md`） | `be29720196e5fbba72a3830d1d67754dc0602b30af7124563d5e9bcfac0ab76c` |
-| A 执行协议（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-track-a.md`） | `45c2786d349ad864ee4b2a6bd4bc9fba51f15aee8eb5eb32c71943aee470bc82` |
-| A 历史重设计（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-redesign.md`） | `915316c7ce4d5842aa1a7b0d50f9d70885d79a6c8d6dde0999577184523636c4` |
-| A DFX 验证（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/dfx-run-identity-verification-plan.md`） | `8d6b1c3ef2853e2e0139064a0a496eb88d10f2fc549a511badd28625db80ed51` |
-| A DFX 矩阵（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/dfx-continuous-collection-matrix.md`） | `2db54067fd669ab15869a44fa32a40a72a07fae10e5d0bd7d32886c36c2cf3fe` |
-| K 原则（本地参考：`../../../hw-native-sys/docs-kernel-mode/runtime-design-principles.md`） | `c05d5c2f3413664c46d994ead4e8cb0f853ed971285f1f168f88ef671901ad0b` |
-| K 参数政策（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-domain-policy.md`） | `45e58e33c22e87814163a2cd19c5926c5c042fd156315d9e2f77a4aecfe0646e` |
-| K 访问契约（本地参考：`../../../hw-native-sys/docs-kernel-mode/endpoint-access-contract.md`） | `0ab846216ef5be6ebe5368fb7d9d0a880d81b329afaa80d1d97d4134bda9a90b` |
-| K 映射契约（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-mapping-contract.md`） | `0b30e79e873e5c8d1d45efc081ea41e5926f0db324df49e293e37e3ddccb5625` |
-| K 准备/提交（本地参考：`../../../hw-native-sys/docs-kernel-mode/kernel-mode-prepare-submit-design.md`） | `bdc74f8059844732fb28905c1dee3d77bc94a07f58dc31277d78be17cc400405` |
-| K 代码证据（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-design-evidence.md`） | `eeb486e7a09a3abe00e04e9c4da50fdaab2b64b9fd0bbcc01405b079558c1e36` |
+ | 来源 | SHA256 |
+ | ---- | ------ |
+ | A 原则（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/runtime-design-principles.md`） | `2db712250850cd48c22c53147fefdf0f69be35c3c1abf1d26a72d7e00be37cb3` |
+ | A 内存原则（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/workspace-memory-principles.md`） | `be29720196e5fbba72a3830d1d67754dc0602b30af7124563d5e9bcfac0ab76c` |
+ | A 执行协议（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-track-a.md`） | `45c2786d349ad864ee4b2a6bd4bc9fba51f15aee8eb5eb32c71943aee470bc82` |
+ | A 历史重设计（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/run-pipeline-redesign.md`） | `915316c7ce4d5842aa1a7b0d50f9d70885d79a6c8d6dde0999577184523636c4` |
+ | A DFX 验证（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/dfx-run-identity-verification-plan.md`） | `8d6b1c3ef2853e2e0139064a0a496eb88d10f2fc549a511badd28625db80ed51` |
+ | A DFX 矩阵（本地参考：`../../.claude/worktrees/pipeline-a-manager/.docs/dfx-continuous-collection-matrix.md`） | `2db54067fd669ab15869a44fa32a40a72a07fae10e5d0bd7d32886c36c2cf3fe` |
+ | K 原则（本地参考：`../../../hw-native-sys/docs-kernel-mode/runtime-design-principles.md`） | `c05d5c2f3413664c46d994ead4e8cb0f853ed971285f1f168f88ef671901ad0b` |
+ | K 参数政策（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-domain-policy.md`） | `45e58e33c22e87814163a2cd19c5926c5c042fd156315d9e2f77a4aecfe0646e` |
+ | K 访问契约（本地参考：`../../../hw-native-sys/docs-kernel-mode/endpoint-access-contract.md`） | `0ab846216ef5be6ebe5368fb7d9d0a880d81b329afaa80d1d97d4134bda9a90b` |
+ | K 映射契约（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-mapping-contract.md`） | `0b30e79e873e5c8d1d45efc081ea41e5926f0db324df49e293e37e3ddccb5625` |
+ | K 准备/提交（本地参考：`../../../hw-native-sys/docs-kernel-mode/kernel-mode-prepare-submit-design.md`） | `bdc74f8059844732fb28905c1dee3d77bc94a07f58dc31277d78be17cc400405` |
+ | K 代码证据（本地参考：`../../../hw-native-sys/docs-kernel-mode/argument-design-evidence.md`） | `eeb486e7a09a3abe00e04e9c4da50fdaab2b64b9fd0bbcc01405b079558c1e36` |

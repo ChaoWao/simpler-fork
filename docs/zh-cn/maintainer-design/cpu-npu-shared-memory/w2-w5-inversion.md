@@ -1,6 +1,6 @@
 # W5 先于 W2 落地：成员词汇的时间窗口与 track 重排
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：📐 **排序分析 + 建议**。不是新设计——它只做三件事：
 > ① 把 PR #1456 对表 [domain-membership.md](domain-membership.md) 与
@@ -30,10 +30,10 @@
 [work-breakdown.md](work-breakdown.md) §2 的依赖是 **W5 ← W2**，理由写在 W5 的「依赖」行：
 *"需端点模型才知道往谁委派"*。实际发生的是：
 
-| 项 | 计划 | 现实（2026-08-07） |
-| -- | ---- | ------------------ |
-| **W5** 委派机制 + 事务语义（L） | SM4，依赖 W2 | ✅ **#1456 已交付 ① 与 ② 的主体**，并在双机真硬件 pod CI 跑通 |
-| **W2** 端点与成员模型（M–L） | SM1，无依赖 | ⬜ **未开工** |
+ | 项 | 计划 | 现实（2026-08-07） |
+ | -- | ---- | ------------------ |
+ | **W5** 委派机制 + 事务语义（L） | SM4，依赖 W2 | ✅ **#1456 已交付 ① 与 ② 的主体**，并在双机真硬件 pod CI 跑通 |
+ | **W2** 端点与成员模型（M–L） | SM1，无依赖 | ⬜ **未开工** |
 
 W5 的**机制**先于它的**词汇**落地。于是成员表达没有 `EndpointId` 可用，
 `Orchestrator::allocate_global_domain` 只能用裸索引二元组顶替：
@@ -76,10 +76,10 @@ stderr」记成了**已修复**。**这是错的。**
 [`../README.md`](../README.md) §1.1 对 #1456 的审计（2026-08-03，`a05b944f`）
 点的正是这一条，而它在 `adc312de` 上**依然成立**：
 
-| — | 契约要求 | #1456 现状 |
-| - | -------- | ---------- |
-| 异步流水 §5.9 第 ⑥ 条 | 完整清理不可证时 **poison ordered admission** | `Worker::_allocate_global_domain` 的 ABORT 扇出 `except` 分支写 **stderr** 后重抛原错 |
-| 同上 | —— | `Worker::_release_all_global_domain_nodes`（L3 节点 close 路径）同样只写 stderr，且**不抛** |
+ | — | 契约要求 | #1456 现状 |
+ | - | -------- | ---------- |
+ | 异步流水 §5.9 第 ⑥ 条 | 完整清理不可证时 **poison ordered admission** | `Worker::_allocate_global_domain` 的 ABORT 扇出 `except` 分支写 **stderr** 后重抛原错 |
+ | 同上 | —— | `Worker::_release_all_global_domain_nodes`（L3 节点 close 路径）同样只写 stderr，且**不抛** |
 
 **stderr 不是「比静默好一点」，它就是 §5.9 点名禁止的反模式。** 后果是可推导的：
 分配失败路径上 domain 从未注册进 `_live_global_domains` 或 `resources.live_global_domains`，
@@ -101,22 +101,22 @@ no handle for a run's fence to fail on"*。
 
 ### 3.1 符合契约的部分（机制层面是对的）
 
-| 契约条款 | #1456 | — |
-| -------- | ----- | - |
-| [domain-membership.md](domain-membership.md) §5 声明自顶向下、执行委派 owner | `PREPARE_EXPORT → IMPORT → COMMIT`，L4 只跟 L3 说话 | ✅ 正是 §5 说的「现有模式再往上推一层」 |
-| §5 四项连带责任 | 部分失败回滚（ABORT 逐参与者扇出）· 域 epoch（`generation`，release 校验失配即拒）· 全员 READY barrier（全部 IMPORT 成功才 COMMIT） | ✅ 三项齐备；成员冻结 🟡 未单独核实 |
-| §8 走「共享 Buffer + Attachment」而非 HCCL flatten | `comm_global_domain_prepare` / `_import` 无 communicator，无 rootinfo 握手 | ✅ 正是 §8 说的「对 L4→L3→L2 嵌套反而是优势」 |
-| §9 硬限 2：64 rank 建域时前置校验 | `Worker::_allocate_global_domain` 与 `validate_member_table` 均按 `GLOBAL_DOMAIN_MAX_RANKS` 拒绝 | ✅ 已做 |
+ | 契约条款 | #1456 | — |
+ | -------- | ----- | - |
+ | [domain-membership.md](domain-membership.md) §5 声明自顶向下、执行委派 owner | `PREPARE_EXPORT → IMPORT → COMMIT`，L4 只跟 L3 说话 | ✅ 正是 §5 说的「现有模式再往上推一层」 |
+ | §5 四项连带责任 | 部分失败回滚（ABORT 逐参与者扇出）· 域 epoch（`generation`，release 校验失配即拒）· 全员 READY barrier（全部 IMPORT 成功才 COMMIT） | ✅ 三项齐备；成员冻结 🟡 未单独核实 |
+ | §8 走「共享 Buffer + Attachment」而非 HCCL flatten | `comm_global_domain_prepare` / `_import` 无 communicator，无 rootinfo 握手 | ✅ 正是 §8 说的「对 L4→L3→L2 嵌套反而是优势」 |
+ | §9 硬限 2：64 rank 建域时前置校验 | `Worker::_allocate_global_domain` 与 `validate_member_table` 均按 `GLOBAL_DOMAIN_MAX_RANKS` 拒绝 | ✅ 已做 |
 
 **这也就回答了 [work-breakdown.md](work-breakdown.md) §3 的问题 2**（见 §5.2）。
 
 ### 3.2 违反契约的部分（词汇层面，按严重度）
 
-| # | 焊死了什么 | 判据 |
-| - | ---------- | ---- |
-| **V1** | **成员用裸索引二元组** —— 缺 `deployment` 维 | §10 第二条；见本文 §1 |
-| **V2** | **单 backing** —— 一个域 = 一块 window，`CommBufferSpec` 只是它内部按 offset 顺序切的片（`GlobalCommDomainHandle::buffer_range` 累加偏移） | §3 boxed note：`halHostRegister` 不支持 VMM VA ⇒ 同一 backing 不可能既 VMM peer-import 又 host-register ⇒ **域模型必须允许组合多个 backing**。§7 的 `HOST_CPU + 同机 DEVICE_*` 原文就是「host-map control Buffer + device-local/VMM payload Buffer，**逐 Buffer** 选 adapter」 |
-| **V3** | **`comm_profile` 把 transport × medium × backing 压成一个节点级枚举**，且强制全域一致（`Worker::_allocate_global_domain` 有 *"all participating nodes must use the same comm_profile"*） | [总纲](../logical-physical-separation.md) §3 检验标准。契约里这三样分属 `TransportPlan` / Buffer backing / `AttachmentPlan` 的 capability 值，且全挂在 `(member, CanonicalBufferIdentity)` 这条**边**上 |
+ | # | 焊死了什么 | 判据 |
+ | - | ---------- | ---- |
+ | **V1** | **成员用裸索引二元组** —— 缺 `deployment` 维 | §10 第二条；见本文 §1 |
+ | **V2** | **单 backing** —— 一个域 = 一块 window，`CommBufferSpec` 只是它内部按 offset 顺序切的片（`GlobalCommDomainHandle::buffer_range` 累加偏移） | §3 boxed note：`halHostRegister` 不支持 VMM VA ⇒ 同一 backing 不可能既 VMM peer-import 又 host-register ⇒ **域模型必须允许组合多个 backing**。§7 的 `HOST_CPU + 同机 DEVICE_*` 原文就是「host-map control Buffer + device-local/VMM payload Buffer，**逐 Buffer** 选 adapter」 |
+ | **V3** | **`comm_profile` 把 transport × medium × backing 压成一个节点级枚举**，且强制全域一致（`Worker::_allocate_global_domain` 有 *"all participating nodes must use the same comm_profile"*） | [总纲](../logical-physical-separation.md) §3 检验标准。契约里这三样分属 `TransportPlan` / Buffer backing / `AttachmentPlan` 的 capability 值，且全挂在 `(member, CanonicalBufferIdentity)` 这条**边**上 |
 
 **V2 是结构缺失，不是能力缺失。** 补 CPU↔NPU 混合域时，`CommBufferSpec` 的语义必须从
 「窗口内切片」改成「独立 Buffer，各带自己的 backing 与 capability」——那是破坏性变更，
@@ -183,11 +183,11 @@ work-breakdown §3 列的必答问题 2：
 
 ### 阶段 1 —— 三件小事并行，全是解锁项
 
-| — | 内容 | 规模 | 类型 | 为什么现在 |
-| - | ---- | ---- | ---- | ---------- |
-| **S0** | #1456 的 ABORT 与 L3-close 路径改调 `Worker::_record_unreclaimable()` | **XS** | 判断 | 合入门，非新工作；修法已在 main（§2） |
-| **S1** | **W2-min**：`members` 换成带 `deployment` 的结构 | **S** | ⏰ 判断 | wire 正在冻结（§1.1）。**现在是加字段，之后是换协议** |
-| **S2** | **W0**：a5 host-map 能力探测 | **XS** | 依赖 | 阻塞整条链 A（W1→W4→W6→W8），而它只是个探测小程序 |
+ | — | 内容 | 规模 | 类型 | 为什么现在 |
+ | - | ---- | ---- | ---- | ---------- |
+ | **S0** | #1456 的 ABORT 与 L3-close 路径改调 `Worker::_record_unreclaimable()` | **XS** | 判断 | 合入门，非新工作；修法已在 main（§2） |
+ | **S1** | **W2-min**：`members` 换成带 `deployment` 的结构 | **S** | ⏰ 判断 | wire 正在冻结（§1.1）。**现在是加字段，之后是换协议** |
+ | **S2** | **W0**：a5 host-map 能力探测 | **XS** | 依赖 | 阻塞整条链 A（W1→W4→W6→W8），而它只是个探测小程序 |
 
 三者互不依赖。**S1 是本阶段重心**：不做完整 W2，只把 `deployment` 这一维在类型与 wire 上
 **占住位置**，哪怕当前只接受 `DEVICE_AICORE`。同时把限制**归因到物理**——
@@ -196,11 +196,11 @@ work-breakdown §3 列的必答问题 2：
 
 ### 阶段 2 —— 三条链各推一步
 
-| 项 | 规模 | 依赖 |
-| -- | ---- | ---- |
-| **W2 完整**：`EndpointId` 全套 · 成员选择器 · potential/actual capability 计算 | M–L | 无（S1 已铺路） |
-| **W1**：a5 override 两个虚函数 + `ONBOARD_HOST_MAPPED` profile + device-id gate | S–M | **W0** |
-| **W3**：per-worker 生命周期扩到带 device 流量的资源 | M–L ↓ | 无 |
+ | 项 | 规模 | 依赖 |
+ | -- | ---- | ---- |
+ | **W2 完整**：`EndpointId` 全套 · 成员选择器 · potential/actual capability 计算 | M–L | 无（S1 已铺路） |
+ | **W1**：a5 override 两个虚函数 + `ONBOARD_HOST_MAPPED` profile + device-id gate | S–M | **W0** |
+ | **W3**：per-worker 生命周期扩到带 device 流量的资源 | M–L ↓ | 无 |
 
 **W3 建议从计划的 SM3 前移至此。** work-breakdown 自己写了
 *"放 SM3 是排期选择，不是依赖所迫；若 #824 提前，可整体前移到 SM1"*，
@@ -208,10 +208,10 @@ work-breakdown §3 列的必答问题 2：
 
 ### 阶段 3
 
-| 项 | 依赖 | 备注 |
-| -- | ---- | ---- |
-| **W4** 同步原语归一 + cache maintenance 抽象 | **W1** | ⚠️ 文档标注的**最高风险项**（PR #540 真实事故），a2a3 onboard 验证是必要条件 |
-| **W5 完整**事务语义 | **W2** | 把 #1456 的机制补齐到契约：含 S0 的 poison、成员冻结 |
+ | 项 | 依赖 | 备注 |
+ | -- | ---- | ---- |
+ | **W4** 同步原语归一 + cache maintenance 抽象 | **W1** | ⚠️ 文档标注的**最高风险项**（PR #540 真实事故），a2a3 onboard 验证是必要条件 |
+ | **W5 完整**事务语义 | **W2** | 把 #1456 的机制补齐到契约：含 S0 的 poison、成员冻结 |
 
 ### 阶段 4 / 5
 
@@ -227,14 +227,14 @@ work-breakdown §3 列的必答问题 2：
 本文是**增量记录**，不是第二份排期真源。建议在下一次编辑既有文档时把内容折回去，
 然后本文只保留 §2 的更正与 §4 的证据：
 
-| 本文小节 | 应折回 |
-| -------- | ------ |
-| §1 / §5.1 | [work-breakdown.md](work-breakdown.md) W2 的「规模」「⚠️ 关键」行 |
-| §5.2 | [work-breakdown.md](work-breakdown.md) §3 问题 2 → 标记关闭 |
-| §5.3 | [work-breakdown.md](work-breakdown.md) §4 交叠 1 → 标记消解 |
-| §6 | [work-breakdown.md](work-breakdown.md) §2 的 SM0–SM4 排期表 |
-| §2 | [`../README.md`](../README.md) §1.1 的 #1456 行（该行已记此缺口，本文只补「`adc312de` 上仍成立」与我的误判更正） |
-| §4 | [domain-membership.md](domain-membership.md) §4.1 跨机行 `D` 格 + §9 硬限 1 的 Fabric 单机注 |
+ | 本文小节 | 应折回 |
+ | -------- | ------ |
+ | §1 / §5.1 | [work-breakdown.md](work-breakdown.md) W2 的「规模」「⚠️ 关键」行 |
+ | §5.2 | [work-breakdown.md](work-breakdown.md) §3 问题 2 → 标记关闭 |
+ | §5.3 | [work-breakdown.md](work-breakdown.md) §4 交叠 1 → 标记消解 |
+ | §6 | [work-breakdown.md](work-breakdown.md) §2 的 SM0–SM4 排期表 |
+ | §2 | [`../README.md`](../README.md) §1.1 的 #1456 行（该行已记此缺口，本文只补「`adc312de` 上仍成立」与我的误判更正） |
+ | §4 | [domain-membership.md](domain-membership.md) §4.1 跨机行 `D` 格 + §9 硬限 1 的 Fabric 单机注 |
 
 > 依据 [`../README.md`](../README.md) §4 规则 1「两份记同一事实必漂移」，
 > 以及 [domain-membership.md](domain-membership.md) §7 那条订正的教训——

@@ -1,6 +1,6 @@
 # 通信域的成员模型：level 是逻辑概念，能力挂在 endpoint–resource 边上（契约）
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：⬜ **设计契约提案**。这是 [cpu-npu-shared-memory.md](../cpu-npu-shared-memory.md)
 > 的 §3.0 展开。
@@ -12,11 +12,11 @@
 
 现有 API（`create_worker_chip_region` / `create_worker_chip_queue`，#1681 前叫 `create_l3_l2_*`）把**三件正交的事焊死在一个名字里**：
 
-| 被焊死的三件事 | 现状 |
-| -------------- | ---- |
-| **谁创建**（协调者 / 生命周期所有者） | L3 |
-| **谁参与**（成员集） | L3 + 单个 L2 |
-| **什么传输**（后端） | host↔device |
+ | 被焊死的三件事 | 现状 |
+ | -------------- | ---- |
+ | **谁创建**（协调者 / 生命周期所有者） | L3 |
+ | **谁参与**（成员集） | L3 + 单个 L2 |
+ | **什么传输**（后端） | host↔device |
 
 由此产生一个无法回答的问题：**"L4 建的是 L3 的域还是 L2 的域？"**
 
@@ -36,18 +36,18 @@
 
 ### 2.1 三层表述（勿混淆）
 
-| 层面 | 状态 |
-| ---- | ---- |
-| **概念上** | level = 编排树中的位置，**纯逻辑**，不含物理含义 |
-| **当前实现** | level **事实上耦合了部署**：`level == 2` ⇒ `ChipWorker` ⇒ NPU。见 ✅ `python/simpler/worker.py:3126, 3151, 3173, 3184, 3460` 等大量 `level==2` / `level>=3` 语义分派。**这是历史包袱，非本质** |
-| **本设计取向** | 通信能力**不看 level**；potential/actual 判据按 §3 的完整公式计算 |
+ | 层面 | 状态 |
+ | ---- | ---- |
+ | **概念上** | level = 编排树中的位置，**纯逻辑**，不含物理含义 |
+ | **当前实现** | level **事实上耦合了部署**：`level == 2` ⇒ `ChipWorker` ⇒ NPU。见 ✅ `python/simpler/worker.py:3126, 3151, 3173, 3184, 3460` 等大量 `level==2` / `level>=3` 语义分派。**这是历史包袱，非本质** |
+ | **本设计取向** | 通信能力**不看 level**；potential/actual 判据按 §3 的完整公式计算 |
 
 ### 2.2 ✅ 实证：同一编排角色，仓库里已存在两种部署
 
-| runtime | 编排跑在哪 | 代码 |
-| ------- | ---------- | ---- |
-| `tensormap_and_ringbuffer` | **设备侧 AICPU** | `src/{a2a3,a5}/runtime/tensormap_and_ringbuffer/aicpu/aicpu_executor.cpp` |
-| `host_build_graph` | **主机侧 CPU** | `src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp`、`runtime/orchestrator_core/pto_orchestrator.cpp`（并有 `host_orch_compat_stubs.cpp` = host-orch 迁移） |
+ | runtime | 编排跑在哪 | 代码 |
+ | ------- | ---------- | ---- |
+ | `tensormap_and_ringbuffer` | **设备侧 AICPU** | `src/{a2a3,a5}/runtime/tensormap_and_ringbuffer/aicpu/aicpu_executor.cpp` |
+ | `host_build_graph` | **主机侧 CPU** | `src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp`、`runtime/orchestrator_core/pto_orchestrator.cpp`（并有 `host_orch_compat_stubs.cpp` = host-orch 迁移） |
 
 **同一逻辑角色、不同部署位置** —— 这不是理论推演，是仓库现状。
 
@@ -62,11 +62,11 @@ live Attachment 等条件。
 
 ### 2.4 但 level 仍然承重——只在另外两件事上
 
-| level 决定 | 说明 |
-| ---------- | ---- |
-| ✅ **控制 / 分发树**（可见性） | L4 只 `submit` 给 L3 —— 编排契约，该守 |
-| ✅ **命名 / 寻址** | 路径 `L4/L3[2]/L2[5]` 的层次结构 |
-| ❌ **通信能力** | 由 deployment/interconnect/backing/backend/runtime support 与 live Attachment 条件共同决定 |
+ | level 决定 | 说明 |
+ | ---------- | ---- |
+ | ✅ **控制 / 分发树**（可见性） | L4 只 `submit` 给 L3 —— 编排契约，该守 |
+ | ✅ **命名 / 寻址** | 路径 `L4/L3[2]/L2[5]` 的层次结构 |
+ | ❌ **通信能力** | 由 deployment/interconnect/backing/backend/runtime support 与 live Attachment 条件共同决定 |
 
 > **前两件是逻辑的（level 说了算）；第三件由物理潜力与实际 Attachment 共同决定，
 > level 不参与判定。**
@@ -165,7 +165,7 @@ live Attachment 等条件。
 > 子分配的 helper 统一叫 `BufferSliceArena`，它也不是另一种物理资源。
 >
 > ⚠️ **数字层级标识符的定位 —— ✅ 已迁移（2026-08-04，#1681 `b3bf3e7a`）**
-> （规则见 [`codestyle.md`](https://github.com/hw-native-sys/simpler/blob/11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b/.claude/rules/codestyle.md) 规则 13）：
+> （规则见 [`codestyle.md`](https://github.com/hw-native-sys/simpler/blob/937c57efc71ad01a01c3a72072df075d2a5dd24f/.claude/rules/codestyle.md) 规则 13）：
 > **我前一版写的「本文档族里出现它们一律是在引用现存代码符号、迁移只在其 API 本就要改时
 > 顺带做」已经过时** —— #1681 `Rename: apply the Worker/Chip/Core layered naming contract`
 > **已把整批标识符一次迁完，且不留兼容别名**：
@@ -182,11 +182,11 @@ live Attachment 等条件。
 > 就是 [p1b-corrected-design.md](../worker-memory-model/p1b-corrected-design.md) 里
 > 那个带 `CanonicalBufferIdentity`（wire 类型名为 `CanonicalIdentity`）的 Buffer，不是另一套东西。
 
-| 端点示例 | 路径 | 部署 |
-| -------- | ---- | ---- |
-| 某 L3 宿主进程作为 CPU 参与者 | `L4/L3[0]` | `HOST_CPU` |
-| 某张卡的设备内存（AICore 可达） | `L4/L3[0]/L2[5]` | `DEVICE_AICORE` |
-| 片内 AICPU（与 AICore 是**不同 CommEngine**） | `L4/L3[0]/L2[5]` | `DEVICE_AICPU` |
+ | 端点示例 | 路径 | 部署 |
+ | -------- | ---- | ---- |
+ | 某 L3 宿主进程作为 CPU 参与者 | `L4/L3[0]` | `HOST_CPU` |
+ | 某张卡的设备内存（AICore 可达） | `L4/L3[0]/L2[5]` | `DEVICE_AICORE` |
+ | 片内 AICPU（与 AICore 是**不同 CommEngine**） | `L4/L3[0]/L2[5]` | `DEVICE_AICPU` |
 
 歧义因此消解——不再说"L4 建 L3 的域"，而是精确表述：
 
@@ -216,13 +216,13 @@ MemberSet = {
 按 adapter 列（`D`=direct-map / device-peer，`C`=owner-delegated copy，
 `T`=explicit transfer，`H`=HCCL collective）：
 
-| 部署 A ↔ 部署 B | `D` | `C` | `T` | `H` | 机制 / 备注 |
-| --------------- | :-: | :-: | :-: | :-: | ----------- |
-| `HOST_CPU` ↔ **同机** `HOST_CPU` | ✅ | ✅ | ✅ | ❌ | fork-shm / POSIX shm。CPU 非 HCCL rank |
-| `HOST_CPU` ↔ **同机** `DEVICE_*` | 🟡 | ✅ | ✅ | ❌ | `D` 需 `halHostRegister`，且受 §5 三条约束（非 VMM backing / 页大小与能力位 / logical→driver id gate）门控 |
-| `DEVICE_*` ↔ **同机** `DEVICE_*` | ✅ | ✅ | ✅ | ✅ | VMM / Fabric-V2 peer import |
-| `HOST_CPU` ↔ **跨机**任意 | ❌ | ✅ | ✅ | ❌ | `D` **物理上不可能**——host CPU 无法映射另一台机器的内存。但**域仍可包含跨机成员**，走 `C`/`T` |
-| `DEVICE_*` ↔ **跨机** `DEVICE_*` | 🟡 | ✅ | ✅ | 🟡 | 由 #1456→#1623→#1624 栈提供（export/import 描述符 + MPI allgather + commit）。**`D` 与 `H` 的跨机形态待核实**，见下 |
+ | 部署 A ↔ 部署 B | `D` | `C` | `T` | `H` | 机制 / 备注 |
+ | --------------- | :-: | :-: | :-: | :-: | ----------- |
+ | `HOST_CPU` ↔ **同机** `HOST_CPU` | ✅ | ✅ | ✅ | ❌ | fork-shm / POSIX shm。CPU 非 HCCL rank |
+ | `HOST_CPU` ↔ **同机** `DEVICE_*` | 🟡 | ✅ | ✅ | ❌ | `D` 需 `halHostRegister`，且受 §5 三条约束（非 VMM backing / 页大小与能力位 / logical→driver id gate）门控 |
+ | `DEVICE_*` ↔ **同机** `DEVICE_*` | ✅ | ✅ | ✅ | ✅ | VMM / Fabric-V2 peer import |
+ | `HOST_CPU` ↔ **跨机**任意 | ❌ | ✅ | ✅ | ❌ | `D` **物理上不可能**——host CPU 无法映射另一台机器的内存。但**域仍可包含跨机成员**，走 `C`/`T` |
+ | `DEVICE_*` ↔ **跨机** `DEVICE_*` | 🟡 | ✅ | ✅ | 🟡 | 由 #1456→#1623→#1624 栈提供（export/import 描述符 + MPI allgather + commit）。**`D` 与 `H` 的跨机形态待核实**，见下 |
 
 **这张表只依赖部署与物理拓扑，与 L2/L3/L4 无关**——这是它的价值所在。
 
@@ -276,10 +276,10 @@ live attachment/materialization、runtime probe/lease——见 §3。
 
 ### 4.2 "能不能" vs "实际" —— 两个不同层次
 
-| 层次 | 判据 | 规范对应物 |
-| ---- | ---- | ---------- |
-| **潜在能力**（potential） | 部署 × 互连（§4.1，**必要门槛**）× backing/backend × runtime support | capability discovery |
-| **实际能力**（actual） | potential ∩ authorization ∩ live attachment/materialization ∩ runtime probe/lease | `AttachmentPlan` 的 capability + attachment |
+ | 层次 | 判据 | 规范对应物 |
+ | ---- | ---- | ---------- |
+ | **潜在能力**（potential） | 部署 × 互连（§4.1，**必要门槛**）× backing/backend × runtime support | capability discovery |
+ | **实际能力**（actual） | potential ∩ authorization ∩ live attachment/materialization ∩ runtime probe/lease | `AttachmentPlan` 的 capability + attachment |
 
 > 规范把 capability 与 attachment 并列写进
 > `(member, CanonicalBufferIdentity) -> capability + attachment`，正是因为潜在能力与
@@ -321,22 +321,22 @@ owner 完成。**
 
 ## 6. 成员的两种表达（建议默认前者）
 
-| 形式 | 说明 | 何时用 |
-| ---- | ---- | ------ |
-| **子树选择器**（idiomatic 默认） | "这些 L3 子树下的所有 chip"，各 L3 **本地展开** | 常规——保持封装，L4 不必知道 chip 拓扑 |
-| **显式端点列表** | 精确指定每个 `EndpointId` | 需要非规则子集时；要求调用者知道拓扑 |
+ | 形式 | 说明 | 何时用 |
+ | ---- | ---- | ------ |
+ | **子树选择器**（idiomatic 默认） | "这些 L3 子树下的所有 chip"，各 L3 **本地展开** | 常规——保持封装，L4 不必知道 chip 拓扑 |
+ | **显式端点列表** | 精确指定每个 `EndpointId` | 需要非规则子集时；要求调用者知道拓扑 |
 
 ## 7. 后端由成员、资源与 capability plan 共同选择，不支持则**显式失败**
 
 下表是代表性组合，不表示只凭 MemberSet 就能确定后端；同一成员对不同 Buffer backing
 可能得到不同 capability，最终 adapter 由 `AttachmentPlan/TransportPlan` 明确选择。
 
-| 成员与资源组合 | 候选后端 | 状态 |
-| -------------- | -------- | ---- |
-| 同一 L3 下的多个 `DEVICE_*` | VMM / Fabric-V2 设备共享 | ✅ 今天就有 |
-| **`HOST_CPU` + 同机 `DEVICE_*`** | host-map control Buffer + device-local/VMM payload Buffer；逐 Buffer 选 direct/copy adapter | ⬜ **本设计要补的那块砖** |
-| 同机 `HOST_CPU` + `HOST_CPU` | host 共享内存（fork-shm / POSIX） | ✅ 机制已有 |
-| 跨机 device 窗口；其他异构组合逐项验收 | 主路径 mpirun/MPI + A3 ACL/Fabric V2 共享窗口；SHMEM 库适配另验 | A3 基本栈 #1456/#1623/#1624 已合入（`68d137fdf` 复核）；任意 host/device ResourceBundle 组合见 DS-10 |
+ | 成员与资源组合 | 候选后端 | 状态 |
+ | -------------- | -------- | ---- |
+ | 同一 L3 下的多个 `DEVICE_*` | VMM / Fabric-V2 设备共享 | ✅ 今天就有 |
+ | **`HOST_CPU` + 同机 `DEVICE_*`** | host-map control Buffer + device-local/VMM payload Buffer；逐 Buffer 选 direct/copy adapter | ⬜ **本设计要补的那块砖** |
+ | 同机 `HOST_CPU` + `HOST_CPU` | host 共享内存（fork-shm / POSIX） | ✅ 机制已有 |
+ | 跨机 device 窗口；其他异构组合逐项验收 | 主路径 mpirun/MPI + A3 ACL/Fabric V2 共享窗口；SHMEM 库适配另验 | A3 基本栈 #1456/#1623/#1624 已合入（`68d137fdf` 复核）；任意 host/device ResourceBundle 组合见 DS-10 |
 
 > ### ⚠️ 订正（2026-08-05，用户指出）：本行此前写作 ❌「今天不可达 → 显式失败」，**错在把
 >
@@ -366,10 +366,10 @@ owner 完成。**
 
 ## 8. ⚠️ 两条机制的答案**不同**（勿混用）
 
-| 机制 | 跨层级如何表达 |
-| ---- | -------------- |
-| **HCCL collective 域** | **必须 flatten** 全部选中 L2 成全局 device rank、建**单一** communicator；子集用 `HcclCreateSubCommConfig` **仅从 global 拆分**（不支持嵌套拆分）。见 l3l4 §D.5 / `:741` |
-| **共享 Buffer + Attachment（本设计）** | **不受此限**——可为任意端点集合，**允许嵌套与重叠**。✅ 依据现有 `comm_alloc_domain_windows` / `comm_derive_context`：这条 simpler 自研 VMM 共享句柄路径**不受 HCCL“子域不可嵌套”限制——这对 L4→L3→L2 的嵌套结构反而是优势** |
+ | 机制 | 跨层级如何表达 |
+ | ---- | -------------- |
+ | **HCCL collective 域** | **必须 flatten** 全部选中 L2 成全局 device rank、建**单一** communicator；子集用 `HcclCreateSubCommConfig` **仅从 global 拆分**（不支持嵌套拆分）。见 l3l4 §D.5 / `:741` |
+ | **共享 Buffer + Attachment（本设计）** | **不受此限**——可为任意端点集合，**允许嵌套与重叠**。✅ 依据现有 `comm_alloc_domain_windows` / `comm_derive_context`：这条 simpler 自研 VMM 共享句柄路径**不受 HCCL“子域不可嵌套”限制——这对 L4→L3→L2 的嵌套结构反而是优势** |
 
 ⇒ **本设计走第二条**，因此可以做"L4 声明、跨 L3 的 chip 级域"，**无需先解决 HCCL 的
 flatten 问题**。两者是**独立的轴，不要互相阻塞**。

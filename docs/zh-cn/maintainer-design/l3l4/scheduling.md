@@ -1,6 +1,6 @@
 # 调度：submit 指定 worker + 去自由调度 + heap
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §C.3。
 
@@ -49,15 +49,15 @@
 
 **③ heap buffer —— 必须按归属层拆开 5~6 个不同概念**：
 
-| 概念 | 归属层 | 代码位置 | 生命周期 |
-| ---- | ------ | -------- | -------- |
-| **`orch.alloc(shape,dtype)` 的 HeapRing** | **L3 主机侧编排器** | `ring.{h,cpp}`；`orchestrator.cpp:70-144` | 4 个 `MAX_RING_DEPTH`（`types.h:117`=4）独立 `mmap(MAP_SHARED\|ANON)` 环，默认每环 1GiB（`ring.h:70`）。按 scope 深度选环，绑合成 COMPLETED slot，FIFO 随 `last_alive` 回收，`Worker.run` 结束 `drain()`→`reset_to_empty()` 整体归零 |
-| **OUTPUT 空指针自动分配** | **L3 主机侧编排器** | `reserve_outputs_and_slot`（`orchestrator.cpp:485-524`） | 同一 HeapRing；submit 时把 `data==0` 的 OUTPUT 切片（1024B 对齐），随产出任务 slot CONSUMED 回收 |
-| **`Orchestrator::malloc/free/copy_to/copy_from`** | **下级(L2/芯片)设备内存**（=kind4） | `orchestrator.h:92-95` → `WorkerThread::control_malloc` | 在指定 chip worker 上分配 device 内存，与 HeapRing 无关 |
-| **`create_host_buffer` / POSIX shm** | **L3 主机侧（born-shared）** | `Worker.create_host_buffer` / `Worker._create_host_buffer_locked`；`HostBuffer` | 显式 `SharedMemory(create=True)`，广播 `_CTRL_MAP_HOST`，显式 `free_host_buffer`。**这就是 C.3 说的 malloc+bind 用户接口模型**；preflight 需 chip/SUB，端到端只覆盖所有被广播 endpoint 都支持 MAP/UNMAP_HOST 的拓扑。当前 L3/remote NEXT_LEVEL 不支持，mixed L4 可过 gate 后失败 |
-| **`PTO2_RING_HEAP` / `ring_heap`** | **L2 设备侧 (NPU AICPU)** | `pto_ring_buffer.h:464` | 每 chip 在 NPU 上跑的 tmr GM 堆，per-ring。**与 L3 主机 HeapRing 只是同构不同物** |
-| **DeviceArena / `PTO2RuntimeArenaLayout` / 预建 arena** | **L2 设备侧** | `pto_runtime2.h:103-249` | 连续 device 分配，主机侧构建、init 时 prewarm、跨 run 复用（#1193/#1234/#1322） |
-| **TRB temp-var buffer（#1198）** | — | **已 revert（`fd5f16f8`）** | 当前代码树不存在 |
+ | 概念 | 归属层 | 代码位置 | 生命周期 |
+ | ---- | ------ | -------- | -------- |
+ | **`orch.alloc(shape,dtype)` 的 HeapRing** | **L3 主机侧编排器** | `ring.{h,cpp}`；`orchestrator.cpp:70-144` | 4 个 `MAX_RING_DEPTH`（`types.h:117`=4）独立 `mmap(MAP_SHARED\|ANON)` 环，默认每环 1GiB（`ring.h:70`）。按 scope 深度选环，绑合成 COMPLETED slot，FIFO 随 `last_alive` 回收，`Worker.run` 结束 `drain()`→`reset_to_empty()` 整体归零 |
+ | **OUTPUT 空指针自动分配** | **L3 主机侧编排器** | `reserve_outputs_and_slot`（`orchestrator.cpp:485-524`） | 同一 HeapRing；submit 时把 `data==0` 的 OUTPUT 切片（1024B 对齐），随产出任务 slot CONSUMED 回收 |
+ | **`Orchestrator::malloc/free/copy_to/copy_from`** | **下级(L2/芯片)设备内存**（=kind4） | `orchestrator.h:92-95` → `WorkerThread::control_malloc` | 在指定 chip worker 上分配 device 内存，与 HeapRing 无关 |
+ | **`create_host_buffer` / POSIX shm** | **L3 主机侧（born-shared）** | `Worker.create_host_buffer` / `Worker._create_host_buffer_locked`；`HostBuffer` | 显式 `SharedMemory(create=True)`，广播 `_CTRL_MAP_HOST`，显式 `free_host_buffer`。**这就是 C.3 说的 malloc+bind 用户接口模型**；preflight 需 chip/SUB，端到端只覆盖所有被广播 endpoint 都支持 MAP/UNMAP_HOST 的拓扑。当前 L3/remote NEXT_LEVEL 不支持，mixed L4 可过 gate 后失败 |
+ | **`PTO2_RING_HEAP` / `ring_heap`** | **L2 设备侧 (NPU AICPU)** | `pto_ring_buffer.h:464` | 每 chip 在 NPU 上跑的 tmr GM 堆，per-ring。**与 L3 主机 HeapRing 只是同构不同物** |
+ | **DeviceArena / `PTO2RuntimeArenaLayout` / 预建 arena** | **L2 设备侧** | `pto_runtime2.h:103-249` | 连续 device 分配，主机侧构建、init 时 prewarm、跨 run 复用（#1193/#1234/#1322） |
+ | **TRB temp-var buffer（#1198）** | — | **已 revert（`fd5f16f8`）** | 当前代码树不存在 |
 
 **结论**：C.3 说的"orch 里的 heap buffer"**只指 L3 主机侧 `Ring` 的 HeapRing（前两行）**。
 
@@ -114,12 +114,12 @@
 
 ### 本节状态小结
 
-| 子诉求 | 状态 | 落地抓手 |
-| ------ | ---- | -------- |
-| C.1 L3 创建即拉起 L2 | **✅ 已落地（#1397 merged `483d97e3`）**：eager 递归 init + full-tree READY + 删 lazy trigger + 本地有界回滚；取代 #1381。**加固第一批 #1398 merged `0ffb88f8`**：单一状态机 + **fail-fast close** + eligibility + L2 两并发 init 第二个立即报错（done-P0.2.md（本地参考：`../P0.2/done.md`）） | 剩余加固转 P0.2.md（本地参考：`../P0.2/done-followup.md`） follow-up；**#1003 已 merged**，补 TASK 阶段 child-exit liveness；sim-remote 细分 P0.3/P2/P3 |
-| C.2 L2/L3/L4 接口 + orch 接口收敛 | **部分实现**（参数基座已统一；**callable 身份未真正统一**——L3 用 raw Python callable、register→下级 LOCAL_PYTHON；`run`/orch/malloc 同名异义未消歧，L4 域接口不对称） | 冻结参数基座 + 补 callable 统一 → 消歧 `run` → 统一内存面 → 补 L4 across-L3 域 |
-| C.3 submit 指定 worker | **已实现**：NEXT_LEVEL single/group 均要求 exact target | #1436；group reservation 由 #1565 补齐 |
-| C.3 跨 run admission | **已实现**：negotiated whole-run FIFO；下一 callback 由 pipeline lease 开放，非前一 run launch acceptance | #1540 + **#1541**；仍无第二个并发 device run |
-| C.3 移除 heap | **未实现**，且 2026-09-08 起**拆成两项** —— `EX-3` **零容量运行验收**（`feature_roadmap.md` §2.5 第 5 步，Ring 已支持 `heap_bytes=0` 的 slot-only allocation ⇒ **不等 arena**，且这一条是 P1 退出条件）· `EX-5` **删除 heap-coupled scope reclaim**（第 6 步，等 `RA-7`）。⛔ **本行原写 `create_host_buffer`，该名全仓 0 命中**（现名 `create_buffer`，`worker.py:10877`） | 归属真源 [`work-items.md`](../work-items.md)；auto-OUTPUT 重写到显式 shm |
+ | 子诉求 | 状态 | 落地抓手 |
+ | ------ | ---- | -------- |
+ | C.1 L3 创建即拉起 L2 | **✅ 已落地（#1397 merged `483d97e3`）**：eager 递归 init + full-tree READY + 删 lazy trigger + 本地有界回滚；取代 #1381。**加固第一批 #1398 merged `0ffb88f8`**：单一状态机 + **fail-fast close** + eligibility + L2 两并发 init 第二个立即报错（done-P0.2.md（本地参考：`../P0.2/done.md`）） | 剩余加固转 P0.2.md（本地参考：`../P0.2/done-followup.md`） follow-up；**#1003 已 merged**，补 TASK 阶段 child-exit liveness；sim-remote 细分 P0.3/P2/P3 |
+ | C.2 L2/L3/L4 接口 + orch 接口收敛 | **部分实现**（参数基座已统一；**callable 身份未真正统一**——L3 用 raw Python callable、register→下级 LOCAL_PYTHON；`run`/orch/malloc 同名异义未消歧，L4 域接口不对称） | 冻结参数基座 + 补 callable 统一 → 消歧 `run` → 统一内存面 → 补 L4 across-L3 域 |
+ | C.3 submit 指定 worker | **已实现**：NEXT_LEVEL single/group 均要求 exact target | #1436；group reservation 由 #1565 补齐 |
+ | C.3 跨 run admission | **已实现**：negotiated whole-run FIFO；下一 callback 由 pipeline lease 开放，非前一 run launch acceptance | #1540 + **#1541**；仍无第二个并发 device run |
+ | C.3 移除 heap | **未实现**，且 2026-09-08 起**拆成两项** —— `EX-3` **零容量运行验收**（`feature_roadmap.md` §2.5 第 5 步，Ring 已支持 `heap_bytes=0` 的 slot-only allocation ⇒ **不等 arena**，且这一条是 P1 退出条件）· `EX-5` **删除 heap-coupled scope reclaim**（第 6 步，等 `RA-7`）。⛔ **本行原写 `create_host_buffer`，该名全仓 0 命中**（现名 `create_buffer`，`worker.py:10877`） | 归属真源 [`work-items.md`](../work-items.md)；auto-OUTPUT 重写到显式 shm |
 
 ---

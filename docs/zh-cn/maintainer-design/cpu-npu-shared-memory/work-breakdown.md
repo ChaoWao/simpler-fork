@@ -1,6 +1,6 @@
 # 实施分解：从当前代码到新设计（计划）
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > **状态**：⬜ **计划（plan-only）**。本文只做**工作分解与排序**，
 > **不含实现者 prompt**——那是 gate 打开后再按 W 项单独拆。
@@ -38,11 +38,11 @@
 
 本设计**不是从零造**。核实后，最关键的三处扩展点仓库里已有：
 
-| 抽象点 | 现状（✅ 已核实） | 含义 |
-| ------ | ----------------- | ---- |
-| **host-map 的 vtable 位** | `src/common/platform/include/common/host_api.h::HostApi::register_device_memory_to_host` / `unregister_device_memory_from_host`。注释**已声明**"返回 VA 可能 ≠ `dev_ptr`，调用方必须用返回值" | **契约本来就是 VA-正确的**；只有 `host_build_graph` 消费端额外断言了 identity |
-| **a5 的接入点** | `src/common/platform/onboard/host/device_runner_base.h::DeviceRunnerBase::register_device_memory_to_host` 是 **virtual + base default 返回 nullptr**；a2a3 override，a5 走 base default | **a5 启用 = override 两个虚函数**，不是造新机制 |
-| **map-or-copy 的 profile 抽象** | `src/common/platform/include/host/worker_chip_orch_region_access.h::WorkerChipRegionAccessProfile`；binding 层的 `_l3_host_mapped_region_*` / `_l3_host_mapped_payload_*` / `_l3_host_mapped_counter_*` 已按 profile 分派 | **"不同后端藏在同一 API 后"的模式已跑通**，新增一个 profile 即可 |
+ | 抽象点 | 现状（✅ 已核实） | 含义 |
+ | ------ | ----------------- | ---- |
+ | **host-map 的 vtable 位** | `src/common/platform/include/common/host_api.h::HostApi::register_device_memory_to_host` / `unregister_device_memory_from_host`。注释**已声明**"返回 VA 可能 ≠ `dev_ptr`，调用方必须用返回值" | **契约本来就是 VA-正确的**；只有 `host_build_graph` 消费端额外断言了 identity |
+ | **a5 的接入点** | `src/common/platform/onboard/host/device_runner_base.h::DeviceRunnerBase::register_device_memory_to_host` 是 **virtual + base default 返回 nullptr**；a2a3 override，a5 走 base default | **a5 启用 = override 两个虚函数**，不是造新机制 |
+ | **map-or-copy 的 profile 抽象** | `src/common/platform/include/host/worker_chip_orch_region_access.h::WorkerChipRegionAccessProfile`；binding 层的 `_l3_host_mapped_region_*` / `_l3_host_mapped_payload_*` / `_l3_host_mapped_counter_*` 已按 profile 分派 | **"不同后端藏在同一 API 后"的模式已跑通**，新增一个 profile 即可 |
 
 > ➡️ **结论**：本设计 = **① 打开 a5 ② 加一个 access profile ③ 把成员模型从"层级"换成"端点"**。
 
@@ -50,14 +50,14 @@
 
 ### W0 🚧 前置：a5 host-map 能力核实 —— **阻塞 W1 的 ld/st 分支**（W1lite / W2 / W3 不受阻，见下）
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | 探测 a5 驱动：`ascend_hal` 是否导出 `halHostRegister`、`DEV_SVM_MAP_HOST` flags 语义是否同义、**是否返回 identity VA**、最低驱动版本与探测方式、**BAR/aperture 大小与数量上限** |
-| **现状锚点** | a2a3 取法可直接照抄：✅ `src/a2a3/platform/onboard/host/device_runner.cpp::load_hal_if_needed` / `get_halHostRegister` / `DeviceRunner::register_device_memory_to_host`（`dlopen("ascend_hal")` + `dlsym`），签名 `int (*)(void*, size_t, unsigned, int, void**)` |
-| **规模** | **XS**（探测小程序 + onboard 跑一次） |
-| **依赖** | 无 |
-| **产出/影响** | 决定 W1 的 a5 分支是"翻门控"还是"移植实现"；**BAR 上限直接进 host-mappable Buffer 容量预算**（约束 §4） |
-| **状态（2026-08-07）** | 🔴 **仍不可用**（外部驱动假设未在本仓验证，见 [hardware-constraints.md](hardware-constraints.md) §2 状态表），且**无人认领**。⇒ **不再等它** —— 见下方 W1lite，用一层封装接口把 W0 从关键路径上摘掉 |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | 探测 a5 驱动：`ascend_hal` 是否导出 `halHostRegister`、`DEV_SVM_MAP_HOST` flags 语义是否同义、**是否返回 identity VA**、最低驱动版本与探测方式、**BAR/aperture 大小与数量上限** |
+ | **现状锚点** | a2a3 取法可直接照抄：✅ `src/a2a3/platform/onboard/host/device_runner.cpp::load_hal_if_needed` / `get_halHostRegister` / `DeviceRunner::register_device_memory_to_host`（`dlopen("ascend_hal")` + `dlsym`），签名 `int (*)(void*, size_t, unsigned, int, void**)` |
+ | **规模** | **XS**（探测小程序 + onboard 跑一次） |
+ | **依赖** | 无 |
+ | **产出/影响** | 决定 W1 的 a5 分支是"翻门控"还是"移植实现"；**BAR 上限直接进 host-mappable Buffer 容量预算**（约束 §4） |
+ | **状态（2026-08-07）** | 🔴 **仍不可用**（外部驱动假设未在本仓验证，见 [hardware-constraints.md](hardware-constraints.md) §2 状态表），且**无人认领**。⇒ **不再等它** —— 见下方 W1lite，用一层封装接口把 W0 从关键路径上摘掉 |
 
 ### W1lite ⬜ **新增，解耦 W0**：register/access 两接口，宏选 ld/st 或 `rtMemcpy` —— **不阻塞下游**
 
@@ -67,26 +67,26 @@
 > ⇒ 把 W0 从「阻塞 W1」降级为「W1lite 内部一根宏开关的翻转」，**该翻转本身不需要新代码**——
 > 消费端从第一天就调用同一对接口，只是接口内部今天走 `rtMemcpy`，明天走 `ld/st`。
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | 定义与 `HostApi::register_device_memory_to_host` / `unregister_device_memory_from_host` 同层的两个接口，**按 platform 而非按能力探测结果分派**：① **注册接口**（对应现有 `register_device_memory_to_host`/`unregister_device_memory_from_host` 虚函数对，签名不变）② **访问接口**（对应 `host_tensor_access.cpp` 里的 `read`/`write`，即 `HostTensorRegion` 的取数路径）。两接口内部各用一个宏在两种实现间二选一：；&nbsp;&nbsp;· **注册**：`ld/st` 分支 = 真映射（`halHostRegister` 返回的 host VA，直接 CPU deref，即 a2a3 现状）；`rtMemcpy` 分支 = **不注册**（`register_device_memory_to_host` 直接返回 `nullptr`，退回 `host_tensor_access.cpp` 已有的 mirror-copy 路径 —— 这条路径今天就存在，等价于"假装没有 host-map"）；&nbsp;&nbsp;· **访问**：`ld/st` 分支 = 对映射出的 host VA 直接 `memcpy`（等价当前 `HostTensorAccessor::read`/`write` 的非-mirror 分支）；`rtMemcpy` 分支 = 对 staging 缓冲 `memcpy` + `copy_to_device`/`copy_from_device`（等价当前的 mirror 分支）；&nbsp;&nbsp;⇒ **两个分支在 `host_tensor_access.cpp` 里都已经存在**，W1lite 只是把"选哪个"从**运行时探测结果**（当前：`register_device_memory_to_host` 返回值是否为空）**收窄为一个编译期/平台期宏**，从而不必等 W0 出结论也能把 a5 接上 |
-| **平台选择** | **A3 = `ld/st`**（现状不变，a2a3 已有 `halHostRegister` override，见 W1）；**A5 = `rtMemcpy`**（W0 结论落地前的默认，且与 [hardware-constraints.md](hardware-constraints.md) §2 表中列出的现有 a5 绕行——PMU / L2 swimlane / scope_stats / args-dump 收集器的 `rtMemcpy DEVICE_TO_HOST` 绕行——**是同一条路径，不是新绕行**）。宏建议挂在现有 `WorkerChipRegionAccessProfile`（`ONBOARD_VMM` / `SIM_POSIX_SHM`）同一层，而非新开 `#if a5 / #if a2a3`——后者正是 W1 要禁止的硬编码模式（见 W1「禁用 `#if a5 / #if a2a3` 硬编码」条） |
-| **W0 可用后怎么切** | **只改宏映射，不改调用方**：把 A5 的宏分支从 `rtMemcpy` 改成 `ld/st`（即真正调用 `halHostRegister` 并按返回 VA 直读），`host_tensor_access.cpp` 与更上层的 `HostTensorAccessor::add`/`read`/`write` 调用点**零改动**——它们从写下的第一天起就只调用注册/访问这两个接口，从不关心宏另一侧是什么 |
-| **现状锚点** | ✅ 两条分支的实现**已经都在** `src/a5/runtime/host_build_graph/host/host_tensor_access.cpp`（`add` 的 `host_view != nullptr` 分支＝ld/st，`fallback_host_view` 分支＝mirror）；✅ `unregister_device_memory_from_host` 的 base default 已经是空实现（`device_runner_base.h:163`），即天然的"rtMemcpy 分支＝不注册"。W1lite **不是新写访问逻辑**，是**把现有的运行时二选一，改造成 platform 定的宏二选一** |
-| **规模** | **XS–S**：`host_api.h` 的 vtable 层加一层按-platform 选择的宏封装；a5 `DeviceRunner` 用宏把 `register_device_memory_to_host` 接到"直接返回 nullptr"（rtMemcpy 分支）而不是留空 override（base default 已是空，行为不变，只是**显式**写出宏分支，避免以后有人误读"a5 无 override＝忘了写"） |
-| **依赖** | 无（**不依赖 W0**，这正是它存在的理由） |
-| **产出/影响** | 把 W0 从「阻塞 W1」降为「W1lite 内部一次宏翻转」；a5 下游（W4 同步原语归一等）可以立刻针对**统一接口**开发，不必等驱动结论 |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | 定义与 `HostApi::register_device_memory_to_host` / `unregister_device_memory_from_host` 同层的两个接口，**按 platform 而非按能力探测结果分派**：① **注册接口**（对应现有 `register_device_memory_to_host`/`unregister_device_memory_from_host` 虚函数对，签名不变）② **访问接口**（对应 `host_tensor_access.cpp` 里的 `read`/`write`，即 `HostTensorRegion` 的取数路径）。两接口内部各用一个宏在两种实现间二选一：；&nbsp;&nbsp;· **注册**：`ld/st` 分支 = 真映射（`halHostRegister` 返回的 host VA，直接 CPU deref，即 a2a3 现状）；`rtMemcpy` 分支 = **不注册**（`register_device_memory_to_host` 直接返回 `nullptr`，退回 `host_tensor_access.cpp` 已有的 mirror-copy 路径 —— 这条路径今天就存在，等价于"假装没有 host-map"）；&nbsp;&nbsp;· **访问**：`ld/st` 分支 = 对映射出的 host VA 直接 `memcpy`（等价当前 `HostTensorAccessor::read`/`write` 的非-mirror 分支）；`rtMemcpy` 分支 = 对 staging 缓冲 `memcpy` + `copy_to_device`/`copy_from_device`（等价当前的 mirror 分支）；&nbsp;&nbsp;⇒ **两个分支在 `host_tensor_access.cpp` 里都已经存在**，W1lite 只是把"选哪个"从**运行时探测结果**（当前：`register_device_memory_to_host` 返回值是否为空）**收窄为一个编译期/平台期宏**，从而不必等 W0 出结论也能把 a5 接上 |
+ | **平台选择** | **A3 = `ld/st`**（现状不变，a2a3 已有 `halHostRegister` override，见 W1）；**A5 = `rtMemcpy`**（W0 结论落地前的默认，且与 [hardware-constraints.md](hardware-constraints.md) §2 表中列出的现有 a5 绕行——PMU / L2 swimlane / scope_stats / args-dump 收集器的 `rtMemcpy DEVICE_TO_HOST` 绕行——**是同一条路径，不是新绕行**）。宏建议挂在现有 `WorkerChipRegionAccessProfile`（`ONBOARD_VMM` / `SIM_POSIX_SHM`）同一层，而非新开 `#if a5 / #if a2a3`——后者正是 W1 要禁止的硬编码模式（见 W1「禁用 `#if a5 / #if a2a3` 硬编码」条） |
+ | **W0 可用后怎么切** | **只改宏映射，不改调用方**：把 A5 的宏分支从 `rtMemcpy` 改成 `ld/st`（即真正调用 `halHostRegister` 并按返回 VA 直读），`host_tensor_access.cpp` 与更上层的 `HostTensorAccessor::add`/`read`/`write` 调用点**零改动**——它们从写下的第一天起就只调用注册/访问这两个接口，从不关心宏另一侧是什么 |
+ | **现状锚点** | ✅ 两条分支的实现**已经都在** `src/a5/runtime/host_build_graph/host/host_tensor_access.cpp`（`add` 的 `host_view != nullptr` 分支＝ld/st，`fallback_host_view` 分支＝mirror）；✅ `unregister_device_memory_from_host` 的 base default 已经是空实现（`device_runner_base.h:163`），即天然的"rtMemcpy 分支＝不注册"。W1lite **不是新写访问逻辑**，是**把现有的运行时二选一，改造成 platform 定的宏二选一** |
+ | **规模** | **XS–S**：`host_api.h` 的 vtable 层加一层按-platform 选择的宏封装；a5 `DeviceRunner` 用宏把 `register_device_memory_to_host` 接到"直接返回 nullptr"（rtMemcpy 分支）而不是留空 override（base default 已是空，行为不变，只是**显式**写出宏分支，避免以后有人误读"a5 无 override＝忘了写"） |
+ | **依赖** | 无（**不依赖 W0**，这正是它存在的理由） |
+ | **产出/影响** | 把 W0 从「阻塞 W1」降为「W1lite 内部一次宏翻转」；a5 下游（W4 同步原语归一等）可以立刻针对**统一接口**开发，不必等驱动结论 |
 
 ### W1 平台层：打开 a5 host-map + 新增 `HOST_MAPPED` profile —— **扩展已有**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | ① a5 `DeviceRunner` **override** 那两个虚函数（照抄 a2a3 的 `dlopen`/`dlsym` 实现），**即 W1lite 宏的 ld/st 分支的真实现**；② `WorkerChipRegionAccessProfile` 新增 **`ONBOARD_HOST_MAPPED`**：host 侧直接 CPU deref，取代 ACL-copy 路径；③ **运行时能力探测**（`dlsym` 成功 + 一次小规模试注册）选 profile，**禁用 `#if a5 / #if a2a3` 硬编码**；④ **device-id namespace gate**：所有直接 `halHostRegister` 调用均先将 ACL/rt logical id 经 `pto::acl_to_hal_device_id()` 转成 driver-visible id；`aclrt*` / `rt*` 入口仍传 logical id，不转换 |
-| **现状锚点** | ✅ `src/a5/platform/onboard/host/device_runner.{h,cpp}` 的 `DeviceRunner::init_chip_swimlane` / `init_args_dump` / `init_pmu` / `init_dep_gen` / `init_scope_stats` 仍显式传 `register_cb=nullptr`；✅ `l3_l2_orch_region_access.h::WorkerChipRegionAccessProfile`；✅ binding 的 `_l3_host_mapped_*` 分派入口；✅ #1600（`9a30e6dd`）增加 `acl_hal_device.h::acl_to_hal_device_id`；⛔ a2a3 的 `DeviceRunner::register_device_memory_to_host` 与五个 DFX `register_cb` 当前仍把 logical `device_id` 直传 `halHostRegister` |
-| **规模** | **S–M**。虚函数 override 是 XS；新 profile 要贯穿 binding 五个入口 |
-| **依赖** | W0 **+ W1lite**（W1 = 把 W1lite 的宏分支从 `rtMemcpy` 翻成 `ld/st`，不是另起一套） |
-| **风险** | 🟡 若 W0 发现**非 identity VA**，则 `src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp::bind_callable_to_runtime_impl` 的 identity 断言会挡路，需先让消费端真正按返 VA 走 → 规模由 S 升 M |
-| **附带** | ⚠️ 删除以下符号附近“a5 无 `halHostRegister`”的过时断言：`KernelArgs::scope_stats_data_base`、a5 `DeviceRunner::init_scope_stats` / `init_dep_gen`、`pmu_profiling.h` 的 streaming-buffer design 注释、`DeviceRunnerBase::register_device_memory_to_host`、`ProfilerBase::release_one_buffer` / `alloc_paired_buffer`。**收集器的 host-影子绕行简化单独立项，勿夹带** |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | ① a5 `DeviceRunner` **override** 那两个虚函数（照抄 a2a3 的 `dlopen`/`dlsym` 实现），**即 W1lite 宏的 ld/st 分支的真实现**；② `WorkerChipRegionAccessProfile` 新增 **`ONBOARD_HOST_MAPPED`**：host 侧直接 CPU deref，取代 ACL-copy 路径；③ **运行时能力探测**（`dlsym` 成功 + 一次小规模试注册）选 profile，**禁用 `#if a5 / #if a2a3` 硬编码**；④ **device-id namespace gate**：所有直接 `halHostRegister` 调用均先将 ACL/rt logical id 经 `pto::acl_to_hal_device_id()` 转成 driver-visible id；`aclrt*` / `rt*` 入口仍传 logical id，不转换 |
+ | **现状锚点** | ✅ `src/a5/platform/onboard/host/device_runner.{h,cpp}` 的 `DeviceRunner::init_chip_swimlane` / `init_args_dump` / `init_pmu` / `init_dep_gen` / `init_scope_stats` 仍显式传 `register_cb=nullptr`；✅ `l3_l2_orch_region_access.h::WorkerChipRegionAccessProfile`；✅ binding 的 `_l3_host_mapped_*` 分派入口；✅ #1600（`9a30e6dd`）增加 `acl_hal_device.h::acl_to_hal_device_id`；⛔ a2a3 的 `DeviceRunner::register_device_memory_to_host` 与五个 DFX `register_cb` 当前仍把 logical `device_id` 直传 `halHostRegister` |
+ | **规模** | **S–M**。虚函数 override 是 XS；新 profile 要贯穿 binding 五个入口 |
+ | **依赖** | W0 **+ W1lite**（W1 = 把 W1lite 的宏分支从 `rtMemcpy` 翻成 `ld/st`，不是另起一套） |
+ | **风险** | 🟡 若 W0 发现**非 identity VA**，则 `src/a2a3/runtime/host_build_graph/host/runtime_maker.cpp::bind_callable_to_runtime_impl` 的 identity 断言会挡路，需先让消费端真正按返 VA 走 → 规模由 S 升 M |
+ | **附带** | ⚠️ 删除以下符号附近“a5 无 `halHostRegister`”的过时断言：`KernelArgs::scope_stats_data_base`、a5 `DeviceRunner::init_scope_stats` / `init_dep_gen`、`pmu_profiling.h` 的 streaming-buffer design 注释、`DeviceRunnerBase::register_device_memory_to_host`、`ProfilerBase::release_one_buffer` / `alloc_paired_buffer`。**收集器的 host-影子绕行简化单独立项，勿夹带** |
 
 > **当前 correctness 缺口不受 W0 阻塞**：④ 中 a2a3 既有路径的 logical→driver
 > 转换应独立先修；W0 只决定 a5 host-map 能否开启。测试必须使用
@@ -95,24 +95,24 @@
 
 ### W2 端点与成员模型 —— ⬜ **全新，设计落地的主体**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | ① **端点标识 `EndpointId = session_id + worker_path + deployment`**——路径 `L4/L3[2]/L2[5]`，部署 `HOST_CPU / DEVICE_AICORE / DEVICE_AICPU`（**术语依 [../feature_roadmap.md](../feature_roadmap.md) 规范**）；② **成员选择器**（子树展开）+ 显式端点列表两种表达；③ 对每个 `(member, CanonicalBufferIdentity)` 计算完整 **potential capability**：`deployment × interconnect × backing/backend × runtime support`，互连矩阵只是第一道必要门槛；④ 把 **actual capability** 收窄为 `potential ∩ authorization ∩ live Attachment/materialization`；W2 冻结计划/校验模型，W5 负责事务性建立 live Attachment；⑤ `TransportPlan` 按 operation 选择规范 adapter：HCCL collective、direct-map/device-peer、owner-delegated copy 或 explicit transfer；adapter 再按 backing/backend 物化为 VMM、fork-shm 等实现。不支持或未 attach 均**显式失败**，禁止仅从 MemberSet 推导后端 |
-| **现状锚点** | ⬜ **代码里没有任何端点路径概念**——端点路径只存在于 ABI 设计（[../worker-memory-model/p1b-corrected-design.md](../worker-memory-model/p1b-corrected-design.md)），且那里它已收窄为**进程内诊断用 `path_id`**，grep 无实现。现有成员表达是**裸 chip 索引**：✅ `Worker._allocate_domain` 校验 `worker_id {w} outside [0, len(device_ids))` |
-| **规模** | ⚠️ **M–L，但「不碰 C++/wire」已于 2026-08-07 作废** —— 见 [w2-w5-inversion.md](w2-w5-inversion.md) §1.1。原文写「纯 Python 层的标识 + 校验」；实际上 **W5 的机制先于 W2 的词汇落地了**（#1456），成员**已经在跨节点控制面 wire 上**：`global_comm_domain::encode_domain_command` 打包 `len(members)` ＋ 逐个 `_put_member`，`validate_member_table` 直接以 `(node_worker_id, local_worker_id)` 判重。编码器确实是 Python，但它是**跨进程、带版本号的序列化格式**，不再是进程内标识。⏰ **且 #1623 / #1624 正在同一协议上继续叠加 ⇒ 现在改是加字段，等它们落地后是换协议。** |
-| **依赖** | 无（**可与 W1 并行**）。⚠️ **但 2026-08-07 发现一条跨里程碑的_反向_供货关系**：**PR #1696 造的端点注册表就是 P1-B 卡着的那张 endpoint 矩阵** —— 见 [../w2-p1b-endpoint-convergence.md](../w2-p1b-endpoint-convergence.md)。W2 不依赖 P1-B，**是 P1-B 的 `ImportContext` 依赖 W2**。⇒ 「谁拥有 endpoint 矩阵」必须先拍板（决定 ①），否则仓库会长出两张矩阵 |
-| **⚠️ 关键** | **必须先冻结路径的字符串/结构表示**——但要注意两处**用法已分岔**：；· **域模型**用**完整 path**（是 `EndpointId` 的组成部分，参与成员判定，必须跨进程可解析）；· **ABI** 只存 `uint32 owner_worker_path_id`，**纯诊断**，侧表在 owner 进程内，消费者解析不出属正常（见 [../worker-memory-model/p1b-corrected-design.md](../worker-memory-model/p1b-corrected-design.md)）；⇒ **要同源的是「路径怎么写」这一个表示，不是它的存储与语义**。ABI 不再把 path 放进 identity，正是为了消灭定长 `char[64]` 那类越界；域模型则不能丢 path。**两者共用格式、各存各的** |
-| **契约来源** | [domain-membership.md](domain-membership.md) §3（域与完整 capability 公式）／§4.2（potential vs actual）／§6（成员表达）／§7（Attachment/Transport 选择） |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | ① **端点标识 `EndpointId = session_id + worker_path + deployment`**——路径 `L4/L3[2]/L2[5]`，部署 `HOST_CPU / DEVICE_AICORE / DEVICE_AICPU`（**术语依 [../feature_roadmap.md](../feature_roadmap.md) 规范**）；② **成员选择器**（子树展开）+ 显式端点列表两种表达；③ 对每个 `(member, CanonicalBufferIdentity)` 计算完整 **potential capability**：`deployment × interconnect × backing/backend × runtime support`，互连矩阵只是第一道必要门槛；④ 把 **actual capability** 收窄为 `potential ∩ authorization ∩ live Attachment/materialization`；W2 冻结计划/校验模型，W5 负责事务性建立 live Attachment；⑤ `TransportPlan` 按 operation 选择规范 adapter：HCCL collective、direct-map/device-peer、owner-delegated copy 或 explicit transfer；adapter 再按 backing/backend 物化为 VMM、fork-shm 等实现。不支持或未 attach 均**显式失败**，禁止仅从 MemberSet 推导后端 |
+ | **现状锚点** | ⬜ **代码里没有任何端点路径概念**——端点路径只存在于 ABI 设计（[../worker-memory-model/p1b-corrected-design.md](../worker-memory-model/p1b-corrected-design.md)），且那里它已收窄为**进程内诊断用 `path_id`**，grep 无实现。现有成员表达是**裸 chip 索引**：✅ `Worker._allocate_domain` 校验 `worker_id {w} outside [0, len(device_ids))` |
+ | **规模** | ⚠️ **M–L，但「不碰 C++/wire」已于 2026-08-07 作废** —— 见 [w2-w5-inversion.md](w2-w5-inversion.md) §1.1。原文写「纯 Python 层的标识 + 校验」；实际上 **W5 的机制先于 W2 的词汇落地了**（#1456），成员**已经在跨节点控制面 wire 上**：`global_comm_domain::encode_domain_command` 打包 `len(members)` ＋ 逐个 `_put_member`，`validate_member_table` 直接以 `(node_worker_id, local_worker_id)` 判重。编码器确实是 Python，但它是**跨进程、带版本号的序列化格式**，不再是进程内标识。⏰ **且 #1623 / #1624 正在同一协议上继续叠加 ⇒ 现在改是加字段，等它们落地后是换协议。** |
+ | **依赖** | 无（**可与 W1 并行**）。⚠️ **但 2026-08-07 发现一条跨里程碑的_反向_供货关系**：**PR #1696 造的端点注册表就是 P1-B 卡着的那张 endpoint 矩阵** —— 见 [../w2-p1b-endpoint-convergence.md](../w2-p1b-endpoint-convergence.md)。W2 不依赖 P1-B，**是 P1-B 的 `ImportContext` 依赖 W2**。⇒ 「谁拥有 endpoint 矩阵」必须先拍板（决定 ①），否则仓库会长出两张矩阵 |
+ | **⚠️ 关键** | **必须先冻结路径的字符串/结构表示**——但要注意两处**用法已分岔**：；· **域模型**用**完整 path**（是 `EndpointId` 的组成部分，参与成员判定，必须跨进程可解析）；· **ABI** 只存 `uint32 owner_worker_path_id`，**纯诊断**，侧表在 owner 进程内，消费者解析不出属正常（见 [../worker-memory-model/p1b-corrected-design.md](../worker-memory-model/p1b-corrected-design.md)）；⇒ **要同源的是「路径怎么写」这一个表示，不是它的存储与语义**。ABI 不再把 path 放进 identity，正是为了消灭定长 `char[64]` 那类越界；域模型则不能丢 path。**两者共用格式、各存各的** |
+ | **契约来源** | [domain-membership.md](domain-membership.md) §3（域与完整 capability 公式）／§4.2（potential vs actual）／§6（成员表达）／§7（Attachment/Transport 选择） |
 
 ### W3 persistent Buffer/Attachment 生命周期 + 跨 run 存活 —— **改已有行为（风险点）**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | ① Buffer Attachment 的 map/unmap + **refcount**（多进程 attach 同一 Buffer）；② persistent Buffer/domain resource **跨 `run()` 存活**；③ **容量核算与上报**（HBM 预算可观测）—— **③ 已被 #1592 部分交付，但缺口正好落在本项上，见下** |
-| **现状锚点**；（**按符号锚定**） | ✅ `Worker.submit` 为每个 `RunHandle` 建 `_RunResources`；`RunHandle.wait` 跨过 native fence 后调 `Worker._finalize_run_handle`，由 `_RunFinalizationCursor` 顺序驱动 `_release_all_live_domains(resources)` 等 one-shot 步骤。`Worker._teardown_ready_tree` 的 `_step(...)` 只属于 terminal close 扫尾，**不是 run-fence 路径** |
-| **规模** | **M → M-L**（见下方 #1466 影响） |
-| **依赖** | 无（但语义上是 issue **#824** 的实质内容） |
-| **⚠️ 交叠** | 与 **P0.2 follow-up 簇C（retryable journal）**交叠——都是"资源只在 native free 成功后才丢账本"。**应对齐，别各做一套**（见 ../P0.2.md（本地参考：`../P0.2/done-followup.md`） §簇C） |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | ① Buffer Attachment 的 map/unmap + **refcount**（多进程 attach 同一 Buffer）；② persistent Buffer/domain resource **跨 `run()` 存活**；③ **容量核算与上报**（HBM 预算可观测）—— **③ 已被 #1592 部分交付，但缺口正好落在本项上，见下** |
+ | **现状锚点**；（**按符号锚定**） | ✅ `Worker.submit` 为每个 `RunHandle` 建 `_RunResources`；`RunHandle.wait` 跨过 native fence 后调 `Worker._finalize_run_handle`，由 `_RunFinalizationCursor` 顺序驱动 `_release_all_live_domains(resources)` 等 one-shot 步骤。`Worker._teardown_ready_tree` 的 `_step(...)` 只属于 terminal close 扫尾，**不是 run-fence 路径** |
+ | **规模** | **M → M-L**（见下方 #1466 影响） |
+ | **依赖** | 无（但语义上是 issue **#824** 的实质内容） |
+ | **⚠️ 交叠** | 与 **P0.2 follow-up 簇C（retryable journal）**交叠——都是"资源只在 native free 成功后才丢账本"。**应对齐，别各做一套**（见 ../P0.2.md（本地参考：`../P0.2/done-followup.md`） §簇C） |
 
 #### ⚠️ #1466 改变了这一项的地基（`da75d350`，2026-07-27 合入）
 
@@ -123,11 +123,11 @@ Worker 级注册表，**可能释放另一个 run 仍持有的资源**。
 
 ##### 对 W3 的三点影响
 
-| 影响 | 说明 |
-| ---- | ---- |
-| **① 方向相反了** | commit message 明写：*"A domain's lifetime **ends at the fence of the run that allocated it**, so **allocate_domain outside graph construction has no owner to charge and is rejected**."* ⇒ main **刚刚把 run-所有权收紧**，跨 run 存活比之前**更难**，不再是"别在 fence 清掉"就行 |
-| **② 但地基更好了** | 所有权从**隐式**（Worker 级注册表）变成**显式**（charge 到 RunHandle）。要加"跨 run 持久"类别，现在是**新增一个显式的 lifetime 归属**，而不是在隐式清扫里开洞 —— 这更干净 |
-| **③ 规模上调** | 需要把 **RunHandle / Worker-tree / persistent** 三个 ownership domain 的边界写成可执行契约，并定义 `_submit_mu` 单写者约束下 persistent owner 如何创建、被 run retain、显式释放与 close 兜底。**M → M-L** |
+ | 影响 | 说明 |
+ | ---- | ---- |
+ | **① 方向相反了** | commit message 明写：*"A domain's lifetime **ends at the fence of the run that allocated it**, so **allocate_domain outside graph construction has no owner to charge and is rejected**."* ⇒ main **刚刚把 run-所有权收紧**，跨 run 存活比之前**更难**，不再是"别在 fence 清掉"就行 |
+ | **② 但地基更好了** | 所有权从**隐式**（Worker 级注册表）变成**显式**（charge 到 RunHandle）。要加"跨 run 持久"类别，现在是**新增一个显式的 lifetime 归属**，而不是在隐式清扫里开洞 —— 这更干净 |
+ | **③ 规模上调** | 需要把 **RunHandle / Worker-tree / persistent** 三个 ownership domain 的边界写成可执行契约，并定义 `_submit_mu` 单写者约束下 persistent owner 如何创建、被 run retain、显式释放与 close 兜底。**M → M-L** |
 
 #### #1541 把 run finalization 的 one-shot 边界变成了显式对象
 
@@ -167,10 +167,10 @@ whole-tree teardown 才是安全的最终回收边界。W3 不得绕开或重放
 
 #### 两种生命周期的当前状态
 
-| 生命周期 | 当前 owner / 终止边界 | W3 要求 |
-| -------- | --------------------- | ------- |
-| **per-orch** | ✅ `_RunResources`；该 run 的 native fence 后由 `_finalize_run_handle` / `_RunFinalizationCursor` 精确一次清理 | 保持为默认；**一个 run 的 fence 不得释放其他 run 或 per-worker 的资源**（#1466 修的正是这条） |
-| **per-worker** | 🟡 **已有先例，但只覆盖无 device 流量的资源**：；· `Worker._buffer_handles`（POSIX shm，`close()` 回收）；· Graph Execution 的 recording state / definition cache / host submission pool —— 其文档明写 *"owned **per worker** (per runtime instance), not process-global"* | 扩到**带 device 控制流量**的资源（CommDomain / L3-L2 region）。run 使用时持 **retain**，run fence 只释放 retain；显式 release 须等所有已接受 run 的 retain 归零；`close()` 顺序 = **先排空 per-orch → 再回收 per-worker → 最后拆 Worker 树** |
+ | 生命周期 | 当前 owner / 终止边界 | W3 要求 |
+ | -------- | --------------------- | ------- |
+ | **per-orch** | ✅ `_RunResources`；该 run 的 native fence 后由 `_finalize_run_handle` / `_RunFinalizationCursor` 精确一次清理 | 保持为默认；**一个 run 的 fence 不得释放其他 run 或 per-worker 的资源**（#1466 修的正是这条） |
+ | **per-worker** | 🟡 **已有先例，但只覆盖无 device 流量的资源**：；· `Worker._buffer_handles`（POSIX shm，`close()` 回收）；· Graph Execution 的 recording state / definition cache / host submission pool —— 其文档明写 *"owned **per worker** (per runtime instance), not process-global"* | 扩到**带 device 控制流量**的资源（CommDomain / L3-L2 region）。run 使用时持 **retain**，run fence 只释放 retain；显式 release 须等所有已接受 run 的 retain 归零；`close()` 顺序 = **先排空 per-orch → 再回收 per-worker → 最后拆 Worker 树** |
 
 > **修正 W3 的做法**：不是"去掉 fence 的清理"，而是
 > **把 per-worker 生命周期从"无 device 流量的资源"扩到"带 device 流量的资源"**。
@@ -183,10 +183,10 @@ whole-tree teardown 才是安全的最终回收边界。W3 不得绕开或重放
 
 真正的分界是另一条：
 
-| per-worker 资源 | 创建时发 device 控制流量？ | 入口 | 阻塞 |
-| --------------- | -------------------------- | ---- | ---- |
-| host shm Buffer | ❌ | ✅ **Worker 级 API，今天就能做**（`create_buffer` 即是） | 无 |
-| **CommDomain / L3-L2 region** | ✅ 多 chip alloc + export/import | Worker 级 API，但**必须进 run/admission 排序域** | 🔴 **控制操作准入** —— 异步流水 §5.8 要求本地/远端控制与 run 共享同一排序域，而这正是 **#1541 尚未闭合的 merge gate 之一** |
+ | per-worker 资源 | 创建时发 device 控制流量？ | 入口 | 阻塞 |
+ | --------------- | -------------------------- | ---- | ---- |
+ | host shm Buffer | ❌ | ✅ **Worker 级 API，今天就能做**（`create_buffer` 即是） | 无 |
+ | **CommDomain / L3-L2 region** | ✅ 多 chip alloc + export/import | Worker 级 API，但**必须进 run/admission 排序域** | 🔴 **控制操作准入** —— 异步流水 §5.8 要求本地/远端控制与 run 共享同一排序域，而这正是 **#1541 尚未闭合的 merge gate 之一** |
 
 ##### ✅ 该阻塞**已解除**（2026-08-03 核实于 `upstream/main`）
 
@@ -202,12 +202,12 @@ main 上的机制是 **`Worker._control_reservation(api)`**，其 docstring 就�
 
 它已经做到四件事：
 
-| — | 机制 |
-| - | ---- |
-| **与 run 互斥** | 取 **`_submit_mu`** —— submit 自己用的那把序列化锁，**check 与命令之间不可能挤进一个 run** |
-| **poison 传导** | `_ordered_cleanup_error` 非空即拒，并提示 `close()` |
-| **静止要求** | 有任何 live run handle 即拒：*"only ordered when nothing else is"* |
-| **可重入** | 一个控制调用可由另一些构成（region 造 queue），第二次**加入**预留而非死锁 |
+ | — | 机制 |
+ | - | ---- |
+ | **与 run 互斥** | 取 **`_submit_mu`** —— submit 自己用的那把序列化锁，**check 与命令之间不可能挤进一个 run** |
+ | **poison 传导** | `_ordered_cleanup_error` 非空即拒，并提示 `close()` |
+ | **静止要求** | 有任何 live run handle 即拒：*"only ordered when nothing else is"* |
+ | **可重入** | 一个控制调用可由另一些构成（region 造 queue），第二次**加入**预留而非死锁 |
 
 ##### ⭐ 静止约束正好回答了决策 A 的悬念
 
@@ -228,11 +228,11 @@ main 上的机制是 **`Worker._control_reservation(api)`**，其 docstring 就�
 
 ##### ⇒ 真正剩下的只有"入口"
 
-| — | 状态 |
-| - | ---- |
-| 排序机制 | ✅ **已在 main**（`_control_reservation`），但**只覆盖"run 外"这一个入口** —— 见下节 |
-| cleanup-bearing 正确分类 | ✅ **天然成立**（键在 `_RunResources.requires_ordered_cleanup`，`worker.py:3142`） |
-| **`allocate_domain` 的建图期门** | 🟡 **仍在** —— `worker.py:1173`。但它**不是独立改动**，理由见下节 F5 |
+ | — | 状态 |
+ | - | ---- |
+ | 排序机制 | ✅ **已在 main**（`_control_reservation`），但**只覆盖"run 外"这一个入口** —— 见下节 |
+ | cleanup-bearing 正确分类 | ✅ **天然成立**（键在 `_RunResources.requires_ordered_cleanup`，`worker.py:3142`） |
+ | **`allocate_domain` 的建图期门** | 🟡 **仍在** —— `worker.py:1173`。但它**不是独立改动**，理由见下节 F5 |
 
 ⇒ W3 要做的是**加一条 per-worker 路径**：走 `_control_reservation` + charge 到 per-worker
 owner，而不是 `_building_run_resources`。**这是小改动，不是被阻塞的大工程。**
@@ -330,11 +330,11 @@ run 拥有域（`resources` 取自 `_building_run_resources`）。取消所有�
 
 逐项代入：
 
-| run 对持久资源做了什么 | fence 上要 teardown 吗 | cleanup-bearing |
-| ---------------------- | ---------------------- | --------------- |
-| **创建**它（`lifetime=PER_WORKER`） | ❌ —— 持久资源不在本 run 的 fence 上释放 | **否** |
-| **retain / 使用**它 | ❌ —— 只掉一个引用计数，无 device 流量 | **否** |
-| 创建**run-scoped** 域（今天的默认） | ✅ | **是** |
+ | run 对持久资源做了什么 | fence 上要 teardown 吗 | cleanup-bearing |
+ | ---------------------- | ---------------------- | --------------- |
+ | **创建**它（`lifetime=PER_WORKER`） | ❌ —— 持久资源不在本 run 的 fence 上释放 | **否** |
+ | **retain / 使用**它 | ❌ —— 只掉一个引用计数，无 device 流量 | **否** |
+ | 创建**run-scoped** 域（今天的默认） | ✅ | **是** |
 
 ⇒ **持久域的整条使用路径都不降深度。** 注意这不是给持久资源开的特例：
 判据换成"fence 上有没有 device teardown"之后，**结论是算出来的**，
@@ -361,31 +361,31 @@ release_per_worker(handle):
 
 ##### ⇒ 成本模型：把降深度从「每个 run」搬到「一次 release」
 
-| — | 每 run 创建域（今天） | persistent（W3） |
-| - | --------------------- | ---------------- |
-| domain alloc/free | 每 run 一次（实测 **150 ms**） | 一次 |
-| K=2 → 1 降级 | **每个 run 都付** | **只有 release 那一次付** |
+ | — | 每 run 创建域（今天） | persistent（W3） |
+ | - | --------------------- | ---------------- |
+ | domain alloc/free | 每 run 一次（实测 **150 ms**） | 一次 |
+ | K=2 → 1 降级 | **每个 run 都付** | **只有 release 那一次付** |
 
 这是 [`../README.md`](../README.md) §1.3 记录的那条双向耦合的**定量形式**。
 
 ##### 判断五：事务性与账本，**沿用既有机制，不另造**
 
-| 要求 | 沿用什么 |
-| ---- | -------- |
-| 多 chip teardown 的事务性 | 异步流水 §5.9：provisional ownership → per-chip 成功追踪 → 任一失败**全员尝试回滚** → 完整清理不可证时 **poison ordered admission** |
-| 失败后的可重试账本 | **P0.2 follow-up 簇C（retryable journal）** —— `../P0.2.md`（本地参考：`../P0.2/done-followup.md`）。⚠️ **两者必须是同一套**，否则 persistent 与 run-scoped 会有两本互相不认的账 |
-| 陈旧 handle 拒绝 | `DomainId = stable id + generation/epoch`；release 后 epoch 递增，旧 handle 失配即拒 |
-| close 兜底 | 上表已定顺序：**先排空 RunHandle → 再回收 persistent → 最后拆 Worker-tree** |
+ | 要求 | 沿用什么 |
+ | ---- | -------- |
+ | 多 chip teardown 的事务性 | 异步流水 §5.9：provisional ownership → per-chip 成功追踪 → 任一失败**全员尝试回滚** → 完整清理不可证时 **poison ordered admission** |
+ | 失败后的可重试账本 | **P0.2 follow-up 簇C（retryable journal）** —— `../P0.2.md`（本地参考：`../P0.2/done-followup.md`）。⚠️ **两者必须是同一套**，否则 persistent 与 run-scoped 会有两本互相不认的账 |
+ | 陈旧 handle 拒绝 | `DomainId = stable id + generation/epoch`；release 后 epoch 递增，旧 handle 失配即拒 |
+ | close 兜底 | 上表已定顺序：**先排空 RunHandle → 再回收 persistent → 最后拆 Worker-tree** |
 
 ###### 🔬 核实结果：账本**只统一了一半**（2026-08-03，核 PR #1456 `a05b944f` / 基线 `2a650f2d`）
 
 判断五要求 persistent 与 run-scoped 共用一本账。逐条核对 §5.9 六条后：
 
-| 失败路径 | ①provisional | ②逐参与者 | ③回滚所有成功者 | ④失败仍继续 | ⑤全程后抛首错 | ⑥不可证时 poison |
-| -------- | ------------ | --------- | --------------- | ----------- | ------------- | ---------------- |
-| 正常 release（`worker.py:8844`） | n/a | ✅ | ✅ | ✅ | ✅ | ✅ 经 fence `:9857` |
-| **分配失败 ABORT**（`:8759`） | ✅ `:8699` | ✅ | ✅ | ✅ | ✅ | ❌ **stderr** |
-| L3 节点 close（`:8460`） | n/a | ✅ | ✅ | ✅ | ❌ 不抛 | ❌ **stderr** |
+ | 失败路径 | ①provisional | ②逐参与者 | ③回滚所有成功者 | ④失败仍继续 | ⑤全程后抛首错 | ⑥不可证时 poison |
+ | -------- | ------------ | --------- | --------------- | ----------- | ------------- | ---------------- |
+ | 正常 release（`worker.py:8844`） | n/a | ✅ | ✅ | ✅ | ✅ | ✅ 经 fence `:9857` |
+ | **分配失败 ABORT**（`:8759`） | ✅ `:8699` | ✅ | ✅ | ✅ | ✅ | ❌ **stderr** |
+ | L3 节点 close（`:8460`） | n/a | ✅ | ✅ | ✅ | ❌ 不抛 | ❌ **stderr** |
 
 ⇒ **release 账本已经是同一本**（两条路都经 run fence，都能 poison）。
 ⇒ **分配失败账本不是**：本地路径（`main:7192-7194`）**先注册再冒险**，让 fence 拥有清理并在
@@ -497,69 +497,69 @@ VMM window 是**保留地址空间**还是**已提交物理页**、peer-import �
 
 新增的第三种 lifetime（persistent）**不能自由设计**，至少要过三关：
 
-| 约束（出处） | W3 必须满足什么 |
-| ------------ | --------------- |
-| **§5.7 cleanup-bearing 分类** | persistent 域必须能被**分类器识别为「非本 run 创建」**，否则会被误判成 cleanup-bearing，**白白降深度**——那样 #824 就只剩省 alloc，丢掉本节方向一的收益 |
-| **§5.7 分类来源** | 分类**只能来自 run 实际 adopt 的资源集合**，**不得**从 callable 符号 / code image / 用户承诺推断（decision log #21）。⇒ persistent 域的"归属"必须是**可枚举的运行期事实**，不能是声明 |
-| **§5.9 cleanup 事务性** | 多 chip 域的创建/释放要求：先记 **provisional ownership** → per-chip 成功追踪 → 任一失败**全员回滚且逐个尝试** → 完整清理不可证时**poison ordered admission**。⇒ persistent 域的 release 事务要与此**同源**，不能另起一套 |
-| **decision log #20** | run fence **不结束于** native `active_tasks == 0`；当 run 拥有 device-affecting Python cleanup 时，**该 cleanup 属于 `S(N)`**。⇒ persistent 域的释放发生在**哪个 run 的 S(N)** 里，必须有明确答案 |
+ | 约束（出处） | W3 必须满足什么 |
+ | ------------ | --------------- |
+ | **§5.7 cleanup-bearing 分类** | persistent 域必须能被**分类器识别为「非本 run 创建」**，否则会被误判成 cleanup-bearing，**白白降深度**——那样 #824 就只剩省 alloc，丢掉本节方向一的收益 |
+ | **§5.7 分类来源** | 分类**只能来自 run 实际 adopt 的资源集合**，**不得**从 callable 符号 / code image / 用户承诺推断（decision log #21）。⇒ persistent 域的"归属"必须是**可枚举的运行期事实**，不能是声明 |
+ | **§5.9 cleanup 事务性** | 多 chip 域的创建/释放要求：先记 **provisional ownership** → per-chip 成功追踪 → 任一失败**全员回滚且逐个尝试** → 完整清理不可证时**poison ordered admission**。⇒ persistent 域的 release 事务要与此**同源**，不能另起一套 |
+ | **decision log #20** | run fence **不结束于** native `active_tasks == 0`；当 run 拥有 device-affecting Python cleanup 时，**该 cleanup 属于 `S(N)`**。⇒ persistent 域的释放发生在**哪个 run 的 S(N)** 里，必须有明确答案 |
 
 ##### 对 W3 的净影响
 
-| — | — |
-| - | - |
-| **优先级** | ⬆️ 上调 —— 从"CPU↔NPU track 的一个 W 项"变成**两条 track 的共同前置** |
-| **规模** | **M-L 不变**，但设计约束变紧（上表四条） |
-| **不可再"独立设计"** | 此前 l3l4 说 #824 是"独立、低风险的第一步"，**已被 #1466 推翻一次**；现在进一步明确：它还要与异步流水 track 的 slot/lease 模型对齐 |
+ | — | — |
+ | - | - |
+ | **优先级** | ⬆️ 上调 —— 从"CPU↔NPU track 的一个 W 项"变成**两条 track 的共同前置** |
+ | **规模** | **M-L 不变**，但设计约束变紧（上表四条） |
+ | **不可再"独立设计"** | 此前 l3l4 说 #824 是"独立、低风险的第一步"，**已被 #1466 推翻一次**；现在进一步明确：它还要与异步流水 track 的 slot/lease 模型对齐 |
 
 ### W4 同步原语归一 + arch 维护抽象 —— **扩展已有**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | ① 把 counter `notify/test/wait` 提升为 Buffer-backed Attachment 的通用同步 API（现绑在 `WorkerChipRegion` 代码符号上）；② **按 arch 的 cache maintenance 抽象**：**a5 上编译成 no-op 也必须有调用点**（a5-first 纪律①）；③ **只暴露 publish/observe，不暴露裸 fence** |
-| **现状锚点** | ✅ 已有大半：`python/bindings/task_interface.cpp` 的 `_l3_host_mapped_counter_notify` / `test` / `wait`；`src/common/platform/include/aicpu/cache_maintenance.h::cache_invalidate_range` / `cache_flush_range`；契约 `docs/l3-l2-orch-comm.md` §4–§5 |
-| **规模** | **S–M**。主要是**搬家 + 补 a2a3 维护点** |
-| **依赖** | W1 |
-| **⚠️ 最高风险** | **这是整个设计最容易错的一块**——`docs/hardware/cache-coherency.md` 记录了 PR #540 的真实事故（用错原语、靠内嵌 `dsb sy` 歪打正着）。**a2a3 onboard 验证是必要条件** |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | ① 把 counter `notify/test/wait` 提升为 Buffer-backed Attachment 的通用同步 API（现绑在 `WorkerChipRegion` 代码符号上）；② **按 arch 的 cache maintenance 抽象**：**a5 上编译成 no-op 也必须有调用点**（a5-first 纪律①）；③ **只暴露 publish/observe，不暴露裸 fence** |
+ | **现状锚点** | ✅ 已有大半：`python/bindings/task_interface.cpp` 的 `_l3_host_mapped_counter_notify` / `test` / `wait`；`src/common/platform/include/aicpu/cache_maintenance.h::cache_invalidate_range` / `cache_flush_range`；契约 `docs/l3-l2-orch-comm.md` §4–§5 |
+ | **规模** | **S–M**。主要是**搬家 + 补 a2a3 维护点** |
+ | **依赖** | W1 |
+ | **⚠️ 最高风险** | **这是整个设计最容易错的一块**——`docs/hardware/cache-coherency.md` 记录了 PR #540 的真实事故（用错原语、靠内嵌 `dsb sy` 歪打正着）。**a2a3 onboard 验证是必要条件** |
 
 ### W5 委派机制 + 事务语义 —— ⬜ **全新，承重墙**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | ① **声明自顶向下、执行委派给 owner**（L4 声明 → L3 展开 → chip 执行 → 逐级上报）；② **部分失败回滚** / **成员冻结** / **域 epoch·代际** / **全员 READY barrier** |
-| **现状锚点** | ✅ **单层版本已存在、可推广**：`worker.py` 的 `_handle_ctrl_alloc_domain`（chip child 侧处理 + 回报）、`Worker._allocate_domain`（L3 侧输入校验 + per-chip shm 布置）、`Worker._dispatch_control_domain`（*"Fan out CTRL_ALLOC_DOMAIN / CTRL_RELEASE_DOMAIN to all participating chips"*）。**本设计 = 再往上推一层** |
-| **规模** | **L**。展开是小的，**事务语义（回滚/冻结/epoch/barrier）是大的** |
-| **依赖** | **W2**（需端点模型才知道往谁委派） |
-| ~~**⚠️ 待拍板**~~ ✅ **已关闭 2026-08-07** | 这四项在 l3l4 §D.5 已列为 L4 建域必需件。~~**若改为"L4 直接操作 L2"，W2 + W5 都要重写**~~ —— ⛔ **本格 2026-08-22 更正：这个问题在同一文件的 [§3 问题 2](#3-三个必须先答的问题会改变分解) 已标为关闭，而本格还留着它的旧拷贝**（§4 规则 1 的形状，且两处在同一个文件里 ⇒ 更难发现）。依据：**#1456 事实上替它投了票** —— 它就是委派机制（`PREPARE_EXPORT → IMPORT → COMMIT`），双机真硬件 pod CI 跑通；**2026-08-22 复核该握手仍在树上**（`upstream/main@6ebaf771`，`python/simpler` 四文件 12 处；阳性对照：`ProviderRegionStore` 在同目录 3 文件 19 处 ⇒ 搜索姿势有效）。；⚠️ **一次性代价已经付出去了**：**#1933 `6ebaf771` 依这个已关闭的答案冻结了 provider 契约**（正文 *"It freezes the provider contract W5 will call"*）。若这个决定被重开，作废的是：**provider 是唯一 allocate/describe/release 权威** · **私有 allocate/release 控制 wire（L3→L2 mailbox 上的私有平面）** · **`RegionInstanceRegistry` 的 run-scoped 清扫与保留策略**。不作废的是 PAYLOAD/COUNTER 两块独立物理分配、commit-last 的发布边、`NotifyOp::Add` 的回绕修法。⇒ 状态跟踪在 [`README.md`](../README.md) §2 的 W5 行 |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | ① **声明自顶向下、执行委派给 owner**（L4 声明 → L3 展开 → chip 执行 → 逐级上报）；② **部分失败回滚** / **成员冻结** / **域 epoch·代际** / **全员 READY barrier** |
+ | **现状锚点** | ✅ **单层版本已存在、可推广**：`worker.py` 的 `_handle_ctrl_alloc_domain`（chip child 侧处理 + 回报）、`Worker._allocate_domain`（L3 侧输入校验 + per-chip shm 布置）、`Worker._dispatch_control_domain`（*"Fan out CTRL_ALLOC_DOMAIN / CTRL_RELEASE_DOMAIN to all participating chips"*）。**本设计 = 再往上推一层** |
+ | **规模** | **L**。展开是小的，**事务语义（回滚/冻结/epoch/barrier）是大的** |
+ | **依赖** | **W2**（需端点模型才知道往谁委派） |
+ | ~~**⚠️ 待拍板**~~ ✅ **已关闭 2026-08-07** | 这四项在 l3l4 §D.5 已列为 L4 建域必需件。~~**若改为"L4 直接操作 L2"，W2 + W5 都要重写**~~ —— ⛔ **本格 2026-08-22 更正：这个问题在同一文件的 [§3 问题 2](#3-三个必须先答的问题会改变分解) 已标为关闭，而本格还留着它的旧拷贝**（§4 规则 1 的形状，且两处在同一个文件里 ⇒ 更难发现）。依据：**#1456 事实上替它投了票** —— 它就是委派机制（`PREPARE_EXPORT → IMPORT → COMMIT`），双机真硬件 pod CI 跑通；**2026-08-22 复核该握手仍在树上**（`upstream/main@6ebaf771`，`python/simpler` 四文件 12 处；阳性对照：`ProviderRegionStore` 在同目录 3 文件 19 处 ⇒ 搜索姿势有效）。；⚠️ **一次性代价已经付出去了**：**#1933 `6ebaf771` 依这个已关闭的答案冻结了 provider 契约**（正文 *"It freezes the provider contract W5 will call"*）。若这个决定被重开，作废的是：**provider 是唯一 allocate/describe/release 权威** · **私有 allocate/release 控制 wire（L3→L2 mailbox 上的私有平面）** · **`RegionInstanceRegistry` 的 run-scoped 清扫与保留策略**。不作废的是 PAYLOAD/COUNTER 两块独立物理分配、commit-last 的发布边、`NotifyOp::Add` 的回绕修法。⇒ 状态跟踪在 [`README.md`](../README.md) §2 的 W5 行 |
 
 ### W6 模板库 —— ⬜ **全新，但有现成原型**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | **第一版只做 SPSC queue**，再按实际 workload 扩 ring、freelist pool、mailbox；用户以自己的元素类型实例化。**MPMC deferred**：只有跨 domain/endpoint 的 atomic RMW、cache maintenance、fairness 和 failure recovery 都有硬件证据后才能设计，不得从 SPSC 直接外推 |
-| **现状锚点** | ✅ **`python/simpler/worker_chip_message_queue.py` 是现成 SPSC 原型**——descriptor ring + payload arena + head/tail counters、`WorkerChipQueueDescSlot{seq,opcode,payload_offset,payload_nbytes}`、STOP opcode。第一版只参数化这个已验证形状 |
-| **规模** | **M**（第一个 queue 模板）＋每增一种 **S** |
-| **依赖** | W1 + W4 |
-| **⚠️ 硬契约** | **一律有界 + 背压，禁止隐式扩容**（约束 §4 推出）；第一版只宣称 SPSC；**必须双 arch onboard 覆盖**才能标 stable |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | **第一版只做 SPSC queue**，再按实际 workload 扩 ring、freelist pool、mailbox；用户以自己的元素类型实例化。**MPMC deferred**：只有跨 domain/endpoint 的 atomic RMW、cache maintenance、fairness 和 failure recovery 都有硬件证据后才能设计，不得从 SPSC 直接外推 |
+ | **现状锚点** | ✅ **`python/simpler/worker_chip_message_queue.py` 是现成 SPSC 原型**——descriptor ring + payload arena + head/tail counters、`WorkerChipQueueDescSlot{seq,opcode,payload_offset,payload_nbytes}`、STOP opcode。第一版只参数化这个已验证形状 |
+ | **规模** | **M**（第一个 queue 模板）＋每增一种 **S** |
+ | **依赖** | W1 + W4 |
+ | **⚠️ 硬契约** | **一律有界 + 背压，禁止隐式扩容**（约束 §4 推出）；第一版只宣称 SPSC；**必须双 arch onboard 覆盖**才能标 stable |
 
 ### W7 常驻 worker —— **改执行模型**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | `orch_fn` while 循环常驻；干净的 STOP / drain / 错误传播 |
-| **现状锚点** | ✅ `worker.py` `Worker.run`；STOP 语义有原型（WorkerChip queue 的 STOP opcode）；"常驻 L2 编排任务"模式已在 `examples/workers/l3/worker_chip_orch_comm_stream` 跑通 |
-| **规模** | **M**。**循环体内 dispatch 仍走现有 DAG 调度**（不改执行模型，风险最小） |
-| **依赖** | **W3**（persistent Buffer/domain resource 必须先能跨 run 存活） |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | `orch_fn` while 循环常驻；干净的 STOP / drain / 错误传播 |
+ | **现状锚点** | ✅ `worker.py` `Worker.run`；STOP 语义有原型（WorkerChip queue 的 STOP opcode）；"常驻 L2 编排任务"模式已在 `examples/workers/l3/worker_chip_orch_comm_stream` 跑通 |
+ | **规模** | **M**。**循环体内 dispatch 仍走现有 DAG 调度**（不改执行模型，风险最小） |
+ | **依赖** | **W3**（persistent Buffer/domain resource 必须先能跨 run 存活） |
 
 ### W8 API 收敛与迁移 —— **收尾**
 
-| 项 | 内容 |
-| -- | ---- |
-| **做什么** | 按 roadmap 语义收敛为 `Worker.create_buffer(...)` 与 `Worker.create_domain(MemberSet, ResourceBundle, AttachmentPlan, TransportPlan, ...)`（按需带 `DeviceRankMap`）；`Queue` 绑到域中某个 Buffer 的 live Attachment，不绑层级对。迁移旧调用点；**并行提供 → 迁移 → 废弃**；⚠️ **决策 C（2026-08-03）**：`attach_buffer` / `detach_buffer` **不进 public surface**，Attachment 只经 `AttachmentPlan` 在建域时批量声明 —— 见 [`../worker-memory-model.md`](../worker-memory-model.md) §5.7。这是 roadmap §2.3「public surface 可以更小」许可范围内的收窄 |
-| **现状锚点** | ✅ **迁移面已量化：66 个调用点、4 个文件**——`examples/workers/l3/worker_chip_message_queue/`、`examples/workers/l3/worker_chip_orch_comm_stream/`、`tests/ut/py/test_worker/test_worker_chip_orch_comm.py`、`tests/ut/py/test_worker/test_worker_chip_message_queue.py` |
-| **规模** | **S–M**（迁移面比预想小） |
-| **依赖** | W2 + W6 |
-| **命名纪律** | 见 [domain-membership.md](domain-membership.md) §10：**API 名不得含层级对；端点用 `EndpointId`；禁止以 level 判定共享能力**。旧 landing 中的 `create_region(...)` 只能当迁移期 placeholder/legacy alias，不得再作为规范资源名：物理资源是 Buffer，域组合是 ResourceBundle |
+ | 项 | 内容 |
+ | -- | ---- |
+ | **做什么** | 按 roadmap 语义收敛为 `Worker.create_buffer(...)` 与 `Worker.create_domain(MemberSet, ResourceBundle, AttachmentPlan, TransportPlan, ...)`（按需带 `DeviceRankMap`）；`Queue` 绑到域中某个 Buffer 的 live Attachment，不绑层级对。迁移旧调用点；**并行提供 → 迁移 → 废弃**；⚠️ **决策 C（2026-08-03）**：`attach_buffer` / `detach_buffer` **不进 public surface**，Attachment 只经 `AttachmentPlan` 在建域时批量声明 —— 见 [`../worker-memory-model.md`](../worker-memory-model.md) §5.7。这是 roadmap §2.3「public surface 可以更小」许可范围内的收窄 |
+ | **现状锚点** | ✅ **迁移面已量化：66 个调用点、4 个文件**——`examples/workers/l3/worker_chip_message_queue/`、`examples/workers/l3/worker_chip_orch_comm_stream/`、`tests/ut/py/test_worker/test_worker_chip_orch_comm.py`、`tests/ut/py/test_worker/test_worker_chip_message_queue.py` |
+ | **规模** | **S–M**（迁移面比预想小） |
+ | **依赖** | W2 + W6 |
+ | **命名纪律** | 见 [domain-membership.md](domain-membership.md) §10：**API 名不得含层级对；端点用 `EndpointId`；禁止以 level 判定共享能力**。旧 landing 中的 `create_region(...)` 只能当迁移期 placeholder/legacy alias，不得再作为规范资源名：物理资源是 Buffer，域组合是 ResourceBundle |
 
 ## 2. 依赖图与排期
 
@@ -576,18 +576,18 @@ VMM window 是**保留地址空间**还是**已提交物理页**、peer-import �
 
 依赖关系（**唯一真源 = 各 W 项的「依赖」行**）：
 
-| 项 | 依赖 |
-| -- | ---- |
-| W0 | 无 |
-| W1lite | 无 |
-| W1 | W0 + W1lite |
-| W2 | 无 |
-| W3 | 无 |
-| W4 | W1lite（**不是 W1** —— 见上方 2026-08-07 更正） |
-| W5 | W2 |
-| W6 | W1 + W4 |
-| W7 | W3 |
-| W8 | W2 + W6 |
+ | 项 | 依赖 |
+ | -- | ---- |
+ | W0 | 无 |
+ | W1lite | 无 |
+ | W1 | W0 + W1lite |
+ | W2 | 无 |
+ | W3 | 无 |
+ | W4 | W1lite（**不是 W1** —— 见上方 2026-08-07 更正） |
+ | W5 | W2 |
+ | W6 | W1 + W4 |
+ | W7 | W3 |
+ | W8 | W2 + W6 |
 
 ```text
 链 A（平台/模板）：  W1lite ──→ W4 ──┐
@@ -606,14 +606,14 @@ VMM window 是**保留地址空间**还是**已提交物理页**、peer-import �
 对应设计文档 [cpu-npu-shared-memory.md](../cpu-npu-shared-memory.md) §5 的
 **shared-memory track 局部分期 SM0–SM4**（不是全局 roadmap P0–P3）：
 
-| 阶段 | 工作项 | 排期如何满足依赖（**不表示已完成**） |
-| ---- | ------ | ------------------------------------ |
-| **SM0** | **W0** | 无前置；当前仍为 W0 标题所示的 🚧 待核实状态 |
-| **SM1** | **W1**(a5) + **W4** + **W2**（**W2 与 W0/W1 无依赖关系，可立即并行**） | 排期为 W0→W1→W4；W2 无前置，可与该链并行。W0/W1/W4 当前状态仍以各 W 项标题为准 |
-| **SM1.5** | **W1 的 a2a3 落地 + onboard 验证** | **与 SM1 紧邻**——a5-first 纪律②③ |
-| **SM2** | **W6**(queue 模板) + **W8** 部分迁移 | W6 依赖 SM1 内的 W1+W4；**W8←W2+W6，故 W8 只能在 W6 之后、同阶段内串行**（"部分迁移"指此） |
-| **SM3** | **W3** + **W7** | 两者与前面各阶段**无依赖**——放 SM3 是**排期选择（人力/风险）**，不是依赖所迫；若 #824 提前，**可整体前移到 SM1** |
-| **SM4** | 对称/OpenSHMEM 拓扑 + **W5** 完整事务语义 | W5←W2；放 SM4 是**排期选择**，W5 可在 W2 完成后任意阶段开工 |
+ | 阶段 | 工作项 | 排期如何满足依赖（**不表示已完成**） |
+ | ---- | ------ | ------------------------------------ |
+ | **SM0** | **W0** | 无前置；当前仍为 W0 标题所示的 🚧 待核实状态 |
+ | **SM1** | **W1**(a5) + **W4** + **W2**（**W2 与 W0/W1 无依赖关系，可立即并行**） | 排期为 W0→W1→W4；W2 无前置，可与该链并行。W0/W1/W4 当前状态仍以各 W 项标题为准 |
+ | **SM1.5** | **W1 的 a2a3 落地 + onboard 验证** | **与 SM1 紧邻**——a5-first 纪律②③ |
+ | **SM2** | **W6**(queue 模板) + **W8** 部分迁移 | W6 依赖 SM1 内的 W1+W4；**W8←W2+W6，故 W8 只能在 W6 之后、同阶段内串行**（"部分迁移"指此） |
+ | **SM3** | **W3** + **W7** | 两者与前面各阶段**无依赖**——放 SM3 是**排期选择（人力/风险）**，不是依赖所迫；若 #824 提前，**可整体前移到 SM1** |
+ | **SM4** | 对称/OpenSHMEM 拓扑 + **W5** 完整事务语义 | W5←W2；放 SM4 是**排期选择**，W5 可在 W2 完成后任意阶段开工 |
 
 > **读法**：SM0→SM4 的顺序里，**真正由依赖强制的只有** W0→W1→W4→W6→W8 这一条链。
 > W3/W7 与 W5 落在后面的阶段是**优先级判断**,不是技术阻塞 —— 需求变了可以直接前移。

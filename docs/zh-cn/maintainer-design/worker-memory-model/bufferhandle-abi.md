@@ -1,6 +1,6 @@
 # BufferHandle / BufferRef 逻辑 schema（**已被取代**，存档）
 
-> **发布快照：2026-10-15。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
 > ## ⛔ SUPERSEDED（2026-07-30）
 >
@@ -31,7 +31,7 @@
 > *logical field set + 语义 + enum 值 + endianness 约定 + 演进规则*；**wire 精确字节偏移 /
 > padding 不在此钉死**——留给 P1 实现的 wire flip PR。
 > **基线**：`upstream/main@81999716`（fetch 于 2026-07-21；schema 首稿在 `13197445`，其后
-> #1424/#1426/#1423/#1427 均为 L3 comm / remote timeout / early-dispatch / daemon send，
+> \#1424/#1426/#1423/#1427 均为 L3 comm / remote timeout / early-dispatch / daemon send，
 > **均不触碰 buffer ABI**，对本 schema 无影响）。
 > **来源（source of truth 顺序）**：[feature_roadmap.md](../feature_roadmap.md)
 > §2.4（**权威字段集，冲突以它为准**）＞
@@ -105,18 +105,18 @@
 硅片与 host 均为 LE，与现状 host-native struct 一致）。`owner_instance_id` 是
 **opaque 字节序列**，只按字节做相等比较，无 endianness 语义。
 
-| 字段 | 逻辑宽度 | 取值域 / enum 值 | 语义 | 冻结后演进规则 |
-| ---- | -------- | ---------------- | ---- | -------------- |
-| `abi_version` | u16 LE | ≥ `1`（`0` 保留=非法） | 整个 handle 的 wire 版本 | 任何不兼容布局变更 bump；未知 version 明确拒绝；协商取双方 min 支持版本或拒绝 |
-| `buffer_id` | u64 LE | 单个 owner incarnation 内唯一，`0` 保留=非法/未分配 | 稳定分配身份 | slot 复用前**必须**先 `generation++`；宽度冻结 |
-| `generation` | u32 LE | 从 `1` 起单调递增，`0` 保留=未初始化 | ABA / stale / slot-reuse 检测 | 每次 `buffer_id` slot 复用递增；回绕视为 owner 换 incarnation（换 `owner_instance_id`） |
-| `owner_instance_id` | 16 B opaque | 非全零 nonce/epoch | owner incarnation 身份 | 只做 bytewise 相等比较；宽度冻结；本地 P1 也真实生成 |
-| `owner_worker_path` | length-delimited：u16 LE 长度 + ≤`PATH_MAX_BYTES` UTF-8 | 形如 `L4/L3[2]/L2[5]`；长度 ≤ 上限 | 归属层级路径（可跨 epoch/重启复用，故需配 `owner_instance_id` 消歧） | 有界 length-delimited；校验 length ≤ 上限；`PATH_MAX_BYTES` 一次定死 |
-| `address_space` | enum u8 | `HOST=0`,`DEVICE=1`；`2..255` reserved | 纯内存空间 | 新值从 reserved 取；未知值明确拒绝 |
-| `visibility` | enum u8 | `PRIVATE=0`,`SHARED=1`；`2..255` reserved | 哪些 worker 可见 | 同上 |
-| `nbytes` | u64 LE | > 0（`0` 仅空/哨兵） | backing 总字节数 | 宽度冻结 |
-| `access` | enum u8 | `READ=0`,`WRITE=1`,`READWRITE=2`；`3..255` reserved | 权限 | 与 `TensorArgType`（依赖）/`ArgDirection`（H2D/D2H）二元性收敛；未知值拒绝 |
-| `backend_descriptor` | tagged/versioned union（见 §4） | tag ∈ §4 枚举 + reserved | 物化方式 | 结构见 §4；未知 tag / descriptor_version 明确拒绝 |
+ | 字段 | 逻辑宽度 | 取值域 / enum 值 | 语义 | 冻结后演进规则 |
+ | ---- | -------- | ---------------- | ---- | -------------- |
+ | `abi_version` | u16 LE | ≥ `1`（`0` 保留=非法） | 整个 handle 的 wire 版本 | 任何不兼容布局变更 bump；未知 version 明确拒绝；协商取双方 min 支持版本或拒绝 |
+ | `buffer_id` | u64 LE | 单个 owner incarnation 内唯一，`0` 保留=非法/未分配 | 稳定分配身份 | slot 复用前**必须**先 `generation++`；宽度冻结 |
+ | `generation` | u32 LE | 从 `1` 起单调递增，`0` 保留=未初始化 | ABA / stale / slot-reuse 检测 | 每次 `buffer_id` slot 复用递增；回绕视为 owner 换 incarnation（换 `owner_instance_id`） |
+ | `owner_instance_id` | 16 B opaque | 非全零 nonce/epoch | owner incarnation 身份 | 只做 bytewise 相等比较；宽度冻结；本地 P1 也真实生成 |
+ | `owner_worker_path` | length-delimited：u16 LE 长度 + ≤`PATH_MAX_BYTES` UTF-8 | 形如 `L4/L3[2]/L2[5]`；长度 ≤ 上限 | 归属层级路径（可跨 epoch/重启复用，故需配 `owner_instance_id` 消歧） | 有界 length-delimited；校验 length ≤ 上限；`PATH_MAX_BYTES` 一次定死 |
+ | `address_space` | enum u8 | `HOST=0`,`DEVICE=1`；`2..255` reserved | 纯内存空间 | 新值从 reserved 取；未知值明确拒绝 |
+ | `visibility` | enum u8 | `PRIVATE=0`,`SHARED=1`；`2..255` reserved | 哪些 worker 可见 | 同上 |
+ | `nbytes` | u64 LE | > 0（`0` 仅空/哨兵） | backing 总字节数 | 宽度冻结 |
+ | `access` | enum u8 | `READ=0`,`WRITE=1`,`READWRITE=2`；`3..255` reserved | 权限 | 与 `TensorArgType`（依赖）/`ArgDirection`（H2D/D2H）二元性收敛；未知值拒绝 |
+ | `backend_descriptor` | tagged/versioned union（见 §4） | tag ∈ §4 枚举 + reserved | 物化方式 | 结构见 §4；未知 tag / descriptor_version 明确拒绝 |
 
 > `local/remote` **刻意不在此表**——见 §2 判断 1。
 
@@ -125,13 +125,13 @@
 `TaskArgs` 携带 **`BufferRef(handle, byte_offset, shape, strides, dtype)`**——
 handle 上带偏移/形状/**显式 stride** 的视图，而非裸 `addr + child_memory` 布尔。
 
-| 字段 | 逻辑宽度 | 取值域 | 语义 |
-| ---- | -------- | ------ | ---- |
-| `handle` | §3 的 `BufferHandle` | — | 被视图的 backing；identity 由它承载 |
-| `byte_offset` | u64 LE | `[0, handle.nbytes)` | 视图原点相对 backing 基址的**字节**偏移 |
-| `shape[]` | 每维 u32 LE，`ndims` ≤ `MAX_DIMS` | 每维 ≥ 0 | 视图逐维形状（元素） |
-| `strides[]` | 每维 u32 LE，长度 = `ndims` | **每维 > 0 严格**（stride=0 广播 / 负步长不支持） | 逐维**元素**粒度显式 stride；singleton 维不归一（§2 判断 3） |
-| `dtype` | 现有 `DataType` enum | — | 元素类型 |
+ | 字段 | 逻辑宽度 | 取值域 | 语义 |
+ | ---- | -------- | ------ | ---- |
+ | `handle` | §3 的 `BufferHandle` | — | 被视图的 backing；identity 由它承载 |
+ | `byte_offset` | u64 LE | `[0, handle.nbytes)` | 视图原点相对 backing 基址的**字节**偏移 |
+ | `shape[]` | 每维 u32 LE，`ndims` ≤ `MAX_DIMS` | 每维 ≥ 0 | 视图逐维形状（元素） |
+ | `strides[]` | 每维 u32 LE，长度 = `ndims` | **每维 > 0 严格**（stride=0 广播 / 负步长不支持） | 逐维**元素**粒度显式 stride；singleton 维不归一（§2 判断 3） |
+ | `dtype` | 现有 `DataType` enum | — | 元素类型 |
 
 > **与现状 wire 的一处需 P1 调和**：现 `Tensor.start_offset` 是**元素**粒度、
 > stride 也是元素粒度；roadmap 的 `BufferRef.byte_offset` 是**字节**粒度。P1
@@ -154,23 +154,23 @@ reserved         : 定长 reserved  # 冻结留位，未落地 backend 用；旧
 
 **backend kind 枚举（冻结值）**：
 
-| tag | `backend_kind` | body 物化字段（示意，byte 布局留 P1） | 典型 `address_space` |
-| --- | -------------- | ------------------------------------- | -------------------- |
-| 0 | `FORK_SHM` | 继承映射基址 token + 区间 | HOST |
-| 1 | `POSIX_SHM` | shm name/fd token + 大小 + 映射 hint | HOST |
-| 2 | `VMM_WINDOW` | shareable-handle token + device 窗口偏移 | DEVICE |
-| 3 | `REMOTE_SIDECAR` | session/endpoint token + 远端窗口 id + staging hint | HOST / DEVICE(arch-gated) |
-| 4 | `DEVICE_MALLOC` | device buffer id / VA token | DEVICE |
-| `5..` | reserved | — | 未知 tag 必须拒绝 |
+ | tag | `backend_kind` | body 物化字段（示意，byte 布局留 P1） | 典型 `address_space` |
+ | --- | -------------- | ------------------------------------- | -------------------- |
+ | 0 | `FORK_SHM` | 继承映射基址 token + 区间 | HOST |
+ | 1 | `POSIX_SHM` | shm name/fd token + 大小 + 映射 hint | HOST |
+ | 2 | `VMM_WINDOW` | shareable-handle token + device 窗口偏移 | DEVICE |
+ | 3 | `REMOTE_SIDECAR` | session/endpoint token + 远端窗口 id + staging hint | HOST / DEVICE(arch-gated) |
+ | 4 | `DEVICE_MALLOC` | device buffer id / VA token | DEVICE |
+ | `5..` | reserved | — | 未知 tag 必须拒绝 |
 
 ### 4.1 能力门控矩阵（`address_space` × `backend_kind`）
 
 #### 不支持的组合 dispatch 前显式失败，不静默回退 host staging
 
-| — | FORK_SHM | POSIX_SHM | VMM_WINDOW | REMOTE_SIDECAR | DEVICE_MALLOC |
-| - | -------- | --------- | ---------- | -------------- | ------------- |
-| **HOST** | ✅ | ✅ | ❌ 拒绝 | ✅（host-staging，future） | ❌ 拒绝 |
-| **DEVICE** | ❌ 拒绝 | ❌ 拒绝 | ✅ 同机跨进程 | ⚠️ **arch-gated** | ✅ 同机/child |
+ | — | FORK_SHM | POSIX_SHM | VMM_WINDOW | REMOTE_SIDECAR | DEVICE_MALLOC |
+ | - | -------- | --------- | ---------- | -------------- | ------------- |
+ | **HOST** | ✅ | ✅ | ❌ 拒绝 | ✅（host-staging，future） | ❌ 拒绝 |
+ | **DEVICE** | ❌ 拒绝 | ❌ 拒绝 | ✅ 同机跨进程 | ⚠️ **arch-gated** | ✅ 同机/child |
 
 ⚠️ `DEVICE × REMOTE_SIDECAR`：**arch-gated 且 remote-transport-gated**。跨机 remote-L3
 sidecar 的真数据面**当时（写作时）仅 sim**（daemon 硬拒非 sim），跨机后端未实现。⚠️ **该断言 2026-08-05 已作废**（#1688 `e78d8437` 把门换成 `host_tcp`，且旧 `"sim"` 本就是真 TCP）；本文是**已 SUPERSEDED 的存档**，不再更新正文，此处仅就地标注以免被当作现状引用。**#1424 只交付了 A3
@@ -297,15 +297,15 @@ reviewer 据此可为 P1 写拒绝路径测试：
 
 ## 10. 冻结前 checklist（对齐 worker-memory-model §"ABI 冻结前必须补齐"）
 
-| # | 项 | 结论 | 负责 |
-| - | -- | ---- | ---- |
-| 1 | `abi_version` + 字段宽度 / endianness / reserved / tagged backend descriptor | ✅ 冻结（§3/§4；endianness=LE，opaque id bytewise） | 本文 |
-| 2 | `BufferRef(byte_offset, shape, strides, dtype)`——显式 stride，禁静默 singleton normalize | ✅ 契约冻结（§3.1/§2-3）；⚠️ **实现调和点**：byte vs element 偏移粒度（§3.1 注） | P1 impl |
-| 3 | 生命周期：`release_buffer()` / in-flight retain + deferred-free / `generation` reuse(ABA) / `close()` cleanup | 🟡 **语义已定**（§3 `generation` + roadmap §2.4）；**代码集成受 P0.2 follow-up merge gate 阻**（§1 非目标） | P1 impl（gated） |
-| 4 | alias identity / bounds / overlap / dependency-key 规则 | ✅ 冻结（§5）；与 SceneTest rehost overlap 拒绝 + TensorMap 依赖推导对齐 | 本文 + ST 验证 |
-| 5 | `owner_instance_id` 宽度 + 本地真实生成 | ✅ 冻结（16B opaque，§3/§2-5） | 本文 |
-| 6 | 能力门控矩阵（address_space × backend） | ✅ 冻结（§4.1；DEVICE×REMOTE arch-gated） | 本文 |
-| 7 | `PATH_MAX_BYTES` / `DESC_MAX_BYTES` / `MAX_DIMS` 具体上限值 | 🟡 **未决**：需 P1 定死具体数（现 `MAX_TENSOR_DIMS=5`） | P1 impl |
+ | # | 项 | 结论 | 负责 |
+ | - | -- | ---- | ---- |
+ | 1 | `abi_version` + 字段宽度 / endianness / reserved / tagged backend descriptor | ✅ 冻结（§3/§4；endianness=LE，opaque id bytewise） | 本文 |
+ | 2 | `BufferRef(byte_offset, shape, strides, dtype)`——显式 stride，禁静默 singleton normalize | ✅ 契约冻结（§3.1/§2-3）；⚠️ **实现调和点**：byte vs element 偏移粒度（§3.1 注） | P1 impl |
+ | 3 | 生命周期：`release_buffer()` / in-flight retain + deferred-free / `generation` reuse(ABA) / `close()` cleanup | 🟡 **语义已定**（§3 `generation` + roadmap §2.4）；**代码集成受 P0.2 follow-up merge gate 阻**（§1 非目标） | P1 impl（gated） |
+ | 4 | alias identity / bounds / overlap / dependency-key 规则 | ✅ 冻结（§5）；与 SceneTest rehost overlap 拒绝 + TensorMap 依赖推导对齐 | 本文 + ST 验证 |
+ | 5 | `owner_instance_id` 宽度 + 本地真实生成 | ✅ 冻结（16B opaque，§3/§2-5） | 本文 |
+ | 6 | 能力门控矩阵（address_space × backend） | ✅ 冻结（§4.1；DEVICE×REMOTE arch-gated） | 本文 |
+ | 7 | `PATH_MAX_BYTES` / `DESC_MAX_BYTES` / `MAX_DIMS` 具体上限值 | 🟡 **未决**：需 P1 定死具体数（现 `MAX_TENSOR_DIMS=5`） | P1 impl |
 
 **评审 exit**：§10 全部 ✅ 或"🟡+明确负责方"、§9 负例期望写清、§8 identity 跨三层
 不变——满足即"reviewer 能据此写 P1 实现而无需再拍字段"。
