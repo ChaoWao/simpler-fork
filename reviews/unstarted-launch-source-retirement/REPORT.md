@@ -1,6 +1,6 @@
 # Unstarted launch: retire this invocation's source references
 
-Baseline: main `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` (#2612). Branch `fix/release-unstarted-launch-sources`; [PR #2614](https://github.com/hw-native-sys/simpler/pull/2614), current head `fc24b0d0a9a20262a1223f700151b5e67150b0cd`; submitted for review, not merged.
+Baseline: main `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` (#2612). Branch `fix/release-unstarted-launch-sources`; [PR #2614](https://github.com/hw-native-sys/simpler/pull/2614), current head `fc24b0d0a9a20262a1223f700151b5e67150b0cd`; merged as main `8b466791f374e1286b0936f8eaebffb9bf32d44b` (#2614).
 
 ## Exact behavior
 
@@ -57,3 +57,8 @@ CI query at 2026-10-17 09:29 UTC: no red checks. A5 onboard scenes, A3 hardware 
 Current parent is main `2ee57567d01d0d86d5afb605f15e644a06a16200`; current candidate head is `fc24b0d0a9a20262a1223f700151b5e67150b0cd`. The sole conflict comes from #2613 moving the native-admission fixture out of the common test file. Keep its split: launch refusal/partial/throw injection moves to support/native_admission/fixture.h, while all four regression tests remain in common/platform/test_native_admission.cpp and execute under all four runtime/architecture targets. No retired runtime selector macro or duplicate backend assertions are restored. Range-diff changes only this test layout; the PR production patch remains identical. Main contributes its separate three-field HBG graph-descriptor initialization.
 
 All changed-file hooks pass. The editable extension/runtime binaries are rebuilt at the new head. Full rebuilt C++ UT passes 327/327 targets in 88.13 s. Exclusive A3 task `task_20261017_034334_292562022153` on device 8 passes all 8 public refusal/retry arms (TMR/HBG × owned/borrowed × prepare/launch), 33.08 s, exit 0 and lock released; occupancy snapshots and isolated logs are retained. Full Linux Python UT passes 3415 / 127 skipped in 137.05 s. All 23 native-admission test names are retained across the common/HBG files, and byte comparison confirms production/Python/docs/scene-test patches match the prior PR exactly. The original branch is updated with an explicit force-with-lease against bc46b441; CI restarts for the new head. Prior complete scene/simulator sweeps remain attributed to their original heads; they are not claimed rerun by this rebase.
+
+
+## Merge receipt
+
+#2614 merged as 8b466791. Its clean NotStarted retirement is delivered. The remaining [launch exception ownership gap](../launch-exception-ownership/REPORT.md) must retain submitted work through an active owner; it is not another no-submission proof. Historical validation remains tied to the recorded candidate heads.

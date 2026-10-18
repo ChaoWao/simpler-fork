@@ -66,6 +66,14 @@
 
 引用文档：[reviews/direct-native-chip-worker/REPORT.md](reviews/direct-native-chip-worker/REPORT.md)。材料未收录。
 
+<a id="artifact-06da1cb300b8"></a>
+
+## 06da1cb300b8
+
+原引用：`review/codex-dfx-pmu-rts-provenance-audit.md`
+
+引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
+
 <a id="artifact-07114129f728"></a>
 
 ## 07114129f728
@@ -231,14 +239,6 @@
 ## 1ae6ab85ff85
 
 原引用：`manager-workspace.md`
-
-引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
-
-<a id="artifact-1c9d82e1637e"></a>
-
-## 1c9d82e1637e
-
-原引用：`review/codex-dfx-args-progress-publication.md`
 
 引用文档：[references/pipeline-a/run-pipeline-track-a.html](references/pipeline-a/run-pipeline-track-a.html)。材料未收录。
 
