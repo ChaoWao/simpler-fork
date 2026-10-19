@@ -51,3 +51,25 @@ Intentional fatal/watchdog cases emit RTS exceptions; raw error-code counts are 
 An initial task used an unsupported hyphenated card-list argument and was rejected before the script or any NPU work started. It is not counted as a runtime/test failure or hardware observation. The successful task uses an explicit comma-separated list.
 
 Raw logs and scripts stay under `/tmp/async-descriptor-*`; isolated ASCEND logs, timed occupancy snapshots and queue records stay in the board directory. The source/head remains frozen during all runtime testing. Raw material stays out of the product PR and the published text-only design snapshot.
+
+## Review correction: runtime-compiled probes and stale axis waiver
+
+The first review found real validation gaps on `9b1bfaf4`: both onboard UT jobs failed all six cases in `test_runtime_publication_launch.py`; the publication probe retained the old one-argument helper signature, and the caller/stream probes lacked pinned-memory and async RTS stubs. Those C++ programs are compiled by hardware-marked Python tests at runtime, so neither the 328-target C++ build nor the non-hardware Python suite compiled them. The earlier green totals remain valid for their exact scopes; they did not qualify the complete onboard UT suite.
+
+Ubuntu UT also failed `tests/lint/check_ut_cpp_axis.py`: expanding the helper case to A5 closed a gap but left its waiver behind. The checker reproduced that obsolete waiver locally. macOS was canceled by matrix fail-fast during C++ build, a separate result from the real Ubuntu failure.
+
+The revision updates all three probes, including the phase contract: arming failure precedes publication and leaves the prepared descriptor unpublished. The caller trace includes publication between Start's CPU wait and Fork, with error injection on that operation and twelve fatal positions in total. Every probe interposes `rtMallocHost`, `rtFreeHost` and `rtMemcpyAsync`. The cleanup fixture reclaims its abandoned host-backed source only after proving the fake transport has no queued reader. The obsolete waiver is deleted; the remaining persistent-args waiver describes its own actual missing boundary instead of referencing the closed helper case.
+
+A host-only layout measurement using the real runtime compile database requests 43,264/47,872 bytes per TMR slot on A3/A5 and 9,472/14,080 bytes per HBG slot. These are requested capacities, excluding RTS allocation/page rounding, retained from first slot prepare to finalize. Fatal abandonment leaves pinned host pages allocated for the process lifetime when a DMA reader cannot be ruled out; premature free would be host use-after-free.
+
+The source is rebased on main `84abd66f3` (#2622), single pushed head `e23f46e804b18696934dd1d0ad4221b47aa783b8`. Raw revision logs stay under `/tmp/pr2620-r2`; the original full-sweep logs belong to `9b1bfaf4` and are not relabeled as revision measurements.
+
+### Revision validation
+
+- Changed-file hooks pass. Full non-hardware C++: 328/328 targets pass in 27.66 s; the axis checker passes after the obsolete-waiver negative control. These checks used the final C++ implementation; subsequent amend only records that source in the single commit.
+- Rebuilt/reinstalled the final committed head, then froze head and source for task `task_20261019_002706_336591827637`, exclusive device 8. A3 host-layout probes: 6 passed / 6 deselected, 41.79 s; A5 host-layout probes: 6 passed / 6 deselected, 37.45 s. All probes use host RTS stubs, with no device kernel; they are not an A5 silicon claim.
+- The same task then ran the four real A3 enqueue-rejection cases: 4 passed / 8 deselected, 59.10 s. Final daemon status is completed/exit 0; the device lock is released. Head and clean tracked-source status are recorded before testing, with isolated ASCEND logs and timestamped occupancy sampling.
+- No new full ordinary scene sweep is attributed to the revision. Its changes after review are the probe migration, axis waiver and documentation; the earlier full-sweep results remain attached to `9b1bfaf4`.
+- New CI run 39215915930 is in progress on `e23f46e8`, docs run 39215915830 passes. The old three failing checks on 9b are retained as evidence, not labeled infrastructure noise. New macOS/onboard results must be read on the updated run.
+
+The HTTPS push was rejected because the rebase includes main #2622's workflow changes and the OAuth credential lacks workflow scope. The existing authenticated SSH credential pushed successfully without changing credentials or workflow files in this PR. No host-key verification was bypassed.
