@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-19 / main `84abd66f3`：#2612/#2614/#2615/#2618 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
+**2026-10-19 / main `f50f90076`：#2620 已合入。** 共同 eager 已使用 slot 常驻 pinned 源，在实际 AICPU 流异步发布 Runtime descriptor，再以 Fork 约束 AICore；复制尝试计入 Partial。当前 PR [#2628](https://github.com/hw-native-sys/simpler/pull/2628) 推进 **A5 HBG resident scheduler metadata 的同一 launch 事务发布**：prepare 按值保存，launch 先 metadata、再 descriptor、再 Fork；保留大块 execution image 的 prepare 同步上传，以继续与前驱执行重叠。Graph Definitions 已随 launch envelope 传递，不属于剩余 H2D。具体改动和验证见[本轮记录](reviews/hbg-async-launch-metadata/REPORT.md)。capture/replay、图所有权与 DFX 剩余写入继续分别验收。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -217,10 +217,15 @@ CPU 负对照确认：launch backend 若在入队后、返回 ActiveExecution �
 实现 head `996628a9` 保存 lane 的不可变创建 PID，在读取可变 worker 指针和获取 lane mutex 前拒绝外来进程；noexcept stop/detach 留下继承副本，既有 Worker 析构放弃路径保留 carrier/DSO，不调用父进程的设备清理。覆盖 live/terminal handle、两类 submit、查询/等待/关闭以及析构；父进程继续完成并提交下一调用。它是 K2 进程拒绝的实际缺口，不是 S3 loader 全面重构或 capture 支持。验证及边界见[本轮报告](reviews/inherited-chip-run-lane/REPORT.md)。
 
 
-### 当前：共同 Runtime descriptor 的异步 eager 发布
+### 已合入：共同 Runtime descriptor 的异步 eager 发布
 
-PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620)，候选 head `e23f46e8` 将 TMR/HBG 的 descriptor 发布都置于共同 launch 事务，使用 slot 保留的 pinned host source。可选 caller Start → AICPU wait → descriptor async H2D → Fork record → AICore wait → 两个 kernel；没有 caller 也必须建立真实复制后的 AICore 依赖，cache 命中且没有 caller 则不增加 fork。DMA 尝试标记 Partial，资源仍由原 active owner、drain 和 quarantine 处理；不增加接口版本、能力查询或另一个 runner。
+PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620) 已合入 main `f50f90076`，审阅 head `e23f46e8` 的实现将 TMR/HBG 的 descriptor 发布都置于共同 launch 事务，使用 slot 保留的 pinned host source。可选 caller Start → AICPU wait → descriptor async H2D → Fork record → AICore wait → 两个 kernel；没有 caller 也必须建立真实复制后的 AICore 依赖，cache 命中且没有 caller 则不增加 fork。DMA 尝试标记 Partial，资源仍由原 active owner、drain 和 quarantine 处理；不增加接口版本、能力查询或另一个 runner。
 
 这是普通 eager 的实际行为交付，不提前宣告 C1/C2/capture 合格。HBG 大图像仍在 prepare 同步上传并可与前驱重叠，DFX 原路径不变。完整框架资格继续归 #2605，DFX 归 #2588。源代码核查同时更正了历史文档：TMR workers 已在尾部，稳态 prefix 不再写握手，不应重复要求改一次物理 ABI。见[实现与验证报告](reviews/async-runtime-descriptor/REPORT.md)。
 
 #2620 复审修订 `e23f46e8` 补齐三份运行时编译探针的 async/pinned RTS 桩与新签名，更新 arming 失败前尚未发布的相位断言，并删除已闭合 A5 helper cell 的 waiver。完整非硬件 UT 与硬件标记探针是不同覆盖面；原 head 的 sweep 结果不重标为修订 head。详见同一报告的 Review correction 小节。
+
+
+### 当前 #2628：A5 HBG scheduler metadata 进入共同 launch
+
+每次 HBG bind 的 resident scheduler metadata 经 HostApi 按值保存，prepare 预留 slot pinned 源，launch 以 metadata→descriptor→Fork 顺序入队。大块 execution image 保持 prepare 上传；Graph Definitions 不另做 H2D。失败与源保活消费 #2620 同一事务与 completion proof，不增加接口版本、公开准备句柄或执行器。PR、成本、板测与 CI 的边界见[本轮报告](reviews/hbg-async-launch-metadata/REPORT.md)。

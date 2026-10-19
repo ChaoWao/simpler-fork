@@ -73,3 +73,8 @@ The source is rebased on main `84abd66f3` (#2622), single pushed head `e23f46e80
 - New CI run 39215915930 is in progress on `e23f46e8`, docs run 39215915830 passes. The old three failing checks on 9b are retained as evidence, not labeled infrastructure noise. New macOS/onboard results must be read on the updated run.
 
 The HTTPS push was rejected because the rebase includes main #2622's workflow changes and the OAuth credential lacks workflow scope. The existing authenticated SSH credential pushed successfully without changing credentials or workflow files in this PR. No host-key verification was bypassed.
+
+
+## 合入记录
+
+#2620 已于 2026-10-19 合入 main `f50f9007620160e63a270ba83d2dd33fc656b7ad`。上述测试保留各自 head；后续 A5 HBG metadata 工作另记于[本轮报告](../hbg-async-launch-metadata/REPORT.md)，不改写原测量。

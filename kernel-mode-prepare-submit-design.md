@@ -5,7 +5,7 @@
 
 **实现进度补充（2026-09-19）：** main `f187c089` 已含 #2342 / #2353 的 HBG 统一发布和 #2358 的公共 descriptor seam。Descriptor prepare/publish 在唯一生产调用点仍紧邻，尚无中间 Runtime 修改窗口；快照性质已建立，分配／复制开销已支付，async / capture 未实现。完整状态以 [ROADMAP 的 S2](ROADMAP.md) 为准；旧源码约束仍引用固定历史基线。
 
-**当前核查补充（2026-10-18 / main `6348a0d1`）：** 公共 Worker eager 已消费共同 native lane；#2618 继承进程拒绝已合入。TMR 的 `workers` 已是尾部，稳态 `runtime_device_copy_size` 不含握手；冷分配只初始化一次。原先“workers 首成员、每次整体覆盖”的论据只属于旧基线，§4.1 已更正。候选 `e23f46e8` 正将两 runtime 的 descriptor 转为实际 AICPU 流中的异步复制，并保留 pinned source；HBG bulk image、DFX 与 capture 仍需各自交付。详见[本轮证据](reviews/async-runtime-descriptor/REPORT.md)。下表是固定历史核查，不是当前缺陷清单。
+**当前核查补充（2026-10-19 / main `f50f90076`）：** #2620 已合入，共同 descriptor 已在实际 AICPU 流异步复制，slot pinned source 活到完成证明之后；TMR 稳态前缀不含尾部 workers。后续实现把 A5 HBG resident scheduler metadata 接到同一事务：metadata→descriptor→Fork；Graph Definitions 已随 launch envelope 传递。bulk execution image 保留 prepare 上传，DFX 与 capture/图所有权继续独立交付。见[descriptor 历史证据](reviews/async-runtime-descriptor/REPORT.md)与[metadata 本轮记录](reviews/hbg-async-launch-metadata/REPORT.md)。下表是固定历史核查，不是当前缺陷清单。
 
 ## 0. 已有基础与交付边界
 
