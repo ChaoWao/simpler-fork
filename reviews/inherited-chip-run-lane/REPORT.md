@@ -31,3 +31,8 @@ Exclusive A3 task `task_20261018_021507_2441430360` holds device 8 after archite
 CI is checked separately from these local results. No test result is relabeled as a measurement of the merge commit or a later head.
 
 Raw local evidence is under `/tmp/fork-lane-*`: red/green test logs, rebuild/hooks, full C++/Python/simulator logs and a task-submit board directory with isolated ASCEND logs and occupancy snapshots. Raw material stays outside the product PR and the published design branch.
+
+
+## Merge receipt
+
+PR #2618 merged as `6348a0d1fdacd58a4f5df85ebfbfaab47e2ccdd4`. All recorded test results retain their original frozen head; merging does not supply a new measurement.

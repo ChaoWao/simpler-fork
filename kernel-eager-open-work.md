@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-18 / main `ce493639`：#2612/#2614/#2615 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
+**2026-10-18 / main `6348a0d1`：#2612/#2614/#2615/#2618 已合入。** 已交付的 [准备拒绝的 source 退休证明](reviews/prepare-refusal-source-retirement/REPORT.md) 交付真实行为：本次准备完全释放后可关闭 Buffer，并在可用环境中重试；其他在飞调用不被提前释放，未知清理状态仍保留。实现接同一 native slot、run_epoch、lane 和 Worker，不增加准备缓存、版本协商或第二个 executor。框架资格、partial/fault/DFX 与 capture/图保活仍分别记账。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -210,8 +210,15 @@ CPU 负对照确认：launch backend 若在入队后、返回 ActiveExecution �
 当前实现与验证见 [启动异常所有权报告](reviews/launch-exception-ownership/REPORT.md)。共同 wrapper 在后端前分配 ActiveExecution；具体 backend 只借用 PreparedExecution，返回事务结果。Partial/异常仍由原 drain 路径决定实际完成，不能误发未提交证明。
 
 
-### 当前 #2618：fork 后的 run/lane 拒绝
+### 已合入 #2618：fork 后的 run/lane 拒绝
 
 主线 `ce493639` 的三个确定性 C++ 回归均被子进程 watchdog 终止：父进程线程在真实 lane 内执行 blocking wait，fork 时 lane mutex 被继承，子进程的 RunHandle 操作、lane 操作和 Worker 析构分别卡住。既有 native 环境检查发生在这些锁之后，不能防止该死锁。
 
 实现 head `996628a9` 保存 lane 的不可变创建 PID，在读取可变 worker 指针和获取 lane mutex 前拒绝外来进程；noexcept stop/detach 留下继承副本，既有 Worker 析构放弃路径保留 carrier/DSO，不调用父进程的设备清理。覆盖 live/terminal handle、两类 submit、查询/等待/关闭以及析构；父进程继续完成并提交下一调用。它是 K2 进程拒绝的实际缺口，不是 S3 loader 全面重构或 capture 支持。验证及边界见[本轮报告](reviews/inherited-chip-run-lane/REPORT.md)。
+
+
+### 当前：共同 Runtime descriptor 的异步 eager 发布
+
+PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620)，候选 head `9b1bfaf4` 将 TMR/HBG 的 descriptor 发布都置于共同 launch 事务，使用 slot 保留的 pinned host source。可选 caller Start → AICPU wait → descriptor async H2D → Fork record → AICore wait → 两个 kernel；没有 caller 也必须建立真实复制后的 AICore 依赖，cache 命中且没有 caller 则不增加 fork。DMA 尝试标记 Partial，资源仍由原 active owner、drain 和 quarantine 处理；不增加接口版本、能力查询或另一个 runner。
+
+这是普通 eager 的实际行为交付，不提前宣告 C1/C2/capture 合格。HBG 大图像仍在 prepare 同步上传并可与前驱重叠，DFX 原路径不变。完整框架资格继续归 #2605，DFX 归 #2588。源代码核查同时更正了历史文档：TMR workers 已在尾部，稳态 prefix 不再写握手，不应重复要求改一次物理 ABI。见[实现与验证报告](reviews/async-runtime-descriptor/REPORT.md)。

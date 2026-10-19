@@ -5,9 +5,11 @@
 
 **实现进度补充（2026-09-19）：** main `f187c089` 已含 #2342 / #2353 的 HBG 统一发布和 #2358 的公共 descriptor seam。Descriptor prepare/publish 在唯一生产调用点仍紧邻，尚无中间 Runtime 修改窗口；快照性质已建立，分配／复制开销已支付，async / capture 未实现。完整状态以 [ROADMAP 的 S2](ROADMAP.md) 为准；旧源码约束仍引用固定历史基线。
 
+**当前核查补充（2026-10-18 / main `6348a0d1`）：** 公共 Worker eager 已消费共同 native lane；#2618 继承进程拒绝已合入。TMR 的 `workers` 已是尾部，稳态 `runtime_device_copy_size` 不含握手；冷分配只初始化一次。原先“workers 首成员、每次整体覆盖”的论据只属于旧基线，§4.1 已更正。候选 `9b1bfaf4` 正将两 runtime 的 descriptor 转为实际 AICPU 流中的异步复制，并保留 pinned source；HBG bulk image、DFX 与 capture 仍需各自交付。详见[本轮证据](reviews/async-runtime-descriptor/REPORT.md)。下表是固定历史核查，不是当前缺陷清单。
+
 ## 0. 已有基础与交付边界
 
-| 已核查主线事实 | 对设计的影响 |
+| 固定历史基线的事实 | 对设计的影响 |
 | --- | --- |
 | `simpler_kernel_mode_supported` 返回 0；launch 是拒绝 stub | Context init/资源准备不等于 kernel eager 可用 |
 | `KernelEventKind` 五事件链，PrepareTail 已删除 | 使用 caller ↔ AICPU ↔ AICore；不恢复四事件或 caller 双分叉图 |
@@ -104,9 +106,11 @@ B−1 是 publication 与执行的重叠窗口；max_inflight 只增加 host 提
 
 ## 4. Publication、共享 workspace 与五事件链
 
-### 4.1 先改 ABI，再开放覆盖
+### 4.1 按发布范围与设备写回控制分区
 
-TMR 当前 descriptor 的 workers 是首成员；host memcpy 整个 device prefix，AICPU/AICore 都消费其中握手。AICore 有整条 Handshake cache-line 写回。发布区与独立执行控制区必须分开，使 B 的 publish 不再写 A 的 handshake；同时更新两侧 reader、地址传递、reset 和 cache invalidate 范围。HBG 显式 descriptor 收口也不自动完成这个按寿命拆分。
+旧基线中 TMR `workers` 是首成员，整段 H2D 会覆盖握手；这个论据不能继续当作当前未完成事项。`6348a0d1` 的两种 TMR 布局及共同 HBG descriptor 已将 workers 放在尾部：`runtime_device_copy_size` 的稳态范围在它之前结束，`runtime_device_initialized_prefix_size` 仅供新分配的冷初始化，`teardown_gates` 从不由 host 发布。各 slot 的分配/初始化记录与本次 reservation 共同保护首次使用。不要因此重复新增一个相同作用的物理 ABI 拆分。
+
+规范仍是发布区不覆盖仍在使用的写回控制区，且不能与 AICore 整条 Handshake cache-line 写回共享 cache line。实际 producer/reader 和编译期边界断言一起验收；“分区”可以是同一 allocation 的不同范围，不强制两次独立分配。未来若改为多个 publication bank 共享一个控制区，必须重新证明地址传递、epoch/reset 和 cache invalidate 的范围，不能从当前每 slot 隔离直接推导共享安全。
 
 不能只删 lane guard 或只移动 memcpy。Launch-time host 清零没有配套 Runtime 上传，不能充当设备 reset。目标 reset 放在设备依赖中，早于所有本次首次读写；不在 AICPU 晚到的入口盲目清 AICore 已写报告。
 

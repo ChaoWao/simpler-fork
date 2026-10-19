@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-18",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "ce493639b45fb2ddf173e5198c78b6978567ed1c",
-  "pending_pr": 2618,
+  "latest_roadmap_source_baseline": "6348a0d1fdacd58a4f5df85ebfbfaab47e2ccdd4",
+  "pending_pr": 2620,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "5005b5380357c32f11e9045c7a17c61b00ba03c23b588d0fe3f3b1ea152ddc50",
-      "published_sha256": "d48e93f5c12bd61bc80c942baed9cc13369d20db7797b3ab79e9c75bd21630f6",
-      "bytes": 54789
+      "source_sha256": "47d5b80872accba5c0c84b9d53af343e3fa3538eff70898c7aabf03e4faaf8bc",
+      "published_sha256": "014512e6b7d75620fff4ab2efa2d7548b22c9b2f22e1e78bc6dde5024695f09a",
+      "bytes": 54931
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "e32aca3f162ae3e9ae793b326b7edea9b2edece0dacb526484f592e224771124",
-      "published_sha256": "81ab22ba6880a089ac090e597cca3664b1e1be37b4bce7bd51c905a92a26f4e8",
-      "bytes": 28199
+      "source_sha256": "bf18e8dfd4e6f79f1836f62083e161f8b4245491256ce52f5575638175ee60f1",
+      "published_sha256": "ee5788a38d43874325e6be343e5fb0222645882711db568b531e8b766f3cb0f5",
+      "bytes": 29280
     },
     {
       "path": "kernel-mode-design.md",
@@ -92,30 +92,30 @@
     {
       "path": "kernel-mode-prepare-submit-design.md",
       "source_collection": "kernel-design",
-      "source_sha256": "7ce63c2c1c1765b174bb8cfea3d75df95263da4d2a5d29e462aa8e95c5a5a329",
-      "published_sha256": "416d7acf0ad84ad0ac39be89c46b05ad2567141d6b01c7f4df904e061e35f79b",
-      "bytes": 20884
+      "source_sha256": "fded079b6bfb2e58e4a1b4ced83289ccb895e340e4c1f583c2e90e7a83e79bd4",
+      "published_sha256": "b65406acf779e05a1999a8a65898993854936abf93ffc18d9059182da267fe2a",
+      "bytes": 22172
     },
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "ee71c58aa3ed4d8727e1db1167b84b7f5cad5c70f39b527cd32e6d90ee56d643",
-      "published_sha256": "2a8e152b2491233a0886b9e7feef88a36ea3b1c4e1716c73354f15575bda1669",
-      "bytes": 70340
+      "source_sha256": "ab43fdeb342b15e433f1e43265c31d8b07dcdcdc400814fc7ba73c8f83cb526b",
+      "published_sha256": "3872a937ea475665f194e4a1f515d026d651bde8c009137b7bab4bb8424a1ce8",
+      "bytes": 70516
     },
     {
       "path": "kernel-mode-tmr-flow.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1a3cb3709d4210da54a5304740b08e67849ad835c913538baf77015275679265",
-      "published_sha256": "cfc4c98ee5aa0edd9f7675c80671c8247842677c64adf6a84ef212eb7548b04e",
-      "bytes": 6818
+      "source_sha256": "820da604dc8f36621012cf86be24ef382bb582b3883d6cabd63fef79d6e9289a",
+      "published_sha256": "4583c9afd293ba0a49aca88db27a96ceb2dbc318fe4782a8d7a6635dda4248c5",
+      "bytes": 7587
     },
     {
       "path": "kernel-mode-unified-design.html",
       "source_collection": "kernel-design",
-      "source_sha256": "834a32627e585a0df69fd7d510892c877f139ad68ce0cbc64f9f385b3d360e00",
-      "published_sha256": "7b0d5e7d789d04ef07535e062a5ad4c89a7d5114704e917487e6fccd9630d566",
-      "bytes": 54592
+      "source_sha256": "e4d2c5e62b331d7ef8c0064b54d902673709a160bc07f2006eb2be9f736bfb8c",
+      "published_sha256": "d00c7be5e014b48d5b3c6524630fe62d3fae0783c808240498aa7a06596f6c47",
+      "bytes": 57359
     },
     {
       "path": "probes/README.md",
@@ -204,16 +204,16 @@
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "119fb114bdc8e6e841fe8b3e8c2916559c3f190535c002908d7db8df156c0757",
-      "published_sha256": "6c10619d7809fc0b34709957bcd5f4dc818e03adfcd2df710720ec419ac0c351",
-      "bytes": 53116
+      "source_sha256": "9e6360cbc6ad6524187546e4c2924a8d6361cda5eeecb21b62cdfc186eba3483",
+      "published_sha256": "ad345e0da142a6ced9f3238a55e02947f14750cd6d9a5a7d24c1870c508267d7",
+      "bytes": 51095
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-reference",
-      "source_sha256": "68b186626bd3da0f3c64c0036b21e0d3895fe2f4475f53025161ca75afacc422",
-      "published_sha256": "9524e3482c9e66c5640394c7a7a0362396d89a6298b9f40dbcaadf459426ea3d",
-      "bytes": 26238
+      "source_sha256": "25074669e2e5ba926f013405b9c414bda1a8ef5786385981e0da9641ae4a5ca0",
+      "published_sha256": "0764ec6a9cde4d7f4aff4c3d2aa85a78f91e5a2de0ba6c862ec2807c11b9b256",
+      "bytes": 23406
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
@@ -235,6 +235,13 @@
       "source_sha256": "fdd2a742b9b8661bfe0e1dd896acd486082e797046e573a26f1b43c8ba918401",
       "published_sha256": "fdd2a742b9b8661bfe0e1dd896acd486082e797046e573a26f1b43c8ba918401",
       "bytes": 2986
+    },
+    {
+      "path": "reviews/async-runtime-descriptor/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "698f3a0ab80d542904f32ddd08792dae2db0ae606066f81090f1b6af1421663d",
+      "published_sha256": "698f3a0ab80d542904f32ddd08792dae2db0ae606066f81090f1b6af1421663d",
+      "bytes": 7248
     },
     {
       "path": "reviews/borrowed-context-identity-97f8b6c92/REPORT.md",
@@ -400,9 +407,9 @@
     {
       "path": "reviews/inherited-chip-run-lane/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "54154d2a3e3c979c1eba6995073f0808e08060cc09342a8a63e21b7d8fbdfa61",
-      "published_sha256": "54154d2a3e3c979c1eba6995073f0808e08060cc09342a8a63e21b7d8fbdfa61",
-      "bytes": 4497
+      "source_sha256": "fcb3f6c86deb329532a438e847629b651ff9e4aa9e4596c42c3551bc8d7d1e5e",
+      "published_sha256": "fcb3f6c86deb329532a438e847629b651ff9e4aa9e4596c42c3551bc8d7d1e5e",
+      "bytes": 4684
     },
     {
       "path": "reviews/issue2460-tensor-buffer-design.md",

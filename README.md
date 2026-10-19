@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `ce493639b45fb2ddf173e5198c78b6978567ed1c`，含已合入 #2610、#2611、#2612、#2613、#2614、#2615 与 Pipeline A #2596；API 层次的完整源码清单仍固定其页内注明的 `e6d546d4` 基线，不能把路线更新当作 API 全面重审。
-- 本次记录的待合入工作为 [#2618](https://github.com/hw-native-sys/simpler/pull/2618)，head `996628a9e7edd44fa523c64e5e6ac66e371c4115`。修订验证及限制见对应报告；CI 状态以报告注明的查询时刻为准。
+- 最新路线状态固定 main `6348a0d1fdacd58a4f5df85ebfbfaab47e2ccdd4`，含已合入 #2610、#2611、#2612、#2613、#2614、#2615、#2618 与 Pipeline A #2596；API 层次的完整源码清单仍固定其页内注明的 `e6d546d4` 基线，不能把路线更新当作 API 全面重审。
+- 本次记录的待合入工作为 [#2620](https://github.com/hw-native-sys/simpler/pull/2620)，head `9b1bfaf4475595dc7d734ebc39a9999ccb08dd4a`。descriptor 异步 eager 发布及验证见 [报告](reviews/async-runtime-descriptor/REPORT.md)；HBG bulk、DFX 和 capture/replay 不属于本次交付。CI 状态以报告注明的查询时刻为准。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。

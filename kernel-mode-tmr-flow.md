@@ -2,6 +2,9 @@
 
 **依据：[设计原则](runtime-design-principles.md)；源码基线：[2085182a](SOURCE_BASELINE.md)。** 本文解释时序，不另立原则。旧版四事件 / PrepareTail 方案已归档，不能继续实施。
 
+
+**当前接线补充（2026-10-18 / main `6348a0d1`）：** 公共 eager 走共同 native run lane。下列五个名字是逻辑角色：`Start/AicoreStart/SerialTail` 分别由 slot 的 `RunCallerOrder::Start/Fork/Tail` 承担，`AicoreDone/AicpuDone` 由本次 `RunCompletionFence` 承担；不能只看旧 `KernelExecutionState` 预建的五个 event 就断言生产入口尚未接通。候选 `9b1bfaf4` 在 AICPU wait Start 之后、Fork 之前排 descriptor async H2D；普通无 caller 的复制同样用 Fork 保护 AICore reader。它不开放 capture/graph owner。历史探针与 ABI 描述继续归原基线；当前 workers/prefix 范围更正见[共同协议 §4.1](kernel-mode-prepare-submit-design.md#41-按发布范围与设备写回控制分区)。
+
 ## 1. 已有定义与尚未交付的边界
 
 `kernel_execution_state.h / KernelEventKind` 已定义五个 event，context 创建、持有两条内部流和事件资源。`c_api_shared.cpp / simpler_kernel_mode_supported` 仍返回 0，`simpler_kernel_mode_launch` 仍拒绝执行。**以下五事件顺序是主线声明的执行合同，不是完整生产 launch 已通过的报告。**

@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-18 / main `ce493639`：#2615 已合入，共同 launch 入口在后端提交前建立 owner，异常按 Partial 保留并关闭后续准入。原 head 的验证见 [启动异常所有权](reviews/launch-exception-ownership/REPORT.md)，不把测试移挂到 merge commit。当前 [#2618](https://github.com/hw-native-sys/simpler/pull/2618) 修复 [fork 后的 run/lane 拒绝死锁](reviews/inherited-chip-run-lane/REPORT.md)：在获取继承 mutex 前验证创建进程，子进程析构不进入父进程的 lane 或设备清理。**
+**2026-10-18 / main `6348a0d1`：#2618 已合入，继承 run/lane 在获取 mutex 前按创建进程拒绝；#2615 的启动异常保活也已合入。当前 PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620) 交付[共同 Runtime descriptor 异步发布](reviews/async-runtime-descriptor/REPORT.md)，候选 head `9b1bfaf4`：TMR/HBG 同一 prepare 快照、slot 常驻 pinned 源、实际 AICPU 流复制及 AICore 入口依赖，复制尝试进入 Partial 事务。HBG bulk image 与 DFX 写入不在本笔异步化范围；capture/replay 仍未开放。328 项 C++ target、3415 项 Python、两套完整模拟器和 A3 普通全量 sweep 已通过，CI 另行记账。**
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
