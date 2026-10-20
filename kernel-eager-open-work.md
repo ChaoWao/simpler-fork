@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**2026-10-19 / main `f50f90076`：#2620 已合入。** 共同 eager 已使用 slot 常驻 pinned 源，在实际 AICPU 流异步发布 Runtime descriptor，再以 Fork 约束 AICore；复制尝试计入 Partial。当前 PR [#2628](https://github.com/hw-native-sys/simpler/pull/2628) 推进 **A5 HBG resident scheduler metadata 的同一 launch 事务发布**：prepare 按值保存，launch 先 metadata、再 descriptor、再 Fork；保留大块 execution image 的 prepare 同步上传，以继续与前驱执行重叠。Graph Definitions 已随 launch envelope 传递，不属于剩余 H2D。具体改动和验证见[本轮记录](reviews/hbg-async-launch-metadata/REPORT.md)。capture/replay、图所有权与 DFX 剩余写入继续分别验收。
+**当前进度基线 main `f7dbe323b`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2619/#2620/#2628/#2600 已合入；当前 [#2638](https://github.com/hw-native-sys/simpler/pull/2638) 推进 S3 的 module/context/native-storage 真实保活。#2624–#2626 分别已有 TMR eager/capture 与共同 invocation 工作，S3 不重做其设备协议。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -82,6 +82,34 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 静态支持与每次“现在可否 join”仍需区分，但不由此推导必须增加查询接口。同仓、同构建的边界不加 `abi_version`/`struct_size`；跨 `.so` 本身不是兼容协议的理由。旧 kernel supported 位只描述旧入口，不能作为公共 K2 交付门。
 
 本次选择保留现有执行 C symbols，并在内部按职责分组；**不新增一张覆盖全部 API 的 get_api 函数表**。沿用既有导出与明确的操作返回值；符号存在不等于操作成功，也不因此增加一层兼容协商。run、有效 callable、graph 和在飞 replay 持有 module 资源；卸载早于最后引用是验收失败。unknown completion / close 失败须保留正确的 module 与环境，不随 C++ wrapper 析构误 unload。
+
+<a id="s3-current-delivery"></a>
+
+### S3 当前交付：#2638（待合入）
+
+代码提交：`aed5afd85`；基线：main `f7dbe323b`。本笔是 loader/code 生命周期的生产接入，复用原 context、lane、slot、callable cache、完成与退休，不移动整张函数表、不增加 C ABI 查询协议。51 个必需符号、18 个可选符号的名称和签名与基线逐项相同。
+
+```text
+ChipWorker.init
+  → RuntimeModule：RTLD_NOW | RTLD_LOCAL + typed required/optional lookup
+  → local module owner 保护 init；回滚先清未提交 binding，再退出局部 owner
+  → context binding / 每个 native-run storage slot 共持同一 module
+  → 原 prepare / launch / completion / retire
+  → 正常 close：native carrier 结束 → context 销毁 → storage 释放 → 最后引用可 unload
+  → close 失败：保留 binding，可重试
+  → 析构仍失败 / carrier abandonment：代码与未知状态保留至进程退出
+```
+
+引用在 init 的预分配 slot 上建立；运行热路径不新增共享计数操作。代价是一个冷路径 module/control-block 分配和每 slot 一个 shared reference；没有性能加速主张。模拟器的进程级 GLOBAL context registry 保持独立所有权。
+
+验证归属：构建时 HEAD 是上述 main，测试的是随后提交为 `aed5afd85` 的代码树。最终重建扩展与板测产物 SHA256 相同（`60cd7502efadcba683a94f5f98a74438131d915597b6a74be8a5ae1d180de756`）；不把构建宏误写成后生成的 commit。
+
+- 完整非硬件 C++：338/338 test programs；完整 Python：3434 passed / 147 skipped；最终重建后相关 Python：172 passed / 82 skipped。
+- 两套 callable/L2 定向 sim：A2/A3 7 passed、A5 6 passed，各自 9 deselected；不是完整 sweep。
+- task-submit `task_20261019_205215_12612273481`，A3 device 0：22 passed / 107 deselected，覆盖 TMR/HBG、owned/borrowed、native depth 1/2、public TQ=0/1、mode isolation 和自动注册；无本地 A5 silicon/macOS 通过主张。
+- 负对照：忽略 terminal retention 会使 DSO 单测和真实 `_ChipWorker` 析构测试失败；移除 production storage 的 module 引用会使移动/寿命测试失败。恢复后通过。编译轴与 pre-commit 全部通过。
+
+不宣布 S3/C2/C3 完成：captured graph、有效图绑定及 replay 的代码/设备资源引用仍须在对应消费者接入。未知完成的保留不证明物理停止；本笔也不关闭 AIV 议题。产品 PR 只有实现、测试与已有开发文档，规划及日志独立备份。
 
 ## 2. API 审查与原路线的对应
 

@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-19",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "f50f9007620160e63a270ba83d2dd33fc656b7ad",
-  "pending_pr": 2628,
+  "latest_roadmap_source_baseline": "f7dbe323bb9ab6321c6c8b0d688f87d773f9ac8b",
+  "pending_pr": 2638,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "c263396fc77e5c52980e2bddc33a0671e288e5c93891ffe6f5cc22700598d26c",
-      "published_sha256": "81ada4c9537fb896e4a18cb81e43e5ded9d5bc76a4b96ad7aaa5755cf29dfa1c",
-      "bytes": 55433
+      "source_sha256": "c706943e097d3c570948b943bb9d56f2d4649e7ed50fc1520fd06d01c5a47d43",
+      "published_sha256": "99045d2f45e898efc3ded357f43e8666fa7f6c64e7962be3c6e04d94a465b0ee",
+      "bytes": 55809
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "9743391973ce7bb6dcfcfc9bbd8740d2685581a481122fd804a00efd785c5c96",
-      "published_sha256": "cb35b7e14000dcf18bc3108276de14b5d2f8c0a2f160b8531da05123e5aaee67",
-      "bytes": 30438
+      "source_sha256": "5ba3a88f424d8f1e7b7af6b61c6e797e09e3bae78e5c837441122afba3a15cd7",
+      "published_sha256": "563128a78832ecc0e2b9044c69e282a52dcb70108f3525bbaa9c0330ab7e551e",
+      "bytes": 32610
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "e6b8ee26dc5a17d9cd34ecc5bb61f8da910a4634f08b3d86b0736eba76be8b0e",
-      "published_sha256": "246faa7119e3e11d3eb416b6b18c341debdefba2abcf2692c85e211e4b16168a",
-      "bytes": 71101
+      "source_sha256": "fe1d1b9c7b70e296f7149c73d0a0b44f966125d875173c6468d3bacd34975852",
+      "published_sha256": "2114ff16571df2c9dd57ebb615e1aac007f3ad10412d0965636d4bb142b29032",
+      "bytes": 71597
     },
     {
       "path": "kernel-mode-tmr-flow.md",

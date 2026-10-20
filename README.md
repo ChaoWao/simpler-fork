@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `f50f9007620160e63a270ba83d2dd33fc656b7ad`，含已合入 #2620 descriptor 异步发布及其前置功能，与 Pipeline A 已交付基础；API 层次的完整源码清单仍固定其页内注明的 `e6d546d4` 基线，不能把路线更新当作 API 全面重审。
-- 本次记录的待合入工作为 [#2628](https://github.com/hw-native-sys/simpler/pull/2628)，head `83ad697e97f12c340dbdda9cf25e25ba484bd97b`。A5 HBG scheduler metadata 的同流异步发布及验证见 [报告](reviews/hbg-async-launch-metadata/REPORT.md)；bulk execution image 保留 prepare 上传。capture/replay 与图保活未因本笔交付。CI 状态以报告注明的查询时刻为准。
+- 最新路线状态固定 main `f7dbe323bb9ab6321c6c8b0d688f87d773f9ac8b`，含 #2619/#2620/#2628/#2600。API 层次的完整源码清单仍保留页面内注明的固定基线，不能把本轮模块寿命与路线更新当成 API 全面重审。
+- 当前待合入工作为 [#2638](https://github.com/hw-native-sys/simpler/pull/2638)，head `aed5afd85`：context binding / native-run storage 的共享 module owner。验证与负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。本地 C++ 338、Python 3434、A3 板测 22 项通过，CI 已启动；graph/replay 引用仍待相应消费者接入。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。

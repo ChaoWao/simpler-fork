@@ -22,7 +22,9 @@
 
 ## 1. 现在做什么
 
-**2026-10-19 / main `f50f90076`：#2620 已合入。** 共同 eager 已使用 slot 常驻 pinned 源，在实际 AICPU 流异步发布 Runtime descriptor，再以 Fork 约束 AICore；复制尝试计入 Partial。当前 PR [#2628](https://github.com/hw-native-sys/simpler/pull/2628) 推进 **A5 HBG resident scheduler metadata 的同一 launch 事务发布**：prepare 按值保存，launch 先 metadata、再 descriptor、再 Fork；保留大块 execution image 的 prepare 同步上传，以继续与前驱执行重叠。Graph Definitions 已随 launch envelope 传递，不属于剩余 H2D。具体改动和验证见[本轮记录](reviews/hbg-async-launch-metadata/REPORT.md)。capture/replay、图所有权与 DFX 剩余写入继续分别验收。
+**2026-10-19 / main `f7dbe323b`：#2619、#2620、#2628 与 #2600 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
+
+**当前 PR [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。该 PR 尚未合入，graph 引用和 replay 仍由 C2–C4 验收。
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -97,7 +99,7 @@ S1、S2 已完成；Pipeline A 的批准首步已交付，可开始 K1 接入。
 | **A · 共同执行基础** | Program 的自然排队、逐 run 结果和安全退休 | Pipeline A 内部 P1/P2/P3 | **基础与后续受限扩展已交付**：初始 #2411/#2419/#2426，随后 #2446/#2449/#2481/#2491/#2514/#2532；范围以 Pipeline A 看板及对应合同为准，不能概括为所有模式均开放 | native 与 L3 均有两个真实 LAUNCHED，持续补位、错误归属和回收正确 |
 | **S1 · device image 边界** | HBG 明确的 device descriptor；host tail 不上传 | 可独立推进 | **已验收**：#2309 缩短上传；[#2315](https://github.com/hw-native-sys/simpler/pull/2315) / [#2312](https://github.com/hw-native-sys/simpler/issues/2312) 的显式 descriptor 已合入；[验证记录](reviews/pr2315-26165696.md) | 两架构及 A5 legacy 的 reader / cache 范围正确；真实 onboard 验收 |
 | **S2 · 单次准备／发布分离** | 本次构图产物留在执行上下文；metadata 发布可单独提交 | S1 的布局收口；与 A 并行 | **已完成同步合同验收；#2372 已合入 `767618b3`**；#2342 / #2353 的 HBG 发布、#2358 的公共 descriptor seam、#2367 的覆盖拒绝与 launch 检查。初始 seam 调用相邻；#2432 已将发布后移，#2438 仅跳过相同 TMR 配置前缀；异步保活另属 C1 | Program 仍每次构图，输出、get/set 副作用、错误、copy-back 与 release 不回退 |
-| **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **计划已确定，未交付**：集中 dlopen/dlsym 与 DSO 寿命；保留原执行 C symbols，不新增全 API get_api 表；收口 R5 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
+| **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **当前 PR #2638**：集中 loader 所有权与 typed lookup，context/slot 共持 module；保留既有导出合同。图的长期引用仍须由 C2 接入，不据本笔标记整阶段完成 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
 | **K1 · 借用环境与参数** | Kernel 接入共同执行层，无 tensor staging 和设备所有权 | A + S2 | **native 准备/环境/caller 已交付，公开接入待完成**：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 仍待 K2b/c。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 [当前记录](kernel-eager-open-work.md) | TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过 |
 | **K2 · caller 顺序与框架接入** | Native 和框架可用的 kernel eager | K1 | **正在交付**：#2567 native caller 链已合入；#2572/#2578 已接 caller lane 与借用初始化；#2580 → K2a/b/c 闭合共同拒绝、环境代际与公开入口。完整验收未完成；具体范围见 [融合后的细分步骤](kernel-eager-open-work.md)；重启核查保留原基线 | caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过 |
 | **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **目标协议已有，生产实现未验收** | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
