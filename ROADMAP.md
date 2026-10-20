@@ -22,13 +22,24 @@
 
 ## 1. 现在做什么
 
-**2026-10-20 / main `63e651fcc`：#2619、#2620、#2628、#2600、#2638 与 #2640 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
+**2026-10-20 / main `7e8038e9a`：#2619、#2620、#2628、#2600、#2638、#2640、#2645 与 #2643 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
 
 **已合入 [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。合入提交 `2a6d2d50c`；graph 引用和 replay 仍由 C2–C4 验收。
 
 **已合入 [#2640](https://github.com/hw-native-sys/simpler/pull/2640)（`63e651fcc`）：C1 的逐调用计时复位同流发布。** 启用 device-phase/task timing 时，prepare 只分配并保存复位值；launch 按 scheduler metadata → timing reset → descriptor → entry fork 排队。复用已有 slot pinned source，持有到完成/隔离；复位或 descriptor 入队失败阻止 kernel，保留 Partial，不读取前次计时。prepare 回滚清除未消费快照。两架构真实库探针、338 C++ 测试程序与 3434 Python UT 通过；本地 A3 task-submit 的 16 次计时/caller 调用通过；CI network1 与独立 main Daily 对照均在同一 peer 的 dispatcher 初始化失败，已登记 #2642，红项仍未解决，未据此宣布 capture 或全量 DFX 完成。具体边界见 [C1 当前交付](kernel-eager-open-work.md#c1-timing-publication)。#2624/#2625 的 TMR eager/capture、#2626 资源迁移和 #2633 collector prewarm 仍各自审阅，不重复它们的范围。
 
-**当前 PR [#2645](https://github.com/hw-native-sys/simpler/pull/2645)：结果区首次初始化同流发布。** cold slot 的 `published=0` 保存为八字节快照，launch 经已有 pinned source 在 AICPU stream 发布，再 fork 到两侧 kernel；未成功发布时拒绝读取该 allocation，即使其中恰好有本次 epoch 和 success。warm 复用不增加 marker 复制。TMR/HBG × 两架构真实库桩探针通过；338 C++、3434 Python、两套 sim 各 2 项和 task-submit A3 板测 34 项通过；负对照抓住 prepare 同步初始化与未初始化结果误读。CI 待验收，无本地 A5 silicon 或 capture 完成主张。见 [本笔边界](kernel-eager-open-work.md#c1-result-publication)。
+**已合入 [#2645](https://github.com/hw-native-sys/simpler/pull/2645)（`ed421bf33`）：结果区首次初始化同流发布。** cold slot 的 `published=0` 保存为八字节快照，launch 经已有 pinned source 在 AICPU stream 发布，再 fork 到两侧 kernel；未成功发布时拒绝读取该 allocation，即使其中恰好有本次 epoch 和 success。warm 复用不增加 marker 复制。TMR/HBG × 两架构真实库桩探针通过；338 C++、3434 Python、两套 sim 各 2 项和 task-submit A3 板测 34 项通过；负对照抓住 prepare 同步初始化与未初始化结果误读。这些数字保留原 head 归属，无本地 A5 silicon 或 capture 完成主张。见 [本笔边界](kernel-eager-open-work.md#c1-result-publication)。
+
+
+**当前 PR [#2649](https://github.com/hw-native-sys/simpler/pull/2649)：本次调用的 swimlane level。** prepare 将 `CallConfig` 的级别写入本次 descriptor；AICPU 显式接收该值，host admission 不再改共享 header。A5 HBG 的 phase 存储规划、RunControl 和导出也改用本次值，修复 runner 仍是前驱 level 0 时漏建后继 level 3 phase 存储的问题。字段使用原 padding/reserved，原有偏移与大小不变；level 变化会使既有前缀缓存失效并重发，不增加独立 level H2D。340 C++、3495 Python、两架构各 6 个真实库探针、A3 普通上板 236 passed / 20 skipped，以及最终 head 的 7 个定向板测通过。A5 follow-up 的 bind/DFX sim 另有证据；CI 待验收，不宣布 capture 或完整 DFX 完成。见 [本次记录](kernel-eager-open-work.md#c1-swimlane-invocation)。
+
+```text
+CallConfig level → 本次 Runtime descriptor → 稳定快照 / pinned async publish → AICPU init(level)
+                       └→ A5 HBG phase layout / RunControl / 本次导出
+host admission → 自己的 export level / pool 检查；record queue 所有权保持原协议
+```
+
+#2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -106,7 +117,7 @@ S1、S2 已完成；Pipeline A 的批准首步已交付，可开始 K1 接入。
 | **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **#2638 已合入 `2a6d2d50c`**：集中 loader 所有权与 typed lookup，context/slot 共持 module；保留既有导出合同。图的长期引用仍须由 C2 接入，不据本笔标记整阶段完成 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
 | **K1 · 借用环境与参数** | Kernel 接入共同执行层，无 tensor staging 和设备所有权 | A + S2 | **native 与 public Worker eager 接线已交付；完整资格分别验收**：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 由 #2599 接入，#2604/#2606/#2608/#2610–#2618 补齐相应语义与寿命。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 [当前记录](kernel-eager-open-work.md) | TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过 |
 | **K2 · caller 顺序与框架接入** | Native 和框架可用的 kernel eager | K1 | **正在交付**：#2567 native caller 链已合入；#2572/#2578 已接 caller lane 与借用初始化；#2580 → K2a/b/c 闭合共同拒绝、环境代际与公开入口。完整验收未完成；具体范围见 [融合后的细分步骤](kernel-eager-open-work.md)；重启核查保留原基线 | caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过 |
-| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler 发布与 #2640 timing reset 已交付；#2645 接首次 result marker**；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
+| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset 与 #2645 result marker 已交付；#2649 接本次 swimlane level**；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
 | **C2 · 图资源所有权** | capture wrapper、generation、bank/event/source 的图引用 | C1 + S3 | **待实现** | 每图 cold-path 预检；module/code 与 bank/event/source 均由图保活；失败/销毁无悬空引用 |
 | **C3 · TMR 与 HBG replay** | 两种 runtime 的真实 executor 可重复运行 | C2 | **仅有原语与局部实验，端到端待实现** | TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确 |
 | **C4 · 完整产品验收** | 换参、多图、DFX、超时/故障、关闭与容量完整行为 | C3 | **未完成；是必交付阶段** | 下文验收矩阵全通过，不能只以单图普通模式宣布完成 |

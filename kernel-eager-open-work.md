@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `63e651fcc`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2619/#2620/#2628/#2600/#2638/#2640 已合入；当前 [#2645](https://github.com/hw-native-sys/simpler/pull/2645) 将结果区首次初始化接入既有同流发布，未初始化时禁止认证结果。#2624–#2626 分别已有 TMR eager/capture 与共同 invocation 工作，不重复其设备协议。
+**当前进度基线 main `7e8038e9a`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643 已合入；当前 [#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，并修复 A5 HBG 取前驱级别导致 phase 存储缺失。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -139,7 +139,7 @@ launch： caller entry → AICPU 异步 scheduler / timing / descriptor → entr
 
 <a id="c1-result-publication"></a>
 
-### C1 当前交付：#2645（待合入）
+### C1 已交付：#2645（已合入 `ed421bf33`）
 
 head `3753da44b`，基线 main `63e651fcc`。cold slot 的结果区原本在 prepare 同步 H2D 清零；现在 prepare 仅保存八字节 `published=0` 快照，launch 使用已有 slot pinned source，在 AICPU stream 发布，并经 entry fork 排序到 AICPU/AICore。成功 enqueue 记录该 allocation 初始化事实，读取仍须先有实际 drain；失败或跳过发布时不读未知 allocator bytes，不污染本 epoch 的 one-shot read ledger。后续 fork event 失败不撤销已经接受的初始化。warm 复用靠 epoch 区分，不新增 marker 复制。
 
@@ -157,7 +157,36 @@ launch： caller entry → 同流发布 metadata + descriptor → fork → 两�
 - 基线在 prepare-only 初始化状态断言上失败；另删去 production read guard 后，真实库探针在匹配 epoch 的 forged-success 臂失败。恢复源码并重建后，上板两份 A3 library SHA256 与测试前一致。提交后扩展重建，A3 关键探针再次 2 passed；不把构建时 HEAD 与随后生成的提交混同。
 - 定向 vector sim：a2a3sim、a5sim 各 2 passed，均覆盖 HBG/TMR，非 sweep。
 - task-submit `task_20261020_040538_32659199043` / A3 device 1：34 passed，覆盖 native/public caller、owned/borrowed、depth 1/2、public TQ=0/1、prepare/finalize 与 clean refusal/retry；无本地 A5 silicon/macOS 通过主张。首笔临时脚本因 daemon 内嵌 task-submit 查询在 pytest 前被拒，查询移到任务外后上述正式任务通过。
-- 编译轴和全部适用 pre-commit 通过。CI 刚启动；#2642 的历史 network1 根因仍未关闭，若再次失败须读取本次日志，不能沿用旧分类直接忽略。
+- 编译轴和全部适用 pre-commit 通过。该 PR 已合入；#2642 的历史 network1 根因仍未关闭，若后续 CI 再失败须读取当次日志，不能沿用旧分类直接忽略。
+
+
+
+<a id="c1-swimlane-invocation"></a>
+
+### C1 当前交付：#2649（待合入）
+
+head `4e4fdaee9`，基线 main `7e8038e9a`。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
+
+| 生产环节 | 本笔行为 |
+| --- | --- |
+| onboard / sim `prepare_launch_shape` | 从本次 CallConfig 填 `dev.chip_swimlane_level`，不读 runner 的当前值 |
+| 三种 descriptor 布局 | TMR 使用 entry storage 前原有对齐空位；共享 HBG 使用一个 reserved word；已有偏移、handshake 边界与 sizeof 不变；三种 Runtime constructor 均定义默认 0 |
+| descriptor publication | 原稳定快照、slot pinned source、AICPU 异步发布与 fork；level 变化参与前缀缓存失效，没有独立 level H2D 或 staging allocation |
+| AICPU producer | 各 runtime/arch 和 A5 HBG resident lifecycle 显式传入本次级别；不读取共享 collector header 的 level；禁用时沿用原缓存失效 |
+| A5 HBG host planner / RunControl / export | 全部取本次 descriptor；避免 prepared successor 使用前驱 level 0，漏建 level 3 phase 存储、发布错误级别或跳过导出 |
+| collector admission | 保存 host 导出级别、检查 pool；不改 device level，不清 producer queue。Header level 只表示初次 pool 元数据 |
+
+A5 请求 phase 时，原 retained scheduler block 可能因此正确增长；没有性能收益或“所有调用的 DMA 笔数不变”的主张。原 joined-admission 规则保持不变，未开放任意级别同时执行。粗粒度 enable bit 仍在 launch envelope；capture 的更新、graph/source/code 寿命和完整 DFX reset/restore 继续按 C1–C4 验收，不能据本笔宣告全部闭包完成。
+
+- 最终提交重建：非硬件 C++ **340/340**、Python **3495 passed / 162 skipped**、两架构真实库 RTS probes 各 **6 passed**；全部适用 pre-commit 与编译轴通过。
+- 负对照：主线 host admission 改共享 header，新用例先红；恢复 device 从 header 取值也使级别切换用例失败。毒化 placement construction 先发现默认字段未定义，补齐 constructor 后四组合通过。
+- A5 real bind 的负对照：runtime 请求 SCHED_PHASES、HostApi 仍返回 0 时，phase 存储没有增长；planner/RunControl/export 改取本次值后 bind suite **56 passed**。A5 HBG follow-up sim **34 passed / 2 skipped**，另有 DFX phase sim **1 passed**。
+- 较早同一接线树的普通 sim：a2a3sim **103 passed**，a5sim **100 passed**；最终 A5 host-path 修正另按上一条验证，不把旧完整 sweep 冒充该修正之后的全量结果。
+- A3 task-submit `task_20261020_072200_40551513679` / devices 0,1,4,5：普通 `< L4`、排除独立 SDMA 分组的 sweep **236 passed / 20 skipped**，hash 前后相同；随后只有 A5 功能修正与文档收尾，A3 执行逻辑未变。
+- 最终提交/重建后 task-submit `task_20261020_074511_129459830537` / device 0：**7 个定向 case 通过**，含 TMR/HBG × owned/borrowed 的 20 次公开调用，逐次检查 tensor、artifact level 和 phase 存在性，及原 DFX/dep-gen smokes。无本地 A5 silicon/macOS 通过主张。
+- 三次早期 harness 问题均保留原日志：DFX smoke 漏 dep-gen；整个 sweep 误用 300 秒 session cap（CI 为 1200 秒）；rebase 后旧 hash 在 pytest 前拒绝新产物。修正后的上述正式运行通过。session cap 的 HUNG 标签不是设备挂死证据；不放宽 device watchdog。
+
+CI 刚启动；#2642 仍单独跟踪。未声明 AIV 根因修复。规划/HTML 与原始现场不进入代码 PR。
 
 
 ## 2. API 审查与原路线的对应

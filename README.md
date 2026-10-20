@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `63e651fcc27993c0a559831eda236a20aa708ac9`，含 #2619/#2620/#2628/#2600/#2638/#2640。API 层次的完整源码清单仍保留页面内注明的固定基线，不能把本轮模块寿命与路线更新当成 API 全面重审。
-- #2638/#2640 已合入，历史验证保留原 head。当前待合入 [#2645](https://github.com/hw-native-sys/simpler/pull/2645)，head `3753da44b`：TMR/HBG 共用的结果区首次初始化同流发布与未初始化读取保护。C++ 338、Python 3434、两架构真实库探针、两套定向 sim 通过；A3 task-submit 板测 34 项通过；CI 仍待验收，无本地 A5 silicon/macOS 通过主张。见 [本笔边界](kernel-eager-open-work.md#c1-result-publication)。历史 network1 失败在独立 main Daily 对照中同样复现，[#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
+- 最新路线状态固定 main `7e8038e9aae4872e7ba7515d0a66ee05687eee05`，含 #2619/#2620/#2628/#2600/#2638/#2640/#2645/#2643。API 层次的完整源码清单仍保留页面内注明的固定基线，不能把本轮模块寿命与路线更新当成 API 全面重审。
+- #2638/#2640/#2645/#2643 已合入，历史测量保留原 head。当前待合入 [#2649](https://github.com/hw-native-sys/simpler/pull/2649)，head `4e4fdaee9`：每次 Runtime descriptor 携带 swimlane level；A5 HBG phase 存储、RunControl 与导出使用同一值。最终 C++ 340、Python 3495、两架构各 6 个真实库探针通过；A3 普通 sweep 236 passed / 20 skipped、最终 head 定向上板 7 项通过；A5 bind/DFX sim 另记，无本地 A5 silicon/macOS 通过主张。CI 待验收。见 [本笔边界](kernel-eager-open-work.md#c1-swimlane-invocation)。历史 [#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。
