@@ -1,6 +1,6 @@
 # 工作项登记表 —— 一个工作项，一个实施归属
 
-> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-19。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > **本轮核验（2026-10-18）**：main `937c57efc71ad01a01c3a72072df075d2a5dd24f`；实现与验收证据分开记录，历史双机 CI 样本保留其实际测试 SHA。
 >
@@ -53,7 +53,7 @@
  | **RA-8** | endpoint 与 capability view | `W2` · `P3①` | — | 🟡 **共同能力判定与 attachment wire 已有，消费组合仍需验收**。`select_adapter`、`_global_domain_attachment_matrix` 与 GlobalDomainAttachment 校验保留；worker.py 的 local_window_bases 仍为字段/赋值共 2 处，retain_after_run 阳性对照 4 处。#2594 的完整成员身份、rank、域引用须消费同一判定权威；SPL 机型/链路输入归本项，不另建选择器。 |
  | **RA-9** | ResourceBundle 组合多 backing / adapter | `P3②` 本地半 | RA-8 · RA-5 | 🔵 **组合契约待实现**。需同时表达 Host DDR control、Device GM payload 与 communicator，含组合失败语义。本地部分归本项，跨节点验收归 DS-10；既有 Region backing 不等于完整 ResourceBundle。 |
  | **RA-10** | 向用户暴露 plan / capability / completion | `P3③` | RA-8 | 🔵 **逐路径接口验收要求**。RA-3、RA-5、DS-3 均须向用户呈现实际 plan/capability/completion，显式 policy 不得隐藏 copy 或 identity 变化。它不另立运行机制。 |
- | **RA-11** | 最小同步原语 ＋ 首个有界 SPSC 示例 | `P3④` · `W4①` · `W6` | RA-7 · **RA-4** | 🟡 **部分交付：#2096 已合入 main**（`ae234fad0`，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head `2297a9a4f29a` 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。schema/policy 属上层，常驻循环归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。合入不关闭 RA-11/P3④；具名证据见 [评审与合入记录](review/pr-2096.md)。 |
+ | **RA-11** | 最小同步原语 ＋ 首个有界 SPSC 示例 | `P3④` · `W4①` · `W6` | RA-7 · **RA-4** | 🟡 **部分交付：#2096 已合入 main**（`ae234fad0`，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head `2297a9a4f29a` 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。schema/policy 属上层，常驻循环归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。**#2635 OPEN**，head `850a36bd9` 发布 endpoint Region/SPSC 公共入口；[定点评审](review/pr-2635.md) 要求修复 finalize 身份在 slot 交还后的复用竞态并解决 main `2a6d2d50c` 集成冲突。合入不关闭 RA-11/P3④；具名证据见 [评审与合入记录](review/pr-2096.md)。 |
  | **RA-12** | 本地独立 per-worker domain ownership | `P2-D` 本地半 · `W3` · `#824` 本地半 | RA-8 | 🟡 **owner 转移仍在飞 #2120**（OPEN，`cd69b1e0ecf9`）；main `detach_persistent_domain` 0 命中，retain_after_run 阳性对照 4 处。L4 retained release 已能绑定后续正在构建的 run fence，仍不等于所有已接纳使用的 Worker 级 ownership。#2594 的复用、跨 run 和释放规则与本项共用 owner；契约 A/D 仍适用。 |
  | **RA-13** | 四类 worker 内存模型统一成 ABI | `l3l4 B` · `AF5` · `U1b` · `U2b` · `ST-1` | RA-3 · RA-5 | 🟡 **公共参数与 materialization 进一步收敛**。#2589 `a8c682a32` 与 #2595 `8c3b0e174` 分别让 direct L2、fork chip child 使用 native ChipWorker；#2597 `e994e106d` 使三类入口共用 `_materialize_chip_task_args`。#2587 `11eb5d2c9` 把 DEVICE source 登记绑定 native environment identity；#2612/#2614 细化失败后的 source-use 退休。旧 ChipStorage/ChipTensor ABI 兼容及 U2b 统一 IO 账本仍须单独验收；#2594 的域 Buffer/远端描述消费尚为设计。#2146 OPEN `247689f4e3ba`，公共 tensor.h 仍逐维比较 stride，ST-1 未被这些 PR 顺带关闭。 |
  | **RA-14** | API 收敛与迁移 | `W8` · `C.2` 的 `malloc` 半 | 就绪 RA-3 · 就绪 RA-5 · 就绪 RA-10 | 🟡 **构造和 chip 消费入口已收敛，兼容退役未完成**。#2479/#2480 提供公共 Tensor(Buffer, shapes=...)；#2501 同批迁移 HOST 控制用户，#2597 共享私有物化转换。#2594 的域 API 改名/兼容归本项，域目标主归属 DS-6、ownership 归 RA-12；全消费者迁移后才移除旧 ABI，不等全部 backend 串行交付。 |

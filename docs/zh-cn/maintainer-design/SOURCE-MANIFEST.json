@@ -1,5 +1,5 @@
 {
-  "published": "2026-10-18",
+  "published": "2026-10-19",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
   "source_root": ".docs",
@@ -8,152 +8,157 @@
     {
       "path": "cpu-npu-shared-memory.md",
       "source_sha256": "b20bb5616b40d2a5a056f528e75b742ab095e851461fdf6edd196dda004f7697",
-      "published_sha256": "62909b2d3866ec5c3cce42bfdc09fa592094274e76226279126431ebf91333ec"
+      "published_sha256": "ef9795514b274250b091327225d7e0d1680a21780e6debf6b85dbcd02276fbf9"
     },
     {
       "path": "cpu-npu-shared-memory/domain-member-vs-attachment.md",
       "source_sha256": "e3df07370a6e30eeb21ac7696986a80022834e7e5a3b395c5a38dcc956a0eb75",
-      "published_sha256": "bac5205a8f7491990e6405fb2855726c6987e7ad2ee191d69e1a3a8278552d3f"
+      "published_sha256": "7c88d5a139af992793bc3825f1ec3e417f41d0e3d0ad1e1c2a60b52d0d77cd98"
     },
     {
       "path": "cpu-npu-shared-memory/domain-membership.md",
       "source_sha256": "dc565702d9b43fb3a3383a3bfc2ea2661c024659022abf4718d2520291a7f07e",
-      "published_sha256": "c47f1af9dc60ea0c79535ee1851fd0a704bdc45013587e08cab9985575bb1f38"
+      "published_sha256": "034100c99e8c09858961543000a80d5d6a9e8d350e5f6fb50b4f49b0a16d5b0b"
     },
     {
       "path": "cpu-npu-shared-memory/hardware-constraints.md",
       "source_sha256": "6c3db9f958bc35819c343bff27192953a46fdf3672a98aa3a86b3baf6be0261e",
-      "published_sha256": "b3f5debdbc8d470063090cef83ec1a6405d6f63c312b519e9884166ce002e6f9"
+      "published_sha256": "51601ee154e9180797615c0f185800ab5f63576d1546f4a0e370212a37735216"
     },
     {
       "path": "cpu-npu-shared-memory/w2-w5-inversion.md",
       "source_sha256": "77ad86a86b21d152283cd74aca221b2335296a003b69131fa53e8c05d7652185",
-      "published_sha256": "8d23ff5b15b98fbf698ea2127abbcf9ccdec37c8f89db061f611af4233eea430"
+      "published_sha256": "a94b786877849e13ff7dfd9cad9fc633ccd4cf6afa62b7a9201601eb060aa2d8"
     },
     {
       "path": "cpu-npu-shared-memory/work-breakdown.md",
       "source_sha256": "217966fc61be0a68fb4a01f39b9330ef9aa1cb6e9cec0f720be5c15c9c0c6842",
-      "published_sha256": "9f5ccc11ec856681e4315e79406fabb550431e6d43dd33b2049ccab478a13da8"
+      "published_sha256": "7b67d60b40a5fa87ae36323c65bee599ad4f5f44bbe19da724850f9cf0d61269"
     },
     {
       "path": "feature_roadmap.md",
       "source_sha256": "76fc959f962eb151d98a19cb222849ce8aee99cd134601d31f157e5462f05fd6",
-      "published_sha256": "c7566a3237b1e56ba2ef0aee230f5881d991b025b0af87b5cacee529ed9cce45"
+      "published_sha256": "d34532201e4f7395080b9dc0d179a514229264cb9d114bdd5277ae4b9c3ac2fe"
     },
     {
       "path": "goal-coverage.md",
       "source_sha256": "48113f84a2094eba115faaccbfa1920fd705ba99c9bcee5751a858e0e78c81de",
-      "published_sha256": "1bb042fc190a32e7fc234be59d722b94fc172fe4eca8154babe8db5e125f698a"
+      "published_sha256": "479b5c2eff1ba6e79c990cd0ff4040dc5d36875c8710fe00235278be6c2f63e1"
     },
     {
       "path": "l3l4.md",
       "source_sha256": "6c5204975e0d0f6aafc0a5b058e4fb1128f26801a0d7729a4bbffdbd53b6c9a8",
-      "published_sha256": "066ad17bf462efe6dbc7f9de4b86fda4366ca4e02a97f9352c35a56ba1d7116d"
+      "published_sha256": "e6832434f5612bcf22af209a3f279910858cfb5f9701162c8ba864c533dc9036"
     },
     {
       "path": "l3l4/cluster-comm.md",
       "source_sha256": "7683142881bfb8f4328dd8c322e4f05b225da5a8bfee452f9d448d42bb386fd2",
-      "published_sha256": "946f19015fa2e0cd0217ceccd1268b496f65ecd1dc02ad4d0eb4c85354749a34"
+      "published_sha256": "0adfd151fbdc0e7cd18bddabe7eb84bae619c9409aa0bc541db100ea728baf94"
     },
     {
       "path": "l3l4/inventory.md",
       "source_sha256": "7ab185a2f546bbcee68775389313e561b66ceabd8603e2ab12c7b14fe785f998",
-      "published_sha256": "dc69f6602219517d05c41493a7b8eba0227a461c51b5c95474acb79b91ae5fa6"
+      "published_sha256": "591c255645d7adf72df41f86e963538bcd5888ee4ae6defcfd6afeadfef665f8"
     },
     {
       "path": "l3l4/lazy-init.md",
       "source_sha256": "bf6ee3a113079aa72d4ae85ba0ea5e1eb089a6cc0bffe71d8d3bbbec12ce8128",
-      "published_sha256": "c616955b2b54e22eee1746244b0d241147b2b92ba45abb182a46d31969c01de5"
+      "published_sha256": "b9ed66957a79459ca3737ac6945db26c58d3d61743d60a2330bc51977532e819"
     },
     {
       "path": "l3l4/memory-kinds.md",
       "source_sha256": "045da3998e223deff1da773c13f41cb1d78d6d2d98e76d1292732be8814b8f65",
-      "published_sha256": "b051e271c77ecff7e8229029f3148ea80d002f9bd61c718060e8b2a01a10befb"
+      "published_sha256": "dfc5d3d73b8795d7a8d5ef54e464246996877e224b062ec3fa51f578a8b167b4"
     },
     {
       "path": "l3l4/remote-startup.md",
       "source_sha256": "612c836320ae8419abd915d836154d936184e125e57207f4e8926d5438b7e89e",
-      "published_sha256": "bf0a6c54288e6b4f1234738bfd93792c42192b463e4d687d54b67297f7a89bb3"
+      "published_sha256": "084fc12d9bc868b7ee696726c3acf62046c147bb55e7c860ccd457cc47144465"
     },
     {
       "path": "l3l4/scheduling.md",
       "source_sha256": "d5ed34f4bf8725298d0dca8979f1be6b62297e62d519c5f15967aeb1c20dfcb6",
-      "published_sha256": "6bfd888705cbddeb1ad763d8eaf66360ce9782c09114a1a5e71ed68ea40b4a8a"
+      "published_sha256": "09aee195e4b06bfab832f7a31c5fd0450fcdb37c3506c808d476938fcaefcaef"
     },
     {
       "path": "logical-physical-separation.md",
       "source_sha256": "a508eaa4a76beccdb0e91ac2c983e9b3d9c21a88e18d28e98ea89374cf8bd9c3",
-      "published_sha256": "106ea92c9686005c54cd396da1a620aca2fc8b202aa58b7941a81a113b4628d3"
+      "published_sha256": "b1bb3287ac94430aa0a7caa2b82630bbd4ce78b317c18c30f84a7b36fa95eb0f"
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "e4a168d4d20467fa546994c15c97c3dbe620397bda147c1a81689dd0028510fd",
-      "published_sha256": "e888b4bacc96388aeed3e5c3c0dc1b0c17f426c716da2322d7cde90798d2dd6e"
+      "source_sha256": "471817ff6faf37be54a29f60fba391c60a6eeda17bab7e9204844d22cf839452",
+      "published_sha256": "5333583dd59b4b3a95d977fa77d2546aa3a41d0b0074b217a629d56cca0aa747"
     },
     {
       "path": "track-boundaries.md",
       "source_sha256": "9903528e3c1e6f65ad2c8e615c15d8e6a321c286b948876580b88a5c7a7479e4",
-      "published_sha256": "b1673a8a91ee8d3fdcd48ff50c8126dda67e0b7ebfbb4a7e7acebecf99fd2fed"
+      "published_sha256": "48b811564ef71eeba2d82c35e7b32fc9781969e8a88a7646793d4416338817a7"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "ff1509fd3f4d45aa96456d53a3bac80d8633f18198920ea91481cc1c0f4d49ce",
-      "published_sha256": "846195940537ebcc7ab068b0f4866f0976d03cfa832fc6dd3d0785b06a0e0f3b"
+      "source_sha256": "c065800d569b55a877b0d510f92b534daa8d623541ccb32d70853d7e7a1be4dd",
+      "published_sha256": "359a24780947503086d6e174d514f270eb9520e71cfe07c1922ebafd54e68d98"
     },
     {
       "path": "worker-memory-model.md",
       "source_sha256": "68307af021cd9bce72a2f1b46ce55e8da302c0960b454e0c6a63b1a18d7cd613",
-      "published_sha256": "b4c01a9486eb5300eb92614c2b973c9c3064ed70fa1d763cdd01870065a360d8"
+      "published_sha256": "053f1d53e1bf7c054a1518a920caf15ef189c9de3d6bc1712ccf232248f5f254"
     },
     {
       "path": "worker-memory-model/access-retirement-contract.md",
       "source_sha256": "bd55a439a7ff9185da6f84d635e3f0c3adf9b24b0b123b29eea7e02df17305e4",
-      "published_sha256": "0a04dea780062c1bb76b2e9554f2fe4241e910c6e759f692dbea356782383f6d"
+      "published_sha256": "340960bf6d2995c57eb04145d38bde40bfb66497f1677351408f3b221855ed93"
     },
     {
       "path": "worker-memory-model/backend-matrix.md",
       "source_sha256": "fd3f2b662f322f96406fec7c73cf54e81facdf25d704dd152658ab6588972002",
-      "published_sha256": "b6652bcc2f0485dbbae92cdf93c6c85827a6ba221d5c6586e20d2c55734c9896"
+      "published_sha256": "7771e9d1a54e238a10f5d1961c14b344248496cb83cbe138e550d81316df1ce0"
     },
     {
       "path": "worker-memory-model/bufferhandle-abi.md",
       "source_sha256": "71d4d386907bd9a2411a9c586b3b1c08ae9b4908057d2d2f957d58616202727d",
-      "published_sha256": "5a5807b35610fd11f14c32693861ced8badcae2f5356d93c5d0191d7462ef6d4"
+      "published_sha256": "47787e9e870293224fc061b0f33a113febfed3b53323694f20faaf0369fd84b2"
     },
     {
       "path": "worker-memory-model/graph-execution-contract.md",
       "source_sha256": "3fc6caab344b5bef5cf756d3ebb7d7608073bafc7257b6bff68f4acfdac1c340",
-      "published_sha256": "9e37a92f3bd655a5569cf26db87bb9d02cd85b20579597100ee3cd47670e9bfe"
+      "published_sha256": "58107885d3f174217254753f5fe9c02e98408b8f8c23b9faaf30ac5fe51c84b1"
     },
     {
       "path": "worker-memory-model/p1b-corrected-design.md",
       "source_sha256": "4696cce4055469b4de4e10a6bb49e49c61a4a47523341cfdf3c779a7875f9ee8",
-      "published_sha256": "ab197826ffad3253a2a99f52f5f753a4a837f07547e860c6faac51d81680dc0b"
+      "published_sha256": "5c0e6c5374d657749374610abd3942133ac312030b4a4319e5d87b2584f0a17d"
     },
     {
       "path": "worker-memory-model/p1b-review-findings.md",
       "source_sha256": "d3892b8ec3da9fb9052e53de0ce59cc9cd7d0d0b816f605a0844489433155763",
-      "published_sha256": "4d117dc7cc1d3b1350dbd671ec083a4d05ede25e105cdeb259d20897f42d8d16"
+      "published_sha256": "e28be614567b94ec1c814481b445f1207c423bbd4bf2e668ec865267171f9c91"
     },
     {
       "path": "worker-memory-model/user-surface.md",
       "source_sha256": "9df070f5f967717da8775d3cba13658234d9b1bb850bf3778e5ba0bb65d85974",
-      "published_sha256": "4d76009d61c1ef69a6717acd534236e9a1d83cea4382d2413f6b0ef7c8dabb0f"
+      "published_sha256": "0d02c491494039ba563ccf3d73d34b46b883b580749cd5f2534bd3b66bb48910"
     },
     {
       "path": "review/2026-09-28-cross-plan-lessons.md",
       "source_sha256": "3119c847d0d99995e7cb1ecca0ab4d0fdbfde86daf316eddab60fae7331878c2",
-      "published_sha256": "a4c466c8aa6bbd95964c04af8a56e2f5cc954a1aceaadd1217ce2ea4841e24e6"
+      "published_sha256": "c3a66d6ade56d4ea18b14857bcea37178bb51c964bf688c806a1287f0512288e"
     },
     {
       "path": "review/pr-2096.md",
       "source_sha256": "32cd2e34d64793cbe2c893525997a643fc223fbc7463dd92e37537b035b19f12",
-      "published_sha256": "2480baeae830cee0cc263e365c9672acb9c2af74c2ff73b3bd69ee3eb8328c19"
+      "published_sha256": "357be5677b4d905d30aebb61e7707e9ad442189112357edd2967a6d9ed796d5a"
     },
     {
       "path": "w2-p1b-endpoint-convergence.md",
       "source_sha256": "fcd6a00da512eba7d6d077531e006cd0299d09ba7405243fc8eb2a86328c9cd0",
-      "published_sha256": "8db59159d3d69dada523d6b7188286eddd41dbbd17c5fde9cb038197c88d69aa"
+      "published_sha256": "fbbf9ad8ee04480ab48bf334b0b5c229ec94b7ea1094e6eeabc75236f3820cf6"
+    },
+    {
+      "path": "review/pr-2635.md",
+      "source_sha256": "9a106acc53cae785dd1f8a39ff74f779f0fc9be06e56d58e460eb32a8ab39042",
+      "published_sha256": "184f41e3e9764a586056f488e8aeca89f16a1807e0b44395d7ab0a452bdae1c2"
     }
   ],
   "omitted_local_references": [

@@ -1,6 +1,6 @@
 # Simpler 功能演进路线图
 
-> **发布快照：2026-10-18。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-19。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > 状态：架构路线图。P0.1 eager-init core 与 P0.2 lifecycle/teardown
 > correctness 已交付；P0.2 的 admission、动态 eligibility、cooperative init

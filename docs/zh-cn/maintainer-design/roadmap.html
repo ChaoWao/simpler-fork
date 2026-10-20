@@ -209,7 +209,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-18 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-19 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
 <div class="viz-root">
 
 <h1>simpler · 设计轨道与在飞项全景</h1>
@@ -398,7 +398,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-11",
           "nm": "最小同步原语 ＋ 首个 SPSC 示例",
           "p": "flight",
-          "hnote": "🟡 <b>部分交付：#2096 已合入 main</b>（<code>ae234fad0</code>，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head <code>2297a9a4f29a</code> 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。schema/policy 属上层，常驻循环归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。合入不关闭 RA-11/P3④；具名证据见 <a href=\"review/pr-2096.md\">评审与合入记录</a>。",
+          "hnote": "🟡 <b>部分交付：#2096 已合入 main</b>（<code>ae234fad0</code>，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head <code>2297a9a4f29a</code> 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。schema/policy 属上层，常驻循环归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。合入不关闭 RA-11/P3④；具名证据见 <a href=\"review/pr-2096.md\">评审与合入记录</a>。 #2635 endpoint 公共入口在飞；850a36bd9 的 finalize identity/slot 复用须修并重验。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -1985,6 +1985,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-10-19 · #2635 · endpoint 公共 API 评审",
+        "b": "head <code>850a36bd9</code>，main <code>2a6d2d50c</code>；RA-11 的公共入口方向符合设计，但建议 request changes：finalize 释放 slot 后才消费 identity，后继可被误归属或清空；三个集成冲突。<b>判据：</b>prepare 端 admission 后清零不代表 finalize 端安全；slot-local 诊断也要跟 run 生命周期一起退休。提取实际函数的 CPU 调度 harness 有无复用阳性对照，不能冒充完整硬件复现。CI 实际树 <code>5ef32743</code> 的双架构正常场景 PASS，故障 ST 限 sim；不向最新 main 外推。旧评论 addressed 标记与当前源码分别核对，原有 HOST Buffer 校验缺口不冒充新增回归。<a href=\"review/pr-2635.md\">完整评审</a>；不推进全目标核验基线。"
+      },
       {
         "t": "2026-10-18 · 937c57efc · 全量登记与目标归属复核",
         "b": "<b>基线：</b>相对 01bf24bfa 新增 79 条 main 合入，28 main open PR、60 open issue。<b>判断失误：</b>此前通信定点更新掩盖登记积压；79 条中 65 条缺登记。旧缓存的 GH 状态绿不能证明刷新。U2a 已由 #2501 交付，Qwen clone/DEVICE/持续请求已有 #2511/#2568/#2592，不能继续列为下一段；#2596 的自动准入不等于真实 Qwen 自动组合验收。<b>新编号：</b>外部 #2429 新增 P6 和最终 Step 3 清单，候选 PR 页 42 项及本地别名此前未进来源全集；#2594 七条验收、#2598 三种 cleanup 观测均明确归属。<b>证伪：</b>候选页 ABORT 只写 stderr、RDMA provider 空白均与 main 冲突；已改为引用工作项，不按旧待办重复开发。#2450 关闭仍不证明 writable alias 已实现。<b>判据：</b>主归属与联验分开，源码/测试存在与实际硬件执行分开，观测账本不冒充资源回收闭环；非空区间、真实缺登记/缺归属负对照、浏览器渲染共同验收。<b>本轮自检：</b>逐 PR 归属集合断言抓到 #2543 漏填，写盘前补齐，不能靠总数相同跳过集合比对。逐页复核又抓到场景表与 backend 范例沿用旧事实：alloc_shared_tensor 返回 Buffer、fork 后可从已继承 arena 分配、A3 Fabric 已有实现；编号全覆盖不能替代示例与场景证据同步。依赖守卫也抓到更新工作项时漏带的三条门禁声明，已恢复，刷新正文不能丢退出条件。"
