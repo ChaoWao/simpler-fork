@@ -21,8 +21,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `2a6d2d50c72fbefecda310ba2c0ae65f1d291fc1`，含 #2619/#2620/#2628/#2600/#2638。API 层次的完整源码清单仍保留页面内注明的固定基线，不能把本轮模块寿命与路线更新当成 API 全面重审。
-- #2638 已合入；S3 的历史验证保留原 head，不改挂。当前待合入 [#2640](https://github.com/hw-native-sys/simpler/pull/2640)，head `ba033efc8`：TMR/HBG 共用的 device-phase/task timing 异步复位与失败保护。C++ 338、Python 3434、两架构真实库探针通过；A3 task-submit 的 16 次 timing/caller 调用已通过；CI 唯一红项 network1 在独立 main Daily 对照中同样复现，已登记 [#2642](https://github.com/hw-native-sys/simpler/issues/2642)，仍待 peer 侧根因诊断与恢复。见 [C1 当前交付](kernel-eager-open-work.md#c1-timing-publication)。
+- 最新路线状态固定 main `63e651fcc27993c0a559831eda236a20aa708ac9`，含 #2619/#2620/#2628/#2600/#2638/#2640。API 层次的完整源码清单仍保留页面内注明的固定基线，不能把本轮模块寿命与路线更新当成 API 全面重审。
+- #2638/#2640 已合入，历史验证保留原 head。当前待合入 [#2645](https://github.com/hw-native-sys/simpler/pull/2645)，head `3753da44b`：TMR/HBG 共用的结果区首次初始化同流发布与未初始化读取保护。C++ 338、Python 3434、两架构真实库探针、两套定向 sim 通过；A3 task-submit 板测 34 项通过；CI 仍待验收，无本地 A5 silicon/macOS 通过主张。见 [本笔边界](kernel-eager-open-work.md#c1-result-publication)。历史 network1 失败在独立 main Daily 对照中同样复现，[#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - `references/pipeline-a/` 是依赖文档的只读快照，用于理解共同原则和交接边界；不建立第二份独立维护的 Pipeline A 计划。

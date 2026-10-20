@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `f7dbe323b`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2619/#2620/#2628/#2600 已合入；当前 [#2638](https://github.com/hw-native-sys/simpler/pull/2638) 推进 S3 的 module/context/native-storage 真实保活。#2624–#2626 分别已有 TMR eager/capture 与共同 invocation 工作，S3 不重做其设备协议。
+**当前进度基线 main `63e651fcc`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2619/#2620/#2628/#2600/#2638/#2640 已合入；当前 [#2645](https://github.com/hw-native-sys/simpler/pull/2645) 将结果区首次初始化接入既有同流发布，未初始化时禁止认证结果。#2624–#2626 分别已有 TMR eager/capture 与共同 invocation 工作，不重复其设备协议。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -114,7 +114,7 @@ ChipWorker.init
 
 <a id="c1-timing-publication"></a>
 
-### C1 当前交付：#2640（待合入）
+### C1 已交付：#2640（已合入 `63e651fcc`）
 
 head `ba033efc8`，基线 main `2a6d2d50c`。这是实际 eager launch 的行为改动：删除逐调用计时复位的同步 H2D，复用 #2620/#2628 的同流 publication 与 pinned-source 生命周期。两架构与两 runtime 共用实现，HBG bulk image 仍保持 prepare 重叠，不改 Pipeline A 准入。
 
@@ -134,7 +134,31 @@ launch： caller entry → AICPU 异步 scheduler / timing / descriptor → entr
 - 最终 head `ba033efc8` 的本地 A3 task-submit `task_20261020_002605_205382813747` / device 0 已通过：TMR/HBG × owned/borrowed，各 4 次 depth-two caller 调用，16 次 tensor 结果均正确且各日志有 4 份 device-wall 记录；四个 runtime library hash 与开测前相同。首次脚本没有初始化 TIMING logger，第一组 tensor 调用后仅在缺失 marker 检查上退出，该次不计 timing 验收；显式调用已有 logger 初始化后复测通过。没有本地 A5 silicon 验证。
 - CI 的 Ubuntu/macOS UT/sim 与 A3/A5 UT/ST 均通过；network1 两次在 peer dispatcher bootstrap 初始化阶段报 `507018 / execute kernel param invalid`，还未进入本次 prepare/publication。已读取 remote plog；第三次重跑仍失败；独立 main Daily `d0d4d0eb` / run `39322278397` attempt 2 / job `118508105787` 在相同 runner、peer 上执行，5 例同样 bootstrap 失败，remote plog 也为 `execute kernel param invalid`。故失败不依赖 #2640；已登记 [#2642](https://github.com/hw-native-sys/simpler/issues/2642)，停止盲重跑。红项仍未解决，需 peer 侧继续检查，不能把 generic 507018 等同设备卡坏或已确定驱动根因。旧 merged PR 的 rerun 因 merge ref 已删除而 checkout 失败，不提供设备执行对照；不据此宣称主线也有同样设备故障。
 
-此笔不开放 capture；首次 run-result 清零、其他 collector 配置和图 restore/reset 继续按真实消费者推进。#2633 的 collector prewarm 独立，不因本笔接入就视为已交付。
+此笔不开放 capture；首次 run-result 清零由下节 #2645 推进，其他 collector 配置和图 restore/reset 继续按真实消费者推进。#2633 的 collector prewarm 独立，不因本笔接入就视为已交付。
+
+
+<a id="c1-result-publication"></a>
+
+### C1 当前交付：#2645（待合入）
+
+head `3753da44b`，基线 main `63e651fcc`。cold slot 的结果区原本在 prepare 同步 H2D 清零；现在 prepare 仅保存八字节 `published=0` 快照，launch 使用已有 slot pinned source，在 AICPU stream 发布，并经 entry fork 排序到 AICPU/AICore。成功 enqueue 记录该 allocation 初始化事实，读取仍须先有实际 drain；失败或跳过发布时不读未知 allocator bytes，不污染本 epoch 的 one-shot read ledger。后续 fork event 失败不撤销已经接受的初始化。warm 复用靠 epoch 区分，不新增 marker 复制。
+
+```text
+prepare：scheduler / timing / cold result marker 快照 → 原 pinned source reserve
+launch： caller entry → 同流发布 metadata + descriptor → fork → 两侧 kernel
+失败：  marker/descriptor 失败 → Partial，无 kernel，无未初始化结果认证
+读取：  已初始化且实际 drain → 原 D2H / ledger / 终态；否则保守 fallback
+复用：  cold abort 清 pending，重试新 marker；warm allocation 无额外 marker
+```
+
+每个尚未初始化的 slot 仅增加八字节 pinned source；无稳态性能主张。分配仍在 capture 外；不宣布 capture、完整 DFX 或 AIV 修复。
+
+- 非硬件完整 C++ 338/338、Python 3434 passed / 147 skipped；两架构完整真实库 RTS 探针各 6 passed，覆盖两 runtime。新增有/无 caller、延迟 DMA、helper 快照先释放、allocation/marker/descriptor/fork 失败、prepare abort/retry、warm 复用和伪造成功结果。
+- 基线在 prepare-only 初始化状态断言上失败；另删去 production read guard 后，真实库探针在匹配 epoch 的 forged-success 臂失败。恢复源码并重建后，上板两份 A3 library SHA256 与测试前一致。提交后扩展重建，A3 关键探针再次 2 passed；不把构建时 HEAD 与随后生成的提交混同。
+- 定向 vector sim：a2a3sim、a5sim 各 2 passed，均覆盖 HBG/TMR，非 sweep。
+- task-submit `task_20261020_040538_32659199043` / A3 device 1：34 passed，覆盖 native/public caller、owned/borrowed、depth 1/2、public TQ=0/1、prepare/finalize 与 clean refusal/retry；无本地 A5 silicon/macOS 通过主张。首笔临时脚本因 daemon 内嵌 task-submit 查询在 pytest 前被拒，查询移到任务外后上述正式任务通过。
+- 编译轴和全部适用 pre-commit 通过。CI 刚启动；#2642 的历史 network1 根因仍未关闭，若再次失败须读取本次日志，不能沿用旧分类直接忽略。
+
 
 ## 2. API 审查与原路线的对应
 
