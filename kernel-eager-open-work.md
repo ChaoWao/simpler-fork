@@ -85,7 +85,7 @@ K2a 必须覆盖 wait/result/done、submit/admission、register/unregister 和 c
 
 <a id="s3-current-delivery"></a>
 
-### S3 当前交付：#2638（待合入）
+### S3 当前交付：#2638（已合入 `2a6d2d50c`）
 
 代码提交：`aed5afd85`；基线：main `f7dbe323b`。本笔是 loader/code 生命周期的生产接入，复用原 context、lane、slot、callable cache、完成与退休，不移动整张函数表、不增加 C ABI 查询协议。51 个必需符号、18 个可选符号的名称和签名与基线逐项相同。
 
@@ -110,6 +110,30 @@ ChipWorker.init
 - 负对照：忽略 terminal retention 会使 DSO 单测和真实 `_ChipWorker` 析构测试失败；移除 production storage 的 module 引用会使移动/寿命测试失败。恢复后通过。编译轴与 pre-commit 全部通过。
 
 不宣布 S3/C2/C3 完成：captured graph、有效图绑定及 replay 的代码/设备资源引用仍须在对应消费者接入。未知完成的保留不证明物理停止；本笔也不关闭 AIV 议题。产品 PR 只有实现、测试与已有开发文档，规划及日志独立备份。
+
+
+<a id="c1-timing-publication"></a>
+
+### C1 当前交付：#2640（待合入）
+
+head `ba033efc8`，基线 main `2a6d2d50c`。这是实际 eager launch 的行为改动：删除逐调用计时复位的同步 H2D，复用 #2620/#2628 的同流 publication 与 pinned-source 生命周期。两架构与两 runtime 共用实现，HBG bulk image 仍保持 prepare 重叠，不改 Pipeline A 准入。
+
+```text
+prepare：已有 scheduler 快照 + 完整 timing reset 快照 → reserve slot pinned source
+launch： caller entry → AICPU 异步 scheduler / timing / descriptor → entry fork → 两侧 kernel
+完成：  实际 drain → timing readback → 原 slot 退休
+失败：  enqueue error → Partial、禁止 kernel、保留 source；不读取 stale timing
+回滚：  未发布的快照清空 → 同 slot 重试只携带新内容
+```
+
+可选 timing 分配失败仍仅关闭本次计时；异步 enqueue 失败属于整个 launch 的不确定入队，不能吞掉继续。启用计时时每 slot pinned 容量增加 A2/A3 2,512 字节或 A5 5,840 字节；没有时延收益测量主张。buffer/record 设备 ABI 不变，不增加 DFX flag 或公开 API。
+
+- 非硬件 C++ 338/338、Python 3434 passed / 147 skipped；扩展最初旧基线触发收集拒绝，重建后上述全量通过。最终提交标记扩展另已重建。
+- 真实 onboard 库 + RTS 桩：每架构 6 个 probe cases 覆盖两 runtime；新增探针覆盖延迟 DMA、host snapshot 先释放、复位/descriptor 失败无 kernel、未读结果拒绝覆盖、分配失败与 prepare 回滚重试。
+- 基线负对照在 pending reset 断言失败。全部 pre-commit 与编译轴通过。
+- 本地 A3 全卡占用，最终提交的 task-submit 验证尚在排队；无本地 A5 silicon/macOS 通过主张。上板结果到达后补记，不能把 RTS 桩当物理 DMA 证明。
+
+此笔不开放 capture；首次 run-result 清零、其他 collector 配置和图 restore/reset 继续按真实消费者推进。#2633 的 collector prewarm 独立，不因本笔接入就视为已交付。
 
 ## 2. API 审查与原路线的对应
 

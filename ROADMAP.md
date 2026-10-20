@@ -22,9 +22,11 @@
 
 ## 1. 现在做什么
 
-**2026-10-19 / main `f7dbe323b`：#2619、#2620、#2628 与 #2600 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
+**2026-10-19 / main `2a6d2d50c`：#2619、#2620、#2628、#2600 与 #2638 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
 
-**当前 PR [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。该 PR 尚未合入，graph 引用和 replay 仍由 C2–C4 验收。
+**已合入 [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。合入提交 `2a6d2d50c`；graph 引用和 replay 仍由 C2–C4 验收。
+
+**当前 PR [#2640](https://github.com/hw-native-sys/simpler/pull/2640)：C1 的逐调用计时复位同流发布。** 启用 device-phase/task timing 时，prepare 只分配并保存复位值；launch 按 scheduler metadata → timing reset → descriptor → entry fork 排队。复用已有 slot pinned source，持有到完成/隔离；复位或 descriptor 入队失败阻止 kernel，保留 Partial，不读取前次计时。prepare 回滚清除未消费快照。两架构真实库探针、338 C++ 测试程序与 3434 Python UT 通过；本地 A3 task-submit 验证排队中，未据此宣布 capture 或全量 DFX 完成。具体边界见 [C1 当前交付](kernel-eager-open-work.md#c1-timing-publication)。#2624/#2625 的 TMR eager/capture、#2626 资源迁移和 #2633 collector prewarm 仍各自审阅，不重复它们的范围。
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
