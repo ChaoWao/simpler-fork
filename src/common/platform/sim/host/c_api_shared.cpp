@@ -39,6 +39,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <new>
 #include <utility>
 #include <vector>
@@ -633,10 +634,14 @@ int finalize_device(DeviceContextHandle ctx) {
     if (ctx == NULL) return PTO_RUNTIME_ERR_INTERNAL;
     try {
         SimDeviceRunnerBase *runner = static_cast<SimDeviceRunnerBase *>(ctx);
+        // Teardown clears the registry, so it is ordered against registration
+        // and unregistration. Initialization still relies on the caller contract.
+        std::lock_guard<std::mutex> lock(runner->callable_registration_mutex());
         if (runner->native_run_active()) {
             LOG_ERROR("finalize_device: native run must be finalized first");
             return PTO_RUNTIME_ERR_INTERNAL;
         }
+        runner->set_program_initialized(false);
         // An unclaimed runner owns no simulated binding. The caller thread
         // may still be bound to another worker's live device.
         if (runner->device_id() < 0) return 0;
@@ -685,6 +690,7 @@ int simpler_init(
         return latch_rc;
     }
 
+    runner->set_program_initialized(false);
     runner->set_dma_workspace_request(enable_sdma != 0);
 
     int rc;
@@ -737,6 +743,7 @@ int simpler_init(
         }
         if (rc != 0) return rc;
     }
+    runner->set_program_initialized(true);
     return 0;
 }
 
@@ -744,12 +751,18 @@ int simpler_init(
  * Per-callable_id preparation
  * =========================================================================== */
 
-int simpler_register_callable(DeviceContextHandle ctx, int32_t callable_id, const void *callable) {
+// The caller holds callable_registration_mutex().
+static int
+register_callable_locked(DeviceContextHandle ctx, int32_t callable_id, const void *callable, const char *entry) {
     if (ctx == NULL || callable == NULL) return PTO_RUNTIME_ERR_INTERNAL;
     SimDeviceRunnerBase *runner = static_cast<SimDeviceRunnerBase *>(ctx);
     if (runner->native_run_active()) {
-        LOG_ERROR("simpler_register_callable: native run must be finalized before mutating the callable registry");
+        LOG_ERROR("%s: native run must be finalized before mutating the callable registry", entry);
         return PTO_RUNTIME_ERR_INTERNAL;
+    }
+    if (runner->has_callable(callable_id)) {
+        LOG_ERROR("%s: callable_id=%d is already registered; unregister it before reuse", entry, callable_id);
+        return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
     }
 
     try {
@@ -801,6 +814,55 @@ int simpler_register_callable(DeviceContextHandle ctx, int32_t callable_id, cons
     } catch (...) {
         return PTO_RUNTIME_ERR_INTERNAL;
     }
+}
+
+int simpler_register_callable_v2(
+    DeviceContextHandle ctx, const void *callable, size_t callable_size, int32_t *out_callable_id
+) {
+    if (out_callable_id == nullptr) return PTO_RUNTIME_ERR_INVALID_ARGUMENT;
+    *out_callable_id = -1;
+    int rc = validate_kernel_prepare_callable_args(ctx, 0, callable, callable_size);
+    if (rc != 0) return rc;
+    rc = validate_kernel_callable_image(callable, callable_size);
+    if (rc != 0) return rc;
+    auto *runner = static_cast<SimDeviceRunnerBase *>(ctx);
+    try {
+        std::lock_guard<std::mutex> lock(runner->callable_registration_mutex());
+        if (runner->execution_mode_latch().is_kernel()) {
+            LOG_ERROR("simpler_register_callable_v2: kernel mode is not supported by the simulator");
+            return PTO_RUNTIME_ERR_INVALID_STATE;
+        }
+        if (runner->native_run_active()) {
+            LOG_ERROR(
+                "simpler_register_callable_v2: native run must be finalized before mutating the callable registry"
+            );
+            return PTO_RUNTIME_ERR_INTERNAL;
+        }
+        if (!runner->program_initialized()) {
+            LOG_ERROR("simpler_register_callable_v2: callable registration requires an initialized PROGRAM context");
+            return PTO_RUNTIME_ERR_INVALID_STATE;
+        }
+        for (int32_t id = 0; id < MAX_REGISTERED_CALLABLE_IDS; ++id) {
+            if (runner->has_callable(id)) continue;
+            rc = register_callable_locked(ctx, id, callable, "simpler_register_callable_v2");
+            if (rc == 0) *out_callable_id = id;
+            return rc;
+        }
+        LOG_ERROR(
+            "simpler_register_callable_v2: callable ID capacity exhausted (slots=%d, device=%d, mode=program)",
+            MAX_REGISTERED_CALLABLE_IDS, runner->device_id()
+        );
+        return PTO_RUNTIME_ERR_INVALID_STATE;
+    } catch (...) {
+        return PTO_RUNTIME_ERR_INTERNAL;
+    }
+}
+
+int simpler_register_callable(DeviceContextHandle ctx, int32_t callable_id, const void *callable) {
+    if (ctx == NULL || callable == NULL) return PTO_RUNTIME_ERR_INTERNAL;
+    auto *runner = static_cast<SimDeviceRunnerBase *>(ctx);
+    std::lock_guard<std::mutex> lock(runner->callable_registration_mutex());
+    return register_callable_locked(ctx, callable_id, callable, "simpler_register_callable");
 }
 
 // Runtime gate for device-domain phase emission. SIMPLER_DEVICE_STRACE_ENABLE=0
@@ -1301,6 +1363,7 @@ int simpler_unregister_callable(DeviceContextHandle ctx, int32_t callable_id) {
     if (ctx == NULL) return PTO_RUNTIME_ERR_INTERNAL;
     try {
         SimDeviceRunnerBase *runner = static_cast<SimDeviceRunnerBase *>(ctx);
+        std::lock_guard<std::mutex> lock(runner->callable_registration_mutex());
         if (runner->native_run_active()) {
             LOG_ERROR(
                 "simpler_unregister_callable: native run must be finalized before mutating the callable registry"
