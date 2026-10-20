@@ -131,7 +131,8 @@ launch： caller entry → AICPU 异步 scheduler / timing / descriptor → entr
 - 非硬件 C++ 338/338、Python 3434 passed / 147 skipped；扩展最初旧基线触发收集拒绝，重建后上述全量通过。最终提交标记扩展另已重建。
 - 真实 onboard 库 + RTS 桩：每架构 6 个 probe cases 覆盖两 runtime；新增探针覆盖延迟 DMA、host snapshot 先释放、复位/descriptor 失败无 kernel、未读结果拒绝覆盖、分配失败与 prepare 回滚重试。
 - 基线负对照在 pending reset 断言失败。全部 pre-commit 与编译轴通过。
-- 本地 A3 全卡占用，最终提交的 task-submit 验证尚在排队；无本地 A5 silicon/macOS 通过主张。上板结果到达后补记，不能把 RTS 桩当物理 DMA 证明。
+- 最终 head `ba033efc8` 的本地 A3 task-submit `task_20261020_002605_205382813747` / device 0 已通过：TMR/HBG × owned/borrowed，各 4 次 depth-two caller 调用，16 次 tensor 结果均正确且各日志有 4 份 device-wall 记录；四个 runtime library hash 与开测前相同。首次脚本没有初始化 TIMING logger，第一组 tensor 调用后仅在缺失 marker 检查上退出，该次不计 timing 验收；显式调用已有 logger 初始化后复测通过。没有本地 A5 silicon 验证。
+- CI 的 Ubuntu/macOS UT/sim 与 A3/A5 UT/ST 均通过；network1 两次在 peer dispatcher bootstrap 初始化阶段报 `507018 / execute kernel param invalid`，还未进入本次 prepare/publication。已读取 remote plog；第三次重跑仍失败；独立 main Daily `d0d4d0eb` / run `39322278397` attempt 2 / job `118508105787` 在相同 runner、peer 上执行，5 例同样 bootstrap 失败，remote plog 也为 `execute kernel param invalid`。故失败不依赖 #2640；已登记 [#2642](https://github.com/hw-native-sys/simpler/issues/2642)，停止盲重跑。红项仍未解决，需 peer 侧继续检查，不能把 generic 507018 等同设备卡坏或已确定驱动根因。旧 merged PR 的 rerun 因 merge ref 已删除而 checkout 失败，不提供设备执行对照；不据此宣称主线也有同样设备故障。
 
 此笔不开放 capture；首次 run-result 清零、其他 collector 配置和图 restore/reset 继续按真实消费者推进。#2633 的 collector prewarm 独立，不因本笔接入就视为已交付。
 
