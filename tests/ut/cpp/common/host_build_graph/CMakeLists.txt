@@ -94,8 +94,15 @@ hbg_case(test_hbg_task_id.cpp ARCHS a2a3)
 # the orch library: that library carries hbg_orch_stubs.cpp, whose dep-gen and
 # host-phase stubs collide with the real TUs this test needs for
 # dep_gen_host_graph_begin_capture and the bind-phase records.
+hbg_case(test_hbg_definition_packing.cpp)
+
 hbg_case(test_hbg_bind_ledger.cpp
     SOURCES
+        ${HBG_HOST_DIR}/kernel_graph_template.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_restore.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_slot_registry.cpp
+        ${SIMPLER_SRC}/common/platform/shared/host/kernel_execution_state.cpp
+        ${SIMPLER_SRC}/common/platform/shared/host/kernel_device_resources.cpp
         ${SIMPLER_SRC}/@arch@/runtime/host_build_graph/host/runtime_maker.cpp
         ${HBG_HOST_DIR}/orchestrator.cpp
         ${HBG_HOST_DIR}/graph_recording.cpp
