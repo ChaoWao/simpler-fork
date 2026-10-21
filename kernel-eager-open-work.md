@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `7d27e6104`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
+**当前进度基线 main `7d27e6104`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作；本轮 #2653 收口本次 PMU 配置和复位，不重复其设备协议。
 
 当前交付边界：共同公开 eager 已接线，完整 K2c 业务资格与故障/DFX 矩阵继续验收。#2605 短序列输出正确，但 128-token 仍不一致。#2624/#2625 已有 TMR eager/capture 候选；#2626/#2646/#2647 的共同资源/HBG graph 与 A2/A3 execution 候选仍为 draft、均未合入。候选实现不是“尚无人实现”，也不是“主线已可用”；后续审查须消费共同 native owner 和寿命合同，避免独立专用路径形成第二套 executor。A5 HBG 不从 A2/A3 成绩推定通过。
 
@@ -200,6 +200,35 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 - A5 的 6 项真实库 RTS 桩探针通过，明确不执行设备。a5sim 的 TMR/HBG joined attribution 各 1 项、HBG level-3 phase 1 项通过；没有本地 A5 silicon 主张。
 - 首次 phase sim 命令未加 DFX enable，验证器从 `.` 扫到旧的已后处理 artifact。按所需 level-3 参数重跑通过；该命令错误不包装成设备回归。
 - inline 资源清理意见已回复并 resolve；最终 head `e768fab28` CI **19 success / 1 预期 skip**。macOS A5 首轮 session 达 600 秒后 exit 124，无用例断言失败；被 HUNG 标记的子任务仅运行 11–17 秒。相同 105 用例，#2588 对照通过；失败轮编译和普通 L3 用例也明显变慢，底层 host 资源原因未证明。只重跑失败项，代码/并发度/预算不变；[重跑 job](https://github.com/hw-native-sys/simpler/actions/runs/39526525143/job/118991872712) 的主场景约 401 秒完成，后续 DFX smokes 全过。
+
+<a id="c1-pmu-invocation"></a>
+
+### C1 当前交付候选：#2653（待审阅）
+
+[#2653](https://github.com/hw-native-sys/simpler/pull/2653)，head `08d239293`，基线 main `7d27e6104`。未合入，CI 结果另行记账。#2649 已收口 swimlane level，但 PMU admission 仍改共享 `PmuDataHeader::event_type`；普通收集另由 host 清 producer counters。现在移除这些逐调用共享写入，实际 producer 直接消费本次稳定描述。
+
+| 生产环节 | 本笔合同 |
+| --- | --- |
+| onboard/sim PreparedExecution | 复用已有 `DfxRunConfig::from` 的解析结果；effective event group 同时供 descriptor 和 collector frozen export 使用，既有环境覆盖只解析一次 |
+| Runtime descriptor | 三种布局添加 `pmu_event_type`，占用现有 padding/reserved；默认 0，原大小、entry args 和 handshake 偏移不变；沿现有缓存比较、pinned 异步发布 |
+| AICPU PMU init | 所有 runtime/arch 入口（含 TMR barrier-free 和 A5 HBG resident）显式传 group，不从 pool header 取本次选择；真实 selector 编程与 fallback 保留 |
+| accounting reset | retained 和普通收集都在 device entry 清本次 total/drop/published counters；A5 另清 mismatch。保留 current buffer、free/ready queue、terminal bank 和 driver lease 的原有所有权/完成协议 |
+| collector admission | 仅更新 host 当前选择、冻结列与路径、管理既有 bank/引用；不再发布 event 字段或 host 清 producer counters |
+
+本笔不改变 joined admission，不开放尚未资格化的 PMU group 并发组合。首次 cold pool 分配/初始化仍由原机制管理；粗粒度 PMU enable bit 仍在 launch envelope。没有宣称捕获、replay 身份或图保活已经完成，也没有性能收益测量。
+
+已完成的验证：
+
+- 基线红测分别证明 admission 会改共享 header/counters、无 terminal bank 的 device entry 不清 accounting；改后通过。
+- 两架构实际 PMU init 用 host-backed MMIO window 检查每个 core/counter 的 selector：header 故意保留 PIPE，descriptor 选择 MEMORY/RESOURCE_CONFLICT，寄存器必须采用本次组。恢复旧共享-header 读取的负对照失败。
+- 两种 runtime 的真实库 RTS 桩探针验证 snapshot 后 host Runtime 被毒化仍发布原值，PMU-only 变化使前缀缓存失效；请求 2 / env override 4，快照后再改 env 为 1，仍发布 4。
+- 非硬件 C++ 378/378，Python 3501 passed / 178 skipped；最后补充的 A5 mismatch accounting 断言与相关 8 个 C++ 目标再通过。八套 runtime 重建、全部适用 pre-commit 通过。
+- 普通 sim corpus：a2a3sim 105 passed / 11 skipped；a5sim 102 passed / 3 skipped。额外 A5 TMR PMU smoke 1 passed。不把桩寄存器或模拟器成绩作为 A5 silicon 证据。
+- A3 task-submit `task_20261020_211004_336428319303` / devices 0,6,7,10：public Worker 的 12 项切换 case（TMR/HBG × owned/borrowed，swimlane 与 PMU，含已有 PMU env override）、6 个 RTS 桩探针和两 runtime PMU smokes 通过；TMR/HBG joined attribution 各 1 项和普通 `< L4` sweep **238 passed / 20 skipped**；后者按 CI 排除独立 SDMA 分组，658 秒完成，不更改设备 watchdog。六个运行时文件 hash 前后相同，exit 0。
+
+- 最终提交 `08d239293` 重建后，task-submit `task_20261020_212651_29463928609` / device 1：4 个 public PMU case（20 次调用）和 6 个 RTS 探针通过，运行时 hash 前后相同；CI 已启动、尚未完成，不冒充 A5 silicon/macOS 验收。
+
+首次实板任务 `task_20261020_205750_277359920110` 失败一次：owned HBG、PMU request 2 / override 4 的首调用，在 device 0 AIVector core 40 报 UB address out of bounds，随后 lane 正确隔离并拒绝释放 in-use Buffer。相同二进制、同设备即时复跑通过；精确 main 控制组与 candidate 交替各两轮均通过。样本不足以判断旧缺陷或本次回归；保留原始设备日志、func/PC、二进制 hash 和任务信息，不因后续全绿撤销该观察。另一并行 task 持 devices 9/10，不与当次 0/6/7/8 锁重叠；占用快照在失败后读取，不能据此排除 fault 瞬间的旁路占用。首轮 CSV 在保全前被 pytest 临时保留策略删除；后续使用固定 basetemp。未知项记录于本地 KNOWN_ISSUES，不声称修复 AIV；按既有[现场规划](aiv-evidence-plan.md)跟踪。
 
 ## 2. API 审查与原路线的对应
 

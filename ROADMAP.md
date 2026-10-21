@@ -39,6 +39,17 @@ CallConfig level → 本次 Runtime descriptor → 稳定快照 / pinned async p
 host admission → 自己的 export level / pool 检查；record queue 所有权保持原协议
 ```
 
+**当前待审阅 [#2653](https://github.com/hw-native-sys/simpler/pull/2653)：逐调用 PMU 选择与 device accounting 复位。** effective event group 从已有 `PreparedExecution.dfx` 的一次解析结果写入 descriptor，保留 `SIMPLER_PMU_EVENT_TYPE` 的既有覆盖语义；host 导出与设备使用相同快照。AICPU 显式接收该组并在 producer 启动前复位本次 counters，host admission 不再改共享 header 或清 device counters；retained 和普通收集共用此规则。两种 runtime、两架构、onboard/sim 和 A5 HBG resident 一起改，队列/terminal bank/driver lease 仍按现有寿命合同管理。它继续收口 C1 的实际设备输入，不代表 capture 完成；不重复现有 graph/launch PR。见[实施和证据](kernel-eager-open-work.md#c1-pmu-invocation)。
+
+```text
+CallConfig + 既有 PMU env override
+  → PreparedExecution.dfx（只解析一次）
+      ├→ collector 本次 frozen export 配置
+      └→ Runtime.pmu_event_type → 稳定快照 / pinned async publish
+           → AICPU init(group) → 本次 accounting reset → producer
+共享 pool / queues / terminal banks / driver lease：仍各自保活到最后使用者
+```
+
 #2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。 #2624 已跟到 main `7d27e6104`；#2625 叠加其上。#2626/#2646/#2647 当前均为 draft，描述的完整实现不能算主线已验收。#2605 vLLM 固定 eager 的两轮 16 请求短序列已通过，但 128-token 与参考输出不一致；K2c 业务资格不能据此标记完成。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。

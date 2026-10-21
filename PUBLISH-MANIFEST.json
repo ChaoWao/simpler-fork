@@ -3,7 +3,7 @@
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
   "latest_roadmap_source_baseline": "7d27e610411c3219137d492eafcb0342bad681d7",
-  "pending_pr": null,
+  "pending_pr": 2653,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "28b844c4ea25894fd77d818d02fcb2d3baf95ac60e97de21ba25bfea0bf86363",
-      "published_sha256": "a546db379daccca900792d8c359aa6d4cdc902db6c03dba004174e6b00e53996",
-      "bytes": 59996
+      "source_sha256": "8dae064b44a83cee390d1b805094ec4963db9168f5c6d16679fe137ea97f2bd9",
+      "published_sha256": "8d44137a28f871b8e12b152a099f6209bfc5cd8a0f869b6d321754c08106259f",
+      "bytes": 61205
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "3f579446d83d0a5355690bc1a90f603173461c43cdb47325ecaa88eb1c5275f9",
-      "published_sha256": "f6f492135bbba4680f50e030811b372792a1d7658cb9130f0e3b7c9c348f272f",
-      "bytes": 45355
+      "source_sha256": "2443269405ce4cee1f6aa3840b6631b44c7ee27a4cda5e4a7fc91d092916e18b",
+      "published_sha256": "1323558e2c84fc70ea251a3f7eb054e8f6c3f7ca4fe956a4e81540024a6b4673",
+      "bytes": 49804
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "a28674e1578bec0620b12d8d303b9a8ee9cd1ce1f45b460de9d2159cf60b6256",
-      "published_sha256": "8634c35343c088826c0b9c1db05d9092b22ecef05bba78a17ad94c3a4a16896f",
-      "bytes": 76222
+      "source_sha256": "dd22db46c819778407777de0407043fb8bf37fc3b7f73faf2cff9d7817ffcf4f",
+      "published_sha256": "80256708b0e57307b0436c7c8bef3e4389a37aef08e083434ace0583bf6ed1b1",
+      "bytes": 77652
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -615,5 +615,6 @@
       "bytes": 10657
     }
   ],
-  "latest_merged_pr": 2649
+  "latest_merged_pr": 2649,
+  "pending_pr_head": "08d239293b19d3d11b31d3298236483acff798ba"
 }
