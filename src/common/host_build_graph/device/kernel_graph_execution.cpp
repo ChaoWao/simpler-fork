@@ -9,6 +9,7 @@
  * -----------------------------------------------------------------------------------------------------------
  */
 #include "host_build_graph/kernel_graph_execution.h"
+#include "host_build_graph/kernel_graph_slot_registry.h"
 
 #include <cstring>
 
@@ -119,7 +120,7 @@ bool validate_definition(
            (begin + d.required_heap) % alignof(ChipTaskStorage) == 0;
 }
 
-bool validate_images(const GraphExecutionPacketView &view, RuntimeArenaLayout &layout, uint64_t &sm_bytes) noexcept {
+bool validate_images(const ValidatedGraphExecutionBinding &view, RuntimeArenaLayout &layout, uint64_t &sm_bytes) noexcept {
     const auto &h = view.graph;
     DeviceArena reservations;
     layout = runtime_reserve_layout(reservations, h.task_window);
@@ -247,8 +248,8 @@ GraphExecutionStatus prepare_graph_execution(
     const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPreparation &out,
     const GraphExecutionPreparationOps &ops, GraphPacketAddress address_mode
 ) noexcept {
-    GraphExecutionPacketView view{};
-    const auto admission = admit_graph_packet_for_execution(
+    ValidatedGraphExecutionBinding view{};
+    const auto admission = validate_graph_execution_binding(
         packet, bytes, device_id, runtime_binary_id, trusted_callable, view, {}, address_mode
     );
     if (admission == GraphSlotStatus::Poisoned) return GraphExecutionStatus::Poisoned;

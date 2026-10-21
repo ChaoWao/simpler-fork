@@ -10,7 +10,7 @@
  */
 #pragma once
 
-#include "host_build_graph/kernel_graph_slot_registry.h"
+#include "host_build_graph/kernel_graph_execution_validation.h"
 
 struct RuntimeContext;
 

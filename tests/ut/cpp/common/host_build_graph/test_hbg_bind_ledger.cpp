@@ -47,6 +47,7 @@
 #include "host_build_graph/kernel_resource_requirements.h"
 #include "host_build_graph/kernel_graph_template.h"
 #include "host_build_graph/kernel_graph_execution.h"
+#include "host_build_graph/kernel_graph_slot_registry.h"
 #include "host_build_graph/host/dep_gen_host_graph.h"
 #include "host_build_graph/host/host_tensor_access.h"
 #include "host/raii_scope_guard.h"

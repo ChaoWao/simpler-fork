@@ -13,10 +13,47 @@
 #include <atomic>
 
 #include "aicpu/cache_maintenance.h"
+#include "common/unified_log.h"
 
 namespace hbg {
 namespace {
 std::atomic<GraphSlotRegistry *> current_registry{nullptr};
+
+const char *graph_slot_status_name(GraphSlotStatus status) noexcept {
+    switch (status) {
+    case GraphSlotStatus::Ok:
+        return "Ok";
+    case GraphSlotStatus::InvalidRegistration:
+        return "InvalidRegistration";
+    case GraphSlotStatus::InvalidRegistry:
+        return "InvalidRegistry";
+    case GraphSlotStatus::NotReady:
+        return "NotReady";
+    case GraphSlotStatus::Publishing:
+        return "Publishing";
+    case GraphSlotStatus::Conflict:
+        return "Conflict";
+    case GraphSlotStatus::DeviceMismatch:
+        return "DeviceMismatch";
+    case GraphSlotStatus::GenerationMismatch:
+        return "GenerationMismatch";
+    case GraphSlotStatus::BinaryMismatch:
+        return "BinaryMismatch";
+    case GraphSlotStatus::InvalidPacket:
+        return "InvalidPacket";
+    case GraphSlotStatus::BindingMismatch:
+        return "BindingMismatch";
+    case GraphSlotStatus::SourceOverlap:
+        return "SourceOverlap";
+    case GraphSlotStatus::CallableMismatch:
+        return "CallableMismatch";
+    case GraphSlotStatus::Poisoned:
+        return "Poisoned";
+    case GraphSlotStatus::SourceUnavailable:
+        return "SourceUnavailable";
+    }
+    return "Unknown";
+}
 
 bool valid_registry(const GraphSlotRegistry *registry) {
     if (registry == nullptr || reinterpret_cast<uintptr_t>(registry) % 1024 != 0) return false;
@@ -45,6 +82,13 @@ GraphSlotStatus initialize_graph_slot_registry(
         runtime_binary_id == 0)
         return GraphSlotStatus::InvalidRegistry;
     if (current_registry.load(std::memory_order_acquire) == registry) return GraphSlotStatus::Conflict;
+    // Detachment does not retire the context identity or clear terminal failure.
+    // A fresh allocation may reuse an address, but its owner must use a new generation.
+    if (valid_registry(registry) && registry->context_generation == generation) {
+        const auto phase = __atomic_load_n(&registry->phase, __ATOMIC_ACQUIRE);
+        if (phase == static_cast<uint32_t>(GraphSlotPhase::Poisoned)) return GraphSlotStatus::Poisoned;
+        return GraphSlotStatus::Conflict;
+    }
     GraphSlotRegistry initial{};
     initial.magic = GRAPH_REGISTRY_MAGIC;
     initial.version = GRAPH_SLOT_VERSION;
@@ -99,8 +143,11 @@ GraphSlotStatus install_graph_execution_slot(const void *registration, size_t by
 
     auto *registry = reinterpret_cast<GraphSlotRegistry *>(candidate.registry.address);
     const auto *bound = current_registry.load(std::memory_order_acquire);
-    if (bound != nullptr) {
-        if (bound != registry) return GraphSlotStatus::Conflict;
+    if (bound != nullptr && bound != registry) return GraphSlotStatus::Conflict;
+    // An unbound registry can still belong to this context. Preserve its execution
+    // counters and poison state instead of treating absence of a binding as freshness.
+    if (bound != nullptr || (valid_registry(registry) &&
+                            registry->context_generation == candidate.slot_generation)) {
         GraphSlotRegistration existing{};
         auto status =
             acquire_graph_execution_slot(registry, candidate.device_id, candidate.runtime_binary_id, existing);
@@ -166,84 +213,44 @@ GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcep
     return GraphSlotStatus::Ok;
 }
 
-GraphSlotStatus admit_graph_packet_for_execution(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPacketView &out,
-    const GraphPacketReadOps &ops, GraphPacketAddress address_mode
-) noexcept {
-    const GraphSlotRegistry *registry = current_registry.load(std::memory_order_acquire);
-    if (registry == nullptr) return GraphSlotStatus::NotReady;
-    GraphSlotRegistration registration{};
-    const auto status = acquire_graph_execution_slot(registry, device_id, runtime_binary_id, registration);
-    if (status != GraphSlotStatus::Ok) return status;
-    if (packet == nullptr || bytes > registration.max_packet_bytes) return GraphSlotStatus::InvalidPacket;
-    const GraphDestination source{reinterpret_cast<uintptr_t>(packet), bytes};
-    if (!graph_span_fits(source.address, source.capacity, UINT64_MAX)) return GraphSlotStatus::InvalidPacket;
-    if (graph_windows_overlap(source, registration.registry)) return GraphSlotStatus::SourceOverlap;
-    for (const auto &destination : registration.destinations)
-        if (graph_windows_overlap(source, destination)) return GraphSlotStatus::SourceOverlap;
-    if (bytes < sizeof(SimplerKernelInvocationHeader) + sizeof(GraphPacketHeader))
-        return GraphSlotStatus::InvalidPacket;
-    if (ops.invalidate) {
-        if (!ops.invalidate(ops.context, packet, bytes)) return GraphSlotStatus::SourceUnavailable;
-    } else {
-        cache_invalidate_range(packet, bytes);
-    }
-    SimplerKernelInvocationHeader invocation{};
-    const auto admission = simpler::kernel::validate_invocation_header(
-        {static_cast<const uint8_t *>(packet), bytes}, trusted_callable, &invocation
-    );
-    if (admission == simpler::kernel::InvocationStatus::StaleCallable) return GraphSlotStatus::CallableMismatch;
-    if (admission != simpler::kernel::InvocationStatus::Ok) return GraphSlotStatus::InvalidPacket;
-    if (validate_graph_packet(packet, bytes, address_mode) != GraphPacketStatus::Ok)
-        return GraphSlotStatus::InvalidPacket;
-    GraphPacketHeader header{};
-    std::memcpy(
-        &header, static_cast<const std::byte *>(packet) + sizeof(SimplerKernelInvocationHeader), sizeof(header)
-    );
-    if (header.device_id != registration.device_id) return GraphSlotStatus::DeviceMismatch;
-    if (header.slot_generation != registration.slot_generation) return GraphSlotStatus::GenerationMismatch;
-    if (header.runtime_binary_id != registration.runtime_binary_id) return GraphSlotStatus::BinaryMismatch;
-    for (size_t i = 0; i < 4; ++i)
-        if (header.destinations[i].address != registration.destinations[i].address ||
-            header.destinations[i].capacity != registration.destinations[i].capacity)
-            return GraphSlotStatus::BindingMismatch;
-    out = {
-        invocation, registration, header,
-        static_cast<const std::byte *>(packet) + sizeof(SimplerKernelInvocationHeader) + header.payload_offset
-    };
-    for (uint32_t i = 0; i < header.region_count; ++i) {
-        GraphImageRegion region{};
-        std::memcpy(
-            &region,
-            static_cast<const std::byte *>(packet) + sizeof(SimplerKernelInvocationHeader) + sizeof(header) +
-                i * sizeof(region),
-            sizeof(region)
-        );
-        out.regions[static_cast<uint32_t>(region.kind)] = region;
-    }
-    return GraphSlotStatus::Ok;
-}
 
 }  // namespace hbg
 
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_register_execution_slot(void *arg) {
     const auto status = hbg::install_graph_execution_slot(arg, sizeof(hbg::GraphSlotRegistration));
+    if (status != hbg::GraphSlotStatus::Ok)
+        LOG_ERROR("HBG execution slot registration failed: %s (%u)", hbg::graph_slot_status_name(status),
+                  static_cast<unsigned>(status));
     return status == hbg::GraphSlotStatus::Ok ? 0 : -1;
 }
 
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detach_execution_slot(void *arg) {
-    if (arg == nullptr) return -1;
+    if (arg == nullptr) {
+        LOG_ERROR("%s", "HBG execution slot detach failed: null control record");
+        return -1;
+    }
     hbg::GraphSlotDetach detach{};
     std::memcpy(&detach, arg, sizeof(detach));
-    if (!hbg::valid_graph_slot_detach(detach)) return -1;
+    if (!hbg::valid_graph_slot_detach(detach)) {
+        LOG_ERROR("%s", "HBG execution slot detach failed: invalid control record");
+        return -1;
+    }
     auto *registry = reinterpret_cast<hbg::GraphSlotRegistry *>(detach.registry_address);
-    if (registry != hbg::current_graph_slot_registry()) return -1;
+    if (registry != hbg::current_graph_slot_registry()) {
+        LOG_ERROR("%s", "HBG execution slot detach failed: registry is not currently bound");
+        return -1;
+    }
     cache_invalidate_range(registry, offsetof(hbg::GraphSlotRegistry, registration));
     if (registry->magic != hbg::GRAPH_REGISTRY_MAGIC || registry->version != hbg::GRAPH_SLOT_VERSION ||
         registry->bytes != sizeof(*registry) || registry->device_id != detach.device_id ||
         registry->context_generation != detach.context_generation ||
-        registry->runtime_binary_id != detach.runtime_binary_id)
+        registry->runtime_binary_id != detach.runtime_binary_id) {
+        LOG_ERROR("%s", "HBG execution slot detach failed: registry identity mismatch");
         return -1;
-    return hbg::detach_graph_slot_registry(registry) ? 0 : -1;
+    }
+    if (!hbg::detach_graph_slot_registry(registry)) {
+        LOG_ERROR("%s", "HBG execution slot detach failed: binding changed during control operation");
+        return -1;
+    }
+    return 0;
 }
