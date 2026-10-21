@@ -71,6 +71,10 @@ arenas, stream bindings and completion fences. Runtime-specific launch owners
 and device packet consumers must be adapted with their real execution tests;
 module tests alone do not establish a working dedicated kernel path.
 
+The [HBG packet sequence](hbg-kernel-packet-sequence.md) maps graph construction,
+registration, parsing, binding checks and execution preparation to their owners,
+and distinguishes implemented module calls from pending production integration.
+
 ## Borrowed caller ordering
 
 The caller orders its own device input writes before the native launch and may

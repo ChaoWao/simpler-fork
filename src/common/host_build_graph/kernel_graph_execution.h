@@ -58,14 +58,15 @@ struct GraphExecutionPreparationOps {
 // Per-execution state is reinitialized; no previous execution is resumed.
 // The owner excludes prior execution/readers, serializes this entire operation
 // with close/registration, and retains immutable packet/callable storage.
-// Source admission and image checks finish before any destination is written.
+// The caller supplies a binding validated under that same lease; this function
+// checks graph image semantics before writing any destination. It does not parse
+// packet framing or repeat callable/resource identity validation.
 // Ready remains occupied until retirement; Failed remains quarantined until
 // controlled cleanup or terminal poisoning. Every admitted retry reinitializes all regions.
 // out changes only on success. This function neither launches nor synchronizes.
 GraphExecutionStatus prepare_graph_execution(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPreparation &out,
-    const GraphExecutionPreparationOps &ops = {}, GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
+    const ValidatedGraphExecutionBinding &binding, GraphExecutionPreparation &out,
+    const GraphExecutionPreparationOps &ops = {}
 ) noexcept;
 
 // Called after all participants have skipped dispatch on failure, shut down,

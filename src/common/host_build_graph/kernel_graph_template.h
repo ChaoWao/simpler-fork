@@ -13,7 +13,7 @@
 #include <vector>
 #include <utility>
 
-#include "host_build_graph/kernel_graph_slot_wire.h"
+#include "host_build_graph/kernel_graph_slot_protocol.h"
 
 struct RuntimeContext;
 struct RuntimeArenaLayout;

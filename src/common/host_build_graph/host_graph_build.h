@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "host_build_graph/host/graph_definition_plan.h"
+#include "host_build_graph/host/graph_task_definition_binding.h"
 #include "host_build_graph/shared_memory.h"
 
 class DeviceArena;
@@ -33,7 +33,7 @@ struct GraphBuild {
     void *sm_mirror{nullptr};
     uint64_t task_capacity{0};
     int32_t total_tasks{0};
-    GraphDefinitionPlan definitions;
+    GraphTaskDefinitionBindings definitions;
     ReadyQueuePopulations ready_queue_populations{};
     ReadyQueueCapacities ready_queue_capacities{};
     sm_layout::BindUsage bind_usage{};

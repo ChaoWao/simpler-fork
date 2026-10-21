@@ -15,7 +15,7 @@
 
 namespace hbg {
 
-inline bool supported_kernel_graph_stride_family(const simpler::hbg::TensorData &tensor) noexcept {
+inline bool is_supported_external_tensor_layout(const simpler::hbg::TensorData &tensor) noexcept {
     if (tensor.ndims == 0 || tensor.ndims > MAX_TENSOR_DIMS || tensor.strides[tensor.ndims - 1] != 1) return false;
     for (uint32_t i = tensor.ndims - 1; i > 0; --i) {
         const uint64_t inner = tensor.strides[i];
@@ -25,7 +25,7 @@ inline bool supported_kernel_graph_stride_family(const simpler::hbg::TensorData 
     return tensor.shapes[tensor.ndims - 1] != 0;
 }
 
-inline bool valid_kernel_graph_tensor(const simpler::hbg::TensorData &tensor) noexcept {
+inline bool is_valid_graph_tensor_descriptor(const simpler::hbg::TensorData &tensor) noexcept {
     if (tensor.ndims == 0 || tensor.ndims > MAX_TENSOR_DIMS || get_element_size(tensor.dtype) == 0) return false;
     uint64_t extent = 1;
     for (uint32_t i = 0; i < tensor.ndims; ++i) {
@@ -40,12 +40,12 @@ inline bool valid_kernel_graph_tensor(const simpler::hbg::TensorData &tensor) no
     if (tensor.owner_task_id.space() == TaskId::Space::PARAM) return tensor.buffer.addr == 0;
     if ((extent + tensor.start_offset) * get_element_size(tensor.dtype) > tensor.buffer.size) return false;
     if (tensor.buffer.addr >= HEAP_VIRTUAL_BASE) return true;
-    return tensor.address_space == AddressSpace::DEVICE && supported_kernel_graph_stride_family(tensor);
+    return tensor.address_space == AddressSpace::DEVICE && is_supported_external_tensor_layout(tensor);
 }
 
 inline bool
-valid_prepared_kernel_graph_tensor(const simpler::hbg::TensorData &tensor, uint64_t heap, uint64_t bytes) noexcept {
-    if (!valid_kernel_graph_tensor(tensor)) return false;
+is_valid_graph_tensor_binding(const simpler::hbg::TensorData &tensor, uint64_t heap, uint64_t bytes) noexcept {
+    if (!is_valid_graph_tensor_descriptor(tensor)) return false;
     if (tensor.buffer.addr >= heap && tensor.buffer.addr - heap <= bytes)
         return tensor.buffer.size <= bytes - (tensor.buffer.addr - heap);
     return tensor.buffer.addr < HEAP_VIRTUAL_BASE && tensor.address_space == AddressSpace::DEVICE;

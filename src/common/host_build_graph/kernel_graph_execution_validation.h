@@ -10,38 +10,27 @@
  */
 #pragma once
 
-#include "host_build_graph/kernel_graph_slot_wire.h"
+#include "host_build_graph/kernel_graph_slot_protocol.h"
 #include "task_interface/kernel_invocation_validation.h"
 
 namespace hbg {
-
-struct GraphPacketReadOps {
-    void *context{nullptr};
-    // Covers the complete task-owned packet after trusted size/overlap checks,
-    // before its first byte is parsed. Null selects device cache invalidation.
-    bool (*invalidate)(void *, const void *, size_t){nullptr};
-};
 
 // Validated resource binding; graph image semantics are checked during preparation.
 // The caller retains the immutable packet and the context execution lease while
 // consuming this borrowed view. Validation does not acquire resources or dispatch tasks.
 struct ValidatedGraphExecutionBinding {
-    SimplerKernelInvocationHeader invocation{};
+    ParsedGraphPacket packet;
     GraphSlotRegistration slot{};
-    GraphPacketHeader graph{};
-    const std::byte *payload{nullptr};
-    GraphImageRegion regions[4]{};  // Indexed by GraphImageKind; absent images have zero bytes.
 };
 
-// Uses the independently latched registry, never an address supplied by packet.
-// Expected device/binary identity comes from trusted AICPU initialization, not packet fields.
-// trusted_callable is borrowed from the live callable registration owner, never
-// synthesized from packet fields. Its lease spans admission and consumption.
-// On failure: no slot write, generation publication, or output modification.
+// Compare an already parsed packet with the trusted snapshot from the read
+// boundary and a live callable. Does not read packet bytes or the device registry.
+// Callers must not fabricate the parsed view or derive trusted identity from it.
+// The source and resource leases cover this comparison and its consumer.
+// On failure, out is unchanged. Graph image semantics belong to preparation.
 GraphSlotStatus validate_graph_execution_binding(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, ValidatedGraphExecutionBinding &out,
-    const GraphPacketReadOps &ops = {}, GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
+    const ParsedGraphPacket &packet, const GraphSlotRegistration &registration,
+    const simpler::kernel::PreparedInvocationView &trusted_callable, ValidatedGraphExecutionBinding &out
 ) noexcept;
 
 }  // namespace hbg

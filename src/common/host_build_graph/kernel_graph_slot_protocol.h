@@ -10,7 +10,11 @@
  */
 #pragma once
 
-#include "host_build_graph/kernel_graph_wire.h"
+#include <cstring>
+
+#include "host_build_graph/kernel_graph_packet.h"
+#include "host_build_graph/kernel_graph_packet_bounds.h"
+#include "utils/fnv1a_64.h"
 
 namespace hbg {
 
@@ -19,7 +23,7 @@ inline constexpr uint32_t GRAPH_REGISTRY_MAGIC = 0x52474248;  // HBGR
 inline constexpr uint16_t GRAPH_SLOT_VERSION = 4;
 inline constexpr uint32_t GRAPH_SLOT_FROZEN_SERIAL = 3;
 
-enum class GraphSlotPhase : uint32_t { Empty, Publishing, Ready, Poisoned };
+enum class GraphSlotRegistrationPhase : uint32_t { Empty, Publishing, Ready, Poisoned };
 enum class GraphSlotStatus : uint32_t {
     Ok,
     InvalidRegistration,
@@ -89,7 +93,7 @@ struct alignas(64) GraphSlotRegistry {
     GraphExecutionSlotControl execution;
 };
 
-struct GraphSlotDetach {
+struct GraphSlotDetachRequest {
     uint64_t registry_address;
     uint64_t context_generation;
     uint64_t runtime_binary_id;
@@ -105,17 +109,17 @@ static_assert(offsetof(GraphSlotRegistration, destinations) == 40);
 static_assert(offsetof(GraphSlotRegistration, registry) == 104);
 static_assert(offsetof(GraphSlotRegistration, checksum) == 120);
 static_assert(sizeof(GraphSlotRegistry) == 320 && alignof(GraphSlotRegistry) == 64);
-static_assert(sizeof(GraphSlotDetach) == 32 && std::is_trivially_copyable_v<GraphSlotDetach>);
+static_assert(sizeof(GraphSlotDetachRequest) == 32 && std::is_trivially_copyable_v<GraphSlotDetachRequest>);
 static_assert(offsetof(GraphSlotRegistry, phase) == 8);
 static_assert(offsetof(GraphSlotRegistry, registration) == 64);
 static_assert(offsetof(GraphSlotRegistry, execution) == 192);
 
 // Both inputs must already have non-overflowing bounds.
-inline bool graph_windows_overlap(GraphDestination a, GraphDestination b) noexcept {
+inline bool graph_memory_regions_overlap(GraphDestination a, GraphDestination b) noexcept {
     return a.capacity && b.capacity && a.address < b.address + b.capacity && b.address < a.address + a.capacity;
 }
 
-inline bool graph_slot_packet_size(const GraphDestination *destinations, uint64_t &bytes) noexcept {
+inline bool calculate_graph_slot_packet_capacity(const GraphDestination *destinations, uint64_t &bytes) noexcept {
     if (destinations == nullptr) return false;
     uint64_t payload = 0;
     uint64_t count = 0;
@@ -135,11 +139,11 @@ inline bool graph_slot_packet_size(const GraphDestination *destinations, uint64_
     return true;
 }
 
-inline uint64_t graph_slot_checksum(const GraphSlotRegistration &registration) noexcept {
+inline uint64_t calculate_graph_slot_registration_checksum(const GraphSlotRegistration &registration) noexcept {
     return simpler::common::utils::fnv1a_64(&registration, offsetof(GraphSlotRegistration, checksum));
 }
 
-inline bool valid_graph_slot_registration(const GraphSlotRegistration &registration) noexcept {
+inline bool is_valid_graph_slot_registration(const GraphSlotRegistration &registration) noexcept {
     if (registration.magic != GRAPH_SLOT_MAGIC || registration.version != GRAPH_SLOT_VERSION ||
         registration.bytes != sizeof(registration) || registration.flags != GRAPH_SLOT_FROZEN_SERIAL ||
         registration.device_id < 0 || registration.slot_generation == 0 || registration.runtime_binary_id == 0 ||
@@ -151,14 +155,15 @@ inline bool valid_graph_slot_registration(const GraphSlotRegistration &registrat
             region.address % 1024 != 0 || !graph_span_fits(region.address, region.capacity, UINT64_MAX))
             return false;
         for (size_t j = 0; j < i; ++j)
-            if (graph_windows_overlap(region, registration.destinations[j])) return false;
+            if (graph_memory_regions_overlap(region, registration.destinations[j])) return false;
     }
     uint64_t packet_bytes = 0;
-    return graph_slot_packet_size(registration.destinations, packet_bytes) &&
-           packet_bytes == registration.max_packet_bytes && registration.checksum == graph_slot_checksum(registration);
+    return calculate_graph_slot_packet_capacity(registration.destinations, packet_bytes) &&
+           packet_bytes == registration.max_packet_bytes &&
+           registration.checksum == calculate_graph_slot_registration_checksum(registration);
 }
 
-inline bool valid_graph_slot_detach(const GraphSlotDetach &detach) noexcept {
+inline bool is_valid_graph_slot_detach_request(const GraphSlotDetachRequest &detach) noexcept {
     return detach.registry_address != 0 && detach.registry_address % 1024 == 0 && detach.context_generation != 0 &&
            detach.runtime_binary_id != 0 && detach.device_id >= 0 && detach.reserved == 0;
 }

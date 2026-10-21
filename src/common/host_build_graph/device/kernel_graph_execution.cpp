@@ -9,12 +9,12 @@
  * -----------------------------------------------------------------------------------------------------------
  */
 #include "host_build_graph/kernel_graph_execution.h"
-#include "host_build_graph/kernel_graph_slot_registry.h"
+#include "host_build_graph/kernel_graph_slot_control.h"
 
 #include <cstring>
 
 #include "aicpu/cache_maintenance.h"
-#include "host_build_graph/kernel_external_tensor_wire.h"
+#include "host_build_graph/kernel_graph_tensor_validation.h"
 #include "host_build_graph/runtime_core.h"
 
 namespace hbg {
@@ -102,12 +102,12 @@ bool validate_definition(
         const auto tensor = read_value<simpler::hbg::TensorData>(
             source + offset + d.off_tensors + i * sizeof(simpler::hbg::TensorData)
         );
-        if (!valid_kernel_graph_tensor(tensor)) return false;
+        if (!is_valid_graph_tensor_descriptor(tensor)) return false;
     }
     for (int32_t i = 0; i < d.predicate_count; ++i) {
         const auto predicate =
             read_value<GraphPredicate>(source + offset + d.off_predicates + i * sizeof(GraphPredicate));
-        if (!valid_kernel_graph_tensor(predicate.operand)) return false;
+        if (!is_valid_graph_tensor_descriptor(predicate.operand)) return false;
     }
     GraphExecutionStorageLayout storage{};
     const auto begin = reinterpret_cast<uintptr_t>(task.task.packed_buffer_base);
@@ -120,18 +120,21 @@ bool validate_definition(
            (begin + d.required_heap) % alignof(ChipTaskStorage) == 0;
 }
 
-bool validate_images(const ValidatedGraphExecutionBinding &view, RuntimeArenaLayout &layout, uint64_t &sm_bytes) noexcept {
-    const auto &h = view.graph;
+bool validate_images(
+    const ValidatedGraphExecutionBinding &view, RuntimeArenaLayout &layout, uint64_t &sm_bytes
+) noexcept {
+    const auto &packet = view.packet;
+    const auto &h = packet.graph;
     DeviceArena reservations;
     layout = runtime_reserve_layout(reservations, h.task_window);
-    const uint64_t copied_begin = view.regions[1].destination_offset;
-    const uint64_t capacity = copied_begin + view.regions[1].bytes;
+    const uint64_t copied_begin = packet.regions[1].destination_offset;
+    const uint64_t capacity = copied_begin + packet.regions[1].bytes;
     if (copied_begin != layout.off_copied_begin) return false;
     if (h.runtime_offset != layout.off_runtime || h.sm_offset != layout.off_copied_end ||
         !graph_span_fits(h.runtime_offset, sizeof(RuntimeContext), capacity) ||
         !graph_span_fits(h.sm_offset, sizeof(SharedMemoryHeader), capacity))
         return false;
-    const auto pristine = read_value<RuntimeContext>(view.payload + h.runtime_offset - copied_begin);
+    const auto pristine = read_value<RuntimeContext>(packet.payload + h.runtime_offset - copied_begin);
     // Queue capacities are authored per graph, while reservation offsets depend
     // only on the common physical layout. The device initializes these queues.
     const auto valid_capacity = [](uint64_t count) {
@@ -150,13 +153,13 @@ bool validate_images(const ValidatedGraphExecutionBinding &view, RuntimeArenaLay
     sm_bytes = capacity - h.sm_offset;
     const auto offsets = sm_layout::segment_offsets(sm_layout::image_extents({h.total_tasks, 0, 0, 0}));
     if (sm_bytes > INT32_MAX || offsets.fanin_pool > sm_bytes) return false;
-    const auto *sm = view.payload + h.sm_offset - copied_begin;
+    const auto *sm = packet.payload + h.sm_offset - copied_begin;
     if (read_value<uint64_t>(sm + offsetof(SharedMemoryTaskHeader, task_storage)) != 0 ||
         read_value<uint64_t>(sm + offsetof(SharedMemoryTaskHeader, task_states)) != 0 ||
         read_value<int32_t>(sm + offsetof(SharedMemoryTaskHeader, total_tasks)) != static_cast<int32_t>(h.total_tasks))
         return false;
     const auto &heap = view.slot.destinations[0];
-    const uint64_t definition_source = view.regions[2].source_offset;
+    const uint64_t definition_source = packet.regions[2].source_offset;
     for (uint32_t i = 0; i < h.total_tasks; ++i) {
         const uint64_t storage_offset = offsets.storage + i * sizeof(ChipTaskStorage);
         ChipTaskStorage task{};
@@ -188,12 +191,12 @@ bool validate_images(const ValidatedGraphExecutionBinding &view, RuntimeArenaLay
             return false;
         for (int32_t j = 0; j < p.tensor_count; ++j) {
             if (graph) {
-                if (!valid_prepared_kernel_graph_tensor(
+                if (!is_valid_graph_tensor_binding(
                         read_value<simpler::hbg::Tensor>(sm + tensors + j * sizeof(simpler::hbg::Tensor)), heap.address,
                         h.heap_bytes
                     ))
                     return false;
-            } else if (!valid_prepared_kernel_graph_tensor(
+            } else if (!is_valid_graph_tensor_binding(
                            read_value<simpler::hbg::Tensor>(sm + tensors + j * sizeof(simpler::hbg::Tensor)),
                            heap.address, h.heap_bytes
                        )) {
@@ -212,7 +215,7 @@ bool validate_images(const ValidatedGraphExecutionBinding &view, RuntimeArenaLay
         if (task.slot.graph_context != nullptr) return false;
         if (graph) {
             if (!validate_definition(
-                    view.payload + definition_source, view.regions[2].bytes, task.task.graph_definition_offset, task
+                    packet.payload + definition_source, packet.regions[2].bytes, task.task.graph_definition_offset, task
                 ))
                 return false;
         } else if (task.task.graph_definition_offset != 0) return false;
@@ -244,16 +247,10 @@ void publish(GraphExecutionSlotControl &control, GraphExecutionSlotPhase phase, 
 }  // namespace
 
 GraphExecutionStatus prepare_graph_execution(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPreparation &out,
-    const GraphExecutionPreparationOps &ops, GraphPacketAddress address_mode
+    const ValidatedGraphExecutionBinding &view, GraphExecutionPreparation &out,
+    const GraphExecutionPreparationOps &ops
 ) noexcept {
-    ValidatedGraphExecutionBinding view{};
-    const auto admission = validate_graph_execution_binding(
-        packet, bytes, device_id, runtime_binary_id, trusted_callable, view, {}, address_mode
-    );
-    if (admission == GraphSlotStatus::Poisoned) return GraphExecutionStatus::Poisoned;
-    if (admission != GraphSlotStatus::Ok) return GraphExecutionStatus::Rejected;
+    const auto &packet = view.packet;
     RuntimeArenaLayout layout{};
     uint64_t sm_bytes = 0;
     if (!validate_images(view, layout, sm_bytes)) return GraphExecutionStatus::InvalidImage;
@@ -283,14 +280,14 @@ GraphExecutionStatus prepare_graph_execution(
         return GraphExecutionStatus::CopyFailed;
     };
     const auto &heap = view.slot.destinations[0];
-    if (!zero_region(ops, reinterpret_cast<void *>(heap.address), view.graph.heap_bytes)) return fail();
+    if (!zero_region(ops, reinterpret_cast<void *>(heap.address), packet.graph.heap_bytes)) return fail();
     for (size_t i = 1; i < 4; ++i) {
         const auto &dst = view.slot.destinations[i];
-        const auto &region = view.regions[i];
+        const auto &region = packet.regions[i];
         if (region.bytes == 0) continue;
         if (!copy_region(
                 ops, reinterpret_cast<void *>(dst.address + region.destination_offset),
-                view.payload + region.source_offset, region.bytes
+                packet.payload + region.source_offset, region.bytes
             ))
             return fail();
     }
@@ -299,32 +296,32 @@ GraphExecutionStatus prepare_graph_execution(
     arena.attach(reinterpret_cast<void *>(working.address));
     auto *runtime = reinterpret_cast<RuntimeContext *>(working.address + layout.off_runtime);
     runtime_wire_arena_pointers(arena, layout, runtime);
-    void *sm = reinterpret_cast<void *>(working.address + view.graph.sm_offset);
+    void *sm = reinterpret_cast<void *>(working.address + packet.graph.sm_offset);
     if (!runtime->sm_handle->attach_populated(
-            sm, sm_bytes, view.graph.task_window, sm_layout::live_slot_pitch(view.graph.total_tasks), sm_bytes
+            sm, sm_bytes, packet.graph.task_window, sm_layout::live_slot_pitch(packet.graph.total_tasks), sm_bytes
         ) ||
         !runtime->scheduler->init_data_from_layout(layout.sched, arena, sm))
         return fail();
     runtime->scheduler->seed_queue_slots();
     runtime->aicore_mailbox->init_empty();
-    if (!flush_region(ops, reinterpret_cast<void *>(heap.address), view.graph.heap_bytes)) return fail();
+    if (!flush_region(ops, reinterpret_cast<void *>(heap.address), packet.graph.heap_bytes)) return fail();
     for (size_t i = 1; i < 4; ++i)
-        if (view.regions[i].bytes && !flush_region(
+        if (packet.regions[i].bytes && !flush_region(
                                          ops, reinterpret_cast<void *>(view.slot.destinations[i].address),
-                                         view.regions[i].destination_offset + view.regions[i].bytes
+                                         packet.regions[i].destination_offset + packet.regions[i].bytes
                                      ))
             return fail();
     control.runtime_address = reinterpret_cast<uintptr_t>(runtime);
     control.sm_bytes = sm_bytes;
-    control.total_tasks = view.graph.total_tasks;
-    control.live_bytes[0] = view.graph.heap_bytes;
+    control.total_tasks = packet.graph.total_tasks;
+    control.live_bytes[0] = packet.graph.heap_bytes;
     for (size_t i = 1; i < 4; ++i)
         control.live_bytes[i] =
-            view.regions[i].bytes == 0 ? 0 : view.regions[i].destination_offset + view.regions[i].bytes;
+            packet.regions[i].bytes == 0 ? 0 : packet.regions[i].destination_offset + packet.regions[i].bytes;
     if (!flush_region(ops, &control, sizeof(control))) return fail();
     control.committed_generation = control.attempt;
     publish(control, GraphExecutionSlotPhase::Ready, GraphExecutionStatus::Ok);
-    out = {runtime, control.attempt, sm_bytes, view.graph.total_tasks};
+    out = {runtime, control.attempt, sm_bytes, packet.graph.total_tasks};
     return GraphExecutionStatus::Ok;
 }
 

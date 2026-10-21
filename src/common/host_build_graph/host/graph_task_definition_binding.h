@@ -33,7 +33,7 @@ struct PreparedGraphDefinition {
 
 // Borrows a completed build's records and slots. Neither planning nor queue
 // measurement acquires device storage or publishes a task's Definition offset.
-struct GraphDefinitionPlan {
+struct GraphTaskDefinitionBindings {
     std::unordered_map<uint64_t, PreparedGraphDefinition> objects;
     std::vector<std::pair<ChipTaskSlotState *, uint32_t>> bindings;
     ReadyQueuePopulations populations{};
@@ -41,15 +41,15 @@ struct GraphDefinitionPlan {
     size_t spilled{0};
 };
 
-inline bool prepare_graph_definitions(
-    GraphHostState &graph_state, const ReadyQueuePopulations &initial_populations, GraphDefinitionPlan &out
+inline bool resolve_graph_task_definitions(
+    GraphHostState &graph_state, const ReadyQueuePopulations &initial_populations, GraphTaskDefinitionBindings &out
 ) {
     if (graph_state.inflight_count.load(std::memory_order_acquire) != 0 || !graph_state.inflight.empty()) return false;
     GraphHostDefinitionList definitions = graph_host_definitions(graph_state);
     if (definitions.entries.size() != graph_state.definitions.size()) return false;
     DefinitionPackingPlan packing;
     if (!measure_definition_packing(definitions, graph_host_arena_used(graph_state), packing)) return false;
-    GraphDefinitionPlan next;
+    GraphTaskDefinitionBindings next;
     next.bytes = packing.bytes;
     next.spilled = packing.spilled;
     for (const auto &object : packing.objects) {

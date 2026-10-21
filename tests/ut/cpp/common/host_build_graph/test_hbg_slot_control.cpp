@@ -12,10 +12,10 @@
 
 #include <cstring>
 
-#include "host_build_graph/kernel_graph_slot_registry.h"
+#include "host_build_graph/kernel_graph_slot_control.h"
 
 namespace {
-class HbgSlotRegistryTest : public ::testing::Test {
+class HbgSlotControlTest : public ::testing::Test {
 protected:
     alignas(1024) hbg::GraphSlotRegistry registry{};
     alignas(1024) hbg::GraphSlotRegistry other{};
@@ -33,21 +33,21 @@ protected:
         registration.destinations[1] = {0x200000, 4096};
         registration.registry = {reinterpret_cast<uintptr_t>(&registry), sizeof(registry)};
         seal(registration);
-        ASSERT_TRUE(hbg::valid_graph_slot_registration(registration));
+        ASSERT_TRUE(hbg::is_valid_graph_slot_registration(registration));
     }
     void TearDown() override {
         if (auto *current = hbg::current_graph_slot_registry()) hbg::detach_graph_slot_registry(current);
     }
     static void seal(hbg::GraphSlotRegistration &value) {
-        ASSERT_TRUE(hbg::graph_slot_packet_size(value.destinations, value.max_packet_bytes));
-        value.checksum = hbg::graph_slot_checksum(value);
+        ASSERT_TRUE(hbg::calculate_graph_slot_packet_capacity(value.destinations, value.max_packet_bytes));
+        value.checksum = hbg::calculate_graph_slot_registration_checksum(value);
     }
     hbg::GraphSlotStatus install() {
         return hbg::install_graph_execution_slot(&registration, sizeof(registration));
     }
 };
 
-TEST_F(HbgSlotRegistryTest, DuplicateInstallPreservesExecutionState) {
+TEST_F(HbgSlotControlTest, DuplicateInstallPreservesExecutionState) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     registry.execution.attempt = 19;
     const auto before = registry;
@@ -55,7 +55,7 @@ TEST_F(HbgSlotRegistryTest, DuplicateInstallPreservesExecutionState) {
     EXPECT_EQ(std::memcmp(&before, &registry, sizeof(registry)), 0);
 }
 
-TEST_F(HbgSlotRegistryTest, DetachedInstallPreservesExecutionState) {
+TEST_F(HbgSlotControlTest, DetachedInstallPreservesExecutionState) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     registry.execution.attempt = 19;
     ASSERT_TRUE(hbg::detach_graph_slot_registry(&registry));
@@ -64,7 +64,7 @@ TEST_F(HbgSlotRegistryTest, DetachedInstallPreservesExecutionState) {
     EXPECT_EQ(std::memcmp(&before, &registry, sizeof(registry)), 0);
 }
 
-TEST_F(HbgSlotRegistryTest, DetachedPoisonedSlotCannotBeRevived) {
+TEST_F(HbgSlotControlTest, DetachedPoisonedSlotCannotBeRevived) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     ASSERT_EQ(hbg::poison_graph_execution_slot(&registry), hbg::GraphSlotStatus::Ok);
     ASSERT_TRUE(hbg::detach_graph_slot_registry(&registry));
@@ -74,7 +74,7 @@ TEST_F(HbgSlotRegistryTest, DetachedPoisonedSlotCannotBeRevived) {
     EXPECT_EQ(hbg::current_graph_slot_registry(), nullptr);
 }
 
-TEST_F(HbgSlotRegistryTest, ConflictingRegistrationDoesNotModifyBoundSlot) {
+TEST_F(HbgSlotControlTest, ConflictingRegistrationDoesNotModifyBoundSlot) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     const auto before = registry;
     registration.destinations[0].capacity *= 2;
@@ -83,7 +83,7 @@ TEST_F(HbgSlotRegistryTest, ConflictingRegistrationDoesNotModifyBoundSlot) {
     EXPECT_EQ(std::memcmp(&before, &registry, sizeof(registry)), 0);
 }
 
-TEST_F(HbgSlotRegistryTest, AnotherSlotIsRejectedBeforeInitialization) {
+TEST_F(HbgSlotControlTest, AnotherSlotIsRejectedBeforeInitialization) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     const auto before = registry;
     const auto other_before = other;
@@ -94,9 +94,9 @@ TEST_F(HbgSlotRegistryTest, AnotherSlotIsRejectedBeforeInitialization) {
     EXPECT_EQ(std::memcmp(&other_before, &other, sizeof(other)), 0);
 }
 
-TEST_F(HbgSlotRegistryTest, StaleDetachKeepsCurrentBinding) {
+TEST_F(HbgSlotControlTest, StaleDetachKeepsCurrentBinding) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
-    hbg::GraphSlotDetach request{reinterpret_cast<uintptr_t>(&registry), 7, 123, 0, 0};
+    hbg::GraphSlotDetachRequest request{reinterpret_cast<uintptr_t>(&registry), 7, 123, 0, 0};
     EXPECT_EQ(simpler_aicpu_l1_hbg_detach_execution_slot(&request), -1);
     EXPECT_EQ(hbg::current_graph_slot_registry(), &registry);
     request.context_generation = 8;
@@ -105,7 +105,7 @@ TEST_F(HbgSlotRegistryTest, StaleDetachKeepsCurrentBinding) {
 }
 
 
-TEST_F(HbgSlotRegistryTest, DirectInitializationCannotClearPoisonForSameGeneration) {
+TEST_F(HbgSlotControlTest, DirectInitializationCannotClearPoisonForSameGeneration) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     ASSERT_EQ(hbg::poison_graph_execution_slot(&registry), hbg::GraphSlotStatus::Ok);
     ASSERT_TRUE(hbg::detach_graph_slot_registry(&registry));
@@ -114,7 +114,7 @@ TEST_F(HbgSlotRegistryTest, DirectInitializationCannotClearPoisonForSameGenerati
     EXPECT_EQ(std::memcmp(&before, &registry, sizeof(registry)), 0);
 }
 
-TEST_F(HbgSlotRegistryTest, FreshContextGenerationCanReuseReleasedAddress) {
+TEST_F(HbgSlotControlTest, FreshContextGenerationCanReuseReleasedAddress) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     ASSERT_TRUE(hbg::detach_graph_slot_registry(&registry));
     // The owner has retired the old context and grants this allocation to a new one.
@@ -125,7 +125,7 @@ TEST_F(HbgSlotRegistryTest, FreshContextGenerationCanReuseReleasedAddress) {
     EXPECT_EQ(registry.execution.attempt, 0U);
 }
 
-TEST_F(HbgSlotRegistryTest, DetachedConflictingRegistrationDoesNotOverwriteState) {
+TEST_F(HbgSlotControlTest, DetachedConflictingRegistrationDoesNotOverwriteState) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);
     ASSERT_TRUE(hbg::detach_graph_slot_registry(&registry));
     const auto before = registry;

@@ -10,13 +10,14 @@
  */
 #pragma once
 
-#include "host_build_graph/kernel_graph_slot_wire.h"
+#include "host_build_graph/kernel_graph_slot_protocol.h"
 
 namespace hbg {
 
 // AICPU control operations. Init only targets newly allocated, exclusively held
 // registry storage. It cannot reset a live context. Register never changes Ready
 // content; duplicates must match byte for byte. These are never launch-blob paths.
+// This module controls registration and binding, not allocation or memory release.
 // The context owner serializes install/bind/detach/poison with preparation,
 // execution readers and allocation release. The atomic publication fields do
 // not provide an allocation lease or make the whole install transaction atomic.

@@ -9,15 +9,17 @@
  * -----------------------------------------------------------------------------------------------------------
  */
 #include "host_build_graph/kernel_graph_template.h"
+#include "host_build_graph/kernel_graph_packet_parser.h"
 
 #include <algorithm>
 #include <new>
 #include <unordered_map>
 
 #include "host_build_graph/host_graph_build.h"
-#include "host_build_graph/kernel_external_tensor_wire.h"
+#include "host_build_graph/kernel_graph_tensor_validation.h"
 #include "host_build_graph/runtime_core.h"
 #include "host_build_graph/kernel_resource_requirements.h"
+#include "task_interface/kernel_invocation_validation.h"
 
 namespace hbg {
 namespace {
@@ -50,14 +52,14 @@ bool valid_definition_external_tensors(const GraphDefinition &definition) {
         );
         if (tensors == nullptr) return false;
         for (int32_t i = 0; i < definition.tensor_arg_count; ++i)
-            if (!valid_kernel_graph_tensor(tensors[i])) return false;
+            if (!is_valid_graph_tensor_descriptor(tensors[i])) return false;
     }
     if (definition.predicate_count != 0) {
         const auto *predicates =
             graph_definition_array<GraphPredicate>(definition, definition.off_predicates, definition.predicate_count);
         if (predicates == nullptr) return false;
         for (int32_t i = 0; i < definition.predicate_count; ++i)
-            if (!valid_kernel_graph_tensor(predicates[i].operand)) return false;
+            if (!is_valid_graph_tensor_descriptor(predicates[i].operand)) return false;
     }
     return true;
 }
@@ -81,9 +83,9 @@ bool valid_build_external_tensors(const GraphBuild &build) {
         for (int32_t j = 0; j < count; ++j) {
             const auto *element = reinterpret_cast<const std::byte *>(first + static_cast<uint64_t>(j) * element_bytes);
             if (graph) {
-                if (!valid_kernel_graph_tensor(*reinterpret_cast<const simpler::hbg::TensorData *>(element)))
+                if (!is_valid_graph_tensor_descriptor(*reinterpret_cast<const simpler::hbg::TensorData *>(element)))
                     return false;
-            } else if (!valid_kernel_graph_tensor(*reinterpret_cast<const simpler::hbg::Tensor *>(element))) {
+            } else if (!is_valid_graph_tensor_descriptor(*reinterpret_cast<const simpler::hbg::Tensor *>(element))) {
                 return false;
             }
         }
@@ -155,7 +157,7 @@ int make_graph_launch_template(
     if (identity.callable_id < 0 || identity.callable_id >= MAX_REGISTERED_CALLABLE_IDS ||
         !simpler::kernel::valid_invocation_counts(identity.tensor_count, identity.scalar_count) ||
         identity.callable_hash == 0 || identity.argument_hash == 0 || identity.function_hash == 0 ||
-        identity.generation == 0 || !valid_graph_slot_registration(registration))
+        identity.generation == 0 || !is_valid_graph_slot_registration(registration))
         return PTO_RUNTIME_ERR_INTERNAL;
     RuntimeArenaLayout layout{};
     int rc = make_kernel_graph_layout(build.task_capacity, layout);
@@ -273,20 +275,17 @@ int make_graph_launch_template(
 }
 
 int make_graph_host_args(const GraphLaunchTemplate &source, GraphHostArgs &out) {
-    if (validate_graph_packet(source.data(), source.size(), GraphPacketAddress::HostTemplate) != GraphPacketStatus::Ok)
+    ParsedGraphPacket parsed;
+    if (parse_graph_packet(source.data(), source.size(), GraphPacketAddress::HostTemplate, parsed) !=
+        GraphPacketStatus::Ok)
         return PTO_RUNTIME_ERR_INTERNAL;
     try {
         GraphHostArgs next;
         next.bytes = source.size();
         next.storage.resize((next.bytes + 7) / 8);
         std::memcpy(next.storage.data(), source.data(), next.bytes);
-        GraphPacketHeader header{};
-        std::memcpy(
-            &header, static_cast<const std::byte *>(source.data()) + sizeof(SimplerKernelInvocationHeader),
-            sizeof(header)
-        );
         next.address_offset = sizeof(SimplerKernelInvocationHeader) + offsetof(GraphPacketHeader, inline_payload_addr);
-        next.data_offset = sizeof(SimplerKernelInvocationHeader) + header.payload_offset;
+        next.data_offset = sizeof(SimplerKernelInvocationHeader) + parsed.graph.payload_offset;
         out = std::move(next);
         return 0;
     } catch (const std::bad_alloc &) {

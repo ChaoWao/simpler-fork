@@ -16,7 +16,7 @@
 #include <cstdint>
 
 #include "host_build_graph/host_graph_build.h"
-#include "host_build_graph/kernel_graph_slot_wire.h"
+#include "host_build_graph/kernel_graph_slot_protocol.h"
 #include "host/kernel_execution_state.h"
 #include "host_build_graph/runtime_core.h"
 #include "host_build_graph/runtime_status.h"
@@ -154,10 +154,10 @@ public:
         for (size_t i = 0; i < 4; ++i)
             next.destinations[i] = {binding.regions[i].address, binding.regions[i].capacity};
         next.registry = {binding.regions[4].address, binding.regions[4].capacity};
-        if (!graph_slot_packet_size(next.destinations, next.max_packet_bytes))
+        if (!calculate_graph_slot_packet_capacity(next.destinations, next.max_packet_bytes))
             return PTO_RUNTIME_ERR_PREPARED_INCOMPATIBLE;
-        next.checksum = graph_slot_checksum(next);
-        if (!valid_graph_slot_registration(next)) return PTO_RUNTIME_ERR_INTERNAL;
+        next.checksum = calculate_graph_slot_registration_checksum(next);
+        if (!is_valid_graph_slot_registration(next)) return PTO_RUNTIME_ERR_INTERNAL;
         out = next;
         return 0;
     }

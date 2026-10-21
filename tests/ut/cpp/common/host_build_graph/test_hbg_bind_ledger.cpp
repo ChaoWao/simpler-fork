@@ -47,7 +47,9 @@
 #include "host_build_graph/kernel_resource_requirements.h"
 #include "host_build_graph/kernel_graph_template.h"
 #include "host_build_graph/kernel_graph_execution.h"
-#include "host_build_graph/kernel_graph_slot_registry.h"
+#include "host_build_graph/kernel_graph_slot_control.h"
+#include "host_build_graph/kernel_graph_packet_reader.h"
+#include "host_build_graph/kernel_graph_packet_parser.h"
 #include "host_build_graph/host/dep_gen_host_graph.h"
 #include "host_build_graph/host/host_tensor_access.h"
 #include "host/raii_scope_guard.h"
@@ -73,6 +75,24 @@ extern "C" int release_run_bindings_impl(Runtime *runtime, const HostApi *api);
 extern "C" int publish_run_image_impl(Runtime *runtime, const HostApi *api);
 
 namespace {
+
+hbg::GraphExecutionStatus prepare_packet_for_test(
+    const void *packet, size_t bytes, int device_id, uint64_t binary_id,
+    const simpler::kernel::PreparedInvocationView &trusted, hbg::GraphExecutionPreparation &out,
+    const hbg::GraphExecutionPreparationOps &ops = {},
+    hbg::GraphPacketAddress mode = hbg::GraphPacketAddress::DeviceCopy
+) {
+    hbg::ParsedGraphPacket parsed;
+    hbg::GraphSlotRegistration registration;
+    auto status = hbg::read_graph_execution_packet(packet, bytes, device_id, binary_id, registration, parsed, {}, mode);
+    if (status == hbg::GraphSlotStatus::Poisoned) return hbg::GraphExecutionStatus::Poisoned;
+    if (status != hbg::GraphSlotStatus::Ok) return hbg::GraphExecutionStatus::Rejected;
+    hbg::ValidatedGraphExecutionBinding binding;
+    status = hbg::validate_graph_execution_binding(parsed, registration, trusted, binding);
+    if (status != hbg::GraphSlotStatus::Ok) return hbg::GraphExecutionStatus::Rejected;
+    return hbg::prepare_graph_execution(binding, out, ops);
+}
+
 
 constexpr size_t kAlign = 1024;
 
@@ -2648,7 +2668,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         capacity_plan.make_registration(execution_context, 0, 8, 123, registration), PTO_RUNTIME_ERR_INVALID_STATE
     );
     ASSERT_EQ(capacity_plan.make_registration(execution_context, 0, 7, 123, registration), 0);
-    ASSERT_TRUE(hbg::valid_graph_slot_registration(registration));
+    ASSERT_TRUE(hbg::is_valid_graph_slot_registration(registration));
     hbg::GraphInvocationIdentity identity{0, 0, 0, 19, 11, 12, 13};
     hbg::GraphLaunchTemplate snapshot;
     ASSERT_EQ(hbg::make_graph_launch_template(build, context, registration, identity, snapshot), 0);
@@ -2691,7 +2711,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::GraphPacketStatus::InvalidHeader
     );
     ASSERT_EQ(
-        hbg::prepare_graph_execution(
+        prepare_packet_for_test(
             second.storage.data(), second.bytes, 0, 123, trusted, prepared, {}, hbg::GraphPacketAddress::RelativeLaunch
         ),
         hbg::GraphExecutionStatus::Ok
@@ -2701,18 +2721,18 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::GraphExecutionStatus::Ok
     );
     EXPECT_EQ(
-        hbg::prepare_graph_execution(second.storage.data(), second.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(second.storage.data(), second.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Rejected
     );
     ASSERT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Ok
     );
     ASSERT_NE(prepared.runtime, nullptr);
     EXPECT_EQ(reinterpret_cast<uintptr_t>(prepared.runtime), registration.destinations[1].address + layout.off_runtime);
     EXPECT_EQ(prepared.total_tasks, static_cast<uint32_t>(build.total_tasks));
     EXPECT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Busy
     );
     const uint64_t first_generation = prepared.generation;
@@ -2723,7 +2743,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::GraphExecutionStatus::Ok
     );
     ASSERT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Ok
     );
     EXPECT_GT(prepared.generation, first_generation);
@@ -2738,7 +2758,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     auto stale = trusted;
     ++stale.generation;
     EXPECT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, stale, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, stale, prepared),
         hbg::GraphExecutionStatus::Rejected
     );
     EXPECT_EQ(registry->execution.attempt, attempt);
@@ -2747,11 +2767,11 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         return false;
     };
     EXPECT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared, copy_failure),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared, copy_failure),
         hbg::GraphExecutionStatus::CopyFailed
     );
     EXPECT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Quarantined
     );
     ASSERT_EQ(
@@ -2761,7 +2781,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::GraphExecutionStatus::Ok
     );
     ASSERT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Ok
     );
     EXPECT_EQ(
@@ -2769,7 +2789,7 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::GraphExecutionStatus::Poisoned
     );
     EXPECT_EQ(
-        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Poisoned
     );
     const uint64_t measured = requirements.runtime_arena_bytes;

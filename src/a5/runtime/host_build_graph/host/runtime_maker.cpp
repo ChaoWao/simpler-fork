@@ -903,16 +903,16 @@ struct DefinitionUploads {
 // records the used prefix for synchronous publication. Device initial classify
 // replaces each task's graph_context with an execution constructed in its own heap.
 int32_t bind_graph_definitions(
-    Runtime *runtime, const HostApi *api, const hbg::GraphDefinitionPlan &definition_plan, DefinitionUploads *uploads
+    Runtime *runtime, const HostApi *api, const hbg::GraphTaskDefinitionBindings &definition_bindings, DefinitionUploads *uploads
 ) {
     *uploads = DefinitionUploads{};
-    const size_t count = definition_plan.bindings.size();
+    const size_t count = definition_bindings.bindings.size();
     const auto align_up = [](size_t value) {
         return (value + GRAPH_DEFINITION_OBJECT_ALIGN - 1) & ~(GRAPH_DEFINITION_OBJECT_ALIGN - 1);
     };
-    const auto &packed = definition_plan.objects;
-    const size_t block_bytes = definition_plan.bytes;
-    uploads->spilled = definition_plan.spilled;
+    const auto &packed = definition_bindings.objects;
+    const size_t block_bytes = definition_bindings.bytes;
+    uploads->spilled = definition_bindings.spilled;
 
     // Named before anything is packed, so a run with no Graph task leaves the
     // device expecting nothing rather than inheriting a predecessor's section.
@@ -979,7 +979,7 @@ int32_t bind_graph_definitions(
         record_bind_phase(HostPhaseKind::BindGraphPack, pack_phase, attrs, block_bytes);
     }
 
-    for (const auto &[slot, offset] : definition_plan.bindings) {
+    for (const auto &[slot, offset] : definition_bindings.bindings) {
         slot->to_descriptor().graph_definition_offset = offset;
         slot->graph_context = nullptr;
     }
@@ -1681,7 +1681,7 @@ int32_t hbg::build_graph(
     // Submission already classified each slot while its fields were hot.
     ReadyQueuePopulations ready_queue_populations = orchestrator.ready_queue_populations;
 
-    if (!hbg::prepare_graph_definitions(*graph_state, ready_queue_populations, build.definitions)) {
+    if (!hbg::resolve_graph_task_definitions(*graph_state, ready_queue_populations, build.definitions)) {
         LOG_ERROR("host-orch: invalid or oversized Graph Definition plan");
         return PTO_RUNTIME_ERR_INTERNAL;
     }

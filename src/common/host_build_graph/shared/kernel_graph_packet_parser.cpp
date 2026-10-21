@@ -8,96 +8,19 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  * -----------------------------------------------------------------------------------------------------------
  */
-#pragma once
+#include "host_build_graph/kernel_graph_packet_parser.h"
 
-#include <cstddef>
-#include <cstdint>
 #include <cstring>
-#include <type_traits>
 
-#include "task_interface/kernel_invocation_header.h"
+#include "host_build_graph/kernel_graph_packet_bounds.h"
 #include "task_interface/kernel_invocation_validation.h"
 #include "utils/fnv1a_64.h"
 
 namespace hbg {
 
-inline constexpr uint32_t GRAPH_PACKET_MAGIC = 0x50474248;  // HBGP
-inline constexpr uint16_t GRAPH_PACKET_VERSION = 5;
-
-enum class GraphImageKind : uint32_t { Runtime = 1, Definitions = 2, Scheduler = 3 };
-enum class GraphPacketAddress : uint32_t { HostTemplate, DeviceCopy, RelativeLaunch };
-enum class GraphPacketStatus : uint32_t {
-    Ok,
-    InvalidEnvelope,
-    InvalidHeader,
-    InvalidBinding,
-    InvalidRegion,
-    InvalidChecksum
-};
-
-struct GraphDestination {
-    uint64_t address;
-    uint64_t capacity;
-};
-
-// Offsets are relative to inline_payload_addr and the selected destination.
-struct GraphImageRegion {
-    GraphImageKind kind;
-    uint32_t reserved;
-    uint64_t source_offset;
-    uint64_t bytes;
-    uint64_t destination_offset;
-};
-
-// Follows the shared common invocation header. Device addresses name
-// context-owned storage; they are claims to compare with the registry, not authority.
-struct GraphPacketHeader {
-    uint32_t magic;
-    uint16_t version;
-    uint16_t header_bytes;
-    uint64_t total_bytes;
-    uint64_t payload_offset;  // From this header, past the region table and padding.
-    uint64_t payload_bytes;
-    uint64_t inline_payload_addr;  // Zero in the template; one CANN placeholder.
-    uint64_t checksum;             // Accidental-corruption check, not authentication.
-    uint64_t slot_generation;      // Independent of callable residency generation.
-    uint64_t callable_hash;
-    uint64_t argument_hash;
-    uint64_t function_hash;
-    uint64_t runtime_offset;
-    uint64_t sm_offset;
-    uint64_t task_window;
-    uint32_t total_tasks;
-    uint32_t region_count;
-    GraphDestination destinations[4];  // heap, runtime/SM, Definitions, A5 scheduler
-    int32_t device_id;
-    uint32_t reserved;
-    uint64_t runtime_binary_id;  // Runtime ABI/code identity, independent of callable identity.
-    uint64_t heap_bytes;         // Live heap prefix for this invocation, within the frozen destination.
-};
-
-static_assert(std::is_trivially_copyable_v<GraphDestination> && std::is_standard_layout_v<GraphDestination>);
-static_assert(std::is_trivially_copyable_v<GraphImageRegion> && std::is_standard_layout_v<GraphImageRegion>);
-static_assert(std::is_trivially_copyable_v<GraphPacketHeader> && std::is_standard_layout_v<GraphPacketHeader>);
-static_assert(sizeof(GraphDestination) == 16);
-static_assert(sizeof(GraphImageRegion) == 32);
-static_assert(sizeof(GraphPacketHeader) == 200);
-static_assert(alignof(GraphPacketHeader) == 8);
-static_assert(offsetof(GraphPacketHeader, inline_payload_addr) == 32);
-static_assert(offsetof(GraphPacketHeader, checksum) == 40);
-static_assert(offsetof(GraphPacketHeader, slot_generation) == 48);
-static_assert(offsetof(GraphPacketHeader, destinations) == 112);
-static_assert(offsetof(GraphPacketHeader, device_id) == 176);
-static_assert(offsetof(GraphPacketHeader, runtime_binary_id) == 184);
-static_assert(offsetof(GraphImageRegion, source_offset) == 8);
-
-inline bool graph_span_fits(uint64_t offset, uint64_t size, uint64_t capacity) noexcept {
-    return offset <= capacity && size <= capacity - offset;
-}
-
 // The only excluded bytes are the runtime-patched address and this checksum.
 // The envelope, binding, identity, region descriptors and padding are covered.
-inline uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept {
+uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept {
     constexpr size_t skip = sizeof(SimplerKernelInvocationHeader) + offsetof(GraphPacketHeader, inline_payload_addr);
     if (packet == nullptr || size < skip + 16) return 0;
     const auto *bytes = static_cast<const uint8_t *>(packet);
@@ -105,11 +28,13 @@ inline uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept 
     return simpler::common::utils::fnv1a_64_append(hash, bytes + skip + 16, size - skip - 16);
 }
 
-// Allocation-free framing validation. No device destination is read or written.
+// Allocation-free framing parsing. No device destination is read or written.
+// out is changed only after every format and checksum check succeeds.
 // Registry identity checks and semantic validation of execution images precede
 // execution separately; a checksum-valid packet alone never authorizes execution preparation.
-inline GraphPacketStatus
-validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept {
+GraphPacketStatus parse_graph_packet(
+    const void *packet, size_t size, GraphPacketAddress address_mode, ParsedGraphPacket &out
+) noexcept {
     constexpr size_t prefix = sizeof(SimplerKernelInvocationHeader);
     if (packet == nullptr || size < prefix + sizeof(GraphPacketHeader) || size > UINT32_MAX)
         return GraphPacketStatus::InvalidEnvelope;
@@ -162,6 +87,10 @@ validate_graph_packet(const void *packet, size_t size, GraphPacketAddress addres
     if (header.runtime_offset % 64 != 0 || header.sm_offset % 64 != 0 || header.runtime_offset >= header.sm_offset ||
         header.sm_offset >= header.destinations[1].capacity)
         return GraphPacketStatus::InvalidBinding;
+    ParsedGraphPacket next{};
+    next.invocation = invocation;
+    next.graph = header;
+    next.payload = reinterpret_cast<const std::byte *>(bytes + prefix + payload_offset);
     uint64_t cursor = 0;
     uint32_t previous_kind = 0;
     for (uint32_t index = 0; index < header.region_count; ++index) {
@@ -181,10 +110,19 @@ validate_graph_packet(const void *packet, size_t size, GraphPacketAddress addres
             if (bytes[prefix + payload_offset + cursor] != 0) return GraphPacketStatus::InvalidRegion;
         cursor = region.source_offset + region.bytes;
         previous_kind = kind;
+        next.regions[kind] = region;
     }
     if (cursor != header.payload_bytes) return GraphPacketStatus::InvalidRegion;
     if (header.checksum != graph_packet_checksum(packet, size)) return GraphPacketStatus::InvalidChecksum;
+    out = next;
     return GraphPacketStatus::Ok;
+}
+
+// Status-only callers share exactly the same parser and format rules.
+GraphPacketStatus
+validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept {
+    ParsedGraphPacket parsed;
+    return parse_graph_packet(packet, size, address_mode, parsed);
 }
 
 }  // namespace hbg

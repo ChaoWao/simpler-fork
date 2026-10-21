@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  * -----------------------------------------------------------------------------------------------------------
  */
-#include "host_build_graph/kernel_graph_slot_registry.h"
+#include "host_build_graph/kernel_graph_slot_control.h"
 
 #include <atomic>
 
@@ -86,14 +86,14 @@ GraphSlotStatus initialize_graph_slot_registry(
     // A fresh allocation may reuse an address, but its owner must use a new generation.
     if (valid_registry(registry) && registry->context_generation == generation) {
         const auto phase = __atomic_load_n(&registry->phase, __ATOMIC_ACQUIRE);
-        if (phase == static_cast<uint32_t>(GraphSlotPhase::Poisoned)) return GraphSlotStatus::Poisoned;
+        if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Poisoned)) return GraphSlotStatus::Poisoned;
         return GraphSlotStatus::Conflict;
     }
     GraphSlotRegistry initial{};
     initial.magic = GRAPH_REGISTRY_MAGIC;
     initial.version = GRAPH_SLOT_VERSION;
     initial.bytes = sizeof(initial);
-    initial.phase = static_cast<uint32_t>(GraphSlotPhase::Empty);
+    initial.phase = static_cast<uint32_t>(GraphSlotRegistrationPhase::Empty);
     initial.device_id = device_id;
     initial.context_generation = generation;
     initial.runtime_binary_id = runtime_binary_id;
@@ -107,27 +107,27 @@ register_graph_execution_slot(GraphSlotRegistry *registry, const void *registrat
     if (registration == nullptr || bytes != sizeof(GraphSlotRegistration)) return GraphSlotStatus::InvalidRegistration;
     GraphSlotRegistration candidate{};
     std::memcpy(&candidate, registration, sizeof(candidate));
-    if (!valid_graph_slot_registration(candidate)) return GraphSlotStatus::InvalidRegistration;
+    if (!is_valid_graph_slot_registration(candidate)) return GraphSlotStatus::InvalidRegistration;
     if (!valid_registry(registry)) return GraphSlotStatus::InvalidRegistry;
     if (!matches_registry(*registry, candidate)) return GraphSlotStatus::Conflict;
     for (;;) {
         uint32_t phase = __atomic_load_n(&registry->phase, __ATOMIC_ACQUIRE);
-        if (phase == static_cast<uint32_t>(GraphSlotPhase::Poisoned)) return GraphSlotStatus::Poisoned;
-        if (phase == static_cast<uint32_t>(GraphSlotPhase::Ready)) {
+        if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Poisoned)) return GraphSlotStatus::Poisoned;
+        if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Ready)) {
             cache_invalidate_range(&registry->registration, sizeof(registry->registration));
             return std::memcmp(&registry->registration, &candidate, sizeof(candidate)) == 0 ? GraphSlotStatus::Ok :
                                                                                               GraphSlotStatus::Conflict;
         }
-        if (phase == static_cast<uint32_t>(GraphSlotPhase::Publishing)) return GraphSlotStatus::Publishing;
-        if (phase != static_cast<uint32_t>(GraphSlotPhase::Empty)) return GraphSlotStatus::InvalidRegistry;
+        if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Publishing)) return GraphSlotStatus::Publishing;
+        if (phase != static_cast<uint32_t>(GraphSlotRegistrationPhase::Empty)) return GraphSlotStatus::InvalidRegistry;
         if (!__atomic_compare_exchange_n(
-                &registry->phase, &phase, static_cast<uint32_t>(GraphSlotPhase::Publishing), false, __ATOMIC_ACQ_REL,
-                __ATOMIC_ACQUIRE
+                &registry->phase, &phase, static_cast<uint32_t>(GraphSlotRegistrationPhase::Publishing), false,
+                __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE
             ))
             continue;
         registry->registration = candidate;
         cache_flush_range(&registry->registration, sizeof(registry->registration));
-        __atomic_store_n(&registry->phase, static_cast<uint32_t>(GraphSlotPhase::Ready), __ATOMIC_RELEASE);
+        __atomic_store_n(&registry->phase, static_cast<uint32_t>(GraphSlotRegistrationPhase::Ready), __ATOMIC_RELEASE);
         cache_flush_range(registry, offsetof(GraphSlotRegistry, registration));
         return GraphSlotStatus::Ok;
     }
@@ -139,7 +139,7 @@ GraphSlotStatus install_graph_execution_slot(const void *registration, size_t by
     }
     GraphSlotRegistration candidate{};
     std::memcpy(&candidate, registration, sizeof(candidate));
-    if (!valid_graph_slot_registration(candidate)) return GraphSlotStatus::InvalidRegistration;
+    if (!is_valid_graph_slot_registration(candidate)) return GraphSlotStatus::InvalidRegistration;
 
     auto *registry = reinterpret_cast<GraphSlotRegistry *>(candidate.registry.address);
     const auto *bound = current_registry.load(std::memory_order_acquire);
@@ -173,13 +173,13 @@ GraphSlotStatus acquire_graph_execution_slot(
     if (registry->device_id != device_id) return GraphSlotStatus::DeviceMismatch;
     if (registry->runtime_binary_id != runtime_binary_id) return GraphSlotStatus::BinaryMismatch;
     const uint32_t phase = __atomic_load_n(&registry->phase, __ATOMIC_ACQUIRE);
-    if (phase == static_cast<uint32_t>(GraphSlotPhase::Poisoned)) return GraphSlotStatus::Poisoned;
-    if (phase == static_cast<uint32_t>(GraphSlotPhase::Empty)) return GraphSlotStatus::NotReady;
-    if (phase == static_cast<uint32_t>(GraphSlotPhase::Publishing)) return GraphSlotStatus::Publishing;
-    if (phase != static_cast<uint32_t>(GraphSlotPhase::Ready)) return GraphSlotStatus::InvalidRegistry;
+    if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Poisoned)) return GraphSlotStatus::Poisoned;
+    if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Empty)) return GraphSlotStatus::NotReady;
+    if (phase == static_cast<uint32_t>(GraphSlotRegistrationPhase::Publishing)) return GraphSlotStatus::Publishing;
+    if (phase != static_cast<uint32_t>(GraphSlotRegistrationPhase::Ready)) return GraphSlotStatus::InvalidRegistry;
     cache_invalidate_range(&registry->registration, sizeof(registry->registration));
     const GraphSlotRegistration candidate = registry->registration;
-    if (!valid_graph_slot_registration(candidate) || !matches_registry(*registry, candidate))
+    if (!is_valid_graph_slot_registration(candidate) || !matches_registry(*registry, candidate))
         return GraphSlotStatus::InvalidRegistry;
     out = candidate;
     return GraphSlotStatus::Ok;
@@ -208,7 +208,7 @@ GraphSlotRegistry *current_graph_slot_registry() noexcept { return current_regis
 
 GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcept {
     if (!valid_registry(registry)) return GraphSlotStatus::InvalidRegistry;
-    __atomic_store_n(&registry->phase, static_cast<uint32_t>(GraphSlotPhase::Poisoned), __ATOMIC_RELEASE);
+    __atomic_store_n(&registry->phase, static_cast<uint32_t>(GraphSlotRegistrationPhase::Poisoned), __ATOMIC_RELEASE);
     cache_flush_range(registry, offsetof(GraphSlotRegistry, registration));
     return GraphSlotStatus::Ok;
 }
@@ -229,9 +229,9 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detac
         LOG_ERROR("%s", "HBG execution slot detach failed: null control record");
         return -1;
     }
-    hbg::GraphSlotDetach detach{};
+    hbg::GraphSlotDetachRequest detach{};
     std::memcpy(&detach, arg, sizeof(detach));
-    if (!hbg::valid_graph_slot_detach(detach)) {
+    if (!hbg::is_valid_graph_slot_detach_request(detach)) {
         LOG_ERROR("%s", "HBG execution slot detach failed: invalid control record");
         return -1;
     }
