@@ -1,9 +1,9 @@
 {
-  "snapshot_date": "2026-10-20",
+  "snapshot_date": "2026-10-21",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "545c05a43469a7fd87d8f8eff2dafdf22922a796",
-  "pending_pr": 2649,
+  "latest_roadmap_source_baseline": "7d27e610411c3219137d492eafcb0342bad681d7",
+  "pending_pr": null,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "64a79324ad2e92e5660a579372548925c9e8a221e8a230a57ea9d3a250c94d38",
-      "published_sha256": "d968f3d657cadea7f19545d45a89cd0ec487d4842837c029472dbe1d402f69d8",
-      "bytes": 59484
+      "source_sha256": "28b844c4ea25894fd77d818d02fcb2d3baf95ac60e97de21ba25bfea0bf86363",
+      "published_sha256": "a546db379daccca900792d8c359aa6d4cdc902db6c03dba004174e6b00e53996",
+      "bytes": 59996
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "52397f78f3076cfd31b380c9bb830fdd0fbf5c649a3e67bfe572eaa6a58cf2b7",
-      "published_sha256": "0d23a1456e174a8aad408501bc98caf8cca382891a954d13a97a723c1cd776f7",
-      "bytes": 44779
+      "source_sha256": "3f579446d83d0a5355690bc1a90f603173461c43cdb47325ecaa88eb1c5275f9",
+      "published_sha256": "f6f492135bbba4680f50e030811b372792a1d7658cb9130f0e3b7c9c348f272f",
+      "bytes": 45355
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "d5653ace68a26d11c96499d4c0b2d75e97d4e18d02eb72ee82c8d7180dfe1d02",
-      "published_sha256": "f86f40f3484eab964454be9e34ddc32818e34fd1ebb2a97a3b071d44b2dcc8a7",
-      "bytes": 75686
+      "source_sha256": "a28674e1578bec0620b12d8d303b9a8ee9cd1ce1f45b460de9d2159cf60b6256",
+      "published_sha256": "8634c35343c088826c0b9c1db05d9092b22ecef05bba78a17ad94c3a4a16896f",
+      "bytes": 76222
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -614,5 +614,6 @@
       "published_sha256": "fc8495d4a475421cd17aee1df7d2da1774ffc371d73a9b99343c27afac925bf7",
       "bytes": 10657
     }
-  ]
+  ],
+  "latest_merged_pr": 2649
 }

@@ -2,7 +2,9 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `545c05a43`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643 已合入；当前 [#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
+**当前进度基线 main `7d27e6104`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
+
+当前交付边界：共同公开 eager 已接线，完整 K2c 业务资格与故障/DFX 矩阵继续验收。#2605 短序列输出正确，但 128-token 仍不一致。#2624/#2625 已有 TMR eager/capture 候选；#2626/#2646/#2647 的共同资源/HBG graph 与 A2/A3 execution 候选仍为 draft、均未合入。候选实现不是“尚无人实现”，也不是“主线已可用”；后续审查须消费共同 native owner 和寿命合同，避免独立专用路径形成第二套 executor。A5 HBG 不从 A2/A3 成绩推定通过。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -163,7 +165,7 @@ launch： caller entry → 同流发布 metadata + descriptor → fork → 两�
 
 <a id="c1-swimlane-invocation"></a>
 
-### C1 当前交付：#2649（待合入）
+### C1 当前交付：#2649（已合入 `0cf537df1`）
 
 head `e768fab28`，rebase 基线 main `545c05a43`（#2588）。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
 
