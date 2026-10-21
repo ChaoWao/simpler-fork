@@ -164,7 +164,7 @@ DFX 与 workload 组合可以在职责和写入范围清楚时并行；依赖整
 - [E2 有界收口](review/e2-after-2411-closeout.md)、[P3 交接](review/p3-delivery-and-handoff.md)。
 - [#2571 历史 Ready 验收](review/pr2571-5e3564a56-ready-evidence.md)、[当前提交与 CI 复审](review/pr2571-a002acc47-ready-evidence.md)。
 - [#2568 精确 head 评审](review/pr2568-46d43741c-manager-review.md)；127 步数据是 PR 作者的板端证据，不是本次 manager 重测。
-- [运行时原则](runtime-design-principles.md)、[工作管理约定](agent-management-contract.html)、[当前授权登记](claude-managed/registry.md)。
+- [运行时原则](runtime-design-principles.md)、[工作管理约定](agent-management-contract.html)、[当前授权登记](ARCHIVE-INDEX.md#local-control-1fbc49aff38a)。
 - [早期总体设计](run-pipeline-redesign.html)是历史设计基线；旧 P1/P2 分工、DFX 矩阵和旧评审不再承担实时状态。
 
 ### 自动准入的下一步

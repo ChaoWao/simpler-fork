@@ -86,7 +86,7 @@
 共迁入 137 份链接可达的文字文件，约 4 MB；它们覆盖 Pipeline A、workspace、DFX、跨仓任务和必要历史评审。每页标记“接管快照”，不再各自维护当前状态。
 
 - 原 manager 的总体原则中夹有历史实现状态，例如 G3 的“main 仍保留显式 depth”与后续 #2596 自动准入记录不一致。保留原句作为历史证据，不能据此恢复旧的多 depth 方案或认定主线未实现自动准入。
-- `manager-workspace.md` 是会话/事件流水，仅本地保留，不上传 fork；协作机制稿保持讨论状态，不恢复旧 agent、cron、Hub 或 polling。
+- `manager-workspace.md` 是会话/事件流水，`claude-managed/` 是旧调度/接续控制材料，均仅本地保留、不上传 fork；协作机制稿保持讨论状态，不恢复旧 agent、cron、Hub 或 polling。
 - 文档中的原源码/另一 worktree/日志链接已转入[证据索引](references/pipeline-a/ARCHIVE-INDEX.md)，不以不存在的工作目录继续导航。原 SHA、任务号、反例和未验收边界保留。
 - 原目录只读归档包含 12,193 个文件、884,041,092 字节；压缩包 201,491,513 字节。逐文件对照源目录校验通过，校验时无变化。归档和原始数据仅本地保留，fork 只备份设计正文及文字证据。
 - 原文文件哈希见[来源清单](references/pipeline-a/SOURCE-MANIFEST.json)。新入口的链接、HTML 和发布 manifest 同次更新。

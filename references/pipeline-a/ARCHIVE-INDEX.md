@@ -662,3 +662,38 @@
 ## manager 会话流水
 
 `manager-workspace.md` 仅在本地及完整原目录归档中保存，不上传会话/任务流水。该记录不是运行时规范或当前任务认领。
+
+
+<a id="local-control-070f0a7e5b46"></a>
+
+## 本地调度控制记录
+
+`references/pipeline-a/claude-managed/CONTEXT_GATE.md` 为旧 manager 控制材料，仅保留在本地完整归档和来源快照，不上传或恢复执行。
+
+
+<a id="local-control-ce417c00d45b"></a>
+
+## 本地调度控制记录
+
+`references/pipeline-a/claude-managed/CONTINUE.md` 为旧 manager 控制材料，仅保留在本地完整归档和来源快照，不上传或恢复执行。
+
+
+<a id="local-control-c5cb64fc2f1f"></a>
+
+## 本地调度控制记录
+
+`references/pipeline-a/claude-managed/dispatch-preflight.md` 为旧 manager 控制材料，仅保留在本地完整归档和来源快照，不上传或恢复执行。
+
+
+<a id="local-control-a333d479fa77"></a>
+
+## 本地调度控制记录
+
+`references/pipeline-a/claude-managed/manager-tick.prompt.txt` 为旧 manager 控制材料，仅保留在本地完整归档和来源快照，不上传或恢复执行。
+
+
+<a id="local-control-1fbc49aff38a"></a>
+
+## 本地调度控制记录
+
+`references/pipeline-a/claude-managed/registry.md` 为旧 manager 控制材料，仅保留在本地完整归档和来源快照，不上传或恢复执行。

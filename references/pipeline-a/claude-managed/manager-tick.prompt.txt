@@ -1,3 +1,0 @@
-> **2026-10-21 接管快照**：保留原基线与历史结论；现状见[接管入口](../../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../../runtime-design-principles.md)为准。此页不授权恢复历史任务、timer 或自动化。
-
-Pipeline A 授权续办。进入 simpler/.claude/worktrees/pipeline-a-manager，先仅删除 .docs/claude-managed/manager-tick.pending，再读取 .docs/claude-managed/CONTINUE.md 并执行。当前任务与授权以 registry.md 最新 CURRENT CONTRACT 为准；这是执行续办，不是只报状态。

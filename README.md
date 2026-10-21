@@ -29,7 +29,7 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 - 当前未合入的候选实现：TMR #2624/#2625，shared resources #2626，HBG #2646/#2647（后三项 draft）。框架 #2605 的 128-token 输出仍不一致。候选代码和主线资格分别记账。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
-- 原 Pipeline A manager 目录计划移除。137 份文字来源已保存于本地参考快照，公开副本排除 manager 会话流水；完整 12,193 文件归档及原始日志仅本地保存。`references/pipeline-a/` 为冻结证据，后续任务统一在[四仓接管说明](kernel-mode-cross-repo-handoff.md)与 ROADMAP 维护。
+- 原 Pipeline A manager 目录计划移除。137 份文字来源已保存于本地参考快照，公开副本排除 manager 会话流水及调度控制材料；完整 12,193 文件归档及原始日志仅本地保存。`references/pipeline-a/` 为冻结证据，后续任务统一在[四仓接管说明](kernel-mode-cross-repo-handoff.md)与 ROADMAP 维护。
 - 文档里的“只留本地”指不进入产品代码 PR。本分支是用户授权的文档备份例外，不改变产品 PR 范围。
 
 ## 后续更新

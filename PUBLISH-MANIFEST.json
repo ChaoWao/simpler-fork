@@ -85,16 +85,16 @@
     {
       "path": "kernel-mode-cross-repo-handoff.html",
       "source_collection": "kernel-design",
-      "source_sha256": "f0045771792565c7a3d2aca97e7b6f83fed002e4e7b00ef73ff241d8b4200a79",
-      "published_sha256": "f0045771792565c7a3d2aca97e7b6f83fed002e4e7b00ef73ff241d8b4200a79",
-      "bytes": 14497
+      "source_sha256": "4d2dc046cbcd093706fe5384877f1d19d1e94e5c5f92c603ac5171e1cacdf8d3",
+      "published_sha256": "4d2dc046cbcd093706fe5384877f1d19d1e94e5c5f92c603ac5171e1cacdf8d3",
+      "bytes": 14563
     },
     {
       "path": "kernel-mode-cross-repo-handoff.md",
       "source_collection": "kernel-design",
-      "source_sha256": "26ca6232c4e378d96ed7ac947bf9a2616f2cd94c22934eba7423e4d4bf2adf25",
-      "published_sha256": "26ca6232c4e378d96ed7ac947bf9a2616f2cd94c22934eba7423e4d4bf2adf25",
-      "bytes": 10035
+      "source_sha256": "1b80aff64ab91b90cb8acab4db75386ea8ed374099fe8b0a94d0a46b5e65df02",
+      "published_sha256": "1b80aff64ab91b90cb8acab4db75386ea8ed374099fe8b0a94d0a46b5e65df02",
+      "bytes": 10090
     },
     {
       "path": "kernel-mode-cross-repo-prompt.html",
@@ -226,15 +226,15 @@
       "path": "references/pipeline-a/ARCHIVE-INDEX.md",
       "source_collection": "pipeline-a-handoff",
       "source_sha256": "c71cd0bbaa8626fce4d71ac817943900b6f041afac1a7ff0648ed626be3840af",
-      "published_sha256": "2024f881a803255320cec3e23040fc6f16bddeef81d55f4c78608c0f8b3075d2",
-      "bytes": 23253
+      "published_sha256": "24a1affcb5fc584d392ee6738c86082fa254bd5a83ef1be19fc8103e1e6ee27e",
+      "bytes": 24424
     },
     {
       "path": "references/pipeline-a/README.md",
       "source_collection": "pipeline-a-handoff",
-      "source_sha256": "e3595749196c26c681a17baab6acdca3d66f10146fdf0bfde8f65123e14453d9",
-      "published_sha256": "e3595749196c26c681a17baab6acdca3d66f10146fdf0bfde8f65123e14453d9",
-      "bytes": 1417
+      "source_sha256": "7ae7ce5605bb88c2092c16390c6292dd35f7a3100a180932e0d380ab426b6c05",
+      "published_sha256": "7ae7ce5605bb88c2092c16390c6292dd35f7a3100a180932e0d380ab426b6c05",
+      "bytes": 1453
     },
     {
       "path": "references/pipeline-a/SOURCE-MANIFEST.json",
@@ -247,8 +247,8 @@
       "path": "references/pipeline-a/agent-management-contract.html",
       "source_collection": "pipeline-a-handoff",
       "source_sha256": "fd7b3aef9388635da899b183113e1429c7e0bc5a66cacbcf3a9b62a1296944b3",
-      "published_sha256": "95ac7ebe7c19f9dc21cba11ca54612d3ef35514ba9c2d977c24975a3da4c99db",
-      "bytes": 24740
+      "published_sha256": "38116ad36ff6641a07149b5d6ec343ff5cbc7bcefb0caadf25e31c83302013a5",
+      "bytes": 24781
     },
     {
       "path": "references/pipeline-a/archives/pipeline-a-p3-integration-2356/README.md",
@@ -261,8 +261,8 @@
       "path": "references/pipeline-a/archives/progress-before-20261015/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-handoff",
       "source_sha256": "463e0eb4b8f840e0f491124ba396415d2059d088ef3b09a2da96a895e20dd2f9",
-      "published_sha256": "8888f8c582a139bcdf4415b08910c59303b1c553e281205515f807e93d9fbf1c",
-      "bytes": 202556
+      "published_sha256": "6bbf092f54605994a95af7ab47fe53c680ae1bf12dfe19b776ae00c899d47a65",
+      "bytes": 202607
     },
     {
       "path": "references/pipeline-a/archives/progress-before-20261015/run-pipeline-track-a.md",
@@ -270,41 +270,6 @@
       "source_sha256": "87b3a027219a4cf277840af5dd9468e776205593b18efe1866bbec2a9e5dac8f",
       "published_sha256": "87b3a027219a4cf277840af5dd9468e776205593b18efe1866bbec2a9e5dac8f",
       "bytes": 98379
-    },
-    {
-      "path": "references/pipeline-a/claude-managed/CONTEXT_GATE.md",
-      "source_collection": "pipeline-a-handoff",
-      "source_sha256": "007451fa69e004a27ec841653c50e591c36cd787fdafc988a12a759fe814aedd",
-      "published_sha256": "007451fa69e004a27ec841653c50e591c36cd787fdafc988a12a759fe814aedd",
-      "bytes": 2464
-    },
-    {
-      "path": "references/pipeline-a/claude-managed/CONTINUE.md",
-      "source_collection": "pipeline-a-handoff",
-      "source_sha256": "13ca9d9f4c8eb916d487fdbacc82b4bf2808a46c4573bd6ce1b1777a72d838a2",
-      "published_sha256": "13ca9d9f4c8eb916d487fdbacc82b4bf2808a46c4573bd6ce1b1777a72d838a2",
-      "bytes": 15772
-    },
-    {
-      "path": "references/pipeline-a/claude-managed/dispatch-preflight.md",
-      "source_collection": "pipeline-a-handoff",
-      "source_sha256": "2a307b4cc4fe4c8668a8ca9992ae101f6de09db2b791fc92646f9edfff1b444f",
-      "published_sha256": "2a307b4cc4fe4c8668a8ca9992ae101f6de09db2b791fc92646f9edfff1b444f",
-      "bytes": 2425
-    },
-    {
-      "path": "references/pipeline-a/claude-managed/manager-tick.prompt.txt",
-      "source_collection": "pipeline-a-handoff",
-      "source_sha256": "9e322663852da63fa33865870f1557b380e6bcb6ba7f5fcd3f5b1a0ce712c393",
-      "published_sha256": "9e322663852da63fa33865870f1557b380e6bcb6ba7f5fcd3f5b1a0ce712c393",
-      "bytes": 576
-    },
-    {
-      "path": "references/pipeline-a/claude-managed/registry.md",
-      "source_collection": "pipeline-a-handoff",
-      "source_sha256": "e4fdc05da9256081bd718a0eefb56c57ef0869a7abde21d61bd6af720b4e7190",
-      "published_sha256": "bf932e0bb66d82d3590327e39ccbfaff3ba89640756aa9e8f14972ef39cbfc5a",
-      "bytes": 1709985
     },
     {
       "path": "references/pipeline-a/dfx-continuous-collection-matrix-review.md",
@@ -1171,15 +1136,15 @@
       "path": "references/pipeline-a/run-pipeline-track-a.html",
       "source_collection": "pipeline-a-handoff",
       "source_sha256": "acf2d70ad7337d8c3456865e78b519aec01b22aad0c7af685117a5b0596a14c6",
-      "published_sha256": "c1e6798814c996a42d1ca882d682f0311702477afa2c827a593b95dac8a75b82",
-      "bytes": 57728
+      "published_sha256": "87360f9d36d8026a6307263f5e9fb5bf99b8c9c767270f6aff6872fcbd4d3414",
+      "bytes": 57745
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
       "source_collection": "pipeline-a-handoff",
       "source_sha256": "9b3506d2904ec071d23aa80dede14f54b559b8b29418c273b65d2dec5121f30a",
-      "published_sha256": "f7b1f3a826ed771fc46ab5c8133c1d2bbe572338d72e7594f5d52a9d85c6f625",
-      "bytes": 25432
+      "published_sha256": "0f588242164a396bc9a3dc47db66163ef35d17f2c9f9f075c9ab65c2ea0054fe",
+      "bytes": 25449
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
