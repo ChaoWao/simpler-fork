@@ -18,7 +18,7 @@
                        └→ A5 HBG phase layout / RunControl / 本次导出
 host admission → 自己的 export level / pool 检查；record queue 所有权保持原协议
 </code></pre>
-<p><strong>当前待审阅 <a href="https://github.com/hw-native-sys/simpler/pull/2653">#2653</a>：逐调用 PMU 选择与 device accounting 复位。</strong> effective event group 从已有 <code>PreparedExecution.dfx</code> 的一次解析结果写入 descriptor，保留 <code>SIMPLER_PMU_EVENT_TYPE</code> 的既有覆盖语义；host 导出与设备使用相同快照。AICPU 显式接收该组并在 producer 启动前复位本次 counters，host admission 不再改共享 header 或清 device counters；retained 和普通收集共用此规则。两种 runtime、两架构、onboard/sim 和 A5 HBG resident 一起改，队列/terminal bank/driver lease 仍按现有寿命合同管理。它继续收口 C1 的实际设备输入，不代表 capture 完成；不重复现有 graph/launch PR。见<a href="kernel-eager-open-work.md#c1-pmu-invocation">实施和证据</a>。</p>
+<p><strong>当前待审阅 <a href="https://github.com/hw-native-sys/simpler/pull/2653">#2653</a>：逐调用 PMU 选择与 device accounting 复位。</strong> effective event group 从已有 <code>PreparedExecution.dfx</code> 的一次解析结果写入 descriptor，保留 <code>SIMPLER_PMU_EVENT_TYPE</code> 的既有覆盖语义；host 导出与设备使用相同快照。AICPU 显式接收该组并在 producer 启动前复位本次 counters，host admission 不再改共享 header 或清 device counters；retained 和普通收集共用此规则。两种 runtime、两架构、onboard/sim 和 A5 HBG resident 一起改，队列/terminal bank/driver lease 仍按现有寿命合同管理。它继续收口 C1 的实际设备输入，不代表 capture 完成；不重复现有 graph/launch PR。 当前修订 <code>dcdb55ef2</code> 只修复两架构 DFX-off 的未使用参数编译错误；DFX-off/on 的本地构建与冒烟均通过，新 CI 待验收。见<a href="kernel-eager-open-work.md#c1-pmu-invocation">实施和证据</a>。</p>
 <pre><code class="language-text">CallConfig + 既有 PMU env override
   → PreparedExecution.dfx（只解析一次）
       ├→ collector 本次 frozen export 配置

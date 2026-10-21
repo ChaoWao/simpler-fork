@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "8dae064b44a83cee390d1b805094ec4963db9168f5c6d16679fe137ea97f2bd9",
-      "published_sha256": "8d44137a28f871b8e12b152a099f6209bfc5cd8a0f869b6d321754c08106259f",
-      "bytes": 61205
+      "source_sha256": "cb59f4a5684a7d3cc9d6cbb35cdbfd9e76e06b3ae6fb36a59ff5594ab2fa3bbb",
+      "published_sha256": "50e65c81e7071a796f508d5917dc73ecfadb1acec61a533a5bcf7f103b9c2712",
+      "bytes": 61357
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "2443269405ce4cee1f6aa3840b6631b44c7ee27a4cda5e4a7fc91d092916e18b",
-      "published_sha256": "1323558e2c84fc70ea251a3f7eb054e8f6c3f7ca4fe956a4e81540024a6b4673",
-      "bytes": 49804
+      "source_sha256": "ae9c5b8f7af4cb197dc689458adf7090ca94f85fe251c4611fb7dae31575e8ab",
+      "published_sha256": "48ec9f154688a18cd5c332697f9afa953f9379b17bee093fdd43d465c54c7d2b",
+      "bytes": 50742
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +99,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "dd22db46c819778407777de0407043fb8bf37fc3b7f73faf2cff9d7817ffcf4f",
-      "published_sha256": "80256708b0e57307b0436c7c8bef3e4389a37aef08e083434ace0583bf6ed1b1",
-      "bytes": 77652
+      "source_sha256": "844b036c2766f84f1acd82046be4732b5eddb2ae206378f559ec75ccf64f69f2",
+      "published_sha256": "20ba812d1dc4cb5fc6ec4ce051bf1b752bb1584abf927eb7886270a2c478dc0d",
+      "bytes": 77815
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -616,5 +616,5 @@
     }
   ],
   "latest_merged_pr": 2649,
-  "pending_pr_head": "08d239293b19d3d11b31d3298236483acff798ba"
+  "pending_pr_head": "dcdb55ef20ab7c8efcbbdc575c9674375f36bbc7"
 }

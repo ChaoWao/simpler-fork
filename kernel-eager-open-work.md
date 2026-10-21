@@ -205,7 +205,7 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 
 ### C1 当前交付候选：#2653（待审阅）
 
-[#2653](https://github.com/hw-native-sys/simpler/pull/2653)，head `08d239293`，基线 main `7d27e6104`。未合入，CI 结果另行记账。#2649 已收口 swimlane level，但 PMU admission 仍改共享 `PmuDataHeader::event_type`；普通收集另由 host 清 producer counters。现在移除这些逐调用共享写入，实际 producer 直接消费本次稳定描述。
+[#2653](https://github.com/hw-native-sys/simpler/pull/2653)，当前 head `dcdb55ef2`，原功能/全量验证 head `08d239293`，基线 main `7d27e6104`。未合入，CI 结果另行记账。#2649 已收口 swimlane level，但 PMU admission 仍改共享 `PmuDataHeader::event_type`；普通收集另由 host 清 producer counters。现在移除这些逐调用共享写入，实际 producer 直接消费本次稳定描述。
 
 | 生产环节 | 本笔合同 |
 | --- | --- |
@@ -227,6 +227,8 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 - A3 task-submit `task_20261020_211004_336428319303` / devices 0,6,7,10：public Worker 的 12 项切换 case（TMR/HBG × owned/borrowed，swimlane 与 PMU，含已有 PMU env override）、6 个 RTS 桩探针和两 runtime PMU smokes 通过；TMR/HBG joined attribution 各 1 项和普通 `< L4` sweep **238 passed / 20 skipped**；后者按 CI 排除独立 SDMA 分组，658 秒完成，不更改设备 watchdog。六个运行时文件 hash 前后相同，exit 0。
 
 - 最终提交 `08d239293` 重建后，task-submit `task_20261020_212651_29463928609` / device 1：4 个 public PMU case（20 次调用）和 6 个 RTS 探针通过，运行时 hash 前后相同；CI 已启动、尚未完成，不冒充 A5 silicon/macOS 验收。
+
+**CI 构建修正 `dcdb55ef2`：** 原 head 的 CI 为 18 success / 1 failure / deploy skipped；唯一失败为 [profiling-flags-smoke](https://github.com/hw-native-sys/simpler/actions/runs/39543987420/job/119039097361) 的两架构 DFX-off 构建。`post_handshake_profiling_init(Runtime *runtime)` 的函数体在 DFX 关闭时为空，新增参数触发 `-Werror=unused-parameter`。本地按 workflow 复现 A3 失败后，两份 TMR 源文件各加 `(void)runtime;`，不改告警或预算。两架构 DFX-off 构建和 vector smoke 通过；最终提交重建八套默认 runtime 后，两架构 DFX-on vector smoke 也通过，适用 pre-commit 通过。此前完整矩阵仍归原功能 head，不重挂到本轮提交；新 CI 已触发、结果待验收。评审另指出 A5 硬件 UT 与 macOS UT 的时限余量偏小，本次两行编译修正未调整其矩阵或预算。
 
 首次实板任务 `task_20261020_205750_277359920110` 失败一次：owned HBG、PMU request 2 / override 4 的首调用，在 device 0 AIVector core 40 报 UB address out of bounds，随后 lane 正确隔离并拒绝释放 in-use Buffer。相同二进制、同设备即时复跑通过；精确 main 控制组与 candidate 交替各两轮均通过。样本不足以判断旧缺陷或本次回归；保留原始设备日志、func/PC、二进制 hash 和任务信息，不因后续全绿撤销该观察。另一并行 task 持 devices 9/10，不与当次 0/6/7/8 锁重叠；占用快照在失败后读取，不能据此排除 fault 瞬间的旁路占用。首轮 CSV 在保全前被 pytest 临时保留策略删除；后续使用固定 basetemp。未知项记录于本地 KNOWN_ISSUES，不声称修复 AIV；按既有[现场规划](aiv-evidence-plan.md)跟踪。
 
