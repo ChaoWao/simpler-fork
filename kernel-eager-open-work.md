@@ -165,7 +165,7 @@ launch： caller entry → 同流发布 metadata + descriptor → fork → 两�
 
 ### C1 当前交付：#2649（待合入）
 
-head `8f89cc639`，rebase 基线 main `545c05a43`（#2588）。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
+head `e768fab28`，rebase 基线 main `545c05a43`（#2588）。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
 
 | 生产环节 | 本笔行为 |
 | --- | --- |
@@ -192,7 +192,7 @@ A5 请求 phase 时，原 retained scheduler block 可能因此正确增长；�
 
 rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局和 HostApi 调用快照全部保留；只更换冲突处的 level 来源和失实注释。测试把 caller context、Worker 注册/初始化与 stream 创建放入清理域，仅释放成功取得的对象；本地 setup 故障注入在 register/init/stream/malloc 四处验证清理，旧版本 register 失败时不执行清理。当前版本验证：
 
-- C++ **378/378**、Python **3501 passed / 162 skipped**；全部适用 pre-commit 通过。
+- 功能树 `8f89cc639`：C++ **378/378**、Python **3501 passed / 162 skipped**；全部适用 pre-commit 通过。最终 head `e768fab28` 仅补两处旧注释，将不存在的 host publish/reset 描述改成真实的 AICPU 调用前复位，适用 header hooks 通过。下述设备测试沿用同一功能树，不冒充注释提交后的重跑。
 - 首次集成 C++ 测试发现 #2588 两个 direct-bind fixture 只填 HostApi snapshot，未填 descriptor，activity 启用/禁用都保持默认 0。fixture 补齐生产 prepare_launch_shape 的前置赋值后，两项及全量 378 目标通过；PMU 与前驱不变的断言保留。
 - task-submit `task_20261020_181448_113200031067` / device 0：9 项实板 case 通过（4 个 public Worker 组合、20 次 level 调用，3 项 DFX/dep-gen smoke，TMR/HBG 各 1 项 joined attribution），另 6 项 A3 RTS 桩探针通过；二进制 hash 前后相同，exit 0。
 - A5 的 6 项真实库 RTS 桩探针通过，明确不执行设备。a5sim 的 TMR/HBG joined attribution 各 1 项、HBG level-3 phase 1 项通过；没有本地 A5 silicon 主张。

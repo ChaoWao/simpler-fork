@@ -22,8 +22,8 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "dc9a8f490d525e475211cad44297ba123020e2c8c6d837c56505a1794497cd7f",
-      "published_sha256": "4ee8a94fe9c9e385e2a2e715855bfc802e1b5955b175e10dcd94075e4d88b261",
+      "source_sha256": "291f8288dd207127c8647ee38448dc3837f01210998e2928593d4aef360d1a0d",
+      "published_sha256": "ecbb494744c77a6500261889ae3cc764b681537601a8e336bba4757334fb876a",
       "bytes": 59350
     },
     {
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "b20bc40afe6210de171ffbb1552f6e3e996e020cf46a493b3b15e916639749bf",
-      "published_sha256": "532e66f69d0935eb161396ae358599c362cec8d20ff72cf35a7d0f73852d2389",
-      "bytes": 44074
+      "source_sha256": "dd464cc3ee294cd63d83d10deb2ffe08aa2140eb5f84f3b7701c86a51ce2b3c3",
+      "published_sha256": "ba83ae0a984419e59ca2557894bf3ce0a98ddeedebf449fccc72edb2d18ea5db",
+      "bytes": 44334
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,8 +99,8 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "1d67850485259f8a0d423366e759180f65a9f44b4aebde1588e9a538ddbce8dd",
-      "published_sha256": "9b438dd40fa9c25eae4b4f26fd4c053a0fe2d9772290a1d90763d4971e5684ed",
+      "source_sha256": "fc2d0ca79f5e77672a64820b59dc3df3ff6186ccedc4aa629b54a9a2d82cb5de",
+      "published_sha256": "5787305379bda7d8be589c84ecb085835e235380b0452a6138536eb666569ac8",
       "bytes": 75552
     },
     {
