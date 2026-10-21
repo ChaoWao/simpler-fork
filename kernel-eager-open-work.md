@@ -197,7 +197,7 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 - task-submit `task_20261020_181448_113200031067` / device 0：9 项实板 case 通过（4 个 public Worker 组合、20 次 level 调用，3 项 DFX/dep-gen smoke，TMR/HBG 各 1 项 joined attribution），另 6 项 A3 RTS 桩探针通过；二进制 hash 前后相同，exit 0。
 - A5 的 6 项真实库 RTS 桩探针通过，明确不执行设备。a5sim 的 TMR/HBG joined attribution 各 1 项、HBG level-3 phase 1 项通过；没有本地 A5 silicon 主张。
 - 首次 phase sim 命令未加 DFX enable，验证器从 `.` 扫到旧的已后处理 artifact。按所需 level-3 参数重跑通过；该命令错误不包装成设备回归。
-- inline 资源清理意见已回复并 resolve；修正后的 head 已推送，CI 重新运行，尚未宣布该 head 全绿。
+- inline 资源清理意见已回复并 resolve；最终 head `e768fab28` CI **19 success / 1 预期 skip**。macOS A5 首轮 session 达 600 秒后 exit 124，无用例断言失败；被 HUNG 标记的子任务仅运行 11–17 秒。相同 105 用例，#2588 对照通过；失败轮编译和普通 L3 用例也明显变慢，底层 host 资源原因未证明。只重跑失败项，代码/并发度/预算不变；[重跑 job](https://github.com/hw-native-sys/simpler/actions/runs/39526525143/job/118991872712) 的主场景约 401 秒完成，后续 DFX smokes 全过。
 
 ## 2. API 审查与原路线的对应
 
