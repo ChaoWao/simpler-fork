@@ -41,7 +41,7 @@ bool detach_graph_slot_registry(GraphSlotRegistry *registry) noexcept;
 // Borrowed only while the invocation owner holds the context execution lease.
 GraphSlotRegistry *current_graph_slot_registry() noexcept;
 
-// Serialized with control/restore/retirement by the invocation owner. Terminal:
+// Serialized with control/preparation/retirement by the invocation owner. Terminal:
 // no register, bind, admission or retirement may make this storage usable again.
 GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcept;
 
@@ -53,8 +53,8 @@ struct GraphPacketReadOps {
 };
 
 // Read-only admission result. The packet and registry stay immutable/alive while
-// the caller uses it. Image semantics, restoration and dispatch are separate.
-struct GraphRestoreView {
+// the caller uses it. Image semantics, preparation and dispatch are separate.
+struct GraphExecutionPacketView {
     SimplerKernelInvocationHeader invocation{};
     GraphSlotRegistration slot{};
     GraphPacketHeader graph{};
@@ -67,9 +67,9 @@ struct GraphRestoreView {
 // trusted_callable is borrowed from the live callable registration owner, never
 // synthesized from packet fields. Its lease spans admission and consumption.
 // On failure: no slot write, generation publication, or output modification.
-GraphSlotStatus admit_graph_packet_for_restore(
+GraphSlotStatus admit_graph_packet_for_execution(
     const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphRestoreView &out,
+    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPacketView &out,
     const GraphPacketReadOps &ops = {}, GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
 ) noexcept;
 

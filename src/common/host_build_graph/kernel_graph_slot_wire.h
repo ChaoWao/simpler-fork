@@ -54,11 +54,11 @@ struct GraphSlotRegistration {
     uint64_t checksum;
 };
 
-enum class GraphRestorePhase : uint32_t { Idle, Restoring, Ready, Failed };
+enum class GraphExecutionSlotPhase : uint32_t { Idle, Preparing, Ready, Failed };
 
 // One leader writes this record; peers acquire phase after the entry's invocation
-// barrier. attempt is device-owned and advances even when a restore fails.
-struct alignas(64) GraphRestoreControl {
+// barrier. attempt is device-owned and advances even when preparation fails.
+struct alignas(64) GraphExecutionSlotControl {
     uint64_t attempt;
     uint64_t committed_generation;
     uint64_t runtime_address;
@@ -69,8 +69,10 @@ struct alignas(64) GraphRestoreControl {
     uint32_t reserved0;
     uint64_t live_bytes[4];
 };
-static_assert(sizeof(GraphRestoreControl) == 128);
-static_assert(std::is_standard_layout_v<GraphRestoreControl> && std::is_trivially_copyable_v<GraphRestoreControl>);
+static_assert(sizeof(GraphExecutionSlotControl) == 128);
+static_assert(
+    std::is_standard_layout_v<GraphExecutionSlotControl> && std::is_trivially_copyable_v<GraphExecutionSlotControl>
+);
 
 // Context-owned device memory. Publication lives on a separate cache line from
 // the immutable registration. phase is accessed through atomic builtins on AICPU.
@@ -84,7 +86,7 @@ struct alignas(64) GraphSlotRegistry {
     uint64_t runtime_binary_id;
     uint64_t reserved[4];
     GraphSlotRegistration registration;
-    GraphRestoreControl restore;
+    GraphExecutionSlotControl execution;
 };
 
 struct GraphSlotDetach {
@@ -106,7 +108,7 @@ static_assert(sizeof(GraphSlotRegistry) == 320 && alignof(GraphSlotRegistry) == 
 static_assert(sizeof(GraphSlotDetach) == 32 && std::is_trivially_copyable_v<GraphSlotDetach>);
 static_assert(offsetof(GraphSlotRegistry, phase) == 8);
 static_assert(offsetof(GraphSlotRegistry, registration) == 64);
-static_assert(offsetof(GraphSlotRegistry, restore) == 192);
+static_assert(offsetof(GraphSlotRegistry, execution) == 192);
 
 // Both inputs must already have non-overflowing bounds.
 inline bool graph_windows_overlap(GraphDestination a, GraphDestination b) noexcept {

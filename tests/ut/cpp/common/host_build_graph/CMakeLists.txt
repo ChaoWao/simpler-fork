@@ -99,7 +99,7 @@ hbg_case(test_hbg_definition_packing.cpp)
 hbg_case(test_hbg_bind_ledger.cpp
     SOURCES
         ${HBG_HOST_DIR}/kernel_graph_template.cpp
-        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_restore.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution.cpp
         ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_slot_registry.cpp
         ${SIMPLER_SRC}/common/platform/shared/host/kernel_execution_state.cpp
         ${SIMPLER_SRC}/common/platform/shared/host/kernel_device_resources.cpp

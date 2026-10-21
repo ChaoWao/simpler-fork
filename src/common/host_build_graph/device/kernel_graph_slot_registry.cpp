@@ -166,9 +166,9 @@ GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcep
     return GraphSlotStatus::Ok;
 }
 
-GraphSlotStatus admit_graph_packet_for_restore(
+GraphSlotStatus admit_graph_packet_for_execution(
     const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphRestoreView &out,
+    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPacketView &out,
     const GraphPacketReadOps &ops, GraphPacketAddress address_mode
 ) noexcept {
     const GraphSlotRegistry *registry = current_registry.load(std::memory_order_acquire);

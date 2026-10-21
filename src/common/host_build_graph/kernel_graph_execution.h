@@ -16,7 +16,7 @@ struct RuntimeContext;
 
 namespace hbg {
 
-enum class GraphRestoreStatus : uint32_t {
+enum class GraphExecutionStatus : uint32_t {
     Ok,
     Rejected,
     InvalidImage,
@@ -28,16 +28,16 @@ enum class GraphRestoreStatus : uint32_t {
     Poisoned
 };
 
-enum class GraphRestoreRetirement : uint32_t { Completed, ControlledFailure, FatalFailure };
+enum class GraphExecutionRetirement : uint32_t { Completed, ControlledFailure, FatalFailure };
 
 // Independent error channels from the enclosing execution and cleanup owner.
-struct GraphRestoreCompletion {
-    GraphRestoreRetirement outcome;
+struct GraphExecutionCompletion {
+    GraphExecutionRetirement outcome;
     int runtime_status{0};
     int unexpected_teardown_status{0};
 };
 
-struct GraphRestoreResult {
+struct GraphExecutionPreparation {
     RuntimeContext *runtime{nullptr};
     uint64_t generation{0};
     uint64_t sm_bytes{0};
@@ -46,38 +46,42 @@ struct GraphRestoreResult {
 
 // Optional synchronous memory backend. A failed operation may have written a
 // prefix, but no dispatch is published. Null operations select device defaults.
-struct GraphRestoreOps {
+struct GraphExecutionPreparationOps {
     void *context{nullptr};
     bool (*copy)(void *, void *, const void *, size_t){nullptr};
     bool (*zero)(void *, void *, size_t){nullptr};
     bool (*flush)(void *, const void *, size_t){nullptr};
 };
 
-// Called by the AICPU leader after Start and before opening the dispatch window.
+// Prepare a fresh graph execution from an immutable packet in a registered device
+// slot. Called by the AICPU leader after Start and before opening the dispatch window.
+// Per-execution state is reinitialized; no previous execution is resumed.
 // The owner excludes prior execution/readers, serializes this entire operation
 // with close/registration, and retains immutable packet/callable storage.
 // Source admission and image checks finish before any destination is written.
 // Ready remains occupied until retirement; Failed remains quarantined until
-// controlled cleanup or terminal poisoning. Every admitted retry restores all regions.
+// controlled cleanup or terminal poisoning. Every admitted retry reinitializes all regions.
 // out changes only on success. This function neither launches nor synchronizes.
-GraphRestoreStatus restore_graph_packet(
+GraphExecutionStatus prepare_graph_execution(
     const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphRestoreResult &out,
-    const GraphRestoreOps &ops = {}, GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
+    const simpler::kernel::PreparedInvocationView &trusted_callable, GraphExecutionPreparation &out,
+    const GraphExecutionPreparationOps &ops = {}, GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
 ) noexcept;
 
 // Called after all participants have skipped dispatch on failure, shut down,
 // passed completion gates and deinitialized, and all AICore/readers are quiescent.
 // Only a known controlled fault with no runtime/teardown error permits retry.
 // Native errors require FatalFailure and Host context poisoning; no reset/free.
-// The owner serializes this with restore, registration, poisoning and close.
-GraphRestoreStatus
-retire_graph_restore(GraphSlotRegistry *registry, uint64_t attempt, const GraphRestoreCompletion &completion) noexcept;
+// The owner serializes this with preparation, registration, poisoning and close.
+GraphExecutionStatus retire_graph_execution(
+    GraphSlotRegistry *registry, uint64_t attempt, const GraphExecutionCompletion &completion
+) noexcept;
 
 // The kernel entry distributes the successful leader's generation through its
 // per-invocation barrier. Peers must never sample an unversioned old Ready flag.
-// The execution lease prevents another restore until these readers have exited.
-GraphRestoreStatus
-acquire_graph_restore_result(const GraphSlotRegistry *registry, uint64_t generation, GraphRestoreResult &out) noexcept;
+// The execution lease prevents another preparation until these readers have exited.
+GraphExecutionStatus acquire_graph_execution(
+    const GraphSlotRegistry *registry, uint64_t generation, GraphExecutionPreparation &out
+) noexcept;
 
 }  // namespace hbg

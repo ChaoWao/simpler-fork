@@ -44,7 +44,7 @@ inline bool valid_kernel_graph_tensor(const simpler::hbg::TensorData &tensor) no
 }
 
 inline bool
-valid_restored_kernel_graph_tensor(const simpler::hbg::TensorData &tensor, uint64_t heap, uint64_t bytes) noexcept {
+valid_prepared_kernel_graph_tensor(const simpler::hbg::TensorData &tensor, uint64_t heap, uint64_t bytes) noexcept {
     if (!valid_kernel_graph_tensor(tensor)) return false;
     if (tensor.buffer.addr >= heap && tensor.buffer.addr - heap <= bytes)
         return tensor.buffer.size <= bytes - (tensor.buffer.addr - heap);

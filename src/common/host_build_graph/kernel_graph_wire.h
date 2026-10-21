@@ -106,8 +106,8 @@ inline uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept 
 }
 
 // Allocation-free framing validation. No device destination is read or written.
-// Registry identity checks and semantic validation of restored images precede
-// execution separately; a checksum-valid packet alone never authorizes restore.
+// Registry identity checks and semantic validation of execution images precede
+// execution separately; a checksum-valid packet alone never authorizes execution preparation.
 inline GraphPacketStatus
 validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept {
     constexpr size_t prefix = sizeof(SimplerKernelInvocationHeader);

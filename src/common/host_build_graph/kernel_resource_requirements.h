@@ -88,7 +88,7 @@ inline int32_t measure_graph_resources(
 }
 
 // One serial execution slot reserves each region's maximum independently.
-// This value does not allocate, freeze a context, or authorize a device restore.
+// This value does not allocate, freeze a context, or authorize device execution preparation.
 class KernelResourceCapacity {
 public:
     static int32_t create(const GraphResourceRequirements *graphs, size_t count, KernelResourceCapacity &out) {

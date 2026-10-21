@@ -46,7 +46,7 @@
 #include "host_build_graph/host_graph_build.h"
 #include "host_build_graph/kernel_resource_requirements.h"
 #include "host_build_graph/kernel_graph_template.h"
-#include "host_build_graph/kernel_graph_restore.h"
+#include "host_build_graph/kernel_graph_execution.h"
 #include "host_build_graph/host/dep_gen_host_graph.h"
 #include "host_build_graph/host/host_tensor_access.h"
 #include "host/raii_scope_guard.h"
@@ -2684,92 +2684,92 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::detach_graph_slot_registry(registry);
     });
     const simpler::kernel::PreparedInvocationView trusted{identity.callable_id, 0, 0, identity.generation};
-    hbg::GraphRestoreResult restored;
+    hbg::GraphExecutionPreparation prepared;
     EXPECT_EQ(
         hbg::validate_graph_packet(second.storage.data(), second.bytes, hbg::GraphPacketAddress::DeviceCopy),
         hbg::GraphPacketStatus::InvalidHeader
     );
     ASSERT_EQ(
-        hbg::restore_graph_packet(
-            second.storage.data(), second.bytes, 0, 123, trusted, restored, {}, hbg::GraphPacketAddress::RelativeLaunch
+        hbg::prepare_graph_execution(
+            second.storage.data(), second.bytes, 0, 123, trusted, prepared, {}, hbg::GraphPacketAddress::RelativeLaunch
         ),
-        hbg::GraphRestoreStatus::Ok
+        hbg::GraphExecutionStatus::Ok
     );
     ASSERT_EQ(
-        hbg::retire_graph_restore(registry, restored.generation, {hbg::GraphRestoreRetirement::Completed}),
-        hbg::GraphRestoreStatus::Ok
+        hbg::retire_graph_execution(registry, prepared.generation, {hbg::GraphExecutionRetirement::Completed}),
+        hbg::GraphExecutionStatus::Ok
     );
     EXPECT_EQ(
-        hbg::restore_graph_packet(second.storage.data(), second.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Rejected
+        hbg::prepare_graph_execution(second.storage.data(), second.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Rejected
     );
     ASSERT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Ok
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Ok
     );
-    ASSERT_NE(restored.runtime, nullptr);
-    EXPECT_EQ(reinterpret_cast<uintptr_t>(restored.runtime), registration.destinations[1].address + layout.off_runtime);
-    EXPECT_EQ(restored.total_tasks, static_cast<uint32_t>(build.total_tasks));
+    ASSERT_NE(prepared.runtime, nullptr);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(prepared.runtime), registration.destinations[1].address + layout.off_runtime);
+    EXPECT_EQ(prepared.total_tasks, static_cast<uint32_t>(build.total_tasks));
     EXPECT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Busy
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Busy
     );
-    const uint64_t first_generation = restored.generation;
-    restored.runtime->total_cycles = 765;
+    const uint64_t first_generation = prepared.generation;
+    prepared.runtime->total_cycles = 765;
     std::memset(reinterpret_cast<void *>(registration.destinations[0].address), 0x55, build.heap_bytes);
     ASSERT_EQ(
-        hbg::retire_graph_restore(registry, first_generation, {hbg::GraphRestoreRetirement::Completed}),
-        hbg::GraphRestoreStatus::Ok
+        hbg::retire_graph_execution(registry, first_generation, {hbg::GraphExecutionRetirement::Completed}),
+        hbg::GraphExecutionStatus::Ok
     );
     ASSERT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Ok
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Ok
     );
-    EXPECT_GT(restored.generation, first_generation);
-    EXPECT_EQ(restored.runtime->total_cycles, 0);
+    EXPECT_GT(prepared.generation, first_generation);
+    EXPECT_EQ(prepared.runtime->total_cycles, 0);
     EXPECT_EQ(*reinterpret_cast<const uint8_t *>(registration.destinations[0].address), 0U);
     ASSERT_EQ(
-        hbg::retire_graph_restore(registry, restored.generation, {hbg::GraphRestoreRetirement::Completed}),
-        hbg::GraphRestoreStatus::Ok
+        hbg::retire_graph_execution(registry, prepared.generation, {hbg::GraphExecutionRetirement::Completed}),
+        hbg::GraphExecutionStatus::Ok
     );
     // A valid checksum does not confer callable authority on a stale capture.
-    const uint64_t attempt = registry->restore.attempt;
+    const uint64_t attempt = registry->execution.attempt;
     auto stale = trusted;
     ++stale.generation;
     EXPECT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, stale, restored),
-        hbg::GraphRestoreStatus::Rejected
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, stale, prepared),
+        hbg::GraphExecutionStatus::Rejected
     );
-    EXPECT_EQ(registry->restore.attempt, attempt);
-    hbg::GraphRestoreOps copy_failure{};
+    EXPECT_EQ(registry->execution.attempt, attempt);
+    hbg::GraphExecutionPreparationOps copy_failure{};
     copy_failure.copy = [](void *, void *, const void *, size_t) {
         return false;
     };
     EXPECT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored, copy_failure),
-        hbg::GraphRestoreStatus::CopyFailed
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared, copy_failure),
+        hbg::GraphExecutionStatus::CopyFailed
     );
     EXPECT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Quarantined
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Quarantined
     );
     ASSERT_EQ(
-        hbg::retire_graph_restore(
-            registry, registry->restore.attempt, {hbg::GraphRestoreRetirement::ControlledFailure}
+        hbg::retire_graph_execution(
+            registry, registry->execution.attempt, {hbg::GraphExecutionRetirement::ControlledFailure}
         ),
-        hbg::GraphRestoreStatus::Ok
+        hbg::GraphExecutionStatus::Ok
     );
     ASSERT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Ok
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Ok
     );
     EXPECT_EQ(
-        hbg::retire_graph_restore(registry, restored.generation, {hbg::GraphRestoreRetirement::FatalFailure, -1}),
-        hbg::GraphRestoreStatus::Poisoned
+        hbg::retire_graph_execution(registry, prepared.generation, {hbg::GraphExecutionRetirement::FatalFailure, -1}),
+        hbg::GraphExecutionStatus::Poisoned
     );
     EXPECT_EQ(
-        hbg::restore_graph_packet(first.storage.data(), first.bytes, 0, 123, trusted, restored),
-        hbg::GraphRestoreStatus::Poisoned
+        hbg::prepare_graph_execution(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
+        hbg::GraphExecutionStatus::Poisoned
     );
     const uint64_t measured = requirements.runtime_arena_bytes;
     EXPECT_EQ(
