@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-20 / main `7e8038e9a`：#2619、#2620、#2628、#2600、#2638、#2640、#2645 与 #2643 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
+**2026-10-20 / main `545c05a43`：#2619、#2620、#2628、#2600、#2638、#2640、#2645、#2643 与 #2588 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
 
 **已合入 [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。合入提交 `2a6d2d50c`；graph 引用和 replay 仍由 C2–C4 验收。
 
@@ -31,7 +31,7 @@
 **已合入 [#2645](https://github.com/hw-native-sys/simpler/pull/2645)（`ed421bf33`）：结果区首次初始化同流发布。** cold slot 的 `published=0` 保存为八字节快照，launch 经已有 pinned source 在 AICPU stream 发布，再 fork 到两侧 kernel；未成功发布时拒绝读取该 allocation，即使其中恰好有本次 epoch 和 success。warm 复用不增加 marker 复制。TMR/HBG × 两架构真实库桩探针通过；338 C++、3434 Python、两套 sim 各 2 项和 task-submit A3 板测 34 项通过；负对照抓住 prepare 同步初始化与未初始化结果误读。这些数字保留原 head 归属，无本地 A5 silicon 或 capture 完成主张。见 [本笔边界](kernel-eager-open-work.md#c1-result-publication)。
 
 
-**当前 PR [#2649](https://github.com/hw-native-sys/simpler/pull/2649)：本次调用的 swimlane level。** prepare 将 `CallConfig` 的级别写入本次 descriptor；AICPU 显式接收该值，host admission 不再改共享 header。A5 HBG 的 phase 存储规划、RunControl 和导出也改用本次值，修复 runner 仍是前驱 level 0 时漏建后继 level 3 phase 存储的问题。字段使用原 padding/reserved，原有偏移与大小不变；level 变化会使既有前缀缓存失效并重发，不增加独立 level H2D。340 C++、3495 Python、两架构各 6 个真实库探针、A3 普通上板 236 passed / 20 skipped，以及最终 head 的 7 个定向板测通过。A5 follow-up 的 bind/DFX sim 另有证据；CI 待验收，不宣布 capture 或完整 DFX 完成。见 [本次记录](kernel-eager-open-work.md#c1-swimlane-invocation)。
+**当前 PR [#2649](https://github.com/hw-native-sys/simpler/pull/2649)：本次调用的 swimlane level。** prepare 将 `CallConfig` 的级别写入本次 descriptor；AICPU 显式接收该值，host admission 不再改共享 header。A5 HBG phase 存储规划、RunControl 和导出同取 descriptor。#2588 已让 HostApi 选择按调用快照，不再将此前的“查询前驱级别”当作当前 main 缺陷；本笔保留该快照和 PMU 布局逻辑，统一设备侧级别来源。字段使用原 padding/reserved，原偏移与大小不变；level 变化使既有前缀缓存失效并重发，没有独立 level H2D。head `8f89cc639` 已 rebase #2588；C++ 378/378、Python 3501 passed；A3 task-submit 的 9 项实板与 6 项 RTS 桩探针、A5 的 6 项桩探针及 3 项 DFX sim 通过。旧 sweep 仍保留原基线，不代替本次集成验证。见 [本次记录](kernel-eager-open-work.md#c1-swimlane-invocation)。
 
 ```text
 CallConfig level → 本次 Runtime descriptor → 稳定快照 / pinned async publish → AICPU init(level)

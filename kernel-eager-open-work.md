@@ -2,7 +2,7 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `7e8038e9a`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643 已合入；当前 [#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，并修复 A5 HBG 取前驱级别导致 phase 存储缺失。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
+**当前进度基线 main `545c05a43`；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643 已合入；当前 [#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作，不重复其设备协议。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -165,7 +165,7 @@ launch： caller entry → 同流发布 metadata + descriptor → fork → 两�
 
 ### C1 当前交付：#2649（待合入）
 
-head `4e4fdaee9`，基线 main `7e8038e9a`。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
+head `8f89cc639`，rebase 基线 main `545c05a43`（#2588）。本笔落地原则 §8/§15：设备使用本次稳定描述，host-only 导出状态独立管理。没有新 public API、版本协商或执行对象。
 
 | 生产环节 | 本笔行为 |
 | --- | --- |
@@ -173,12 +173,14 @@ head `4e4fdaee9`，基线 main `7e8038e9a`。本笔落地原则 §8/§15：设�
 | 三种 descriptor 布局 | TMR 使用 entry storage 前原有对齐空位；共享 HBG 使用一个 reserved word；已有偏移、handshake 边界与 sizeof 不变；三种 Runtime constructor 均定义默认 0 |
 | descriptor publication | 原稳定快照、slot pinned source、AICPU 异步发布与 fork；level 变化参与前缀缓存失效，没有独立 level H2D 或 staging allocation |
 | AICPU producer | 各 runtime/arch 和 A5 HBG resident lifecycle 显式传入本次级别；不读取共享 collector header 的 level；禁用时沿用原缓存失效 |
-| A5 HBG host planner / RunControl / export | 全部取本次 descriptor；避免 prepared successor 使用前驱 level 0，漏建 level 3 phase 存储、发布错误级别或跳过导出 |
+| A5 HBG host planner / RunControl / export | 全部取本次 descriptor；保留 #2588 已交付的 per-run HostApi diagnostics snapshot 和 PMU 布局选择，不把早期基线缺陷重复计为新修复 |
 | collector admission | 保存 host 导出级别、检查 pool；不改 device level，不清 producer queue。Header level 只表示初次 pool 元数据 |
 
 A5 请求 phase 时，原 retained scheduler block 可能因此正确增长；没有性能收益或“所有调用的 DMA 笔数不变”的主张。原 joined-admission 规则保持不变，未开放任意级别同时执行。粗粒度 enable bit 仍在 launch envelope；capture 的更新、graph/source/code 寿命和完整 DFX reset/restore 继续按 C1–C4 验收，不能据本笔宣告全部闭包完成。
 
-- 最终提交重建：非硬件 C++ **340/340**、Python **3495 passed / 162 skipped**、两架构真实库 RTS probes 各 **6 passed**；全部适用 pre-commit 与编译轴通过。
+以下为 rebase 前 head `4e4fdaee9` / main `7e8038e9a` 的历史证据，不能替代与 #2588 的集成验证：
+
+- 原提交重建：非硬件 C++ **340/340**、Python **3495 passed / 162 skipped**、两架构真实库 RTS probes 各 **6 passed**；全部适用 pre-commit 与编译轴通过。
 - 负对照：主线 host admission 改共享 header，新用例先红；恢复 device 从 header 取值也使级别切换用例失败。毒化 placement construction 先发现默认字段未定义，补齐 constructor 后四组合通过。
 - A5 real bind 的负对照：runtime 请求 SCHED_PHASES、HostApi 仍返回 0 时，phase 存储没有增长；planner/RunControl/export 改取本次值后 bind suite **56 passed**。A5 HBG follow-up sim **34 passed / 2 skipped**，另有 DFX phase sim **1 passed**。
 - 较早同一接线树的普通 sim：a2a3sim **103 passed**，a5sim **100 passed**；最终 A5 host-path 修正另按上一条验证，不把旧完整 sweep 冒充该修正之后的全量结果。
@@ -186,8 +188,16 @@ A5 请求 phase 时，原 retained scheduler block 可能因此正确增长；�
 - 最终提交/重建后 task-submit `task_20261020_074511_129459830537` / device 0：**7 个定向 case 通过**，含 TMR/HBG × owned/borrowed 的 20 次公开调用，逐次检查 tensor、artifact level 和 phase 存在性，及原 DFX/dep-gen smokes。无本地 A5 silicon/macOS 通过主张。
 - 三次早期 harness 问题均保留原日志：DFX smoke 漏 dep-gen；整个 sweep 误用 300 秒 session cap（CI 为 1200 秒）；rebase 后旧 hash 在 pytest 前拒绝新产物。修正后的上述正式运行通过。session cap 的 HUNG 标签不是设备挂死证据；不放宽 device watchdog。
 
-CI 刚启动；#2642 仍单独跟踪。未声明 AIV 根因修复。规划/HTML 与原始现场不进入代码 PR。
+原 head 的 CI 全绿，包括 macOS/A5/network1；不代表 rebase 后版本已验收。#2642 仍单独跟踪。未声明 AIV 根因修复。规划/HTML 与原始现场不进入代码 PR。
 
+rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局和 HostApi 调用快照全部保留；只更换冲突处的 level 来源和失实注释。测试把 caller context、Worker 注册/初始化与 stream 创建放入清理域，仅释放成功取得的对象；本地 setup 故障注入在 register/init/stream/malloc 四处验证清理，旧版本 register 失败时不执行清理。当前版本验证：
+
+- C++ **378/378**、Python **3501 passed / 162 skipped**；全部适用 pre-commit 通过。
+- 首次集成 C++ 测试发现 #2588 两个 direct-bind fixture 只填 HostApi snapshot，未填 descriptor，activity 启用/禁用都保持默认 0。fixture 补齐生产 prepare_launch_shape 的前置赋值后，两项及全量 378 目标通过；PMU 与前驱不变的断言保留。
+- task-submit `task_20261020_181448_113200031067` / device 0：9 项实板 case 通过（4 个 public Worker 组合、20 次 level 调用，3 项 DFX/dep-gen smoke，TMR/HBG 各 1 项 joined attribution），另 6 项 A3 RTS 桩探针通过；二进制 hash 前后相同，exit 0。
+- A5 的 6 项真实库 RTS 桩探针通过，明确不执行设备。a5sim 的 TMR/HBG joined attribution 各 1 项、HBG level-3 phase 1 项通过；没有本地 A5 silicon 主张。
+- 首次 phase sim 命令未加 DFX enable，验证器从 `.` 扫到旧的已后处理 artifact。按所需 level-3 参数重跑通过；该命令错误不包装成设备回归。
+- inline 资源清理意见已回复并 resolve；修正后的 head 已推送，CI 重新运行，尚未宣布该 head 全绿。
 
 ## 2. API 审查与原路线的对应
 
