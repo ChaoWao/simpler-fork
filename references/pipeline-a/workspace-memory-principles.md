@@ -1,7 +1,9 @@
+> **2026-10-21 接管快照**：保留原基线与历史结论；现状见[接管入口](../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../runtime-design-principles.md)为准。此页不授权恢复历史任务、timer 或自动化。
+
 # Workspace：按位置、写入方与最后使用者分类
 
 历史源码分类快照（不是当前进度）：main `47de5bb168f3b9c9351317b8c1b7517ed6873272`。仅静态核查，未运行用例。
-当前状态见 [路线图](run-pipeline-track-a.md) 与 [内存报告](../../LOCAL-EVIDENCE.md#artifact-ee79834e8745)。原始源码分类保留下面的精确基线；当前预算政策以修订后的 G3 为准，#2571 的传输/执行寿命拆分仍是未合入 PR。
+当前状态见 [路线图](run-pipeline-track-a.md) 与 [内存报告](memory-current-state.html)。原始源码分类保留下面的精确基线；当前预算政策以修订后的 G3 为准，#2571 的传输/执行寿命拆分仍是未合入 PR。
 
 本文提供 [运行时总体原则 G2–G4](runtime-design-principles.md) 的内存分类与代码依据。
 代码事实仍以以上核查基线为准；目标原则适用于 program / kernel 共用的内部资源管理，

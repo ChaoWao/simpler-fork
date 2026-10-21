@@ -1,17 +1,35 @@
+> **2026-10-21 接管快照**：保留原基线与历史结论；现状见[接管入口](../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../runtime-design-principles.md)为准。此页不授权恢复历史任务、timer 或自动化。
+
 # Pipeline A：当前路线、阶段状态与交接
 
-核对时间：2026-10-19T08:57:43.919060+00:00（诊断进度；CI沿用已注明证据）。主线基线：`f50f9007620160e63a270ba83d2dd33fc656b7ad`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)；原始异步目标：[#1853](https://github.com/hw-native-sys/simpler/issues/1853)。
+## 仓库后续与协作入口（2026-10-21）
+
+当前主线源码核对到 `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，本轮未运行产品测试。已新建[四仓 HBG × Async 整体验收 #2658](https://github.com/hw-native-sys/simpler/issues/2658)，复用 #2429/#1706/#1853 与既有作者。
+
+- [Issue/PR 全局梳理与后续依赖](ecosystem-status-and-next.html)：已交付基础、开放 PR 与可并行包。
+- [kernel eager/capture 跨仓 prompt](kernel-mode-cross-repo-prompt.html)：四仓实际接口、旧栈重叠与接收任务。
+- [多人协作原则 v0](multi-agent-work-principles.html)：与 WudiTask 的能力边界、认领/交接/验收建议，尚未成为新制度。
+
+以下详细阶段保留各自原始验证基线；合入与本轮源码核对均不等于重测。ArgsDump 历史超时已按用户要求搁置；Qwen 自动模式组合仍缺原输入权限。
+
+外部#2628已合入main d0d4d0eb：HBG前置元数据按调用保留主机快照，在launch流使用pinned源异步上传；A5诊断扩展仅在本run元数据已发布后输出。已核实际17文件改动，未重测，不视为PMU根因修复；本次定位仍使用冻结产物。
+
+[HBG × Async 整体验收与性能目标](hbg-async-system-validation.html)：host 准备退出稳态关键路径、device 时间主导；含交互时间线与跨仓工作拆解。目标与方案，尚非实测结论。
+
+状态整理时间：2026-10-21T10:20:02.820703+00:00（只读核对，历史测试见各项）。主线基线：`7503761a6c01a6d07ccd8d9c82b8060da843d1af`。总集成跟踪：[Issue #2429](https://github.com/hw-native-sys/simpler/issues/2429)。
+
+外部基线更新：#2629已合入main 3b9d1a74，仅将pto-isa pin从cbca1e9b更新为b1d460ee；已核实际单文件差异，未重构建或重测，当前PMU诊断继续使用冻结产物。
 
 外部主线：#2620已合入main f50f90076，合入树与已审e23f46完全一致。HBG/TMR runtime描述符使用按资源组保留的pinned主机源，在实际AICPU流异步上传，并用event排序AICore读取；失败保留源与执行所有权。大块HBG图上传、DFX写入和capture仍单列，不代表PMU根因已修复。本轮仅核源码，未重测；本次PMU隔离实验使用冻结产物，已完成并复现原失败。此前#2622仿真时限与手动图容量、#2618 fork隔离、#2615启动异常保全均已合入，#2617关闭未合入。
 
-本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](../../LOCAL-EVIDENCE.md#artifact-e9af7bab9363)，不能作为当前待办。
+本页是当前阶段表；[HTML 看板](run-pipeline-track-a.html)使用同一批事实。旧 `748c39fbe` 设计与旧进度保留在[历史快照](archives/progress-before-20261015/run-pipeline-track-a.md)，不能作为当前待办。
 
 设计方向更新：默认自动资源准入；PR/CI证据仍以以上核对时间为准。
 
-DFX #2588当前5cab632f（PR基线2ee，单提交）尚未Ready；CI已完成17成功、1跳过、1失败，A3板端PMU仍失败。A5 HBG ArgsDump不支持且延期，历史ArgsDump处理超时单列未解。优先定位#2588：全16设备协作锁隔离下再次复现，6轮中前5轮2565条计数全正，第6轮513条全零；72个窗口入口/保存值全0、使能及等待前全7，派发前1秒后全2。固定无任务AIC窗口单写7后仅目标恢复7，其余71仍2。177份交付指纹、528条原始记录、3078条CSV、两次全锁及实际加载身份已核，数值、flush、关闭和锁释放通过，原失败保留。这排除同时正确预留设备的协作任务是必要条件，仍不能排除前轮/先前任务延迟、未托管全局控制或硬件机制；物理核映射与上一场不同，不作完全配对比较。六轮432个保存值全0，普通恢复没有直接写2的记录。下一方案已审，原作者正在准备新进程/新context各跑一次的主机脚本和首次离线检查，以检验同context多轮复用是否必要；包含正常关闭和重置等生命周期变化，不把未复现当修复。尚未启动新设备实验。历史ArgsDump超时仍单列未解，未Ready。 8条反馈已关闭，A5 HBG ArgsDump延期。 #2596当前提交与历史CI分开记录，见下。
+DFX #2588 已合入 main 545c05a43；合入树与最终已审 fd5ba1fd 完全一致，本轮仅核源码、未重跑测试。四后端六run公开API持续补队、资源世代复用、复用后再次提前入队及逐run诊断内容验收通过；两host新增watchdog用例所在目标执行通过。合入前CI17成功，含Docs为18成功1跳过；8条审查线程均已解决。普通A5 L2失败仅重试一次后通过，六组DFX smokes也实际通过；原507018/sched100及历史PMU/ArgsDump等故障原因仍未证明。执行存储与诊断输出额度独立，不声称强制背压实测或性能收益。A5 HBG ArgsDump延期，HBG无设备ScopeStats/DepGen生产者；旧诊断UNKNOWN保留不重提。
 
 
-外部接口整合：[#2599](https://github.com/hw-native-sys/simpler/pull/2599)公开直接L2的borrowed context/caller-stream eager接口；[#2600](https://github.com/hw-native-sys/simpler/pull/2600)当前010dcc5扩展为五类collector初始化失败回滚、注销后释放及非抛出发布，共20个源/测试文件；native退休/ACK补充已撤回。前者不等于本地L3自动准入，后者尚未证明能解决本线PMU全零；各由原作者负责。前者#2599已合入main，后者#2600仍开放；实际差异已核，后续整合需保留各自接口与测试。
+外部接口整合：#2599 borrowed context/caller-stream eager 与 #2600 PMU/collector 资源所有权修复均已合入；#2619 统一注册亦已合入。本轮核对合入状态，没有重跑各项测试；它们不替代本地 L3 默认自动准入与真实模型组合验收。
 
 CI辅助#2609已合入main 0d05dfd54，合入补丁与已审3ace7ba74精确一致。合入前CI18成功、1跳过；修复源文件索引更新时未正确使用既有重试的问题。持续软件源故障仍可能失败，且不代表DFX的PMU问题已修复。
 
@@ -21,13 +39,15 @@ CI辅助#2609已合入main 0d05dfd54，合入补丁与已审3ace7ba74精确一�
 
 测试维护#2613已合入main 2ee57567d：删除SIMPLER_UT_TRB_RUNTIME，HBG/TMR专属测试独立组织，保留15个目标和248个既有实例，并补全HBG Runtime默认图描述符的三个初值。合入树与已审30ed1de42完全一致；合入前18项成功、1跳过，macOS 326和Ubuntu 327个CTest目标全部通过。本轮仅核对合入源码，未重跑测试；不代表Qwen自动组合或DFX已验收。
 
-DFX #2588当前5cab632f（PR基线2ee，单提交）尚未Ready；CI已完成17成功、1跳过、1失败，A3板端PMU仍失败。A5 HBG ArgsDump不支持且延期，历史ArgsDump处理超时单列未解。优先定位#2588：全16设备协作锁隔离下再次复现，6轮中前5轮2565条计数全正，第6轮513条全零；72个窗口入口/保存值全0、使能及等待前全7，派发前1秒后全2。固定无任务AIC窗口单写7后仅目标恢复7，其余71仍2。177份交付指纹、528条原始记录、3078条CSV、两次全锁及实际加载身份已核，数值、flush、关闭和锁释放通过，原失败保留。这排除同时正确预留设备的协作任务是必要条件，仍不能排除前轮/先前任务延迟、未托管全局控制或硬件机制；物理核映射与上一场不同，不作完全配对比较。六轮432个保存值全0，普通恢复没有直接写2的记录。下一方案已审，原作者正在准备新进程/新context各跑一次的主机脚本和首次离线检查，以检验同context多轮复用是否必要；包含正常关闭和重置等生命周期变化，不把未复现当修复。尚未启动新设备实验。历史ArgsDump超时仍单列未解，未Ready。
+DFX #2588 已合入 main 545c05a43；合入树与最终已审 fd5ba1fd 完全一致，本轮仅核源码、未重跑测试。四后端六run公开API持续补队、资源世代复用、复用后再次提前入队及逐run诊断内容验收通过；两host新增watchdog用例所在目标执行通过。合入前CI17成功，含Docs为18成功1跳过；8条审查线程均已解决。普通A5 L2失败仅重试一次后通过，六组DFX smokes也实际通过；原507018/sched100及历史PMU/ArgsDump等故障原因仍未证明。执行存储与诊断输出额度独立，不声称强制背压实测或性能收益。A5 HBG ArgsDump延期，HBG无设备ScopeStats/DepGen生产者；旧诊断UNKNOWN保留不重提。
 
 ## 当前结论
 
-步骤一有界 P4/P1–P3 验收已完成；步骤二 #2447/#2456、步骤三 #2471/#2511/#2568/#2592 均已合入当前 main。普通异步并非仍是单 launched；剩余重点是动态资源扩展收口、真实 workload 组合，以及 DFX 完整接线。
+ArgsDump遗留超时：追加3次串行验证全部通过，共6次公开submit；真实提前入队、数值与run归属均通过，每run7条Args和513条正PMU记录，进程及双锁清理已核。4秒/8秒探针未触发，保持原8秒/2秒期限及545c冻结基线。按用户要求暂时搁置，保留证据、后续再现再定位，不再主动复跑，不声明根因修复或最新main验收。
 
-#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；合入基线 `a2b0ad2` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596已合入main a2b0ad2；合入树与已审77460ea26完全一致。四后端默认自动准入、持续补队、HOST/DEVICE寿命、失败/关闭及双端点验收已有证据，合入前CI18成功、1跳过，五条反馈已关闭；本轮未重测。内部slot是可复用资源组编号，自动身份目录最多168项，不是固定2/3份准入。冷启动先准入一个逻辑run，首run完整退休并反馈容量后才扩展，会减少首对请求的重叠机会。Qwen自动模式组合尚未验收；合入后源码复核已完成：arena竞争被reservation门禁阻断，FIFO容量折入正确；native同线程跨context重入已由4项基线对照复现，修复14项验证通过并发布#2611，已合入0eda81c93，合入前CI18成功1跳过、补丁核验一致。 manager已更新[设计要求](../../LOCAL-EVIDENCE.md#artifact-fa3c46d23d4a)，已完成[完整实施合同](../../LOCAL-EVIDENCE.md#artifact-46af702a03da)，实现已合入，继续合入后复核和真实Qwen自动模式组合。
+步骤一有界 P4/P1–P3 验收已完成；步骤二 #2447/#2456、步骤三 #2471/#2511/#2568/#2592 均已合入当前 main。普通异步并非仍是单 launched；动态资源扩展与 DFX 完整接线已合入；剩余重点是真实 workload 组合验收；ArgsDump历史超时经三次追加未复现，按用户要求暂时搁置。
+
+#2571 已合入 `78365f79c`，合入补丁与已审 a002 一致；合入基线 `a2b0ad2` 已包含#2592且合入补丁核验一致；#2593将communicator控制状态移入chip子进程循环，不改变自动准入范围。合入前CI18成功1跳过，四后端容量、五run入队和64次持续提交已有证据，本轮未重测。按用户最新方向，普通submit默认按资源自动准入，不要求配置多个depth；原Qwen固定4/2示例方案及其审批撤回。普通异步#2596已合入main a2b0ad2；合入树与已审77460ea26完全一致。四后端默认自动准入、持续补队、HOST/DEVICE寿命、失败/关闭及双端点验收已有证据，合入前CI18成功、1跳过，五条反馈已关闭；本轮未重测。内部slot是可复用资源组编号，自动身份目录最多168项，不是固定2/3份准入。冷启动先准入一个逻辑run，首run完整退休并反馈容量后才扩展，会减少首对请求的重叠机会。Qwen自动模式组合尚未验收；合入后源码复核已完成：arena竞争被reservation门禁阻断，FIFO容量折入正确；native同线程跨context重入已由4项基线对照复现，修复14项验证通过并发布#2611，已合入0eda81c93，合入前CI18成功1跳过、补丁核验一致。 manager已更新[设计要求](review/p4-qwen-grant-composition-decision.md)，已完成[完整实施合同](review/p4-auto-resource-admission-decision.md)，实现已合入，继续合入后复核和真实Qwen自动模式组合。
 
 普通异步#2611已合入，Qwen15项新增CPU通过、硬件待输入；DFX旧版边界观察已完成，再次复现初始化后至首次读数前失效。合入事实、设计目标与执行证据分开记录。
 
@@ -55,7 +75,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | --- | --- | --- | --- |
 | P0 · 测量基线 | 已有基线，最终性能验收未完成 | [#2262](https://github.com/hw-native-sys/simpler/pull/2262) | 已有设备时基与观测工具；同负载、同设备条件下的端到端正确性、吞吐、长尾和资源峰值报告仍待交付。 |
 | P1 · run 私有资源 | 有界普通路径已交付 | [#2268](https://github.com/hw-native-sys/simpler/pull/2268) / [#2275](https://github.com/hw-native-sys/simpler/pull/2275) / [#2283](https://github.com/hw-native-sys/simpler/pull/2283) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) | 计时、arena、结果与终态按 run 保留。动态资源表由 #2571 扩展；不能用历史固定容量验收替代组合验收。 |
-| P1 · DFX 资源与身份 | 基础已合入，完整接线未完成 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588当前5cab632f（PR基线2ee，单提交）尚未Ready；CI已完成17成功、1跳过、1失败，A3板端PMU仍失败。A5 HBG ArgsDump不支持且延期，历史ArgsDump处理超时单列未解。优先定位#2588：全16设备协作锁隔离下再次复现，6轮中前5轮2565条计数全正，第6轮513条全零；72个窗口入口/保存值全0、使能及等待前全7，派发前1秒后全2。固定无任务AIC窗口单写7后仅目标恢复7，其余71仍2。177份交付指纹、528条原始记录、3078条CSV、两次全锁及实际加载身份已核，数值、flush、关闭和锁释放通过，原失败保留。这排除同时正确预留设备的协作任务是必要条件，仍不能排除前轮/先前任务延迟、未托管全局控制或硬件机制；物理核映射与上一场不同，不作完全配对比较。六轮432个保存值全0，普通恢复没有直接写2的记录。下一方案已审，原作者正在准备新进程/新context各跑一次的主机脚本和首次离线检查，以检验同context多轮复用是否必要；包含正常关闭和重置等生命周期变化，不把未复现当修复。尚未启动新设备实验。历史ArgsDump超时仍单列未解，未Ready。 8条反馈已关闭，A5 HBG ArgsDump延期；不外推未验收collector。 |
+| P1 · DFX 资源与身份 | 完整跨 run 接线已合入 | [#2534](https://github.com/hw-native-sys/simpler/pull/2534) / [#2563](https://github.com/hw-native-sys/simpler/pull/2563) | DFX #2588 已合入 main 545c05a43；合入树与最终已审 fd5ba1fd 完全一致，本轮仅核源码、未重跑测试。四后端六run公开API持续补队、资源世代复用、复用后再次提前入队及逐run诊断内容验收通过；两host新增watchdog用例所在目标执行通过。合入前CI17成功，含Docs为18成功1跳过；8条审查线程均已解决。普通A5 L2失败仅重试一次后通过，六组DFX smokes也实际通过；原507018/sched100及历史PMU/ArgsDump等故障原因仍未证明。执行存储与诊断输出额度独立，不声称强制背压实测或性能收益。A5 HBG ArgsDump延期，HBG无设备ScopeStats/DepGen生产者；旧诊断UNKNOWN保留不重提。 |
 | P2 E1 · 健康消费者 | 已合入，不再是“下一项” | [#2303](https://github.com/hw-native-sys/simpler/pull/2303) / [#2354](https://github.com/hw-native-sys/simpler/pull/2354) / [#2374](https://github.com/hw-native-sys/simpler/pull/2374) | callback owner、故障证据及匹配设备代际的停止准入已交付；通知不自动归属某个 run，通知缺席不证明成功。 |
 | P2 E2 · 完成与安全退休 | 批准的有界 program 范围已完成 | [#2272](https://github.com/hw-native-sys/simpler/pull/2272) / [#2298](https://github.com/hw-native-sys/simpler/pull/2298) / [#2330](https://github.com/hw-native-sys/simpler/pull/2330) / [#2379](https://github.com/hw-native-sys/simpler/pull/2379) / [#2391](https://github.com/hw-native-sys/simpler/pull/2391) / [#2411](https://github.com/hw-native-sys/simpler/pull/2411) | 有效本 run 完成证据与 Ok 判定走正常分支；错误、Partial 或停止未知保留对应回退/隔离。不得外推所有故障形态都无同步。 |
 | P3 · FIFO / build / host 访问 | 已合入；步骤一有界集成验收完成 | [#2314](https://github.com/hw-native-sys/simpler/pull/2314) / [#2356](https://github.com/hw-native-sys/simpler/pull/2356) / [#2399](https://github.com/hw-native-sys/simpler/pull/2399) / [#2406](https://github.com/hw-native-sys/simpler/pull/2406) | 保持 parent FIFO、recorder/build 所有权及调用方 host 就绪合同。扩大准入后仍需对应组合回归，不自动推导跨 run host 数据依赖。 |
@@ -74,7 +94,7 @@ P0–P6 是设计职责，不与某一个 PR 一一对应；下表分别标注�
 | --- | --- | --- |
 | R1 · 容量扩展收口 | #2571 已合入 → main 源码基线已核 | 合入补丁核验完成；历史CI不冒充最新main重测，后续集中组合验收。 |
 | R2 · 动态资源 × 真实 Qwen | R1 + 已合入 #2471/#2511/#2568 | 组合验证自动准入、transport/执行背压、持续 refill、DEVICE 最后消费者、失败/关闭；组件分别通过不等于组合已通过；旧4/2与固定N+1示例方案撤回；#2596的77460ea26已完成静审、CI及反馈闭环，已合入；随后完成Qwen自动模式组合验收。#2592已合入1a8a3ee2，合入补丁与已审93b7b4c3一致；最终CI18成功、1跳过，macOS重跑成功。作者板端证据为六请求636步、619条joined相邻边、608条refill，数值与最后消费者检查通过，小窗口和失败关闭对照完成。范围限固定形状、单A3 HBG端点、关闭诊断，替换请求设显式排干检查点；不代表自动资源准入或任意动态请求已验收。本轮未重测。 自动准入已合入；native重入修复#2611已合入0eda81c93，补丁核验一致，不重复#2592 driver。 |
-| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588当前5cab632f（PR基线2ee，单提交）尚未Ready；CI已完成17成功、1跳过、1失败，A3板端PMU仍失败。A5 HBG ArgsDump不支持且延期，历史ArgsDump处理超时单列未解。优先定位#2588：全16设备协作锁隔离下再次复现，6轮中前5轮2565条计数全正，第6轮513条全零；72个窗口入口/保存值全0、使能及等待前全7，派发前1秒后全2。固定无任务AIC窗口单写7后仅目标恢复7，其余71仍2。177份交付指纹、528条原始记录、3078条CSV、两次全锁及实际加载身份已核，数值、flush、关闭和锁释放通过，原失败保留。这排除同时正确预留设备的协作任务是必要条件，仍不能排除前轮/先前任务延迟、未托管全局控制或硬件机制；物理核映射与上一场不同，不作完全配对比较。六轮432个保存值全0，普通恢复没有直接写2的记录。下一方案已审，原作者正在准备新进程/新context各跑一次的主机脚本和首次离线检查，以检验同context多轮复用是否必要；包含正常关闭和重置等生命周期变化，不把未复现当修复。尚未启动新设备实验。历史ArgsDump超时仍单列未解，未Ready。 8条反馈已关闭，A5 HBG ArgsDump延期。 |
+| R3 · DFX 完整跨 run 接线 | P4依赖整合 → 语义复审 → 精确head CI / collector验收 | DFX #2588 已合入 main 545c05a43；合入树与最终已审 fd5ba1fd 完全一致，本轮仅核源码、未重跑测试。四后端六run公开API持续补队、资源世代复用、复用后再次提前入队及逐run诊断内容验收通过；两host新增watchdog用例所在目标执行通过。合入前CI17成功，含Docs为18成功1跳过；8条审查线程均已解决。普通A5 L2失败仅重试一次后通过，六组DFX smokes也实际通过；原507018/sched100及历史PMU/ArgsDump等故障原因仍未证明。执行存储与诊断输出额度独立，不声称强制背压实测或性能收益。A5 HBG ArgsDump延期，HBG无设备ScopeStats/DepGen生产者；旧诊断UNKNOWN保留不重提。 |
 | R4 · 固定形状 vLLM eager | 普通异步组合边界成立；目标 workload / ABI / 输出合同固定 | 外部#2605已开放：固定形状单A3 HBG、borrowed L2/caller stream；当前591f003：作者报告A3真实模型短decode（2×16请求、4token）通过，128token仍有数值偏差，首token分歧64；完整模型与性能未验收，不覆盖本地L3自动准入。 |
 | R5 · 约定动态请求范围 | 固定形状 eager + 明确 batch / request lifecycle 范围 | 逐项约定准入、取消、失败、回收和资源背压；不宣称无限请求或无限内存。 |
 | R6 · capture / replay | 准备产物、参数绑定、graph 引用寿命及目标 SDK 合同成立 | 后续独立能力；当前普通异步不以 capture 实现为前置。 |
@@ -113,9 +133,9 @@ DFX 与 workload 组合可以在职责和写入范围清楚时并行；依赖整
 
 ## 支线状态
 
-- **DFX：** 已合入身份、后台输出和有界泳道能力；完整多 collector 跨 run 接线在原 temporal 分支，尚待最终依赖整合、复审、CI。详见[整合审查](../../LOCAL-EVIDENCE.md#artifact-16574d2263c2)。
+- **DFX：** 已合入身份、后台输出和有界泳道能力；完整多 collector 跨 run 接线在原 temporal 分支，尚待最终依赖整合、复审、CI。详见[整合审查](review/temporal-a8f1ceff9-integration-review.md)。
 - **prepare / 上传：** 注册资源复用、TMR 调用参数进入 launch（#2432）、执行配置复用（#2438）、HBG 图定义进入 RTS launch 参数（#2487）已交付；不等于所有传输成本已消失或性能最优。
-- **内存：** 四类 workspace 默认生命周期管理（#2473）及图定义设备块移交 RTS（#2487）已合入。请求私有存储和最后消费者规则仍须随 #2571 扩展核验；[内存报告](../../LOCAL-EVIDENCE.md#artifact-ee79834e8745)的存储分类与源码基线单独标注。
+- **内存：** 四类 workspace 默认生命周期管理（#2473）及图定义设备块移交 RTS（#2487）已合入。请求私有存储和最后消费者规则仍须随 #2571 扩展核验；[内存报告](memory-current-state.html)的存储分类与源码基线单独标注。
 
 <a id="principles-application"></a>
 ## 规范边界
@@ -141,14 +161,14 @@ DFX 与 workload 组合可以在职责和写入范围清楚时并行；依赖整
 
 ## 证据入口与历史
 
-- [E2 有界收口](../../LOCAL-EVIDENCE.md#artifact-03fee72fb1e2)、[P3 交接](../../LOCAL-EVIDENCE.md#artifact-eeac338ebd70)。
-- [#2571 历史 Ready 验收](../../LOCAL-EVIDENCE.md#artifact-d1caeb49985a)、[当前提交与 CI 复审](../../LOCAL-EVIDENCE.md#artifact-01940bbb0835)。
-- [#2568 精确 head 评审](../../LOCAL-EVIDENCE.md#artifact-1e8d23ac687c)；127 步数据是 PR 作者的板端证据，不是本次 manager 重测。
-- [运行时原则](runtime-design-principles.md)、[工作管理约定](../../LOCAL-EVIDENCE.md#artifact-579c8abdfab8)、[当前授权登记](../../LOCAL-EVIDENCE.md#artifact-ada206aaafff)。
-- [早期总体设计](../../LOCAL-EVIDENCE.md#artifact-ac0b78177977)是历史设计基线；旧 P1/P2 分工、DFX 矩阵和旧评审不再承担实时状态。
+- [E2 有界收口](review/e2-after-2411-closeout.md)、[P3 交接](review/p3-delivery-and-handoff.md)。
+- [#2571 历史 Ready 验收](review/pr2571-5e3564a56-ready-evidence.md)、[当前提交与 CI 复审](review/pr2571-a002acc47-ready-evidence.md)。
+- [#2568 精确 head 评审](review/pr2568-46d43741c-manager-review.md)；127 步数据是 PR 作者的板端证据，不是本次 manager 重测。
+- [运行时原则](runtime-design-principles.md)、[工作管理约定](agent-management-contract.html)、[当前授权登记](claude-managed/registry.md)。
+- [早期总体设计](run-pipeline-redesign.html)是历史设计基线；旧 P1/P2 分工、DFX 矩阵和旧评审不再承担实时状态。
 
 ### 自动准入的下一步
 
-默认自动准入已随#2596合入：内部按复用、可控增长、可等待回收和不可满足分流，旧显式配置兼容。下一步复用#2592验证真实Qwen自动模式，分别报告正确性、实际容量和未覆盖的总内存峰值；见[现行方案](../../LOCAL-EVIDENCE.md#artifact-fa3c46d23d4a)。
+默认自动准入已随#2596合入：内部按复用、可控增长、可等待回收和不可满足分流，旧显式配置兼容。下一步复用#2592验证真实Qwen自动模式，分别报告正确性、实际容量和未覆盖的总内存峰值；见[现行方案](review/p4-qwen-grant-composition-decision.md)。
 
-DFX当前失败已按八类机制核对，最终提交需逐项闭合：[失败与候选修复清单](../../LOCAL-EVIDENCE.md#artifact-d47b11f96638)。其中预算固定开销与未释放记录分开判断；候选修改不等于测试通过。
+DFX当前失败已按八类机制核对，最终提交需逐项闭合：[失败与候选修复清单](review/pr2588-1d707-ci-repair-coverage.md)。其中预算固定开销与未释放记录分开判断；候选修改不等于测试通过。

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HBG × Async · 从跨仓贯通到设备主导性能</title>
+<style>
+:root{--ink:#172d3b;--muted:#546b79;--paper:#f5f7f6;--line:#dbe5e6;--blue:#4c70d4;--green:#128571;--amber:#b85d16;--soft:#edf2fb}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.75 system-ui,-apple-system,"Noto Sans CJK SC",sans-serif}a{color:#2758aa;text-underline-offset:4px}main{max-width:1160px;margin:auto;padding:36px 28px 72px}nav{display:flex;flex-wrap:wrap;gap:18px;margin:26px 0;font-size:14px}header{padding:30px 0 24px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--green);font-size:13px;font-weight:750;letter-spacing:2px}h1{font-size:clamp(30px,4.5vw,52px);line-height:1.22;letter-spacing:-1.5px;max-width:860px;margin:18px 0}h2{font-size:27px;line-height:1.4;margin:8px 0 22px}h3{font-size:18px;margin:0 0 10px}p{margin:8px 0 16px}.lead{font-size:20px;max-width:900px}.muted,small{color:var(--muted)}section{margin-top:44px;scroll-margin-top:20px}.number{font-size:13px;color:var(--green);font-weight:700;letter-spacing:1px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{padding:22px;background:white;border:1px solid var(--line);border-radius:16px}.target{background:#153f40;color:white;border-radius:18px;padding:26px 30px;margin:24px 0}.target p{color:#dcecea}.formula{font-size:clamp(21px,3vw,31px);font-weight:700;letter-spacing:-.5px}.tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;background:#e6f3ef;color:#09634f}.tag.plan{background:#fff1dd;color:#8b4a11}.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.chain .card{position:relative;padding:18px}.chain strong{display:block;font-size:18px}.chain span{display:block;font-size:14px;color:var(--muted)}.chain .card:not(:last-child):after{content:'→';position:absolute;right:-17px;top:29px;z-index:1;background:var(--paper);color:var(--green)}.note{border-left:3px solid var(--green);padding:12px 18px;background:#eaf4ef;font-size:15px}.warn{border-color:var(--amber);background:#fff3e7}.sim{padding:24px;background:white;border:1px solid var(--line);border-radius:18px}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin:20px 0}label{display:block;font-size:14px;font-weight:650}input[type=range]{width:100%;accent-color:var(--green)}select{font:inherit;padding:8px;max-width:100%;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink)}.presets{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}button{border:1px solid #c2d6ce;background:#edf6f2;color:#185d4c;padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;font-size:14px}button:hover{background:#d5eadf}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #b85d16;outline-offset:3px}.chart-wrap{overflow:auto}svg{width:100%;min-width:740px;height:auto;display:block}.legend{display:flex;flex-wrap:wrap;gap:20px;font-size:13px;margin-top:12px}.dot{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}.metric{background:#f2f6f5;border-radius:12px;padding:15px}.metric strong{display:block;font-size:27px;line-height:1.35}.metric span{font-size:13px;color:var(--muted)}.comparison{display:flex;gap:16px;align-items:center;margin:24px 0}.comparison .card{flex:1;border-top:4px solid var(--green)}.comparison b{font-size:27px}.comparison .sign{font-size:30px;color:var(--green)}table{width:100%;border-collapse:collapse;background:white;font-size:14px}th,td{text-align:left;vertical-align:top;padding:15px;border-bottom:1px solid var(--line)}th{background:#eaf0f0}ul,ol{padding-left:22px}li{margin-bottom:7px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.dag{padding:24px;background:#edf2f0;border-radius:16px}.dag .gate{text-align:center;padding:16px;border:1px solid #a5c4b8;border-radius:10px;background:white;font-weight:700}.dag .branches{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.dag .branches div{background:white;padding:15px;border-radius:10px;font-size:14px}.arrow{text-align:center;color:var(--green);font-size:22px}.footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.status{font-size:13px;line-height:1.8}.links{display:flex;gap:20px;flex-wrap:wrap}@media(max-width:760px){main{padding:20px 16px 48px}.grid,.chain,.controls,.dag .branches{grid-template-columns:1fr}.chain .card:after{display:none}.metrics{grid-template-columns:1fr}.comparison{flex-direction:column;align-items:stretch}.comparison .sign{text-align:center;line-height:1}.target{padding:22px}.lead{font-size:18px}h2{font-size:24px}.table-wrap table{min-width:700px}}@media print{body{background:white}main{max-width:none;padding:0}nav,.controls,.presets,.mode{display:none}section{break-inside:avoid}a{color:inherit}svg{min-width:0}.card{break-inside:avoid}}
+</style>
+</head>
+<body><aside style="padding:12px;background:#fff4d6;color:#3a2d16">2026-10-21 接管快照；原基线与历史结论保留。<a href="../../kernel-mode-cross-repo-handoff.md">接管入口与现状</a> · <a href="../../runtime-design-principles.md">当前规范</a>。此页不授权恢复历史任务或自动化。</aside><main><p>已建立正式跟踪：<a href="https://github.com/hw-native-sys/simpler/issues/2658">Issue #2658 · 四仓 HBG × Async 整体验收</a>。<a href="ecosystem-status-and-next.html">当前仓库状态与依赖</a>；本文继续作为设计说明，非实测性能报告。</p>
+<header>
+<div class="eyebrow">SYSTEM QUALIFICATION / HBG × ASYNC</div>
+<h1>让设备时间，<br>决定推理性能。</h1>
+<p class="lead">跨仓跑通 HBG，让 Async 将主机工作移出稳态关键路径，再验证 <strong>HBG 优于 TMR、TMR 优于 vLLM-Ascend</strong> 的性能目标。</p>
+<p class="status"><span class="tag">用户明确的性能目标</span> <span class="tag plan">整体验收方案 · 尚非实测结论</span><br>2026-10-19 · Async 为原 Pipeline A 特性的现用名称。本文规定目标、验证方式与工作拆解；不宣称整体验收已完成。</p>
+</header>
+<nav aria-label="页内导航"><a href="#goal">目标</a><a href="#timeline">关键路径时间线</a><a href="#comparison">性能排序</a><a href="#delivery">跨仓功能</a><a href="#work">并行工作与验收</a></nav>
+
+<section id="goal"><div class="number">01 / 性能目标</div><h2>Host 可以忙，设备不应因此等待</h2>
+<div class="target"><div class="formula">稳态每步时间 ≈ 设备关键路径时间</div><p>主机为下一次调用做准备时，设备执行当前调用。主机工作赶在设备需要之前完成，未被覆盖的主机等待应小到可以忽略。</p></div>
+<div class="grid"><article class="card"><h3>HBG：减少设备控制开销</h3><p>将适合的构图与依赖准备放到主机，让设备主要承担计算和必要调度。新增的主机构图、打包和传输也必须被覆盖。</p></article><article class="card"><h3>Async：保持设备持续有工作</h3><p>重叠准备、提交和安全回收；资源不足时按实际可用资源背压。足够的排队只能吸收波动，不能弥补长期供给不足。</p></article><article class="card"><h3>整体验收：证明组合成立</h3><p>从真实模型与请求入口测量，检查设备空洞、持续补队和主机暴露时间，同时验证数值与资源寿命。</p></article></div>
+<p class="note">“设备时间”是完成同等有效工作的设备执行关键路径，包含设备调度、必要传输及通信的实际影响；不能只统计忙碌的算子、删掉设备内开销。主机关键路径占比很低，也不代表设备执行本身已经足够快。</p>
+</section>
+
+<section id="timeline"><div class="number">02 / 可交互的时间线</div><h2>看主机工作是否真正被覆盖</h2>
+<div class="sim">
+<p><strong>教学模型，所有数字均为示意输入。</strong>同一设备上 run 串行；图中展示六次调用，主机准备使用一个串行生产者。没有设备实测数据。</p>
+<div class="controls"><label for="host">主机准备 H：<output id="host-value">3.0</output> ms<input id="host" type="range" min="0.5" max="20" step="0.5" value="3"></label><label for="device">设备执行 D：<output id="device-value">10.0</output> ms<input id="device" type="range" min="1" max="20" step="0.5" value="10"></label><label for="gap">未被覆盖的交接 g：<output id="gap-value">0.1</output> ms<input id="gap" type="range" min="0" max="3" step="0.1" value="0.1"></label></div>
+<label class="mode" for="mode">依赖条件 <select id="mode"><option value="overlap">可提前准备：DEVICE 数据按设备顺序消费</option><option value="feedback">必须先读回：主机拿到前驱结果才准备后继</option></select></label>
+<div class="presets"><button type="button" data-preset="covered">目标状态：覆盖主机工作</button><button type="button" data-preset="slow">主机供给不足</button><button type="button" data-preset="feedback">主机反馈形成串行依赖</button></div>
+<div class="chart-wrap"><svg id="timeline-svg" viewBox="0 0 1060 260" role="img" aria-labelledby="chart-title chart-desc"><title id="chart-title">同步与异步的主机和设备时间线</title><desc id="chart-desc">蓝色是主机准备，绿色是串行设备执行，橙色是设备等待下一次提交。修改上方参数可查看关键路径变化。</desc></svg></div>
+<div class="legend"><span><i class="dot" style="background:#4c70d4"></i>Host 准备</span><span><i class="dot" style="background:#128571"></i>Device 执行</span><span><i class="dot" style="background:#e5a25e"></i>未被覆盖的等待</span><span>两组时间线使用相同时间刻度</span></div>
+<div class="metrics" aria-live="polite"><div class="metric"><span>同步稳态周期</span><strong id="sync-cycle">13.1 ms</strong></div><div class="metric"><span>当前方案稳态周期</span><strong id="async-cycle">10.1 ms</strong></div><div class="metric"><span>模型中暴露在关键路径上的主机等待占比</span><strong id="host-share">1.0%</strong></div></div>
+<p id="explanation" class="note">H 小于 D，主机准备能被设备执行覆盖；剩余交接等待仍需缩小。</p>
+<p class="muted">模型公式：可提前准备时，稳态周期 = max(H, D + g)；主机反馈阻塞时 = H + D + g。前者假设有限缓冲足以支撑该流水线、布局已知且无额外资源冲突。首轮启动和最后排空没有被隐藏，仍计入完整请求延迟。</p>
+<noscript><p class="note">启用 JavaScript 可操作时间线。静态结论：H=3、D=10、g=0.1 ms 时，同步周期13.1 ms；可提前准备的稳态周期10.1 ms；若必须等主机反馈，仍为13.1 ms。</p></noscript>
+</div>
+<p class="note warn">自回归依赖必须真实满足：后继可提前持有设备地址，不等于已经有了数据；仍需正确设备顺序。若采样、分支或动态形状必须由 host 读取前驱结果决定，这段等待仍在关键路径，Async API 本身不会消除它。</p>
+</section>
+
+<section id="comparison"><div class="number">03 / 性能排序与判定</div><h2>目标：同等工作量下，HBG 更快</h2>
+<div class="comparison"><article class="card"><span class="tag">目标延迟最低</span><h3>HBG + Async</h3><b>T<sub>HBG</sub></b><p>主机准备被覆盖，设备侧构图/依赖管理成本更低。</p></article><div class="sign">&lt;</div><article class="card"><h3>TMR + Async</h3><b>T<sub>TMR</sub></b><p>持续供给设备，并优化算子、融合与设备调度。</p></article><div class="sign">&lt;</div><article class="card"><h3>vLLM-Ascend</h3><b>T<sub>vLLM</sub></b><p>同模型、精度、负载与硬件上的实际服务基准。</p></article></div>
+<p><strong>这里的“&lt;”是工程目标，不是已测结果。</strong>等量工作的延迟越低越好；吞吐则越高越好。单请求延迟与服务吞吐分开验证，不用增加 batch 或放宽尾延迟冒充同条件加速。</p>
+<div class="table-wrap"><table><thead><tr><th>比较</th><th>保持一致</th><th>要回答的问题</th></tr></thead><tbody><tr><td>HBG vs TMR</td><td>尽量相同模型、算子实现、精度、输入、KV、服务调度；使用同一 Async 策略</td><td>设备控制成本节省了多少？host 准备、上传是否吃回收益？不可避免的生成代码差异单独记录。</td></tr><tr><td>Async vs 同步对照</td><td>分别在 HBG/TMR 上保持有效计算不变</td><td>设备间隙是否缩小，端到端周期是否接近设备周期，资源峰值增加多少？</td></tr><tr><td>TMR/HBG vs vLLM-Ascend</td><td>权重/tokenizer、精度与质量门槛、硬件/并行规模、请求流、输入输出长度、缓存状态</td><td>完整推理与服务性能是否更好？先做受控 eager 比较，再做各自可部署优化配置比较，明确 graph/capture 差异。</td></tr></tbody></table></div>
+<div class="grid" style="margin-top:16px"><article class="card"><h3>关键路径验收</h3><p>在持续有有效请求的稳态窗口，按统一时间基准测量设备等 host 的间隙。报告总占比与间隙 P50/P95/P99，区分输入依赖、资源背压和上游供给不足。</p></article><article class="card"><h3>整体性能验收</h3><p>报告设备执行、首 token 延迟、每 token 延迟、请求延迟与有效吞吐；尾延迟、CPU、HBM 和主机内存一起报告。预热与冷启动单列。</p></article><article class="card"><h3>明确“可忽略”</h3><p>建议将“稳态 host 等待占比 ≤ 1%”作为待确定的验收阈值，同时检查尾部间隙。它是本方案的建议，不是已批准的数值承诺或 runtime 参数。</p></article></div>
+<p class="muted">诊断工具用于解释差距，正式性能轮关闭高扰动诊断。重复测量采用交错顺序，报告离散度/置信区间；小于测量噪声的差异不宣布胜出。PMU 尚未可靠时，不引用其计数证明性能，但可用独立校验的计时继续基础验收。</p>
+</section>
+
+<section id="delivery"><div class="number">04 / 功能闭环</div><h2>同一个真实模型，穿过四个仓库</h2>
+<div class="chain"><div class="card"><strong>pypto-serving</strong><span>请求调度 · KV · 采样 · 输出</span></div><div class="card"><strong>pypto-lib</strong><span>模型结构 · 算子组合</span></div><div class="card"><strong>pypto</strong><span>编译 · HBG/TMR 产物</span></div><div class="card"><strong>simpler</strong><span>准入 · 提交 · 执行 · 退休</span></div></div>
+<p>首个完整验收建议复用 Qwen3-14B / A3 基础：<strong>prefill → 连续 decode → 多请求持续到达 → 结束回收</strong>。从源码生成真实产物，记录实际加载身份；手写示例、私人旧二进制或 CPU prefill 只作定位对照。</p>
+<div class="grid"><article class="card"><h3>数值要贯通</h3><p>算子组合、单层、全模型逐层核对。相同前缀下比较 logits/KV，再做自由生成；对齐归一化、舍入与精度边界，不用放宽容差掩盖错误。</p></article><article class="card"><h3>请求要持续</h3><p>不同请求拥有独立可变 KV/输出。DEVICE feedback、安全复用、自动准入与背压一起验证；覆盖不同长度、提前结束、部分提交失败和 close。</p></article><article class="card"><h3>边界要保留</h3><p>设备 operator 串行、parent FIFO、最后消费者后退休、有限资源与明确背压；不引入隐式跨 run host 同步。未验证的平台与形态不外推支持。</p></article></div>
+</section>
+
+<section id="work"><div class="number">05 / 如何达成</div><h2>功能、Async、数值、性能基线并行推进</h2>
+<div class="dag" aria-label="工作依赖关系"><div class="gate">共同起点：固定四仓版本、模型/输入、硬件、计时与正确性标准</div><div class="arrow">↓</div><div class="branches"><div><strong>A · 跨仓 HBG 接线</strong><br>编译接口 → 单层 → 全模型 → 服务入口</div><div><strong>B · 数值与参考</strong><br>相同前缀 → 首个偏差 → logits/KV → 自由生成</div><div><strong>C · Async 接线</strong><br>持续提交 → DEVICE feedback → 资源背压 → 安全退休</div><div><strong>D · 性能基线</strong><br>TMR/vLLM 基线 → 时间分解 → 可比较请求流</div></div><div class="arrow">↓ A + B + C 汇合；D 提供同口径基准</div><div class="gate">完整模型正确运行 → HBG/Async 组合验收 → 设备主导的性能优化 → 跨仓 CI 与发布报告</div></div>
+<div class="table-wrap" style="margin-top:20px"><table><thead><tr><th>里程碑</th><th>必须交付</th><th>完成判据</th></tr></thead><tbody><tr><td>M1 · 跑通</td><td>四仓可复现入口、真实模型 HBG 全链路</td><td>从源码构建；prefill/连续生成正确；后端身份明确，无静默回退</td></tr><tr><td>M2 · 持续运行</td><td>Async 与模型/服务组合</td><td>持续补队、自动背压、数值/身份/寿命/关闭通过；无需固定 depth 调参才能正确工作</td></tr><tr><td>M3 · 达到性能目标</td><td>统一负载的 HBG/TMR/vLLM 比较与关键路径报告</td><td>host 暴露等待达到约定阈值；设备主导稳态；明确哪些场景达到目标排序及剩余差距</td></tr><tr><td>M4 · 可持续交付</td><td>跨仓 CI、支持矩阵、版本组合与运行说明</td><td>新提交能发现功能/性能回退，其他人可以复现，不依赖某台机器的私有环境</td></tr></tbody></table></div>
+<p class="note">按完整公开场景组织 PR，跨仓采用有关联和合入顺序的一组 PR。工作包是并行分工，不是把一个功能拆成若干“再多一套资源”的交付。现有作者与实现优先复用，派发前检查 main 和开放 PR。</p>
+<details><summary>遇到性能差距，按什么顺序处理？</summary><ol><li><strong>设备等待 host：</strong>先定位必需反馈、隐藏同步、准备/提交不足和资源回收阻塞，量化各自贡献。</li><li><strong>host 已被覆盖，但 HBG 不快：</strong>比较设备调度、算子执行、数据移动和图表示成本；降低主机占比已不够。</li><li><strong>TMR 仍慢于 vLLM：</strong>分别归因算子/融合、内存与 KV、设备调度、服务调度；不能只优化 runtime。</li><li><strong>设备微基准快，服务不快：</strong>检查排队、采样、请求组织和输出路径，计入真实用户延迟。</li></ol></details>
+</section>
+<footer class="footer"><p><strong>文档性质：</strong>用户目标与建议验收方案。时间线是简化模型，性能排序尚待实测；本文不增加产品配置项，也不构成新实现阶段已启动或跨仓验收已完成的证据。</p><div class="links"><a href="run-pipeline-track-a.html">当前进度看板</a><a href="run-pipeline-track-a.md">阶段与证据记录</a><a href="https://github.com/hw-native-sys/simpler/pull/2605">现有服务集成与数值定位</a><a href="https://docs.vllm.ai/projects/ascend/en/main/developer_guide/performance_and_debug/performance_benchmark.html">vLLM-Ascend 基准方法</a></div></footer>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const svg = $('timeline-svg');
+  const ns = 'http://www.w3.org/2000/svg';
+  function node(tag, attrs, content) {
+    const n = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+    if (content !== undefined) n.textContent = content;
+    svg.appendChild(n); return n;
+  }
+  function render() {
+    const h = +$('host').value, d = +$('device').value, g = +$('gap').value;
+    const blocked = $('mode').value === 'feedback';
+    ['host','device','gap'].forEach(id => $(id + '-value').textContent = (+$(id).value).toFixed(1));
+    svg.querySelectorAll('g,rect,line,text').forEach(n => n.remove());
+    const n = 6, end = n * (h + d + g), left = 122, width = 910;
+    const x = t => left + t / end * width;
+    function text(t, y, s, extra = {}) { node('text', {x:t,y,'font-size':13,fill:'#546b79',...extra}, s); }
+    function bar(start, duration, y, color, label) {
+      if (duration <= 0) return;
+      node('rect', {x:x(start), y, width:duration/end*width, height:24, rx:4, fill:color});
+      if (duration/end*width > 25) text(x(start+duration/2), y+17, label, {'text-anchor':'middle',fill:'white','font-size':12});
+    }
+    text(10,28,'同步对照',{'font-weight':700,fill:'#172d3b'});
+    text(10,134,blocked?'主机反馈阻塞':'Async 提前准备',{'font-weight':700,fill:'#172d3b'});
+    text(10,54,'Host'); text(10,88,'Device'); text(10,160,'Host'); text(10,194,'Device');
+    let prev = 0;
+    for (let i=0;i<n;i++) {
+      const start = i*(h+d+g);
+      bar(start,h,37,'#4c70d4','H'+(i+1));
+      bar(start,h+g,71,'#e5a25e','等待');
+      bar(start+h+g,d,71,'#128571','D'+(i+1));
+      const hs = blocked?prev:i*h;
+      const ds = Math.max(hs+h,prev)+g;
+      bar(hs,h,143,'#4c70d4','H'+(i+1));
+      bar(prev,ds-prev,177,'#e5a25e','等待');
+      bar(ds,d,177,'#128571','D'+(i+1));
+      prev = ds+d;
+    }
+    node('line',{x1:left,x2:left+width,y1:225,y2:225,stroke:'#bfcdd1'});
+    for(let i=0;i<=6;i++) text(x(end*i/6),245,(end*i/6).toFixed(1),{'text-anchor':'middle'});
+    text(10,245,'时间 / ms');
+    const cycle = blocked?h+d+g:Math.max(h,d+g);
+    $('sync-cycle').textContent=(h+d+g).toFixed(1)+' ms';
+    $('async-cycle').textContent=cycle.toFixed(1)+' ms';
+    $('host-share').textContent=(100*(cycle-d)/cycle).toFixed(1)+'%';
+    $('explanation').textContent=blocked?'后继必须先等主机读回，H 仍在依赖链上；需要处理真实数据依赖与上层接线，提前调用接口本身不能隐藏它。':h>d+g?'主机长期供给慢于设备消费，稳态由 H 限制。增加队列只能暂时缓冲，不能消除持续空洞。':'主机准备已被覆盖，稳态由设备执行加剩余交接等待决定；继续缩小 g，并检查真实尾部波动。';
+    $('explanation').className='note'+(blocked||h>d+g?' warn':'');
+  }
+  ['host','device','gap','mode'].forEach(id=>$(id).addEventListener('input',render));
+  document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+    $('host').value=b.dataset.preset==='slow'?15:3;
+    $('device').value=10;$('gap').value=.1;
+    $('mode').value=b.dataset.preset==='feedback'?'feedback':'overlap';render();
+  }));
+  render();
+})();
+</script>
+</body></html>

@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-21",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "7d27e610411c3219137d492eafcb0342bad681d7",
-  "pending_pr": 2653,
+  "latest_roadmap_source_baseline": "7503761a6c01a6d07ccd8d9c82b8060da843d1af",
+  "pending_pr": null,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "cb59f4a5684a7d3cc9d6cbb35cdbfd9e76e06b3ae6fb36a59ff5594ab2fa3bbb",
-      "published_sha256": "50e65c81e7071a796f508d5917dc73ecfadb1acec61a533a5bcf7f103b9c2712",
-      "bytes": 61357
+      "source_sha256": "209a256d7cc35ac577bd63897400565e1f6b1a8d767780ad613e01446a27c6dc",
+      "published_sha256": "209a256d7cc35ac577bd63897400565e1f6b1a8d767780ad613e01446a27c6dc",
+      "bytes": 61966
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,37 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "ae9c5b8f7af4cb197dc689458adf7090ca94f85fe251c4611fb7dae31575e8ab",
-      "published_sha256": "48ec9f154688a18cd5c332697f9afa953f9379b17bee093fdd43d465c54c7d2b",
-      "bytes": 50742
+      "source_sha256": "29736e472eb662182f0141b74a9012838752b06bfa18bc5e91c5744f6d0205c0",
+      "published_sha256": "29736e472eb662182f0141b74a9012838752b06bfa18bc5e91c5744f6d0205c0",
+      "bytes": 51170
+    },
+    {
+      "path": "kernel-mode-cross-repo-handoff.html",
+      "source_collection": "kernel-design",
+      "source_sha256": "f0045771792565c7a3d2aca97e7b6f83fed002e4e7b00ef73ff241d8b4200a79",
+      "published_sha256": "f0045771792565c7a3d2aca97e7b6f83fed002e4e7b00ef73ff241d8b4200a79",
+      "bytes": 14497
+    },
+    {
+      "path": "kernel-mode-cross-repo-handoff.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "26ca6232c4e378d96ed7ac947bf9a2616f2cd94c22934eba7423e4d4bf2adf25",
+      "published_sha256": "26ca6232c4e378d96ed7ac947bf9a2616f2cd94c22934eba7423e4d4bf2adf25",
+      "bytes": 10035
+    },
+    {
+      "path": "kernel-mode-cross-repo-prompt.html",
+      "source_collection": "kernel-design",
+      "source_sha256": "2f5a1498e3029a1edf59f2ad3977b681887362f4bd568f0d80d3ce7431b46a67",
+      "published_sha256": "2f5a1498e3029a1edf59f2ad3977b681887362f4bd568f0d80d3ce7431b46a67",
+      "bytes": 29113
+    },
+    {
+      "path": "kernel-mode-cross-repo-prompt.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "d9dda2e3a93f3bab6709f8bfce23e3420918e27028347615a5e2811ba4c41c25",
+      "published_sha256": "6247f708e923ee8802f499d85612ef2ccd3ecfd3ade925f607b7a8f505da39df",
+      "bytes": 24129
     },
     {
       "path": "kernel-mode-design.md",
@@ -99,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "844b036c2766f84f1acd82046be4732b5eddb2ae206378f559ec75ccf64f69f2",
-      "published_sha256": "20ba812d1dc4cb5fc6ec4ce051bf1b752bb1584abf927eb7886270a2c478dc0d",
-      "bytes": 77815
+      "source_sha256": "b38150c3efef8aa852e5727660c4b045d725593ae7d36fdd083b1c1dede2ca42",
+      "published_sha256": "10b53190424b891b0553b8bd5cfe75fb9eeb8d10d85fabf8c4bd06d6495b5466",
+      "bytes": 78554
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -195,39 +223,977 @@
       "bytes": 7625
     },
     {
+      "path": "references/pipeline-a/ARCHIVE-INDEX.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "c71cd0bbaa8626fce4d71ac817943900b6f041afac1a7ff0648ed626be3840af",
+      "published_sha256": "2024f881a803255320cec3e23040fc6f16bddeef81d55f4c78608c0f8b3075d2",
+      "bytes": 23253
+    },
+    {
+      "path": "references/pipeline-a/README.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e3595749196c26c681a17baab6acdca3d66f10146fdf0bfde8f65123e14453d9",
+      "published_sha256": "e3595749196c26c681a17baab6acdca3d66f10146fdf0bfde8f65123e14453d9",
+      "bytes": 1417
+    },
+    {
+      "path": "references/pipeline-a/SOURCE-MANIFEST.json",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "356929d9c67dd7ff0d89679cb236850d17738747a4d6bb05623d36b434931c39",
+      "published_sha256": "356929d9c67dd7ff0d89679cb236850d17738747a4d6bb05623d36b434931c39",
+      "bytes": 24068
+    },
+    {
+      "path": "references/pipeline-a/agent-management-contract.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "fd7b3aef9388635da899b183113e1429c7e0bc5a66cacbcf3a9b62a1296944b3",
+      "published_sha256": "95ac7ebe7c19f9dc21cba11ca54612d3ef35514ba9c2d977c24975a3da4c99db",
+      "bytes": 24740
+    },
+    {
+      "path": "references/pipeline-a/archives/pipeline-a-p3-integration-2356/README.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "3506a49ce588368957760a474b1142b8be263828dfb23828019bd7bd6d42f9de",
+      "published_sha256": "3506a49ce588368957760a474b1142b8be263828dfb23828019bd7bd6d42f9de",
+      "bytes": 1226
+    },
+    {
+      "path": "references/pipeline-a/archives/progress-before-20261015/run-pipeline-track-a.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "463e0eb4b8f840e0f491124ba396415d2059d088ef3b09a2da96a895e20dd2f9",
+      "published_sha256": "8888f8c582a139bcdf4415b08910c59303b1c553e281205515f807e93d9fbf1c",
+      "bytes": 202556
+    },
+    {
+      "path": "references/pipeline-a/archives/progress-before-20261015/run-pipeline-track-a.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "87b3a027219a4cf277840af5dd9468e776205593b18efe1866bbec2a9e5dac8f",
+      "published_sha256": "87b3a027219a4cf277840af5dd9468e776205593b18efe1866bbec2a9e5dac8f",
+      "bytes": 98379
+    },
+    {
+      "path": "references/pipeline-a/claude-managed/CONTEXT_GATE.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "007451fa69e004a27ec841653c50e591c36cd787fdafc988a12a759fe814aedd",
+      "published_sha256": "007451fa69e004a27ec841653c50e591c36cd787fdafc988a12a759fe814aedd",
+      "bytes": 2464
+    },
+    {
+      "path": "references/pipeline-a/claude-managed/CONTINUE.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "13ca9d9f4c8eb916d487fdbacc82b4bf2808a46c4573bd6ce1b1777a72d838a2",
+      "published_sha256": "13ca9d9f4c8eb916d487fdbacc82b4bf2808a46c4573bd6ce1b1777a72d838a2",
+      "bytes": 15772
+    },
+    {
+      "path": "references/pipeline-a/claude-managed/dispatch-preflight.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2a307b4cc4fe4c8668a8ca9992ae101f6de09db2b791fc92646f9edfff1b444f",
+      "published_sha256": "2a307b4cc4fe4c8668a8ca9992ae101f6de09db2b791fc92646f9edfff1b444f",
+      "bytes": 2425
+    },
+    {
+      "path": "references/pipeline-a/claude-managed/manager-tick.prompt.txt",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "9e322663852da63fa33865870f1557b380e6bcb6ba7f5fcd3f5b1a0ce712c393",
+      "published_sha256": "9e322663852da63fa33865870f1557b380e6bcb6ba7f5fcd3f5b1a0ce712c393",
+      "bytes": 576
+    },
+    {
+      "path": "references/pipeline-a/claude-managed/registry.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e4fdc05da9256081bd718a0eefb56c57ef0869a7abde21d61bd6af720b4e7190",
+      "published_sha256": "bf932e0bb66d82d3590327e39ccbfaff3ba89640756aa9e8f14972ef39cbfc5a",
+      "bytes": 1709985
+    },
+    {
+      "path": "references/pipeline-a/dfx-continuous-collection-matrix-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "64eb1f74a632ee2b6b651caa7550c17d742e93b126703d732fd98e812d5332f8",
+      "published_sha256": "64eb1f74a632ee2b6b651caa7550c17d742e93b126703d732fd98e812d5332f8",
+      "bytes": 10571
+    },
+    {
+      "path": "references/pipeline-a/dfx-continuous-collection-matrix.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "d82f1220e9d941b36962c19e0a2aad10ff2957c5265e59dc300c37cf1596b59a",
+      "published_sha256": "d82f1220e9d941b36962c19e0a2aad10ff2957c5265e59dc300c37cf1596b59a",
+      "bytes": 37321
+    },
+    {
+      "path": "references/pipeline-a/dfx-run-identity-verification-plan.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e529dfc8a0c33d726e4e0236625238f1499cc79e96d85cb5f4f1c49b8f67bfc1",
+      "published_sha256": "e529dfc8a0c33d726e4e0236625238f1499cc79e96d85cb5f4f1c49b8f67bfc1",
+      "bytes": 12519
+    },
+    {
+      "path": "references/pipeline-a/ecosystem-status-and-next.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "cfec606584cba661d2a463058cc0d7911c16b860585c2e3ca966413f0c9feec8",
+      "published_sha256": "cfec606584cba661d2a463058cc0d7911c16b860585c2e3ca966413f0c9feec8",
+      "bytes": 18325
+    },
+    {
+      "path": "references/pipeline-a/ecosystem-status-and-next.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "debd3a89864f029377945efbd001fb0883af55553bb3af15aa4ca52c1920e863",
+      "published_sha256": "debd3a89864f029377945efbd001fb0883af55553bb3af15aa4ca52c1920e863",
+      "bytes": 12106
+    },
+    {
+      "path": "references/pipeline-a/hbg-async-system-validation.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "04bf7ecc1e209de8fbb7cbe28b4b68556d816da4f8a6bedddf50aaf6e4bd0bb0",
+      "published_sha256": "04bf7ecc1e209de8fbb7cbe28b4b68556d816da4f8a6bedddf50aaf6e4bd0bb0",
+      "bytes": 22852
+    },
+    {
+      "path": "references/pipeline-a/kernel-mode-cross-repo-prompt.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a414b3f79e6f1b60bd3a2c7901305910f162245bf6a1e897d71439322d2cdf6f",
+      "published_sha256": "a414b3f79e6f1b60bd3a2c7901305910f162245bf6a1e897d71439322d2cdf6f",
+      "bytes": 30560
+    },
+    {
+      "path": "references/pipeline-a/kernel-mode-cross-repo-prompt.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "6bd59f89d03e1c19c15db27ccb77637a510f1a8408aea4c92d2363951113e923",
+      "published_sha256": "64c1531ea94e8855d82da086346b3442bbdb34dd0487f5eab727ff11d924eb1f",
+      "bytes": 23819
+    },
+    {
+      "path": "references/pipeline-a/memory-current-state.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "fc71d30862c79f73b6fd09494d7d57658ee97028fdedf9f31c7d9b090cd38294",
+      "published_sha256": "b5eb1e2e5a815494bc888bfe302994aab6a1704d4e2b6d2d542210181c2c0aa3",
+      "bytes": 39449
+    },
+    {
+      "path": "references/pipeline-a/multi-agent-work-principles.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f815234770c9b3f521bb6b5262e30c97d821bac13842fcb1e434b53a6f0fb1d0",
+      "published_sha256": "f815234770c9b3f521bb6b5262e30c97d821bac13842fcb1e434b53a6f0fb1d0",
+      "bytes": 25054
+    },
+    {
+      "path": "references/pipeline-a/multi-agent-work-principles.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2dde570146cb21746b1b512f9ab159e67e65291469e5520ea39b02580f8fddd6",
+      "published_sha256": "8c2f69ed77b4af01a331d8b3df4e4b0ccb18939781f6e03d654d5e4b997c15b7",
+      "bytes": 18896
+    },
+    {
+      "path": "references/pipeline-a/review/capture-memory-framework-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "92a3aa7d7e52d78cab104e401aadfc0c0a136d05c994dac8deec502782d42baa",
+      "published_sha256": "92a3aa7d7e52d78cab104e401aadfc0c0a136d05c994dac8deec502782d42baa",
+      "bytes": 7325
+    },
+    {
+      "path": "references/pipeline-a/review/codex-dfx-pmu-old-boundary-scene.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "6787a6091b19ab641201376df0bfaa09ee61aad2f428f56cfdc14bf1caf296ab",
+      "published_sha256": "6787a6091b19ab641201376df0bfaa09ee61aad2f428f56cfdc14bf1caf296ab",
+      "bytes": 6706
+    },
+    {
+      "path": "references/pipeline-a/review/codex-dfx-pmu-regression-pair.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "56cf3561c6b5f95d7de2fb1e9a626de37d60a09ea2dcaff02a4796e6897d4cae",
+      "published_sha256": "56cf3561c6b5f95d7de2fb1e9a626de37d60a09ea2dcaff02a4796e6897d4cae",
+      "bytes": 8622
+    },
+    {
+      "path": "references/pipeline-a/review/codex-p4-77460-feedback-closure.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "766d0f340b355a1c4023765a746443bd5c1aa10aa387405d912c1ff120a78491",
+      "published_sha256": "766d0f340b355a1c4023765a746443bd5c1aa10aa387405d912c1ff120a78491",
+      "bytes": 15712
+    },
+    {
+      "path": "references/pipeline-a/review/codex-p4-auto-acceptance-audit.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "3da51e8b728aa49261ed0d896c3dcc608efaf4f1b653dd580360e9b26554c76d",
+      "published_sha256": "3da51e8b728aa49261ed0d896c3dcc608efaf4f1b653dd580360e9b26554c76d",
+      "bytes": 18888
+    },
+    {
+      "path": "references/pipeline-a/review/codex-p4-postmerge-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "93a0815110b83df65a119300d19a835406e20c4c1c875818379065bcf88c8688",
+      "published_sha256": "93a0815110b83df65a119300d19a835406e20c4c1c875818379065bcf88c8688",
+      "bytes": 21283
+    },
+    {
+      "path": "references/pipeline-a/review/continuation-20260928-three-implementations-and-mainline.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "3694c76c107b669bd1405e14cd467e60389a401a4106a8bbfacf5cde7f9382d5",
+      "published_sha256": "3694c76c107b669bd1405e14cd467e60389a401a4106a8bbfacf5cde7f9382d5",
+      "bytes": 4335
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-a5-task-args-capture-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "52ebdc13a1503e3542634f64cf58796129cfe964fa91a41f4ef9f44a96b4a2b8",
+      "published_sha256": "52ebdc13a1503e3542634f64cf58796129cfe964fa91a41f4ef9f44a96b4a2b8",
+      "bytes": 5697
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-after2451-audit-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ec9f84eb52f22476103c76c246a402f591a1096a2399a715209a572bd9a9bb24",
+      "published_sha256": "ec9f84eb52f22476103c76c246a402f591a1096a2399a715209a572bd9a9bb24",
+      "bytes": 4207
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-current-design.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "dbd8818a93720c9b8ad7b756deb0844ba23d662b42969e6c2b8acdd20eab1836",
+      "published_sha256": "6ce456d3b5832b5ec91eeac45be4e0f04c9b37dc292809c71b025ab31e6b7a0c",
+      "bytes": 13646
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-design-historical-status-before-20261008.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "6c2c36c3a21ee80e56a62a2cc678ca405c4ecd1a04f83fa9331e75d873ad26dd",
+      "published_sha256": "3bc0e56f9380e5f2f4a65a56a8d6e5fdb0242721e192ff98e2e304d3a1f835b8",
+      "bytes": 1891
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-handoff-identity-assessment.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "765858d9aeeaa245bb1559f98bb6bc8aa8df8f0f722a9b8b4136cafa2fd22137",
+      "published_sha256": "765858d9aeeaa245bb1559f98bb6bc8aa8df8f0f722a9b8b4136cafa2fd22137",
+      "bytes": 15336
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-independent-retirement-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "cb1f7eef8b40b6c7118067f3cfbb58d5932a8279c7650baa70d38ad626f91a09",
+      "published_sha256": "cb1f7eef8b40b6c7118067f3cfbb58d5932a8279c7650baa70d38ad626f91a09",
+      "bytes": 5038
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-joined-launch-complete-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2047935013c0987a0112df24bfbc9fce3475f084ab8b5a19f01f63a27ee2a061",
+      "published_sha256": "2047935013c0987a0112df24bfbc9fce3475f084ab8b5a19f01f63a27ee2a061",
+      "bytes": 5741
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-joined-launch-design-r8.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a54d98fbd36dc32b9f68ce6bf0a9f93c4b1d9c96d084be551a25590076371463",
+      "published_sha256": "a54d98fbd36dc32b9f68ce6bf0a9f93c4b1d9c96d084be551a25590076371463",
+      "bytes": 67849
+    },
+    {
+      "path": "references/pipeline-a/review/dfx-joined-launch-r8-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "1ade3fb0fd6daa72c31ee1d6882e89cf18fbe74008db4513f4282edd53a551b2",
+      "published_sha256": "1ade3fb0fd6daa72c31ee1d6882e89cf18fbe74008db4513f4282edd53a551b2",
+      "bytes": 3200
+    },
+    {
+      "path": "references/pipeline-a/review/e2-after-2411-closeout.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e48cac7118b6021474f20b33ed982a2d0233ad1c3dd696c66e965dc07c48eff4",
+      "published_sha256": "e48cac7118b6021474f20b33ed982a2d0233ad1c3dd696c66e965dc07c48eff4",
+      "bytes": 1393
+    },
+    {
+      "path": "references/pipeline-a/review/hbg-target-and-2534-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "12a15e1a269bf69281edbb874de3c1306e1c16d8783cfa4fc8d522947a2b753d",
+      "published_sha256": "12a15e1a269bf69281edbb874de3c1306e1c16d8783cfa4fc8d522947a2b753d",
+      "bytes": 5486
+    },
+    {
+      "path": "references/pipeline-a/review/main-2561-integration-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f3c19a9ca81099bf6a52f658b73599a1d8c2431961faa2c48a9f75eb9a7e3b56",
+      "published_sha256": "f3c19a9ca81099bf6a52f658b73599a1d8c2431961faa2c48a9f75eb9a7e3b56",
+      "bytes": 1420
+    },
+    {
+      "path": "references/pipeline-a/review/mainline-after2447-merge.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2e5a8fb27354d1383aad892ace709ca11edcc12538606cf99b97ab065a7147e7",
+      "published_sha256": "2e5a8fb27354d1383aad892ace709ca11edcc12538606cf99b97ab065a7147e7",
+      "bytes": 1699
+    },
+    {
       "path": "references/pipeline-a/review/mainline-independent-next-step.md",
-      "source_collection": "pipeline-a-reference",
-      "source_sha256": "0ae235311c98a429473cb413bbb9647ed7abb11f581d5a52f5be1d1c86d09a94",
-      "published_sha256": "0ae235311c98a429473cb413bbb9647ed7abb11f581d5a52f5be1d1c86d09a94",
-      "bytes": 5397
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e70be632fca8093246a896ef54012e14a77a553b1d392b955ce3016709380d67",
+      "published_sha256": "e70be632fca8093246a896ef54012e14a77a553b1d392b955ce3016709380d67",
+      "bytes": 5657
+    },
+    {
+      "path": "references/pipeline-a/review/memory-after2464-default-mechanism-direction.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "8873af547edf8fa9b05128bf791038afd746f8c0d2621fa578cd8be6e69c1d9e",
+      "published_sha256": "8873af547edf8fa9b05128bf791038afd746f8c0d2621fa578cd8be6e69c1d9e",
+      "bytes": 2840
+    },
+    {
+      "path": "references/pipeline-a/review/memory-after2487-manager-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f3354b148c73b9d0084e68af0a117b36f406c7b3229df0c2fcfd8913fdf549c6",
+      "published_sha256": "f3354b148c73b9d0084e68af0a117b36f406c7b3229df0c2fcfd8913fdf549c6",
+      "bytes": 1920
+    },
+    {
+      "path": "references/pipeline-a/review/memory-after2487-recovery.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "c92295c361585166d548998a1f892ddab367cf48932f177d1a39022401ae3764",
+      "published_sha256": "f1174563ebbebdcecf56ddf023ed75fac7527905435da6760b0be4861f8378ec",
+      "bytes": 8838
+    },
+    {
+      "path": "references/pipeline-a/review/memory-capture-unified-direction.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "93e9b539c7c60f3541441013291ecc43a8809bcd8e1fdb21434f73f62dba319d",
+      "published_sha256": "93e9b539c7c60f3541441013291ecc43a8809bcd8e1fdb21434f73f62dba319d",
+      "bytes": 5496
+    },
+    {
+      "path": "references/pipeline-a/review/memory-capture-unified-review-18.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a9106df705efde3b17bc48d29ce5bf09488f9271ac9cf9fe868d3a43d60bb14a",
+      "published_sha256": "a9106df705efde3b17bc48d29ce5bf09488f9271ac9cf9fe868d3a43d60bb14a",
+      "bytes": 2700
+    },
+    {
+      "path": "references/pipeline-a/review/memory-default-lifetime-implementation-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a9048de4f925a523884cde6358ec7aa77d88a745cff38573bc3012ad46f59045",
+      "published_sha256": "a9048de4f925a523884cde6358ec7aa77d88a745cff38573bc3012ad46f59045",
+      "bytes": 3911
+    },
+    {
+      "path": "references/pipeline-a/review/memory-graph-kernelargs-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "624a91e7a12f3b4a8dd21566de04ff881903df074a48886af9e8eb4959937da8",
+      "published_sha256": "624a91e7a12f3b4a8dd21566de04ff881903df074a48886af9e8eb4959937da8",
+      "bytes": 5261
+    },
+    {
+      "path": "references/pipeline-a/review/memory-graph-kernelargs-rev4-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "59bea97f9812530bb26bec4e0845957e2279ecc77aff5094dcd4947c0722e436",
+      "published_sha256": "59bea97f9812530bb26bec4e0845957e2279ecc77aff5094dcd4947c0722e436",
+      "bytes": 3333
+    },
+    {
+      "path": "references/pipeline-a/review/memory-lifetime-without-mandatory-budget-assessment.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f7cd5e1b456c99baf8a780ebcd44711dfe3a6b70415b7f7d8276a1d87b26fcb9",
+      "published_sha256": "f7cd5e1b456c99baf8a780ebcd44711dfe3a6b70415b7f7d8276a1d87b26fcb9",
+      "bytes": 8558
+    },
+    {
+      "path": "references/pipeline-a/review/memory-overall-design.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "08e096220ccac5b8357a7b152d04845bd5391d65a9998146e1654953699aa456",
+      "published_sha256": "08e096220ccac5b8357a7b152d04845bd5391d65a9998146e1654953699aa456",
+      "bytes": 4922
+    },
+    {
+      "path": "references/pipeline-a/review/memory-workspace-first-pr-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ec06ce464a39763a47a874bb4f7297245cfc76883f3f02c046ae40661ffdb4a5",
+      "published_sha256": "ec06ce464a39763a47a874bb4f7297245cfc76883f3f02c046ae40661ffdb4a5",
+      "bytes": 6971
+    },
+    {
+      "path": "references/pipeline-a/review/memory-workspace-how-it-works.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2eb7e4b18514eef16746c27e416a13b214c2d189e23427f7b5aeb8e4b3af12e4",
+      "published_sha256": "2eb7e4b18514eef16746c27e416a13b214c2d189e23427f7b5aeb8e4b3af12e4",
+      "bytes": 4147
+    },
+    {
+      "path": "references/pipeline-a/review/ordinary-async-acceptance-and-cost-map.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "c7d0c0b3b7f9d9409721113f25eb203790b2f83d8cd01a63b66572a23621bd8f",
+      "published_sha256": "c7d0c0b3b7f9d9409721113f25eb203790b2f83d8cd01a63b66572a23621bd8f",
+      "bytes": 37530
+    },
+    {
+      "path": "references/pipeline-a/review/ordinary-async-acceptance-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a2630dcebc8466bc09e3c029c5987b2cc9cba0e6357e86a8dc8511c7c7a2dc9c",
+      "published_sha256": "a2630dcebc8466bc09e3c029c5987b2cc9cba0e6357e86a8dc8511c7c7a2dc9c",
+      "bytes": 4131
+    },
+    {
+      "path": "references/pipeline-a/review/p3-delivery-and-handoff.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f06894c794f9c6ec836d710e829e5915016fc60774c399f5713f40aec3d05b1d",
+      "published_sha256": "f06894c794f9c6ec836d710e829e5915016fc60774c399f5713f40aec3d05b1d",
+      "bytes": 4885
+    },
+    {
+      "path": "references/pipeline-a/review/p4-2419-4b2c797ee-rebase-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "d6abe5f7546f606e2cb30af81a188501f5f86f0a6f27060c40d573de215665cc",
+      "published_sha256": "d6abe5f7546f606e2cb30af81a188501f5f86f0a6f27060c40d573de215665cc",
+      "bytes": 2767
+    },
+    {
+      "path": "references/pipeline-a/review/p4-a3-tmr-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "3c1749b1841f937819d00f74f033cc1a2fe73d770506e20899ce5c67507e5ca2",
+      "published_sha256": "3c1749b1841f937819d00f74f033cc1a2fe73d770506e20899ce5c67507e5ca2",
+      "bytes": 20567
+    },
+    {
+      "path": "references/pipeline-a/review/p4-a5-hbg-early-enqueue-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "de530ba3212935342d0bb86490cf02b94dea8418a85d7f912ba5cae293315a2d",
+      "published_sha256": "de530ba3212935342d0bb86490cf02b94dea8418a85d7f912ba5cae293315a2d",
+      "bytes": 4163
+    },
+    {
+      "path": "references/pipeline-a/review/p4-auto-resource-admission-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "8efdfdaf52328a3b4970998af5354a05c61332b48c5dfd102bee744177520336",
+      "published_sha256": "9acbf132a18d06eb862a8ac22a4f6d3c081de38d59691fbccf68c92c56ce52e6",
+      "bytes": 6834
+    },
+    {
+      "path": "references/pipeline-a/review/p4-auto-resource-admission-design.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "d65e565476df7027f708f9349558efa2f6ea04708c2c99e2606d8f5b232e6eeb",
+      "published_sha256": "d65e565476df7027f708f9349558efa2f6ea04708c2c99e2606d8f5b232e6eeb",
+      "bytes": 93676
+    },
+    {
+      "path": "references/pipeline-a/review/p4-auto-resource-admission-manager-review-r21.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "830883de212237a1552ed9910bbb17ba1e8fdb1c07a5937981211fa848a96483",
+      "published_sha256": "830883de212237a1552ed9910bbb17ba1e8fdb1c07a5937981211fa848a96483",
+      "bytes": 3068
+    },
+    {
+      "path": "references/pipeline-a/review/p4-device-chain-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "b3a6e8a559a4bafe523df5d7ccf9f4d1a0a49e22f29eff55541d5e1351f8d615",
+      "published_sha256": "b3a6e8a559a4bafe523df5d7ccf9f4d1a0a49e22f29eff55541d5e1351f8d615",
+      "bytes": 4026
+    },
+    {
+      "path": "references/pipeline-a/review/p4-dynamic-run-resources-contract.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a53b5ba3ce64e55ae36946d3398e0afc98084a8be63a56ce99e7d09b814fe77c",
+      "published_sha256": "a53b5ba3ce64e55ae36946d3398e0afc98084a8be63a56ce99e7d09b814fe77c",
+      "bytes": 70202
+    },
+    {
+      "path": "references/pipeline-a/review/p4-dynamic-run-resources-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "03084509f42a0a42952a620cecec0077c11b0a4294f140a04387c38cc751c3cd",
+      "published_sha256": "03084509f42a0a42952a620cecec0077c11b0a4294f140a04387c38cc751c3cd",
+      "bytes": 6062
+    },
+    {
+      "path": "references/pipeline-a/review/p4-dynamic-run-resources-r7-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "9afb8c5eb6b4fe0547b4b119c7b50142e5edbeb113bcde12b3ae56bddc7bf2ca",
+      "published_sha256": "9afb8c5eb6b4fe0547b4b119c7b50142e5edbeb113bcde12b3ae56bddc7bf2ca",
+      "bytes": 2597
+    },
+    {
+      "path": "references/pipeline-a/review/p4-postmerge-composition-final-design.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "6aa117e72e133c29ad03283a00db4540d4018362cac53fc4cee387912d5f555d",
+      "published_sha256": "6aa117e72e133c29ad03283a00db4540d4018362cac53fc4cee387912d5f555d",
+      "bytes": 25702
+    },
+    {
+      "path": "references/pipeline-a/review/p4-qwen-grant-composition-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e400b37d20af0f598718a87f39ddca5399309583a24f0ad1ef184551f69280bd",
+      "published_sha256": "e400b37d20af0f598718a87f39ddca5399309583a24f0ad1ef184551f69280bd",
+      "bytes": 7534
+    },
+    {
+      "path": "references/pipeline-a/review/p4-request-frame-handoff-wip-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "0e7d82fb8331fa39d92a140a383d278da6868d8cd3cf9a629299c12afa7c71ce",
+      "published_sha256": "0e7d82fb8331fa39d92a140a383d278da6868d8cd3cf9a629299c12afa7c71ce",
+      "bytes": 2672
+    },
+    {
+      "path": "references/pipeline-a/review/p4-three-run-capacity-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "8953d1324aa8cb7fd6a2f9df0ef1f8ebe652b4aa9f19091f24e143c81ffad5d3",
+      "published_sha256": "8953d1324aa8cb7fd6a2f9df0ef1f8ebe652b4aa9f19091f24e143c81ffad5d3",
+      "bytes": 4199
+    },
+    {
+      "path": "references/pipeline-a/review/parallel-next-work-analysis.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "5ad0cd9044a361862242f957860df93492e75ebb720c5612358fe2f00297070d",
+      "published_sha256": "5ad0cd9044a361862242f957860df93492e75ebb720c5612358fe2f00297070d",
+      "bytes": 8201
+    },
+    {
+      "path": "references/pipeline-a/review/pipeline-recovery-20261008.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "b2cc7143b4aa972492fbcaf66f0f5bd2b21bf1407690927bd414aeede78b8ddd",
+      "published_sha256": "b2cc7143b4aa972492fbcaf66f0f5bd2b21bf1407690927bd414aeede78b8ddd",
+      "bytes": 3253
+    },
+    {
+      "path": "references/pipeline-a/review/pr-2275.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ed74cf23fddc98ac8202e8199370295946d789f385cbb18495bdef1c94640e8e",
+      "published_sha256": "ed74cf23fddc98ac8202e8199370295946d789f385cbb18495bdef1c94640e8e",
+      "bytes": 7320
+    },
+    {
+      "path": "references/pipeline-a/review/pr-2406-c2fea0e90.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "fe44e0a13dfb363cf66f4a762f06fd37f233886344377299b9db6df5bf09aab1",
+      "published_sha256": "fe44e0a13dfb363cf66f4a762f06fd37f233886344377299b9db6df5bf09aab1",
+      "bytes": 1733
+    },
+    {
+      "path": "references/pipeline-a/review/pr2427-a5-onboard-106740509941.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "4c23c4f318f20c7a80f94e1c4ca7e0ecabba5376876eb56d2d10abdbdd9ae8d2",
+      "published_sha256": "4c23c4f318f20c7a80f94e1c4ca7e0ecabba5376876eb56d2d10abdbdd9ae8d2",
+      "bytes": 1630
+    },
+    {
+      "path": "references/pipeline-a/review/pr2432-fd9ec795f-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2791b29f2d36647d2881d86d4ab7cf539134853ae0879bb073acf7667254a5a5",
+      "published_sha256": "2791b29f2d36647d2881d86d4ab7cf539134853ae0879bb073acf7667254a5a5",
+      "bytes": 2391
+    },
+    {
+      "path": "references/pipeline-a/review/pr2435-merged-closeout.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e606d13e5e4c3c114d10d21c4cca4a404ca4e2f4522806d095548569ad0be3ec",
+      "published_sha256": "e606d13e5e4c3c114d10d21c4cca4a404ca4e2f4522806d095548569ad0be3ec",
+      "bytes": 1209
+    },
+    {
+      "path": "references/pipeline-a/review/pr2438-55d47307f-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "163438399357b5daa9414842ba56e8290470546a4fc09e447c1031422c958f42",
+      "published_sha256": "163438399357b5daa9414842ba56e8290470546a4fc09e447c1031422c958f42",
+      "bytes": 1872
+    },
+    {
+      "path": "references/pipeline-a/review/pr2438-55d47307f-ready.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ad20d2fa813c7f33269e99bb24338e17a4db7ad6164de30e36e86d5e56187c65",
+      "published_sha256": "ad20d2fa813c7f33269e99bb24338e17a4db7ad6164de30e36e86d5e56187c65",
+      "bytes": 1714
+    },
+    {
+      "path": "references/pipeline-a/review/pr2440-e1a4fac77-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e8f484ea22383f3ae139d609f9b92325a879dad831021b35f15e3c67bef05f22",
+      "published_sha256": "e8f484ea22383f3ae139d609f9b92325a879dad831021b35f15e3c67bef05f22",
+      "bytes": 2333
+    },
+    {
+      "path": "references/pipeline-a/review/pr2441-ef56f0b53-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "cff46433f86e09176924753cca06f7703262d5fd306ccc943f2ca04ebf6ba32c",
+      "published_sha256": "cff46433f86e09176924753cca06f7703262d5fd306ccc943f2ca04ebf6ba32c",
+      "bytes": 2847
+    },
+    {
+      "path": "references/pipeline-a/review/pr2443-098c3ea2f-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "1703173113442862846e3186a77a78a8ac9b0a5a83d1757d9a3a36f166a47c5f",
+      "published_sha256": "1703173113442862846e3186a77a78a8ac9b0a5a83d1757d9a3a36f166a47c5f",
+      "bytes": 1584
+    },
+    {
+      "path": "references/pipeline-a/review/pr2446-3b338b2fe-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "6d797d471c67e47ff822ad60208d38ed90e5c72c046e1224aa629208d74f09e1",
+      "published_sha256": "6d797d471c67e47ff822ad60208d38ed90e5c72c046e1224aa629208d74f09e1",
+      "bytes": 1706
+    },
+    {
+      "path": "references/pipeline-a/review/pr2446-46848ba18-a5-ci-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "5cb52ddfa4009151dcff6b4a90872a89ee14a9de04a2116d4311d57ae57fe0b5",
+      "published_sha256": "5cb52ddfa4009151dcff6b4a90872a89ee14a9de04a2116d4311d57ae57fe0b5",
+      "bytes": 1819
+    },
+    {
+      "path": "references/pipeline-a/review/pr2446-46848ba18-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "d0d29c3ad60ca5881786e9459fa0ec6b5ab84098db91f590f8af10616de337ce",
+      "published_sha256": "d0d29c3ad60ca5881786e9459fa0ec6b5ab84098db91f590f8af10616de337ce",
+      "bytes": 3750
+    },
+    {
+      "path": "references/pipeline-a/review/pr2449-34d22736e-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "af4141497aa8ac06893637fb20501bc4404e567d229d123ef382f7902eb71126",
+      "published_sha256": "af4141497aa8ac06893637fb20501bc4404e567d229d123ef382f7902eb71126",
+      "bytes": 5699
+    },
+    {
+      "path": "references/pipeline-a/review/pr2451-5ce210cec-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f9cd2d5ccd9992d20181992f81161e0a17a93bfe616225880561137c37721a0d",
+      "published_sha256": "f9cd2d5ccd9992d20181992f81161e0a17a93bfe616225880561137c37721a0d",
+      "bytes": 5374
+    },
+    {
+      "path": "references/pipeline-a/review/pr2452-f28f86bc2-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "4c5f3b00c7ced0cce65e099e6249c1d09b1df5703a882fbe6c2c1b40f9ab8ea5",
+      "published_sha256": "4c5f3b00c7ced0cce65e099e6249c1d09b1df5703a882fbe6c2c1b40f9ab8ea5",
+      "bytes": 3115
+    },
+    {
+      "path": "references/pipeline-a/review/pr2455-53a271a17-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "5c27afc233a96d4e3710ba24aaae2c9c2bb19e0224178cedc4c84402a1dc9075",
+      "published_sha256": "5c27afc233a96d4e3710ba24aaae2c9c2bb19e0224178cedc4c84402a1dc9075",
+      "bytes": 3060
+    },
+    {
+      "path": "references/pipeline-a/review/pr2462-9ebf5c02a-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "b40751f392851c9c9605d1b76524560d12e89ec9f791d33d49fbe6abe6494e57",
+      "published_sha256": "b40751f392851c9c9605d1b76524560d12e89ec9f791d33d49fbe6abe6494e57",
+      "bytes": 2868
+    },
+    {
+      "path": "references/pipeline-a/review/pr2463-1f6b4446d-duplicate-integration-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "aac1cac275ce69b796eee52b49c19a9d938ecaead8a46a295f9093f87f6451a4",
+      "published_sha256": "aac1cac275ce69b796eee52b49c19a9d938ecaead8a46a295f9093f87f6451a4",
+      "bytes": 3523
+    },
+    {
+      "path": "references/pipeline-a/review/pr2464-2c9d6173a-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "44ab3885d4b875710f84f9f1a725e8944295629289f1efe1f767760b9c15a161",
+      "published_sha256": "44ab3885d4b875710f84f9f1a725e8944295629289f1efe1f767760b9c15a161",
+      "bytes": 1049
+    },
+    {
+      "path": "references/pipeline-a/review/pr2465-72c7ae74b-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "24a7c0bbe6fa84f82d655a96a5b9f028268d368e76261717f3e436257d0445f1",
+      "published_sha256": "24a7c0bbe6fa84f82d655a96a5b9f028268d368e76261717f3e436257d0445f1",
+      "bytes": 1742
+    },
+    {
+      "path": "references/pipeline-a/review/pr2466-baec33001-integration-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "12c9b68253267b0303359f3cb8740dd31cc5c6954d2197b37a162ed4ed951969",
+      "published_sha256": "12c9b68253267b0303359f3cb8740dd31cc5c6954d2197b37a162ed4ed951969",
+      "bytes": 2550
+    },
+    {
+      "path": "references/pipeline-a/review/pr2481-427768f50-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "57186ab884a5b345b1d106259264a4acc4c741a4335ea4f6a3854bfca0169d19",
+      "published_sha256": "57186ab884a5b345b1d106259264a4acc4c741a4335ea4f6a3854bfca0169d19",
+      "bytes": 7304
+    },
+    {
+      "path": "references/pipeline-a/review/pr2483-1d79e7263-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "16e6dddb931f68854dd88de162379864ee4a48e7a80eaf0a13efaa6c102ce790",
+      "published_sha256": "16e6dddb931f68854dd88de162379864ee4a48e7a80eaf0a13efaa6c102ce790",
+      "bytes": 3825
+    },
+    {
+      "path": "references/pipeline-a/review/pr2483-dce-ci-format-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ef64cb9760949103954c6b9924d043a891bc1a96700f9e9e4f269d1f892b4761",
+      "published_sha256": "ef64cb9760949103954c6b9924d043a891bc1a96700f9e9e4f269d1f892b4761",
+      "bytes": 1300
+    },
+    {
+      "path": "references/pipeline-a/review/pr2500-merged-closeout.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2f55f53e56659f3ece04bacced8d180a4d3bf611e808aae1e7b85ac62d420677",
+      "published_sha256": "2f55f53e56659f3ece04bacced8d180a4d3bf611e808aae1e7b85ac62d420677",
+      "bytes": 1019
+    },
+    {
+      "path": "references/pipeline-a/review/pr2505-0bdcc36de-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "cded293b58f27cabc1b7d61fceb21c3559bd23367240f4fcf37beacf9a1bfc62",
+      "published_sha256": "cded293b58f27cabc1b7d61fceb21c3559bd23367240f4fcf37beacf9a1bfc62",
+      "bytes": 4890
+    },
+    {
+      "path": "references/pipeline-a/review/pr2507-macos-ut-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "eb18e5d924e6861cd738f663bbf2a47ff69671844935c7c42ae5f8e67e7b8c58",
+      "published_sha256": "eb18e5d924e6861cd738f663bbf2a47ff69671844935c7c42ae5f8e67e7b8c58",
+      "bytes": 1893
+    },
+    {
+      "path": "references/pipeline-a/review/pr2531-ca08f6369-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "bc24e17ae956f44f445b1d99422be2452a0c10b787deb1c26093ca250dd6194e",
+      "published_sha256": "1fe735f79dcd16b2bffbcbcd6a0e4b4b7762f279d69a3c9eda1a84c25065886e",
+      "bytes": 9679
+    },
+    {
+      "path": "references/pipeline-a/review/pr2534-complete-function-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "9bdef1057f2fde833afc6c1dd56351c5773ab5bd3d2679c69f73ed482f1f08cf",
+      "published_sha256": "9bdef1057f2fde833afc6c1dd56351c5773ab5bd3d2679c69f73ed482f1f08cf",
+      "bytes": 8695
+    },
+    {
+      "path": "references/pipeline-a/review/pr2560-192929-a5ut-timeout.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "b980021eae2f2dfad061c3513ce9b4d70446264b6b7e0ef27f40cfe7a3737eb3",
+      "published_sha256": "c213081125b6d0dc173877dea62af3e733f5a8cc416e66953382bebbfd192cb2",
+      "bytes": 2467
+    },
+    {
+      "path": "references/pipeline-a/review/pr2560-192929bc5-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "45ad5d57c470ed0b1543e43cb2823d0d26791399f371fc5fbf71ed8c1cfb8574",
+      "published_sha256": "45ad5d57c470ed0b1543e43cb2823d0d26791399f371fc5fbf71ed8c1cfb8574",
+      "bytes": 8749
+    },
+    {
+      "path": "references/pipeline-a/review/pr2564-9d71625e0-fix-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "4f4d0a00eecf4794a489c54dbebe639e9da48ed60321df720a4954407fd9ae37",
+      "published_sha256": "4f4d0a00eecf4794a489c54dbebe639e9da48ed60321df720a4954407fd9ae37",
+      "bytes": 3602
+    },
+    {
+      "path": "references/pipeline-a/review/pr2568-46d43741c-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "97c9533f571cda76ccaa635cf2801dcf7f7c13740fd6c5572ecfe91057c068ba",
+      "published_sha256": "97c9533f571cda76ccaa635cf2801dcf7f7c13740fd6c5572ecfe91057c068ba",
+      "bytes": 7510
+    },
+    {
+      "path": "references/pipeline-a/review/pr2571-5e3564a56-ready-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "5ee1850e821f946ce186ea6be513ed30ca29a46dcf378fe5a99a83da6cf1d1d7",
+      "published_sha256": "5ee1850e821f946ce186ea6be513ed30ca29a46dcf378fe5a99a83da6cf1d1d7",
+      "bytes": 2439
+    },
+    {
+      "path": "references/pipeline-a/review/pr2571-931d-ci-acceptance-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "a3457768f8f80a22cfde7478dd5bb1fd1d51d1efa42fb66d4e44a8c735a70d33",
+      "published_sha256": "a3457768f8f80a22cfde7478dd5bb1fd1d51d1efa42fb66d4e44a8c735a70d33",
+      "bytes": 1508
+    },
+    {
+      "path": "references/pipeline-a/review/pr2571-a002acc47-ready-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "34efcc338fca9a5e675be1fb49c702217d04eed99e95a6f8388c43015e009bcf",
+      "published_sha256": "34efcc338fca9a5e675be1fb49c702217d04eed99e95a6f8388c43015e009bcf",
+      "bytes": 2914
+    },
+    {
+      "path": "references/pipeline-a/review/pr2571-a780-a5-execution-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "ce47602043d2f22e94f7a40afd14fe583c024ae7fe9893bf278f55f183f3c804",
+      "published_sha256": "ce47602043d2f22e94f7a40afd14fe583c024ae7fe9893bf278f55f183f3c804",
+      "bytes": 1544
+    },
+    {
+      "path": "references/pipeline-a/review/pr2571-a780-ci-final-evidence.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "124aabdb0751b1140e8cd7137e44d6a70427ce8d3836666c5d17f286bb39f7df",
+      "published_sha256": "124aabdb0751b1140e8cd7137e44d6a70427ce8d3836666c5d17f286bb39f7df",
+      "bytes": 1477
+    },
+    {
+      "path": "references/pipeline-a/review/pr2577-16a79b03-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "9bc223f54c7741dd525336b7097bd69ec9bb8b8a425215e11ed3f6c80da35d03",
+      "published_sha256": "9bc223f54c7741dd525336b7097bd69ec9bb8b8a425215e11ed3f6c80da35d03",
+      "bytes": 7179
+    },
+    {
+      "path": "references/pipeline-a/review/pr2588-1d707-ci-repair-coverage.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "783eb8032031627445a00d804bcc96f9dbbd5770f80e7d5287457e94278bd54f",
+      "published_sha256": "783eb8032031627445a00d804bcc96f9dbbd5770f80e7d5287457e94278bd54f",
+      "bytes": 4597
+    },
+    {
+      "path": "references/pipeline-a/review/pr2588-710-macos-timeout.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "de028ce976ab142f4044320438a187b4c47c6cca5aacaa2174ae34230fffd698",
+      "published_sha256": "de028ce976ab142f4044320438a187b4c47c6cca5aacaa2174ae34230fffd698",
+      "bytes": 2419
+    },
+    {
+      "path": "references/pipeline-a/review/pr2588-bank-fix-wip-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "1b13cdaaca19ab6d56ebf1379c2ff6ec2287bfce6db347f8b1acfd3f35816bf9",
+      "published_sha256": "62413ea9ce1493c347b5b97c9b0b6ebcb1b51e03a39c1519a590b98c823312f8",
+      "bytes": 4658
+    },
+    {
+      "path": "references/pipeline-a/review/pr2588-da746-manager-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "139b0a901e7c9a8716c3ff10affeb18a3845f02b0a676f709562928600950336",
+      "published_sha256": "139b0a901e7c9a8716c3ff10affeb18a3845f02b0a676f709562928600950336",
+      "bytes": 3497
+    },
+    {
+      "path": "references/pipeline-a/review/pto-exception-stop-audit-disposition.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "f6848f187a19eafa13bdd7c3cbab7d14a58bee45498121163a894e18109152c2",
+      "published_sha256": "f6848f187a19eafa13bdd7c3cbab7d14a58bee45498121163a894e18109152c2",
+      "bytes": 2243
+    },
+    {
+      "path": "references/pipeline-a/review/stream-architecture-user-contract.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "0069dd127738c46e205376a2ffa84fc9d6e4fbb1f411edc50fe0c6d7635c204e",
+      "published_sha256": "0069dd127738c46e205376a2ffa84fc9d6e4fbb1f411edc50fe0c6d7635c204e",
+      "bytes": 3188
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-2427-c9cfa621c-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "8e34e9391dc2c18c9239fab63c03d329e295e4884ca7f657ea925ecf887e7346",
+      "published_sha256": "8e34e9391dc2c18c9239fab63c03d329e295e4884ca7f657ea925ecf887e7346",
+      "bytes": 3658
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-a8f1ceff9-integration-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "8e475ac2c716aecf46d72e71805e6a66fe0dc6560877d59b2affac3dea8cc7ed",
+      "published_sha256": "8e475ac2c716aecf46d72e71805e6a66fe0dc6560877d59b2affac3dea8cc7ed",
+      "bytes": 5680
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-args-dump-background-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "107d8a0c894da89963bc1c59e6bcc46b6829bc3685c04a43df105dd8c77160d2",
+      "published_sha256": "107d8a0c894da89963bc1c59e6bcc46b6829bc3685c04a43df105dd8c77160d2",
+      "bytes": 9782
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-depgen-background-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "7c88096a1d5817eaa584d83e40528be04efd33ac1c759556ff8a1e365d1fab11",
+      "published_sha256": "7c88096a1d5817eaa584d83e40528be04efd33ac1c759556ff8a1e365d1fab11",
+      "bytes": 5944
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-depgen-rev4-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "bcd81b77d151a4239475b53c85f2840c63046054d5d717b7aa2b365ab48b5b33",
+      "published_sha256": "bcd81b77d151a4239475b53c85f2840c63046054d5d717b7aa2b365ab48b5b33",
+      "bytes": 1703
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-hbg-background-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "06e278828e780df902ab24a667532085c76faa277f2b5855dc5c3b1b9e69cd83",
+      "published_sha256": "06e278828e780df902ab24a667532085c76faa277f2b5855dc5c3b1b9e69cd83",
+      "bytes": 4088
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-hbg-background-rev3-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "63de3ede0a12a76f836a1e93500588213b3739179a9a1f22589a9d726a1db877",
+      "published_sha256": "63de3ede0a12a76f836a1e93500588213b3739179a9a1f22589a9d726a1db877",
+      "bytes": 1479
+    },
+    {
+      "path": "references/pipeline-a/review/temporal-scopestats-background-decision.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "304dec4e8b4abc36919702d634992d71157d92f811c8cbef2fea365184032797",
+      "published_sha256": "304dec4e8b4abc36919702d634992d71157d92f811c8cbef2fea365184032797",
+      "bytes": 4884
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-p1-p2-coordination.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "834570468f4525843f341f59c84fa06561fe07a14c37a3b11e642eed2d04e3ee",
+      "published_sha256": "834570468f4525843f341f59c84fa06561fe07a14c37a3b11e642eed2d04e3ee",
+      "bytes": 8566
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-redesign-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "dafabaa6fd0d221eaddf140fa597ea728bfe77cc9d6d4e46ccba132cae3a1313",
+      "published_sha256": "dafabaa6fd0d221eaddf140fa597ea728bfe77cc9d6d4e46ccba132cae3a1313",
+      "bytes": 50603
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-redesign.html",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "604546cc8b3cb51abb07d38591954640937cb36a9f0ee7e149a435a6bcb59c1b",
+      "published_sha256": "604546cc8b3cb51abb07d38591954640937cb36a9f0ee7e149a435a6bcb59c1b",
+      "bytes": 59149
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-redesign.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e06f7e14f3903f9e44d2b008b2747b92cd3ca377286d5ff4126c9bc0d5661404",
+      "published_sha256": "e06f7e14f3903f9e44d2b008b2747b92cd3ca377286d5ff4126c9bc0d5661404",
+      "bytes": 27315
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-review-code-assessment.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "2c4536679c5ae0553ef8d90d3a8639329820f0ffa8377fa172fa7255b552491d",
+      "published_sha256": "2c4536679c5ae0553ef8d90d3a8639329820f0ffa8377fa172fa7255b552491d",
+      "bytes": 17885
+    },
+    {
+      "path": "references/pipeline-a/run-pipeline-track-a-review.md",
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "3fa4b88607840863732d2d646f642d6b91733c70ffcbff8c85a5829c3514e5f8",
+      "published_sha256": "3fa4b88607840863732d2d646f642d6b91733c70ffcbff8c85a5829c3514e5f8",
+      "bytes": 16559
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.html",
-      "source_collection": "pipeline-a-reference",
-      "source_sha256": "d0ec9be1f3f6ffc867c8f17b8e18e3bdd9381355d1984fd6caf1d86f00f3234b",
-      "published_sha256": "a5fc5401eaf510bd9046a21ef7b002a1fa6a58de763d62277dd865e8e14b2a12",
-      "bytes": 52907
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "acf2d70ad7337d8c3456865e78b519aec01b22aad0c7af685117a5b0596a14c6",
+      "published_sha256": "c1e6798814c996a42d1ca882d682f0311702477afa2c827a593b95dac8a75b82",
+      "bytes": 57728
     },
     {
       "path": "references/pipeline-a/run-pipeline-track-a.md",
-      "source_collection": "pipeline-a-reference",
-      "source_sha256": "557016c3f83afb0eb790de5c9921216402bb2704fa6b3d39a8b1bab1e5545ff9",
-      "published_sha256": "541ce0f418de05115d9a4fd4cec2c2c7fa27a297e0897691fd1624a338807526",
-      "bytes": 25861
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "9b3506d2904ec071d23aa80dede14f54b559b8b29418c273b65d2dec5121f30a",
+      "published_sha256": "f7b1f3a826ed771fc46ab5c8133c1d2bbe572338d72e7594f5d52a9d85c6f625",
+      "bytes": 25432
     },
     {
       "path": "references/pipeline-a/runtime-design-principles.md",
-      "source_collection": "pipeline-a-reference",
-      "source_sha256": "8e27a8713dab042ebfee05e652a5194ec50c17564efe2dc4c1f3add86fb26c1e",
-      "published_sha256": "8e27a8713dab042ebfee05e652a5194ec50c17564efe2dc4c1f3add86fb26c1e",
-      "bytes": 9559
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "e446093e24420209e5a814031294177b4ae176c6f95ffca43e29b0a4cfc23def",
+      "published_sha256": "e446093e24420209e5a814031294177b4ae176c6f95ffca43e29b0a4cfc23def",
+      "bytes": 9824
     },
     {
       "path": "references/pipeline-a/workspace-memory-principles.md",
-      "source_collection": "pipeline-a-reference",
-      "source_sha256": "d659df2dec19191c2439517f6d2a66409e0984ceb177517d918d2fe45befeb3d",
-      "published_sha256": "c8aa0abc647185f3cc588bace6671a615b003f3bbbce35b8c663b2b4a4c8aa28",
-      "bytes": 16144
+      "source_collection": "pipeline-a-handoff",
+      "source_sha256": "289a20dc243037b1d7876c118c5e6f95191c121e8c66caf6e6a2ec16b53a2049",
+      "published_sha256": "289a20dc243037b1d7876c118c5e6f95191c121e8c66caf6e6a2ec16b53a2049",
+      "bytes": 16389
     },
     {
       "path": "reviews/argument-storage-contract-1761d130.md",
@@ -342,18 +1308,18 @@
       "bytes": 3825
     },
     {
-      "path": "reviews/cleanup-wait-poison/ci-38358457015/REPORT.md",
-      "source_collection": "kernel-design",
-      "source_sha256": "e2a4f322000fc2776ff19fe17f13dd6a8808acec05db79bb28a80c8c6321a804",
-      "published_sha256": "e2a4f322000fc2776ff19fe17f13dd6a8808acec05db79bb28a80c8c6321a804",
-      "bytes": 2932
-    },
-    {
       "path": "reviews/cleanup-wait-poison/ci-38358457015-attempt2/REPORT.md",
       "source_collection": "kernel-design",
       "source_sha256": "54fdb4af0e631eb6648986aa12c93e8a4aba472b6869bbc5ee9169be40000a9c",
       "published_sha256": "54fdb4af0e631eb6648986aa12c93e8a4aba472b6869bbc5ee9169be40000a9c",
       "bytes": 1255
+    },
+    {
+      "path": "reviews/cleanup-wait-poison/ci-38358457015/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "e2a4f322000fc2776ff19fe17f13dd6a8808acec05db79bb28a80c8c6321a804",
+      "published_sha256": "e2a4f322000fc2776ff19fe17f13dd6a8808acec05db79bb28a80c8c6321a804",
+      "bytes": 2932
     },
     {
       "path": "reviews/context-bound-buffer-source/REPORT.md",
@@ -596,7 +1562,7 @@
     {
       "path": "runtime-design-principles.md",
       "source_collection": "kernel-design",
-      "source_sha256": "4264c158ec4a5ed4058a2671aa96f9f1b61c07f335d27716a24c84155cd32ea9",
+      "source_sha256": "c69ba985872377b087df8b19cb04b65068b2ddd1fa205041494e9f9c5f0a54de",
       "published_sha256": "3033a9dd1153e27183a796398f0a4e17e9d38a5d140410c225cfb2a9b114cece",
       "bytes": 34254
     },
@@ -615,6 +1581,6 @@
       "bytes": 10657
     }
   ],
-  "latest_merged_pr": 2649,
-  "pending_pr_head": "dcdb55ef20ab7c8efcbbdc575c9674375f36bbc7"
+  "latest_merged_pr": 2653,
+  "cross_repo_handoff_date": "2026-10-21"
 }

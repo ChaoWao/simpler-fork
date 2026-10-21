@@ -22,7 +22,7 @@
 
 ## 1. 现在做什么
 
-**2026-10-21 / main `7d27e6104`：#2619、#2620、#2628、#2600、#2638、#2640、#2645、#2643、#2588、#2649 与 #2648 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
+**2026-10-21 / main `7503761a6`：#2619、#2620、#2628、#2600、#2638、#2640、#2645、#2643、#2588、#2649、#2648 与 #2653 已合入。** 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。
 
 **已合入 [#2638](https://github.com/hw-native-sys/simpler/pull/2638)：S3 的实际模块保活。** 同一 `RuntimeModule` 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 [S3 当前交付](kernel-eager-open-work.md#s3-current-delivery)。合入提交 `2a6d2d50c`；graph 引用和 replay 仍由 C2–C4 验收。
 
@@ -39,7 +39,7 @@ CallConfig level → 本次 Runtime descriptor → 稳定快照 / pinned async p
 host admission → 自己的 export level / pool 检查；record queue 所有权保持原协议
 ```
 
-**当前待审阅 [#2653](https://github.com/hw-native-sys/simpler/pull/2653)：逐调用 PMU 选择与 device accounting 复位。** effective event group 从已有 `PreparedExecution.dfx` 的一次解析结果写入 descriptor，保留 `SIMPLER_PMU_EVENT_TYPE` 的既有覆盖语义；host 导出与设备使用相同快照。AICPU 显式接收该组并在 producer 启动前复位本次 counters，host admission 不再改共享 header 或清 device counters；retained 和普通收集共用此规则。两种 runtime、两架构、onboard/sim 和 A5 HBG resident 一起改，队列/terminal bank/driver lease 仍按现有寿命合同管理。它继续收口 C1 的实际设备输入，不代表 capture 完成；不重复现有 graph/launch PR。 当前修订 `dcdb55ef2` 只修复两架构 DFX-off 的未使用参数编译错误；DFX-off/on 的本地构建与冒烟均通过，新 CI 待验收。见[实施和证据](kernel-eager-open-work.md#c1-pmu-invocation)。
+**已合入 [#2653](https://github.com/hw-native-sys/simpler/pull/2653)（`7503761a6`）：逐调用 PMU 选择与 device accounting 复位。** effective event group 从已有 `PreparedExecution.dfx` 的一次解析结果写入 descriptor，保留 `SIMPLER_PMU_EVENT_TYPE` 的既有覆盖语义；host 导出与设备使用相同快照。AICPU 显式接收该组并在 producer 启动前复位本次 counters，host admission 不再改共享 header 或清 device counters；retained 和普通收集共用此规则。两种 runtime、两架构、onboard/sim 和 A5 HBG resident 一起改，队列/terminal bank/driver lease 仍按现有寿命合同管理。它继续收口 C1 的实际设备输入，不代表 capture 完成；不重复现有 graph/launch PR。 最终 head `dcdb55ef2` 的两架构 DFX-off/on 修正已验收，CI 19 success / 1 deploy skipped；原单发 AIV 仍未分类。见[实施和证据](kernel-eager-open-work.md#c1-pmu-invocation)。
 
 ```text
 CallConfig + 既有 PMU env override
@@ -49,6 +49,8 @@ CallConfig + 既有 PMU env override
            → AICPU init(group) → 本次 accounting reset → producer
 共享 pool / queues / terminal banks / driver lease：仍各自保活到最后使用者
 ```
+
+**四仓交接已接管。** 原 manager 目录计划移除；[接管入口](kernel-mode-cross-repo-handoff.md) / [HTML](kernel-mode-cross-repo-handoff.html) 接收原提示词、Pipeline A/DFX 正文和证据索引。下一步先审双 runtime 候选与共同执行设计的对齐及真实 stacked diff，再完成 PyPTO adapter → pypto-lib → serving 的调用与验收映射；#2658 的普通 Async 系统验收独立记账。原作者分支、自动化和未承诺任务不由文档迁移接管。
 
 #2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。 #2624 已跟到 main `7d27e6104`；#2625 叠加其上。#2626/#2646/#2647 当前均为 draft，描述的完整实现不能算主线已验收。#2605 vLLM 固定 eager 的两轮 16 请求短序列已通过，但 128-token 与参考输出不一致；K2c 业务资格不能据此标记完成。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。
 
@@ -139,7 +141,7 @@ S1、S2 已完成；Pipeline A 的批准首步已交付，可开始 K1 接入。
 
 Pipeline A 的[路线入口](references/pipeline-a/run-pipeline-track-a.html#roadmap)是其自身阶段和分工的依据。这里只定义后续 kernel 的接收门槛。
 
-当前权威目录为 `pipeline-a-manager/.docs`；旧 temporal 目录不再用于判断进度。主线已交接至 [#2429](https://github.com/hw-native-sys/simpler/issues/2429)，manager 保留跟踪与独立分析。其[下一步建议](references/pipeline-a/review/mainline-independent-next-step.md)要求先闭合同域串行执行归属、A→device tensor→B→C 和提交/完成/退休边界。K1 接入应复用这套合同，不因 program/kernel 各有私有 stream 就推定跨入口有序；与接手方协调实现归属，避免平行 runner 或重复开发。Qwen 基线是业务证据，不替代设备链与寿命验收。
+Pipeline A 的 manager 目录已交接并计划移除；来源冻结在本目录的 `references/pipeline-a/`，后续状态由本路线与[四仓接管说明](kernel-mode-cross-repo-handoff.md)维护。主线已交接至 [#2429](https://github.com/hw-native-sys/simpler/issues/2429)，manager 保留跟踪与独立分析。其[下一步建议](references/pipeline-a/review/mainline-independent-next-step.md)要求先闭合同域串行执行归属、A→device tensor→B→C 和提交/完成/退休边界。K1 接入应复用这套合同，不因 program/kernel 各有私有 stream 就推定跨入口有序；与接手方协调实现归属，避免平行 runner 或重复开发。Qwen 基线是业务证据，不替代设备链与寿命验收。
 
 - **执行**：native 三道门和 L3 两道门都已接通。两个真实 LAUNCHED，不是一个执行加一个 prepared。
 - **顺序**：保留父 run 的全部 dispatch 顺序，同 callable 的 host 构图串行；host get/set 的就绪和冲突合同不因 device FIFO 而消失。

@@ -1,0 +1,249 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Simpler 当前交付、Issue/PR 与后续工作</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#193144;font:16px/1.75 system-ui,sans-serif}main{max-width:1220px;margin:auto;padding:36px 28px 80px}h1{font-size:36px;line-height:1.3}h2{margin-top:42px;padding-top:18px;border-top:2px solid #dbe5ed}h3{margin-top:28px}a{color:#08639b;text-underline-offset:3px}nav{display:flex;gap:14px;flex-wrap:wrap;padding:16px;background:white;border-radius:12px;position:relative}table{border-collapse:collapse;width:100%;font-size:14px;background:white}th,td{padding:13px;border:1px solid #dae2e8;text-align:left;vertical-align:top}th{background:#e9f1f7}td{min-width:120px}section.table{overflow-x:auto}blockquote{position:relative;margin:20px 0;padding:24px;background:#fff;border-left:5px solid #22859a;border-radius:8px}code{overflow-wrap:anywhere;font-size:.88em;background:#eaf0f4}pre{overflow:auto;background:#162e40;color:#e6f0f8;padding:20px;border-radius:10px}pre code{background:none;color:inherit}button{border:1px solid #9bb5c7;background:#eef6fa;border-radius:6px;padding:6px 12px;cursor:pointer;float:right}.meta{color:#526778}li{margin:6px 0}.toc{background:white;border-radius:12px;padding:16px 24px}.toc ul{columns:2}.map{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}.map div{padding:18px;background:white;border:1px solid #c9dce8;border-radius:12px}.map b{display:block;color:#146878}.map small{display:block} @media(max-width:760px){main{padding:18px 12px}h1{font-size:28px}.map{grid-template-columns:1fr}.toc ul{columns:1}}@media print{nav,button{display:none}body{background:white}main{max-width:none;padding:0}}</style></head><body><aside style="padding:12px;background:#fff4d6;color:#3a2d16">2026-10-21 接管快照；原基线与历史结论保留。<a href="../../kernel-mode-cross-repo-handoff.md">接管入口与现状</a> · <a href="../../runtime-design-principles.md">当前规范</a>。此页不授权恢复历史任务或自动化。</aside><main><nav><a href="ecosystem-status-and-next.html">仓库状态与后续</a><a href="hbg-async-system-validation.html">系统验收设计</a><a href="kernel-mode-cross-repo-prompt.html">Kernel 交接 prompt</a><a href="multi-agent-work-principles.html">协作原则讨论</a><a href="https://github.com/hw-native-sys/simpler/issues/2658">验收 Issue #2658</a></nav><p class="meta">2026-10-21 · 静态事实快照与明确标注的设计建议 · <a href="ecosystem-status-and-next.md">Markdown 原文</a></p><div class="map"><div><b>已合入基础</b>Async · 资源准入 · DFX<small>进入真实系统组合验收</small></div><div><b>两条产品线</b>Program Async / Kernel eager·capture<small>不同契约，按真实依赖集成</small></div><div><b>协作工作台</b>Issue / PR → Hub → 本地团队<small>原则讨论稿，尚未部署</small></div></div><details class="toc"><summary>展开目录</summary><div class="toc">
+<ul>
+<li><a href="#simpler-issuepr">Simpler 当前交付、Issue/PR 与后续工作</a><ul>
+<li><a href="#1">1. 三个工作入口</a></li>
+<li><a href="#2">2. 已交付基础及不能外推的结论</a></li>
+<li><a href="#3-issue">3. Issue 如何归并</a></li>
+<li><a href="#4-pr">4. 开放 PR：先接现有作者，不能重复派发</a></li>
+<li><a href="#5">5. 后续依赖与可并行工作</a></li>
+<li><a href="#6">6. 不变的验收边界</a></li>
+<li><a href="#7">7. 本轮交付与下一次讨论</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><h1 id="simpler-issuepr">Simpler 当前交付、Issue/PR 与后续工作</h1>
+<p>核对日期：2026-10-21 UTC。Simpler main：<code>7503761a6c01a6d07ccd8d9c82b8060da843d1af</code>。已读取全部 45 个开放 PR 和相关 Issue；本页是状态与证据整理，本轮未运行产品测试。开放 PR 的存在不等于已支持，合入不等于整体验收完成。</p>
+<p><strong>结论：普通 Async 的资源、入队和诊断基础已经有合入成果；下一重心是四仓真实模型的组合验收与交付。kernel eager/capture 是同时推进的另一能力线。多人协作机制单独讨论，不再依赖聊天记忆充当任务系统。</strong></p>
+<h2 id="1">1. 三个工作入口</h2>
+<section class="table"><table>
+<thead>
+<tr>
+<th>入口</th>
+<th>承载内容</th>
+<th>当前状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2658">HBG × Async 系统验收 #2658</a></td>
+<td>四仓联通、真实模型、持续请求、正确性、性能、回归</td>
+<td>新建父 Issue；复用原实现与作者，验收尚未完成</td>
+</tr>
+<tr>
+<td><a href="kernel-mode-cross-repo-prompt.md">kernel mode 跨仓 prompt</a> / <a href="kernel-mode-cross-repo-prompt.html">HTML</a></td>
+<td>eager/capture 契约、当前 PR 栈、四仓接收任务、交付门槛</td>
+<td>可复制交接材料；未声称各仓已调通</td>
+</tr>
+<tr>
+<td><a href="multi-agent-work-principles.md">多人协作原则</a> / <a href="multi-agent-work-principles.html">HTML</a></td>
+<td>GitHub 合同、WudiTask 协调、本地多 agent、人类决策</td>
+<td>v0 讨论稿，尚未安装工具或修改 Hub</td>
+</tr>
+</tbody>
+</table></section>
+<h2 id="2">2. 已交付基础及不能外推的结论</h2>
+<section class="table"><table>
+<thead>
+<tr>
+<th>能力</th>
+<th>已合入 PR / 已有验收</th>
+<th>仍缺什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>有界异步与真实 Qwen 起点</td>
+<td>bounded P4/P1–P3 已验收；<a href="https://github.com/hw-native-sys/simpler/pull/2447">#2447</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2456">#2456</a></td>
+<td>不能把有界起点当四仓或所有平台支持</td>
+</tr>
+<tr>
+<td>clone 与 DEVICE 连续反馈</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2471">#2471</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2511">#2511</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2568">#2568</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2592">#2592</a></td>
+<td>#2511：127 对请求 joined；#2568：127 步、126 相邻边 joined、125 refill；#2592：六请求 636 步。均受原 workload/平台/诊断条件约束，未证明默认自动准入组合</td>
+</tr>
+<tr>
+<td>动态容量与自动资源准入</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2571">#2571</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2596">#2596</a></td>
+<td>默认按资源证明准入，不再让用户猜多个 depth；内部 slot 仍是可复用资源身份。冷启动从一个逻辑 run 开始，真实 Qwen 自动模式仍待验收</td>
+</tr>
+<tr>
+<td>事务与测试维护</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2611">#2611</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2613">#2613</a></td>
+<td>native 重入防护、专属测试分离已经交付，不替代模型组合测试</td>
+</tr>
+<tr>
+<td>DFX 跨 run 接线</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2588">#2588</a></td>
+<td>四后端六 run 的持续补队与诊断归属有证据；A5 HBG ArgsDump 仍不支持，HBG 无设备 ScopeStats/DepGen 生产者，不外推 kernel capture DFX</td>
+</tr>
+<tr>
+<td>PMU 与上传相关主线</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2643">#2643</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2653">#2653</a> 已合入；<a href="https://github.com/hw-native-sys/simpler/pull/2620">#2620</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2628">#2628</a> 上传路径改造已合入</td>
+<td>当前源码包含相关修复不等于所有历史故障都已有因果闭环，也不等于端到端性能收益已测得</td>
+</tr>
+</tbody>
+</table></section>
+<p>ArgsDump 历史超时按用户要求追加三次串行验证均通过，共六次公开 submit；原期限不变，未复现。<strong>已暂时搁置，遇到再定位</strong>。这不是根因已证或自动取消任何未来失败检查。</p>
+<h2 id="3-issue">3. Issue 如何归并</h2>
+<section class="table"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>GitHub 状态</th>
+<th>建议后续职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/1706">#1706</a> HBG tracking</td>
+<td>OPEN</td>
+<td>HBG 能力母线；链接系统验收与 kernel 分线，历史设计不直接当当前实现</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2429">#2429</a> vLLM execution backend</td>
+<td>OPEN</td>
+<td>保留后端主目标；用 #2658 承载跨仓验收，避免重复维护另一套验收清单</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/1853">#1853</a> 连续运行入队</td>
+<td>OPEN</td>
+<td>已有大量交付，按原 acceptance 做收尾核定，不因旧正文还在就重做机制</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2316">#2316</a> FIFO / host-build 合同</td>
+<td>OPEN</td>
+<td>核对已合入证据能否满足全部 acceptance，再由 owner 关闭；本轮未代关</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2415">#2415</a>、<a href="https://github.com/hw-native-sys/simpler/issues/2425">#2425</a>、<a href="https://github.com/hw-native-sys/simpler/issues/2517">#2517</a>、<a href="https://github.com/hw-native-sys/simpler/issues/2565">#2565</a>、<a href="https://github.com/hw-native-sys/simpler/issues/2585">#2585</a></td>
+<td>CLOSED</td>
+<td>保留历史证据入口，不再作为当前待派任务</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2512">#2512</a> aarch64 SwimlaneLoss</td>
+<td>OPEN</td>
+<td>需要单独核查最新 main 覆盖及解决证据；OPEN 本身不是当前仍失败的证明，本轮未复现</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2459">#2459</a> HBG distinct</td>
+<td>OPEN；独立能力线</td>
+<td>不作为 clone 或 DEVICE feedback 前置；跟随原 Issue 的范围和负责人</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2654">#2654</a> scope mode 竞争</td>
+<td>OPEN → <a href="https://github.com/hw-native-sys/simpler/pull/2652">#2652</a></td>
+<td>并发使用同一 orchestration context 时核对此修复与配套构建；不把所有普通串行 HBG 都判成不可用</td>
+</tr>
+<tr>
+<td><a href="https://github.com/hw-native-sys/simpler/issues/2594">#2594</a>、<a href="https://github.com/hw-native-sys/simpler/issues/2642">#2642</a></td>
+<td>OPEN</td>
+<td>通信域和 peer bootstrap 独立线；仅在具体 workload 需要时形成依赖，不归因到 ArgsDump</td>
+</tr>
+</tbody>
+</table></section>
+<h2 id="4-pr">4. 开放 PR：先接现有作者，不能重复派发</h2>
+<p>下表只列相关工作；全仓 45 个开放 PR 不都属于本线。这里未逐项重审 CI，不给任何开放 PR 新的 Ready 结论。</p>
+<section class="table"><table>
+<thead>
+<tr>
+<th>工作</th>
+<th>当前 PR 与核对 head</th>
+<th>下一步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>真实模型与服务入口</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2436">#2436</a> <code>a4a0b3dc4</code>；<a href="https://github.com/hw-native-sys/simpler/pull/2605">#2605</a> <code>591f003be</code></td>
+<td>复用驱动。<a href="https://github.com/hw-native-sys/simpler/pull/2605">#2605</a> 作者报告短序列通过，128-token 在第 64 token 分歧；分别解决数值等价与性能，不接管另一份实现</td>
+</tr>
+<tr>
+<td>TMR kernel</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2624">#2624</a> <code>e9c16b047</code> → <a href="https://github.com/hw-native-sys/simpler/pull/2625">#2625</a> <code>7848e06e0</code></td>
+<td>eager 强化 → capture/replay；最终组合要补消费者证据</td>
+</tr>
+<tr>
+<td>HBG kernel</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2626">#2626</a> <code>f701832b0</code> → <a href="https://github.com/hw-native-sys/simpler/pull/2646">#2646</a> <code>be63699b4</code> → <a href="https://github.com/hw-native-sys/simpler/pull/2647">#2647</a> <code>8f1a054d9</code></td>
+<td>共用资源 → 模块 → dedicated launch 生命周期；箭头是逻辑依赖，必须重核当前 head 的实际祖先</td>
+</tr>
+<tr>
+<td>kernel 旧栈扩展</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2493">#2493</a> <code>536cf3eea</code>；<a href="https://github.com/hw-native-sys/simpler/pull/2583">#2583</a> <code>97343062d</code></td>
+<td>DFX/prefetch 基于旧 integration，先移植审查与接口对齐；不能当 main 支持</td>
+</tr>
+<tr>
+<td>HBG 其余进展</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2630">#2630</a> prepare queue；<a href="https://github.com/hw-native-sys/simpler/pull/2652">#2652</a> scope；<a href="https://github.com/hw-native-sys/simpler/pull/2655">#2655</a> output root</td>
+<td>由原作者完成各自行为闭环；接入场景确需才设为前置</td>
+</tr>
+<tr>
+<td>会话/通信/平台</td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2598">#2598</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2639">#2639</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2651">#2651</a>、<a href="https://github.com/hw-native-sys/simpler/pull/2656">#2656</a> 等</td>
+<td>独立原作者线；只按生命周期或多设备实际需求关联</td>
+</tr>
+</tbody>
+</table></section>
+<p>跨仓另有 PyPTO #3001/#3084 重叠：#3084 当前已包含 #3001 功能；serving #274 引用的 PyPTO #2975 已合入。细节和不可变证据见 kernel prompt，不能机械沿用旧合并顺序。</p>
+<h2 id="5">5. 后续依赖与可并行工作</h2>
+<pre><code class="language-text">已合入 Async / 资源 / DFX 基础
+  ├─ 原 Qwen 输入恢复可读 → 默认自动准入 × clone/DEVICE 组合验收 ─┐
+  ├─ 四仓 HBG 编译/模型/服务入口对齐 → prefill/decode 正确性 ────┤
+  └─ TMR/vLLM 可比基线准备 ────────────────────────────────────┤
+                                                             ↓
+                  #2658 持续请求与生命周期 → 性能归因 → CI/发布矩阵
+
+TMR eager → capture ──────┐
+HBG 资源 → 模块 → launch ─┴─ PyPTO adapter → pypto-lib → serving eager/capture
+                   ↑ 旧 integration DFX/prefetch 按需迁移；不是所有路径前置
+
+协作原则讨论 → 小范围试用 → 再决定 Hub/自动化改造（独立于产品代码）
+</code></pre>
+<section class="table"><table>
+<thead>
+<tr>
+<th>可同时开展的包</th>
+<th>能现在做的事</th>
+<th>真正阻塞及交接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A 系统入口与合同</td>
+<td>四仓接口/产物矩阵、现有 driver 复用、回归入口与 owner 确认</td>
+<td>公开调用链与配套 runtime 需要明确；不另造统一假 API</td>
+</tr>
+<tr>
+<td>B 模型正确性</td>
+<td>复用 <a href="https://github.com/hw-native-sys/simpler/pull/2605">#2605</a> 原作者的数值差异证据，定义 teacher-forced/KV 对照</td>
+<td>修正数值语义后才能接受完整请求；短序列不代替长序列</td>
+</tr>
+<tr>
+<td>C Async 组合</td>
+<td>保存现有改动与精确产物身份，明确自动准入/寿命证明</td>
+<td>本地 83 份原参考/身份输入仍不可读；不能绕权限、换参考或缩小模型来宣称完成</td>
+</tr>
+<tr>
+<td>D kernel 双路线</td>
+<td>TMR 与 HBG 原作者并行，adapter/模型/serving 提前对齐接口</td>
+<td>共享 ABI 有明确 owner；最终消费者验收依赖必要 runtime 集成</td>
+</tr>
+<tr>
+<td>E 测量方案</td>
+<td>同工作/质量/精度对照、基线采样、host/device 归因方案</td>
+<td>功能正确后才形成正式性能结论；诊断测量和正式性能分开</td>
+</tr>
+<tr>
+<td>F 协作机制</td>
+<td>与用户讨论任务身份、认领范围、交接和收尾协议</td>
+<td>本轮只有设计稿，没有安装 Hub 或接管现有任务</td>
+</tr>
+</tbody>
+</table></section>
+<p>更后的工作：约定动态请求形态；capture/replay 的模型与服务闭环；确需的通信/多设备能力；端到端正确性与性能报告。不能把这些全塞进一次“支持异步”的勾选，也不能按 slot 2→3→4 拆成一串不完整用户功能。</p>
+<h2 id="6">6. 不变的验收边界</h2>
+<p>设备 operator 串行、parent FIFO、请求私有资源在最后消费者结束后退休、有限资源与明确背压，不添加隐式跨 run host 同步。请求数 grant 和字节预算是两个概念；用户不应为了普通调用猜多个深度旋钮。能力按架构/runtime/调用模式/任务形态分别验收，未经验证不得外推。</p>
+<p>性能方向是 <strong>HBG+Async 优于 TMR+Async，TMR+Async 优于 vLLM-Ascend</strong>，且稳态 host 暴露等待应可忽略；目前是目标。需要相同有效工作、数值质量和资源约束的可比实验；若尚未达到，报告瓶颈而非更改口径。</p>
+<h2 id="7">7. 本轮交付与下一次讨论</h2>
+<p>已建立 #2658，提供 kernel 跨仓 prompt 和独立协作讨论稿。未安装 WudiTask、未更改 Hub、未代替原作者合并 PR、未做新的产品测试。下一次建议先讨论：<strong>一个 GitHub 账号下的本地多 agent，是否统一由一个 manager run 对外认领，再按独立 scope/worktree 在内部并行？</strong> 这与当前 WudiTask 的 same-login 限制吻合，且不会伪造多个参与者身份。</p></main><script>document.querySelectorAll('blockquote').forEach(el=>{const b=document.createElement('button');b.textContent='复制这段 prompt';b.onclick=async()=>{const t=[...el.children].filter(x=>x!==b).map(x=>x.innerText).join('\n\n');try{await navigator.clipboard.writeText(t);b.textContent='已复制'}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent='已选中，请复制'}};el.prepend(b)});</script></body></html>

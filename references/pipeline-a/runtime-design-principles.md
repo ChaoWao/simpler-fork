@@ -1,3 +1,5 @@
+> **2026-10-21 接管快照**：保留原基线与历史结论；现状见[接管入口](../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../runtime-design-principles.md)为准。此页不授权恢复历史任务、timer 或自动化。
+
 # Simpler 运行时总体原则
 
 本文记录架构与评审的总体原则，适用于 TMR / HBG、program / kernel 以及 eager / capture 的设计。

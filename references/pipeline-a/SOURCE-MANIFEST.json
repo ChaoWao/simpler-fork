@@ -1,0 +1,691 @@
+{
+  "snapshot_date": "2026-10-21",
+  "scope": "source bytes before relocation notices and link adaptation",
+  "files": [
+    {
+      "path": "agent-management-contract.html",
+      "sha256": "5f537152871d8e2c12c3a1f2c4500a539ff157b440324843045301c42904c4c1",
+      "bytes": 24404
+    },
+    {
+      "path": "archives/pipeline-a-p3-integration-2356/README.md",
+      "sha256": "e004b74c75a9c8ef5a35d2e0c1f58fc8176586cb485d9dd71ca82705d747921c",
+      "bytes": 949
+    },
+    {
+      "path": "archives/progress-before-20261015/run-pipeline-track-a.html",
+      "sha256": "f7d9456b02e29f2cd13f454a73a4abf4c422629d2b249ba9aee41094016c295a",
+      "bytes": 202412
+    },
+    {
+      "path": "archives/progress-before-20261015/run-pipeline-track-a.md",
+      "sha256": "d8c5a1818d311fd00238c3adfb8433742d6c92f0a86a628261ad344349a692de",
+      "bytes": 98188
+    },
+    {
+      "path": "claude-managed/CONTEXT_GATE.md",
+      "sha256": "979883642793c11363d834cacb23ec1e100c0823e95339c516993cd90c3595ae",
+      "bytes": 2193
+    },
+    {
+      "path": "claude-managed/CONTINUE.md",
+      "sha256": "4a4dabea42f99f4ed110ddc578e50d601700de8af8576be31a354c460bfd07cb",
+      "bytes": 15501
+    },
+    {
+      "path": "claude-managed/dispatch-preflight.md",
+      "sha256": "56660b9e1969d7b96c4220957b4a086d1c8efeb108cc70981528dbff3091500c",
+      "bytes": 2154
+    },
+    {
+      "path": "claude-managed/manager-tick.prompt.txt",
+      "sha256": "0f8387223127bed235fc624c1154b52c9e5d58901c0d20bdad116b98f6cfa12f",
+      "bytes": 305
+    },
+    {
+      "path": "claude-managed/registry.md",
+      "sha256": "d406a6d3bbd07e28c534ec3b735bc5a6e281c62dfe77e77e59893ff5bb383727",
+      "bytes": 1709711
+    },
+    {
+      "path": "dfx-continuous-collection-matrix-review.md",
+      "sha256": "0f9f9565522d1d0067de2c7e8ff215874b0145849846d68f5c0a47f02e978476",
+      "bytes": 10306
+    },
+    {
+      "path": "dfx-continuous-collection-matrix.md",
+      "sha256": "34b2dd73dab9efbf80b3e47dbe19443965a455868abf055fc40cb8b0e6fb57c5",
+      "bytes": 37080
+    },
+    {
+      "path": "dfx-run-identity-verification-plan.md",
+      "sha256": "de037ceb550efe9391d66540543128df223e91b26ef4e15fe5dd07b4c3f26e55",
+      "bytes": 12253
+    },
+    {
+      "path": "ecosystem-status-and-next.html",
+      "sha256": "5fc69d168bf0b5742d834fdc07ff6cd56db605e6278deee8eadaf4f20ce26773",
+      "bytes": 18006
+    },
+    {
+      "path": "ecosystem-status-and-next.md",
+      "sha256": "2a3e8f64286b0ac7102678f50abac026aa1c848cf53d7eac9ab472e3324cb193",
+      "bytes": 11841
+    },
+    {
+      "path": "hbg-async-system-validation.html",
+      "sha256": "83e7e980579c3ac6a9329285b308397a207c59596227ab96d22266b15e97d4d6",
+      "bytes": 22533
+    },
+    {
+      "path": "kernel-mode-cross-repo-prompt.html",
+      "sha256": "bd44a6254c83eaaf0c6d75620ced92d31154421e3af32f27ce3545387348a5ba",
+      "bytes": 30241
+    },
+    {
+      "path": "kernel-mode-cross-repo-prompt.md",
+      "sha256": "f29e959d6379ca1e5d690f460e9ea1aff868645d71b26873ed98be6d3b0c3c8b",
+      "bytes": 23555
+    },
+    {
+      "path": "manager-workspace.md",
+      "sha256": "0b9d04b943ccfcdb834b5dd8775af4044ad33de31ddadbe25bfa393f115cc693",
+      "bytes": 656818
+    },
+    {
+      "path": "memory-current-state.html",
+      "sha256": "984ad919899e4ed847d9054d77f7652662ebbab7baf327930ffd1b8e404d3b8e",
+      "bytes": 39129
+    },
+    {
+      "path": "multi-agent-work-principles.html",
+      "sha256": "c6e8204e672496bfa9935b5a6b20d6f28a9ad517f14d1a79c69b22b726a83e26",
+      "bytes": 24735
+    },
+    {
+      "path": "multi-agent-work-principles.md",
+      "sha256": "d93feb3963be51735bb941ec727607b03ff2b7efd9d5522c488e4c1ce7a1b924",
+      "bytes": 18632
+    },
+    {
+      "path": "review/capture-memory-framework-evidence.md",
+      "sha256": "223bad3c4ddf6b408a030a35c73c39d01dd856450769685ae8bfeeae56db6a4c",
+      "bytes": 7054
+    },
+    {
+      "path": "review/codex-dfx-pmu-old-boundary-scene.md",
+      "sha256": "7e3856e66f506428ec7422e0e8b6da909a13a49b3e89bb6163f2bd6ebaead20c",
+      "bytes": 7486
+    },
+    {
+      "path": "review/codex-dfx-pmu-regression-pair.md",
+      "sha256": "773b7d5a7eded84a550ff1a66c66da80898999ca569d2f45f6484febeeb6695a",
+      "bytes": 9007
+    },
+    {
+      "path": "review/codex-p4-77460-feedback-closure.md",
+      "sha256": "69df5f245eb386acdf60660ee03053d795090dae2f9593e4ba631f3fc263a482",
+      "bytes": 15441
+    },
+    {
+      "path": "review/codex-p4-auto-acceptance-audit.md",
+      "sha256": "d416578fd07d464408f009f2842275d52c955d2e662003a66a30ea696df92a3d",
+      "bytes": 18617
+    },
+    {
+      "path": "review/codex-p4-postmerge-review.md",
+      "sha256": "fea056acc1a66ff68841c9b73564357f32799409ca2e674640800a4020e586f5",
+      "bytes": 21012
+    },
+    {
+      "path": "review/continuation-20260928-three-implementations-and-mainline.md",
+      "sha256": "41442cdaa23687b5945c2cf528f84e0f35526a5a0b165fab3ef8670dfd90a5d9",
+      "bytes": 4064
+    },
+    {
+      "path": "review/dfx-a5-task-args-capture-decision.md",
+      "sha256": "b8dfeee21b70bbbe40c179a655b8fd2b549a72c68297b4053c7b17cbead43fb9",
+      "bytes": 5426
+    },
+    {
+      "path": "review/dfx-after2451-audit-disposition.md",
+      "sha256": "9dad1d542faf9e0859c416db412e13edac14b7e850cadc3ae0a09c08873aa40a",
+      "bytes": 3936
+    },
+    {
+      "path": "review/dfx-current-design.md",
+      "sha256": "3ff80d1a5fc91d4cbb086e20830ac1592c11caa5d29663ef7201277746a3eb84",
+      "bytes": 13376
+    },
+    {
+      "path": "review/dfx-design-historical-status-before-20261008.md",
+      "sha256": "ff14a6eb588da91c9c6faa58d9a66b756e3a1f240ac426577bc54c04508bf180",
+      "bytes": 1621
+    },
+    {
+      "path": "review/dfx-handoff-identity-assessment.md",
+      "sha256": "04d9a3187e291be60e9bc3998592f1e46fc108b1e1fd5ff5016ed8126ba6c1ed",
+      "bytes": 15065
+    },
+    {
+      "path": "review/dfx-independent-retirement-manager-review.md",
+      "sha256": "ec41a29d38604f089044a2d9dfaa947a6b92a19d123cc425c96cae1f07e1ad54",
+      "bytes": 4767
+    },
+    {
+      "path": "review/dfx-joined-launch-complete-decision.md",
+      "sha256": "857f3d58cde5112a36356642be09a31faffa6001a1d7f5b0e3a3a0a10be70292",
+      "bytes": 5470
+    },
+    {
+      "path": "review/dfx-joined-launch-design-r8.md",
+      "sha256": "918c8fd9af4067ac012bfd8b3bfa9a32a90f24d4946bfd0acdcde2a39da69703",
+      "bytes": 67578
+    },
+    {
+      "path": "review/dfx-joined-launch-r8-manager-review.md",
+      "sha256": "66122289743bfcd2b56f6e4d62b2fc2363ebb622c68845a5cd9595780da3ab98",
+      "bytes": 2929
+    },
+    {
+      "path": "review/e2-after-2411-closeout.md",
+      "sha256": "ce44ef0ca5516ceb89f0c8819b629e1e8e302fcca12653f84e423517d27fc400",
+      "bytes": 1143
+    },
+    {
+      "path": "review/hbg-target-and-2534-disposition.md",
+      "sha256": "48793f871464a8aa3359ce52d53b3f5ac420848469ee6de5d16c96fe0652366e",
+      "bytes": 5215
+    },
+    {
+      "path": "review/main-2561-integration-review.md",
+      "sha256": "d1d730a3e861a72bd746e89c14ee666d83bde80e9814efe1556ffeab2572d334",
+      "bytes": 1149
+    },
+    {
+      "path": "review/mainline-after2447-merge.md",
+      "sha256": "d5d28a8f99d4507655bb9c7dccd89c35e4047c8d30d35ce3cea9fbbacbbd171d",
+      "bytes": 1428
+    },
+    {
+      "path": "review/mainline-independent-next-step.md",
+      "sha256": "0ae235311c98a429473cb413bbb9647ed7abb11f581d5a52f5be1d1c86d09a94",
+      "bytes": 5397
+    },
+    {
+      "path": "review/memory-after2464-default-mechanism-direction.md",
+      "sha256": "f0046912c1047fc6f3cfd2f472d78a09b00a7f3bc04b24d3925f6437834c01ee",
+      "bytes": 2569
+    },
+    {
+      "path": "review/memory-after2487-manager-disposition.md",
+      "sha256": "2462d9103cbac5e998e178f0acbff6a29e23c4e6380362ca0b842310e78df4e7",
+      "bytes": 1649
+    },
+    {
+      "path": "review/memory-after2487-recovery.md",
+      "sha256": "7b778012dc2008ec3f9708532264b60a037d52d5ba74996f132cf3ff469af54a",
+      "bytes": 8570
+    },
+    {
+      "path": "review/memory-capture-unified-direction.md",
+      "sha256": "0a733315b36f12560ce22218ce1df5a1145bb9fdc4547d63f563d7c4ba3345b4",
+      "bytes": 5225
+    },
+    {
+      "path": "review/memory-capture-unified-review-18.md",
+      "sha256": "86029d194c0b7eae5ba93fda6ca5f364425c3448541d96354f86db06f5171017",
+      "bytes": 2429
+    },
+    {
+      "path": "review/memory-default-lifetime-implementation-disposition.md",
+      "sha256": "fde8811f5ea8bd2b1827397c7663aba88991238ff8c8b03c89d0ff668d63c2ff",
+      "bytes": 3640
+    },
+    {
+      "path": "review/memory-graph-kernelargs-decision.md",
+      "sha256": "5fd5daee424fa2737a4f1abcdea89dafa214fae4a51054d793fcfe6a1b007dcf",
+      "bytes": 5026
+    },
+    {
+      "path": "review/memory-graph-kernelargs-rev4-review.md",
+      "sha256": "bfbed01e17255af2d1714984860fa98e62b522cce9ce8d7a2ea151e55607bcf0",
+      "bytes": 3062
+    },
+    {
+      "path": "review/memory-lifetime-without-mandatory-budget-assessment.md",
+      "sha256": "f83f4796ac21826f1c2b0cf034b7b8fa297a1c4a2f7d2f005488f3b8e4477d9d",
+      "bytes": 8287
+    },
+    {
+      "path": "review/memory-overall-design.md",
+      "sha256": "747a5347f2c778a52960728afaa4b2527e26fead2b17f0bf554498b8c0a137bd",
+      "bytes": 4651
+    },
+    {
+      "path": "review/memory-workspace-first-pr-decision.md",
+      "sha256": "f66e25c9e3405245256c42ba016edb106f141faebd2afc64c86b19c0442a6bdf",
+      "bytes": 6738
+    },
+    {
+      "path": "review/memory-workspace-how-it-works.md",
+      "sha256": "3c33c811221521ceacaa863eac051ccaab487ea75d2934a980e31bf9855f9bbe",
+      "bytes": 3876
+    },
+    {
+      "path": "review/ordinary-async-acceptance-and-cost-map.md",
+      "sha256": "9de362174fba8d03b8136095ae73eb9be2abd4431bdb3555b7239ef19f73d094",
+      "bytes": 37259
+    },
+    {
+      "path": "review/ordinary-async-acceptance-manager-review.md",
+      "sha256": "2d9464e2e85d8e963f83291bb3223c415406a6f39cb98213e40b28493bcc64ad",
+      "bytes": 3860
+    },
+    {
+      "path": "review/p3-delivery-and-handoff.md",
+      "sha256": "a772c510837d25bb099757f7579edb74b243a5ca25b657d882e29bc4cb2882f8",
+      "bytes": 4614
+    },
+    {
+      "path": "review/p4-2419-4b2c797ee-rebase-review.md",
+      "sha256": "0fd17f17ca8d7c39135ff3cdc6c44de40bd0ca122d0806502e362cc9930f3c7d",
+      "bytes": 2496
+    },
+    {
+      "path": "review/p4-a3-tmr-decision.md",
+      "sha256": "f82fcf442e93174b67ea3493d06ac0dd92b39c110211e8be47b94e8ea0d8a622",
+      "bytes": 20296
+    },
+    {
+      "path": "review/p4-a5-hbg-early-enqueue-decision.md",
+      "sha256": "4e580d35c132bf75b9c32dd33c677a7425265e77fcbc19b32b4c6d6000400b1c",
+      "bytes": 3892
+    },
+    {
+      "path": "review/p4-auto-resource-admission-decision.md",
+      "sha256": "627ed734cba1756500792f42b6bf709d5ae4eb8a179bd42b76cf3bf611362b32",
+      "bytes": 6551
+    },
+    {
+      "path": "review/p4-auto-resource-admission-design.md",
+      "sha256": "71a1952ad8ff8d906347df89f3b2f2b0486e7e76a1e5d7ab445fbb63aa52462e",
+      "bytes": 93405
+    },
+    {
+      "path": "review/p4-auto-resource-admission-manager-review-r21.md",
+      "sha256": "47182f3ce9612e0b50f62fc13cfcc5378d3e5cd25b340cca1b12b77b7e50f16f",
+      "bytes": 2797
+    },
+    {
+      "path": "review/p4-device-chain-decision.md",
+      "sha256": "6a685c98c6862617f96c5bfa8642cb62847e9c3e4c7a77aab5ba42ee9944d08b",
+      "bytes": 3755
+    },
+    {
+      "path": "review/p4-dynamic-run-resources-contract.md",
+      "sha256": "d0200d2860ee2934675e59632ddf4bf1303c431378f90e5ecb16270592e37094",
+      "bytes": 69931
+    },
+    {
+      "path": "review/p4-dynamic-run-resources-decision.md",
+      "sha256": "c085ff3fd7191e0308d0f04e13a3a55ea1368ebe6eb90db0642c730006aa15f4",
+      "bytes": 5791
+    },
+    {
+      "path": "review/p4-dynamic-run-resources-r7-manager-review.md",
+      "sha256": "e829dc5618c6a53a4e0001f5acdc62825a353cebd0699e9de8c8e48ed73ab5f0",
+      "bytes": 2326
+    },
+    {
+      "path": "review/p4-postmerge-composition-final-design.md",
+      "sha256": "c80a0b971c85357f512253067c4ecbeeecae98fca44bc9d7d6fbadd5819a338b",
+      "bytes": 25431
+    },
+    {
+      "path": "review/p4-qwen-grant-composition-decision.md",
+      "sha256": "4e3d07633c6650af7a953e0d936af5161450275a7d8ba24afd6ac92724c7afb2",
+      "bytes": 7263
+    },
+    {
+      "path": "review/p4-request-frame-handoff-wip-review.md",
+      "sha256": "a9cd87c4c39c91b8f4ebe2b93695e09b7aa5754a561c9edd4a590e0477627d7f",
+      "bytes": 2401
+    },
+    {
+      "path": "review/p4-three-run-capacity-decision.md",
+      "sha256": "d77080990d7d82e671ebc0fe3507cb2da690c5ead50a8f5ec154f431ca5cd954",
+      "bytes": 3967
+    },
+    {
+      "path": "review/parallel-next-work-analysis.md",
+      "sha256": "0bd4d8b876ad385855f3023e6b32f5337ff56b1a944a3972b55d0f749b01b03e",
+      "bytes": 7930
+    },
+    {
+      "path": "review/pipeline-recovery-20261008.md",
+      "sha256": "8295eb7cd2fc45e1ca094e5eb1770ac07c4eecda5aa01d6cd7f9aafc54b1f86d",
+      "bytes": 2982
+    },
+    {
+      "path": "review/pr-2275.md",
+      "sha256": "b15da659b6fc0672dd18225145104bbc37f8f560965082abdc36976680a05553",
+      "bytes": 7049
+    },
+    {
+      "path": "review/pr-2406-c2fea0e90.md",
+      "sha256": "78085505c81b77ec0a52f715d60c79e6e56438d4e57abf4d7313f47e6dd2e689",
+      "bytes": 1462
+    },
+    {
+      "path": "review/pr2427-a5-onboard-106740509941.md",
+      "sha256": "142d80fb6c8ed000f1c00896b51dbe76c9165e9f4e5497c2fa2f23a902825608",
+      "bytes": 1359
+    },
+    {
+      "path": "review/pr2432-fd9ec795f-manager-review.md",
+      "sha256": "61ab5153f4f2ee872b8428826f00eeed1c3f72c4c927482b26828f12718a89a3",
+      "bytes": 2120
+    },
+    {
+      "path": "review/pr2435-merged-closeout.md",
+      "sha256": "b1263ded8bf5e819dfb4d54394fb58d458fcd619eafbc2dca2498a4e614e2764",
+      "bytes": 938
+    },
+    {
+      "path": "review/pr2438-55d47307f-manager-review.md",
+      "sha256": "0bf4ffa848c15f6a5ee13c71aeda708324b1e19a84c2dab131b46a7a072627d8",
+      "bytes": 1601
+    },
+    {
+      "path": "review/pr2438-55d47307f-ready.md",
+      "sha256": "fa55a5034ac9e11c572e2009a26ef455d9cac99c1f1a3549aab7ea324b07d3b6",
+      "bytes": 1443
+    },
+    {
+      "path": "review/pr2440-e1a4fac77-manager-review.md",
+      "sha256": "481dc6bec562f7520f9cb637292e6bbcccda36f974b21ee975dde036ce0cad8e",
+      "bytes": 2062
+    },
+    {
+      "path": "review/pr2441-ef56f0b53-manager-review.md",
+      "sha256": "01ec5fa910bc97b521d1eaac8370899f56c36d212c02a2558b9aa0128e261690",
+      "bytes": 2576
+    },
+    {
+      "path": "review/pr2443-098c3ea2f-manager-review.md",
+      "sha256": "ef0777f65973f97eb9f54a24a7120ec037490904f2b924395d30bbaa966102c8",
+      "bytes": 1313
+    },
+    {
+      "path": "review/pr2446-3b338b2fe-manager-review.md",
+      "sha256": "fd4377e3dc7658bb41ede20a308365a9541408fe141051fe0995e18ab9ed21ba",
+      "bytes": 1435
+    },
+    {
+      "path": "review/pr2446-46848ba18-a5-ci-disposition.md",
+      "sha256": "aaae030a7427c1a236d233fe4e90569c3c421ef9049b714e0fe37de947bf0e78",
+      "bytes": 1548
+    },
+    {
+      "path": "review/pr2446-46848ba18-manager-review.md",
+      "sha256": "415b6154aa7d80a5b6e613b57895f7e3d2b5f8679fe7939ceee8d9e57dfe5c68",
+      "bytes": 3479
+    },
+    {
+      "path": "review/pr2449-34d22736e-manager-review.md",
+      "sha256": "475b5b004b354c5bfc156c7fabff515e1836345d37557e940ce34ae4e5d1829a",
+      "bytes": 5428
+    },
+    {
+      "path": "review/pr2451-5ce210cec-manager-review.md",
+      "sha256": "8912f64138b1022748e30e3a784a5f5a42144bfdf3b731a433ae813e63b94fa2",
+      "bytes": 5103
+    },
+    {
+      "path": "review/pr2452-f28f86bc2-manager-review.md",
+      "sha256": "246baa51eb15c6431d9942e279ecee226e2178f15190a3cf25eb5fe308fbc744",
+      "bytes": 2844
+    },
+    {
+      "path": "review/pr2455-53a271a17-manager-review.md",
+      "sha256": "d3d46a598150f5d78908717fd41a6e2e635ee373c6eb109921c9daa8ad7d85ee",
+      "bytes": 2789
+    },
+    {
+      "path": "review/pr2462-9ebf5c02a-manager-review.md",
+      "sha256": "2e2d23c51e99090e34a535c12a51eeda4711a5a001f5094099769df9f9cd8239",
+      "bytes": 2597
+    },
+    {
+      "path": "review/pr2463-1f6b4446d-duplicate-integration-review.md",
+      "sha256": "42d0832932fdae6582c970a68360a6dd1e5535a34535087f53e90cd2c6049603",
+      "bytes": 3252
+    },
+    {
+      "path": "review/pr2464-2c9d6173a-manager-review.md",
+      "sha256": "76fd429b100039a20f24e87281c6a52d9f0445e073d394c1d666677451208ef6",
+      "bytes": 778
+    },
+    {
+      "path": "review/pr2465-72c7ae74b-manager-review.md",
+      "sha256": "a9583cd23bdb6914ba3e05e8dca2312d97f5b6b4d0b7dcd4bea22101bbab7bf3",
+      "bytes": 1471
+    },
+    {
+      "path": "review/pr2466-baec33001-integration-review.md",
+      "sha256": "dc691741190e6d2881a237838e915364b5c80ea6833bf5f1f7bc77d3c2f1cb22",
+      "bytes": 2279
+    },
+    {
+      "path": "review/pr2481-427768f50-manager-review.md",
+      "sha256": "f3134073a8e632b86dc9caba47063408f12cedec46ba3eb3f223ca90f95330dd",
+      "bytes": 7033
+    },
+    {
+      "path": "review/pr2483-1d79e7263-manager-review.md",
+      "sha256": "231e671bb3fc06d968498332f21cbf797fccbbab8c993a1b86f1960e782fcefe",
+      "bytes": 3554
+    },
+    {
+      "path": "review/pr2483-dce-ci-format-review.md",
+      "sha256": "a1dd506267c797c8bf1f1ce198adbf6a24383ebb960bb5830e8a8537032ee885",
+      "bytes": 1029
+    },
+    {
+      "path": "review/pr2500-merged-closeout.md",
+      "sha256": "0d6eaf3c958020bfa8f4cf3bede3957476301df598f72551b1a203d53d9287ac",
+      "bytes": 748
+    },
+    {
+      "path": "review/pr2505-0bdcc36de-manager-review.md",
+      "sha256": "2295104bd092877dd91ab83571d6486ed79441dca4e91800157d4c12f3ff7ac5",
+      "bytes": 4619
+    },
+    {
+      "path": "review/pr2507-macos-ut-disposition.md",
+      "sha256": "cf02722b01c4d98843c3702f797a725625023fe67d999e5eb476ac8626018d40",
+      "bytes": 1622
+    },
+    {
+      "path": "review/pr2531-ca08f6369-manager-review.md",
+      "sha256": "4c389f00abcb3aad06db03ad7f051669cd2cdb6bf92ed66f7424326a4e1caac7",
+      "bytes": 9411
+    },
+    {
+      "path": "review/pr2534-complete-function-evidence.md",
+      "sha256": "5f0aae0142d9b71e22323313569829223592b5a2735ba4de51382f4da7e6618c",
+      "bytes": 8424
+    },
+    {
+      "path": "review/pr2560-192929-a5ut-timeout.md",
+      "sha256": "e0536341b2166b60c6a7aed981a062dde38f453a727038a6f9a1d1391d0bc527",
+      "bytes": 2223
+    },
+    {
+      "path": "review/pr2560-192929bc5-manager-review.md",
+      "sha256": "80b8e08574205321a2d2d4dc91d000442cdab1771bc32b48b0ae941246385604",
+      "bytes": 8508
+    },
+    {
+      "path": "review/pr2564-9d71625e0-fix-review.md",
+      "sha256": "b8b355f6a981dd860bf772e3a63e7613c531f81ba981ff9fd546e9eddf660b1f",
+      "bytes": 3331
+    },
+    {
+      "path": "review/pr2568-46d43741c-manager-review.md",
+      "sha256": "5b8c7ef740390104cebf196344b1b8d3365eb0a03825475f1dcd74ba8e0d1270",
+      "bytes": 7239
+    },
+    {
+      "path": "review/pr2571-5e3564a56-ready-evidence.md",
+      "sha256": "1e6066be9c025d3ff7240b26eb22883c9281f70692303030fdb9b41d83d27a94",
+      "bytes": 2168
+    },
+    {
+      "path": "review/pr2571-931d-ci-acceptance-evidence.md",
+      "sha256": "a22b241ab5c2c490b849875d4f6d2c079b2a9c3c2898b5cfa8b07a070aa95441",
+      "bytes": 1237
+    },
+    {
+      "path": "review/pr2571-a002acc47-ready-evidence.md",
+      "sha256": "bd4359340a0388c79fc553551928d2fc55b4b6bd93c7b32b6e864bcdde04b960",
+      "bytes": 2643
+    },
+    {
+      "path": "review/pr2571-a780-a5-execution-evidence.md",
+      "sha256": "42d582974e7da8229993065d09ebca3595cfba1965a3530762050460e81677c8",
+      "bytes": 1273
+    },
+    {
+      "path": "review/pr2571-a780-ci-final-evidence.md",
+      "sha256": "d8af6d1ef42bce95da597576872e01d3f4fe0bf19c063ed8844ea0017e4dc744",
+      "bytes": 1206
+    },
+    {
+      "path": "review/pr2577-16a79b03-manager-review.md",
+      "sha256": "e77a4950e3be63a1490c807eb551678663e22b12e3054d986e0c141948734289",
+      "bytes": 6908
+    },
+    {
+      "path": "review/pr2588-1d707-ci-repair-coverage.md",
+      "sha256": "5b1b6cc379e2fa0b29b0cee6a3172eaed9253af96576c79e8be964e26b4bbad0",
+      "bytes": 4326
+    },
+    {
+      "path": "review/pr2588-710-macos-timeout.md",
+      "sha256": "90078a965ade45fe3e60294e120a909058896e5990a39209a7bbec0c73973726",
+      "bytes": 2148
+    },
+    {
+      "path": "review/pr2588-bank-fix-wip-review.md",
+      "sha256": "62cd4143d8cf3be8c510d4597e551f86b8fa3d7736a9f7b8a0f3cd4584ef49d5",
+      "bytes": 4395
+    },
+    {
+      "path": "review/pr2588-da746-manager-review.md",
+      "sha256": "eb4bf6dc3d731ef7c849b6d7546cd8747868532170610ec2119a47eef4ab210e",
+      "bytes": 3226
+    },
+    {
+      "path": "review/pto-exception-stop-audit-disposition.md",
+      "sha256": "d4138986d34a9c08f8f4b58cd7cbdc451269decdea813875cb0ba8b3d8dbaaf0",
+      "bytes": 1972
+    },
+    {
+      "path": "review/stream-architecture-user-contract.md",
+      "sha256": "0ea6da37184e426ff06d5ea8313d3d5c69a121b8e78852b380271959fc048a09",
+      "bytes": 2917
+    },
+    {
+      "path": "review/temporal-2427-c9cfa621c-review.md",
+      "sha256": "ddfaa13a5e173ccbcaf402b0cef952b996faa9a76027ba525696ce26a48d3263",
+      "bytes": 3387
+    },
+    {
+      "path": "review/temporal-a8f1ceff9-integration-review.md",
+      "sha256": "34d51400e40e8b8121183c5c5d17cf1b39a6c0991ea755056687c3b79270726f",
+      "bytes": 5409
+    },
+    {
+      "path": "review/temporal-args-dump-background-decision.md",
+      "sha256": "34ee71eff39d7d625d9ca80cf7d334408323ef263d68231986ee713c79f3c8a3",
+      "bytes": 9511
+    },
+    {
+      "path": "review/temporal-depgen-background-decision.md",
+      "sha256": "ad1c40d91aad0c37473f49856eca591cefcb78cdc7faf0b7f9f8fb2a17bc9560",
+      "bytes": 5705
+    },
+    {
+      "path": "review/temporal-depgen-rev4-review.md",
+      "sha256": "08c9d81d788bb311e16b24e32137552661dcdf9fe276098006cc11fe25bba397",
+      "bytes": 1432
+    },
+    {
+      "path": "review/temporal-hbg-background-decision.md",
+      "sha256": "f64510184bf580483c6d32a812b57317ea007db3a9bf4cfe6954f69317cd76cf",
+      "bytes": 3846
+    },
+    {
+      "path": "review/temporal-hbg-background-rev3-review.md",
+      "sha256": "20fafe5fa0e1096f7c62e30e4022ca21bf0409ea617f567404eb7c17276851c3",
+      "bytes": 1208
+    },
+    {
+      "path": "review/temporal-scopestats-background-decision.md",
+      "sha256": "815f319d622253767f6c667a08ca0e84eff06cafb896bd2cb109ff3020ec589e",
+      "bytes": 4653
+    },
+    {
+      "path": "run-pipeline-p1-p2-coordination.md",
+      "sha256": "aec944049684b0efcfb64ae886b1f09b0775f6a74dde37198c4e80ea1ae9386e",
+      "bytes": 8382
+    },
+    {
+      "path": "run-pipeline-redesign-review.md",
+      "sha256": "d68f9f36136889e33d38ffa666fa116a4235f0e57eadae4424cfc7c703618825",
+      "bytes": 51220
+    },
+    {
+      "path": "run-pipeline-redesign.html",
+      "sha256": "741180f0401cdb0c2345679f58330ca6c7e4f3240857bed031e331f22453bbb0",
+      "bytes": 58830
+    },
+    {
+      "path": "run-pipeline-redesign.md",
+      "sha256": "eae1ae6006268a84acd1fa8a6db7c9da4eda511d3e87b06c1dd33b889d2eb5f5",
+      "bytes": 27050
+    },
+    {
+      "path": "run-pipeline-review-code-assessment.md",
+      "sha256": "ded9724274c9d92eb304833c0570424e288489880f9498ca974fd748f3e16502",
+      "bytes": 17620
+    },
+    {
+      "path": "run-pipeline-track-a-review.md",
+      "sha256": "b7398ebda97881de693fe9df5b8a51b7a4ff071039a00f5973dd39512e199ed5",
+      "bytes": 16294
+    },
+    {
+      "path": "run-pipeline-track-a.html",
+      "sha256": "905fcdefa3a00035860acffa5747e5a81f851107171c877a04491e95438954de",
+      "bytes": 57396
+    },
+    {
+      "path": "run-pipeline-track-a.md",
+      "sha256": "749720bfae3404eaff4f253c07523ce5aaf8461290cac91b8067f5c664d6fcf5",
+      "bytes": 25168
+    },
+    {
+      "path": "runtime-design-principles.md",
+      "sha256": "8e27a8713dab042ebfee05e652a5194ec50c17564efe2dc4c1f3add86fb26c1e",
+      "bytes": 9559
+    },
+    {
+      "path": "workspace-memory-principles.md",
+      "sha256": "d659df2dec19191c2439517f6d2a66409e0984ceb177517d918d2fe45befeb3d",
+      "bytes": 16124
+    }
+  ]
+}

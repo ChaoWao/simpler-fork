@@ -1,0 +1,15 @@
+> **2026-10-21 接管快照**：保留原基线与历史结论；现状见[接管入口](../../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../../runtime-design-principles.md)为准。此页不授权恢复历史任务、timer 或自动化。
+
+# R8 design disposition — accepted with normative manager clarifications
+
+R8 result and R7→R8 changes read, plus source/capacity/decision sections. Accept the selected complete functionality for a user implementation decision, not product readiness. R8 now counts privileged cancellation through return, elects one credit-detach owner, closes entry before drain and clears targets before context unload. Earlier call-entry/return and cancellation races are addressed at the credit-call boundary.
+
+The standalone decision is `dfx-joined-launch-complete-decision.md`; these clarifications supersede contradictory draft wording:
+
+1. Six owners mean swimlane (levels1–4), ArgsDump, PMU, ScopeStats, TMR DepGen, HBG host graph. Levels are not separate owners. Native backend restrictions remain per capability table; HBG host graph is host-only and gets no device terminal bank.
+2. Credit Detached proves credit calls have left, not that the whole lane close/finalize has completed. Preserve existing Worker owning-thread/single-close-attempt and native caller serialization. No promise of arbitrary raw `_close_chip_run_lane`/`finalize` concurrency or direct C ABI use. Any supported internal path that releases GIL must retain a shared lane-state handle before entering and preserve Worker/native object ownership through return. A follower must still obtain the existing full close outcome, not skip native drain merely because credit state is Detached. This is an implementation acceptance constraint, not a new public close API. Refused/reentrant/raw unsupported shutdown must fail locally before target access; ordinary late credit calls return locally.
+3. Closing publication credit is not admission cancellation. Already admitted runs retain their own outcome and ownership; the new30s deadline only applies to front-of-queue credit admission and does not time out device execution or file publication already admitted. The draft statement that this deadline bounds an arbitrary delayed device fence is withdrawn.
+4. Full default-path regression preserves semantic records/verdicts; timestamp/path fields need not be byte-identical. Device terminal writes apply when the corresponding producer/collector is enabled, and do not license dereferencing absent terminal addresses in default/sim.
+5. Product writes in the overlapping runner/lane area wait for P4 complete implementation to become reviewable and its base/interface to be integrated. Re-run fresh main/all-open dedup before dispatch, coordinate one writer per worktree, do not duplicate external2566/2567/2568. One complete feature PR, not a capacity increment. Approval, once obtained, persists across this integration wait.
+
+No implementation, test execution, compile, CI or performance proof is claimed. Design approval is requested only after this concrete decision is available. Original temporal remains idle until approval and safe integration dispatch.

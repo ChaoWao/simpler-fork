@@ -2,9 +2,11 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `7d27e6104`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作；本轮 #2653 收口本次 PMU 配置和复位，不重复其设备协议。
+**当前进度基线 main `7503761a6`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648/#2653 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作；本轮 #2653 收口本次 PMU 配置和复位，不重复其设备协议。
 
 当前交付边界：共同公开 eager 已接线，完整 K2c 业务资格与故障/DFX 矩阵继续验收。#2605 短序列输出正确，但 128-token 仍不一致。#2624/#2625 已有 TMR eager/capture 候选；#2626/#2646/#2647 的共同资源/HBG graph 与 A2/A3 execution 候选仍为 draft、均未合入。候选实现不是“尚无人实现”，也不是“主线已可用”；后续审查须消费共同 native owner 和寿命合同，避免独立专用路径形成第二套 executor。A5 HBG 不从 A2/A3 成绩推定通过。
+
+四仓任务和原 manager 移除后的资料归属见[接管说明](kernel-mode-cross-repo-handoff.md)。下一步先审候选与共同执行接口对齐，不在未审清依赖时另开重复实现。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
 
@@ -203,9 +205,9 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 
 <a id="c1-pmu-invocation"></a>
 
-### C1 当前交付候选：#2653（待审阅）
+### C1 当前交付：#2653（已合入 `7503761a6`）
 
-[#2653](https://github.com/hw-native-sys/simpler/pull/2653)，当前 head `dcdb55ef2`，原功能/全量验证 head `08d239293`，基线 main `7d27e6104`。未合入，CI 结果另行记账。#2649 已收口 swimlane level，但 PMU admission 仍改共享 `PmuDataHeader::event_type`；普通收集另由 host 清 producer counters。现在移除这些逐调用共享写入，实际 producer 直接消费本次稳定描述。
+[#2653](https://github.com/hw-native-sys/simpler/pull/2653)，当前 head `dcdb55ef2`，原功能/全量验证 head `08d239293`，基线 main `7d27e6104`。已合入；最终 CI 19 success / 1 deploy skipped，历史测试保留原 head。#2649 已收口 swimlane level，但 PMU admission 仍改共享 `PmuDataHeader::event_type`；普通收集另由 host 清 producer counters。现在移除这些逐调用共享写入，实际 producer 直接消费本次稳定描述。
 
 | 生产环节 | 本笔合同 |
 | --- | --- |
@@ -226,9 +228,9 @@ rebase 与评审修正：main #2588 的诊断 credit/rollback、PMU 可选布局
 - 普通 sim corpus：a2a3sim 105 passed / 11 skipped；a5sim 102 passed / 3 skipped。额外 A5 TMR PMU smoke 1 passed。不把桩寄存器或模拟器成绩作为 A5 silicon 证据。
 - A3 task-submit `task_20261020_211004_336428319303` / devices 0,6,7,10：public Worker 的 12 项切换 case（TMR/HBG × owned/borrowed，swimlane 与 PMU，含已有 PMU env override）、6 个 RTS 桩探针和两 runtime PMU smokes 通过；TMR/HBG joined attribution 各 1 项和普通 `< L4` sweep **238 passed / 20 skipped**；后者按 CI 排除独立 SDMA 分组，658 秒完成，不更改设备 watchdog。六个运行时文件 hash 前后相同，exit 0。
 
-- 最终提交 `08d239293` 重建后，task-submit `task_20261020_212651_29463928609` / device 1：4 个 public PMU case（20 次调用）和 6 个 RTS 探针通过，运行时 hash 前后相同；CI 已启动、尚未完成，不冒充 A5 silicon/macOS 验收。
+- 最终提交 `08d239293` 重建后，task-submit `task_20261020_212651_29463928609` / device 1：4 个 public PMU case（20 次调用）和 6 个 RTS 探针通过，运行时 hash 前后相同；该条仍是原 head 的本地记录；最终 head CI 的 A5 silicon/macOS 与 profiling smoke 已通过，不把这些结果移挂为原 AIV 根因证明。
 
-**CI 构建修正 `dcdb55ef2`：** 原 head 的 CI 为 18 success / 1 failure / deploy skipped；唯一失败为 [profiling-flags-smoke](https://github.com/hw-native-sys/simpler/actions/runs/39543987420/job/119039097361) 的两架构 DFX-off 构建。`post_handshake_profiling_init(Runtime *runtime)` 的函数体在 DFX 关闭时为空，新增参数触发 `-Werror=unused-parameter`。本地按 workflow 复现 A3 失败后，两份 TMR 源文件各加 `(void)runtime;`，不改告警或预算。两架构 DFX-off 构建和 vector smoke 通过；最终提交重建八套默认 runtime 后，两架构 DFX-on vector smoke 也通过，适用 pre-commit 通过。此前完整矩阵仍归原功能 head，不重挂到本轮提交；新 CI 已触发、结果待验收。评审另指出 A5 硬件 UT 与 macOS UT 的时限余量偏小，本次两行编译修正未调整其矩阵或预算。
+**CI 构建修正 `dcdb55ef2`：** 原 head 的 CI 为 18 success / 1 failure / deploy skipped；唯一失败为 [profiling-flags-smoke](https://github.com/hw-native-sys/simpler/actions/runs/39543987420/job/119039097361) 的两架构 DFX-off 构建。`post_handshake_profiling_init(Runtime *runtime)` 的函数体在 DFX 关闭时为空，新增参数触发 `-Werror=unused-parameter`。本地按 workflow 复现 A3 失败后，两份 TMR 源文件各加 `(void)runtime;`，不改告警或预算。两架构 DFX-off 构建和 vector smoke 通过；最终提交重建八套默认 runtime 后，两架构 DFX-on vector smoke 也通过，适用 pre-commit 通过。此前完整矩阵仍归原功能 head，不重挂到本轮提交；最终 CI 19 success / 1 deploy skipped，含两架构 DFX-off profiling smoke，#2653 已合入 `7503761a6`。评审另指出 A5 硬件 UT 与 macOS UT 的时限余量偏小，本次两行编译修正未调整其矩阵或预算。
 
 首次实板任务 `task_20261020_205750_277359920110` 失败一次：owned HBG、PMU request 2 / override 4 的首调用，在 device 0 AIVector core 40 报 UB address out of bounds，随后 lane 正确隔离并拒绝释放 in-use Buffer。相同二进制、同设备即时复跑通过；精确 main 控制组与 candidate 交替各两轮均通过。样本不足以判断旧缺陷或本次回归；保留原始设备日志、func/PC、二进制 hash 和任务信息，不因后续全绿撤销该观察。另一并行 task 持 devices 9/10，不与当次 0/6/7/8 锁重叠；占用快照在失败后读取，不能据此排除 fault 瞬间的旁路占用。首轮 CSV 在保全前被 pytest 临时保留策略删除；后续使用固定 basetemp。未知项记录于本地 KNOWN_ISSUES，不声称修复 AIV；按既有[现场规划](aiv-evidence-plan.md)跟踪。
 

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run-pipeline 重构设计 v7 — 分两轨</title>
+<style>
+  :root {
+    color-scheme: light;
+    --plane:#f9f9f7; --surface-1:#fcfcfb;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+    --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
+    --code-bg:#f2f1ed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --plane:#0d0d0d; --surface-1:#1a1a19;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+      --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+      --code-bg:#232322;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface-1:#1a1a19;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+    --code-bg:#232322;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plane);color:var(--text-primary);
+       font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 96px}
+  header.doc{border-bottom:1px solid var(--border);padding-bottom:24px}
+  h1{font-size:26px;line-height:1.3;margin:0 0 10px;letter-spacing:-.01em}
+  .sub{color:var(--text-secondary);margin:0}
+  .meta{color:var(--text-muted);font-size:13px;margin-top:14px}
+  h2{font-size:20px;margin:48px 0 6px;letter-spacing:-.01em;padding-top:20px;
+     border-top:1px solid var(--border)}
+  h2 .num{color:var(--text-muted);font-weight:600;margin-right:10px}
+  h3{font-size:16px;margin:30px 0 6px}
+  p{margin:12px 0} ul,ol{margin:12px 0;padding-left:22px} li{margin:5px 0}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;
+       background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;
+      padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.55}
+  pre code{background:none;padding:0}
+  .rule{background:var(--surface-1);border:1px solid var(--border);
+        border-left:3px solid var(--series-1);border-radius:8px;
+        padding:18px 22px;margin:22px 0;font-size:16px}
+  .danger{border-left-color:var(--critical)}
+  figure{margin:26px 0;background:var(--surface-1);border:1px solid var(--border);
+         border-radius:10px;padding:18px 18px 14px}
+  figcaption{color:var(--text-secondary);font-size:13px;margin-top:12px;
+             padding-top:12px;border-top:1px solid var(--border)}
+  figcaption b{color:var(--text-primary)}
+  .fig-title{font-size:14px;font-weight:650;margin:0 0 14px}
+  svg{display:block;max-width:100%;height:auto}
+  svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 14px;font-size:13px;
+          color:var(--text-secondary)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .sw-dash{width:13px;height:11px;border:1.5px dashed var(--text-muted);
+           border-radius:3px;background:none}
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--grid);
+        vertical-align:top}
+  th{color:var(--text-secondary);font-weight:650;font-size:13px}
+  td.c,th.c{text-align:center}
+  tbody tr:last-child td{border-bottom:none}
+  .tbl{background:var(--surface-1);border:1px solid var(--border);
+       border-radius:10px;padding:4px 16px 8px}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:650;
+        padding:2px 8px;border-radius:999px;border:1px solid var(--border);white-space:nowrap}
+  .pill .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .ok{color:var(--good)} .bad{color:var(--critical)}
+  .bar-g:hover rect.mark{stroke:var(--surface-1);stroke-width:2}
+  .toggle{position:fixed;top:16px;right:16px;z-index:10;background:var(--surface-1);
+          color:var(--text-secondary);border:1px solid var(--border);border-radius:999px;
+          padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+          color:var(--text-muted);margin:0 0 6px}
+  .note{color:var(--text-secondary);font-size:14px}
+  .m2{background:var(--code-bg);border-radius:6px;padding:2px 6px;font-size:12px;
+      color:var(--text-secondary)}
+</style>
+</head>
+<body><aside style="padding:12px;background:#fff4d6;color:#3a2d16">2026-10-21 接管快照；原基线与历史结论保留。<a href="../../kernel-mode-cross-repo-handoff.md">接管入口与现状</a> · <a href="../../runtime-design-principles.md">当前规范</a>。此页不授权恢复历史任务或自动化。</aside><div id="historical-baseline-notice" style="padding:18px;background:#fff0d5;color:#493719">历史设计基线：正文保留原版本语义，不代表当前进度或支持能力。<a href="run-pipeline-track-a.html">查看当前看板</a> · <a href="run-pipeline-track-a.md">P0–P6 阶段表</a></div>
+<button class="toggle" id="themeBtn" type="button">深色 / 浅色</button>
+<div class="wrap">
+
+<header class="doc">
+  <p class="kicker">设计提案 · simpler runtime · 第 7 版</p>
+  <h1>Run-pipeline 重构 —— 分两轨<br>program 自然排队 / kernel 接入</h1>
+  <p class="sub">
+    前六版把"去掉固定槽位"和一整套新 API、tiling 缓存、ACLGraph 绑成一个交付。
+    两轮 review 加一份源码核查之后，最有价值的结论是<b>分轨</b>。
+    v7 替换了三处核心：<b>资源判据</b>、<b>寿命分类</b>、<b>构建读写合同</b>。
+  </p>
+  <p class="meta">基线 <code>748c39fbe</code> · issue <code>#1853</code> ·
+    全文 <code>.docs/run-pipeline-redesign.md</code></p>
+</header>
+
+<h2><span class="num">1</span>为什么必须分轨</h2>
+
+<div class="rule danger">
+  <code>simpler_kernel_mode_supported()</code> 返回 <b>0</b>，其后的 kernel 入口是共享
+  参数校验的<b>占位实现</b>（<code>c_api_shared.cpp:1253</code>）。所以"program 与 kernel
+  共用设备提交"<b>不能</b>读作"复用一个成熟的 <code>kernel_launch</code>"——
+  本分支能工作的只有 program 路径，<b>依赖方向是反的</b>。
+</div>
+
+<figure>
+  <p class="fig-title">图 1 · 两轨与唯一的交汇点</p>
+  <svg viewBox="0 0 920 400" role="img" aria-labelledby="f1t">
+    <title id="f1t">A 轨六步服务 program 自然排队；B 轨前置是 kernel 路径不再是 stub；A2 是交汇点</title>
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted)"/></marker>
+      <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--good)"/></marker></defs>
+
+    <text x="0" y="20" font-size="13" font-weight="700" fill="var(--series-1)">A 轨 · program 自然排队</text>
+    <text x="250" y="20" font-size="11.5" fill="var(--text-secondary)">不需要 tiling 缓存 · 不需要 kernel 接口 · 不需要 ACLGraph</text>
+    <line x1="30" y1="44" x2="898" y2="44" stroke="var(--grid)" stroke-width="2"/>
+
+    <g font-size="11">
+      <!-- A0 -->
+      <rect x="30" y="56" width="132" height="74" rx="8" fill="var(--series-1)" opacity=".10"
+            stroke="var(--series-1)" stroke-width="1.3"/>
+      <circle cx="96" cy="44" r="7" fill="var(--series-1)"/>
+      <text x="96" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-primary)">A0</text>
+      <text x="96" y="95" text-anchor="middle" fill="var(--text-primary)">共享资源安全</text>
+      <text x="96" y="111" text-anchor="middle" fill="var(--text-secondary)">arena 扩容守卫</text>
+      <text x="96" y="125" text-anchor="middle" fill="var(--text-secondary)">TMR 失败状态</text>
+
+      <!-- A1 -->
+      <rect x="172" y="56" width="132" height="74" rx="8" fill="var(--series-1)" opacity=".10"
+            stroke="var(--series-1)" stroke-width="1.3"/>
+      <circle cx="238" cy="44" r="7" fill="var(--series-1)"/>
+      <text x="238" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-primary)">A1</text>
+      <text x="238" y="95" text-anchor="middle" fill="var(--text-primary)">per-run fence</text>
+      <text x="238" y="111" text-anchor="middle" fill="var(--text-secondary)">event 引用三态</text>
+      <text x="238" y="125" text-anchor="middle" fill="var(--text-secondary)">partial 分账</text>
+
+      <!-- A2 highlighted -->
+      <rect x="314" y="52" width="132" height="82" rx="8" fill="var(--good)" opacity=".14"
+            stroke="var(--good)" stroke-width="2"/>
+      <circle cx="380" cy="44" r="10" fill="var(--good)"/>
+      <text x="380" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="var(--good)">A2</text>
+      <text x="380" y="93" text-anchor="middle" font-size="11" font-weight="650" fill="var(--text-primary)">寿命四分 · 按字段拆</text>
+      <text x="380" y="109" text-anchor="middle" fill="var(--text-secondary)">同 callable build 串行</text>
+      <text x="380" y="125" text-anchor="middle" font-weight="650" fill="var(--good)">构建计划 / 每次绑定</text>
+
+      <!-- A3 -->
+      <rect x="456" y="56" width="132" height="74" rx="8" fill="var(--series-1)" opacity=".10"
+            stroke="var(--series-1)" stroke-width="1.3"/>
+      <circle cx="522" cy="44" r="7" fill="var(--series-1)"/>
+      <text x="522" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-primary)">A3</text>
+      <text x="522" y="95" text-anchor="middle" fill="var(--text-primary)">claim + lane ③④</text>
+      <text x="522" y="111" text-anchor="middle" fill="var(--text-secondary)">四态区分</text>
+      <text x="522" y="126" text-anchor="middle" font-weight="650" fill="var(--warning)">直连路径排队</text>
+
+      <!-- A4 -->
+      <rect x="598" y="56" width="132" height="74" rx="8" fill="var(--series-1)" opacity=".10"
+            stroke="var(--series-1)" stroke-width="1.3"/>
+      <circle cx="664" cy="44" r="7" fill="var(--series-1)"/>
+      <text x="664" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-primary)">A4</text>
+      <text x="664" y="95" text-anchor="middle" fill="var(--text-primary)">mailbox 拆分</text>
+      <text x="664" y="111" text-anchor="middle" fill="var(--text-secondary)">请求帧 + 状态数组</text>
+
+      <!-- A5 -->
+      <rect x="740" y="56" width="158" height="74" rx="8" fill="var(--series-1)" opacity=".10"
+            stroke="var(--critical)" stroke-width="1.6"/>
+      <circle cx="819" cy="44" r="7" fill="var(--series-1)"/>
+      <text x="819" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-primary)">A5</text>
+      <text x="819" y="95" text-anchor="middle" fill="var(--text-primary)">L3 两层 ①②</text>
+      <text x="819" y="111" text-anchor="middle" font-weight="650" fill="var(--critical)">正确性门先定</text>
+      <text x="819" y="126" text-anchor="middle" font-weight="650" fill="var(--good)">生产路径排队</text>
+    </g>
+
+    <!-- convergence arrow -->
+    <path d="M380 138 L380 258" fill="none" stroke="var(--good)" stroke-width="2.2"
+          stroke-dasharray="6 4" marker-end="url(#arg)"/>
+    <text x="394" y="196" font-size="11.5" font-weight="650" fill="var(--good)">唯一交汇点</text>
+    <text x="394" y="212" font-size="10.5" fill="var(--text-secondary)">A2 的产出正是 B 轨</text>
+    <text x="394" y="226" font-size="10.5" fill="var(--text-secondary)">build API 的返回物</text>
+
+    <!-- B track -->
+    <text x="0" y="288" font-size="13" font-weight="700" fill="var(--series-2)">B 轨 · kernel 接入</text>
+    <rect x="30" y="300" width="300" height="80" rx="8" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <text x="46" y="322" font-size="11.5" font-weight="700" fill="var(--critical)">前置 · 未满足</text>
+    <text x="46" y="341" font-size="11" fill="var(--text-secondary)">kernel 路径不再是 stub</text>
+    <text x="46" y="357" font-size="10.5" font-family="ui-monospace,monospace" fill="var(--text-muted)">simpler_kernel_mode_supported()</text>
+    <text x="46" y="371" font-size="10.5" font-family="ui-monospace,monospace" fill="var(--critical)">    return 0;</text>
+
+    <g stroke="var(--text-muted)" stroke-width="1.4" fill="none">
+      <path d="M334 340 L360 340" marker-end="url(#ar)"/></g>
+
+    <rect x="366" y="300" width="532" height="80" rx="8" fill="var(--series-2)" opacity=".10"
+          stroke="var(--series-2)" stroke-width="1.3"/>
+    <g font-size="11" fill="var(--text-secondary)">
+      <text x="384" y="322" font-size="11.5" font-weight="650" fill="var(--text-primary)">纯 host build API · TilingInputs 契约 · PyPTO tiling 缓存 · ACLGraph</text>
+      <text x="384" y="343">缓存部分还被 <tspan font-family="ui-monospace,monospace">set_tensor_data</tspan> 的构建副作用卡着（图 5）</text>
+      <text x="384" y="361">captured graph 的引用寿命需独立规定，不能套用单次 fence</text>
+    </g>
+  </svg>
+  <figcaption>
+    <b>A2 做对了 B 轨才有地基；反过来不成立。</b>A 轨不需要 tiling 缓存、不需要 kernel
+    接口、不需要 ACLGraph——把它们捆成同一个交付前置，是前六版的结构性毛病。
+  </figcaption>
+</figure>
+
+<h2><span class="num">2</span>资源判据换掉了</h2>
+
+<p>前几版用的是"<b>当且仅当 host 碰它</b> ⟺ <code>PER_RUN</code>"。<b>撤回</b>——它与
+本文档自己的 ledger 矛盾（只读 callable 代码被 host 写过却可共享），而且它不回答何时释放。</p>
+
+<div class="rule">
+  <b>判据：后继的准备是否可能覆盖一个仍有使用者的版本；以及最后一个使用者何时结束。</b><br>
+  最后使用者包括：device 执行、回拷、状态读取、event wait、<b>captured graph</b>。
+</div>
+
+<p class="note">
+  这条严格更强：它同时给出分类<b>和释放时机</b>。<br>
+  推论：<code>Runtime</code> / handshake 要<b>按字段拆</b>——哪些是每次参数、哪些是共享
+  执行状态、哪些是结果。不能因为整个结构在 prepare 里被写过，就永久规定整份每 run 一份。
+  但<b>拆字段前保留当前隔离</b>：共享化需要逐字段的读写与复位证明。
+</p>
+
+<h2><span class="num">3</span>寿命是四类，不是三类</h2>
+
+<figure>
+  <p class="fig-title">图 2 · 四类寿命；第四类不由任何 run 的 fence 界定</p>
+  <svg viewBox="0 0 920 340" role="img" aria-labelledby="f2t">
+    <title id="f2t">构建临时数据到上传；每次记录到最后使用者；共享资源按代际；captured graph 引用跨多次 replay</title>
+    <g font-size="11" fill="var(--text-secondary)" text-anchor="middle">
+      <text x="150" y="300">prepare</text><text x="258" y="300">upload</text>
+      <text x="366" y="300">排队中</text><text x="474" y="300">设备执行</text>
+      <text x="582" y="300">finalize</text><text x="690" y="300">后继执行</text>
+      <text x="820" y="300">更多次 replay</text>
+    </g>
+    <line x1="96" y1="280" x2="898" y2="280" stroke="var(--axis)"/>
+    <g stroke="var(--grid)" stroke-width="1" stroke-dasharray="3 3">
+      <line x1="204" y1="30" x2="204" y2="280"/><line x1="312" y1="30" x2="312" y2="280"/>
+      <line x1="420" y1="30" x2="420" y2="280"/><line x1="528" y1="30" x2="528" y2="280"/>
+      <line x1="636" y1="30" x2="636" y2="280"/><line x1="744" y1="30" x2="744" y2="280"/>
+    </g>
+
+    <g font-size="11.5" fill="var(--text-secondary)">
+      <text x="0" y="56">① 构建临时</text><text x="0" y="112">② 每次记录</text>
+      <text x="0" y="168">③ 共享 + 同步</text><text x="0" y="224">④ captured graph</text>
+    </g>
+
+    <g class="bar-g"><title>① host 构建临时数据：上传/延迟提交完成、runtime 不再引用才可回收——不能按函数返回判断</title>
+      <rect class="mark" x="96" y="40" width="214" height="24" rx="4" fill="var(--series-1)"/>
+      <text x="203" y="56" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">构建工作区</text></g>
+    <text x="322" y="56" font-size="10.5" fill="var(--text-muted)">不能按函数返回判断</text>
+
+    <g class="bar-g"><title>② 每次执行记录与参数版本：device、回拷、状态读取等最后使用者结束</title>
+      <rect class="mark" x="96" y="96" width="536" height="24" rx="4" fill="var(--series-2)"/>
+      <text x="364" y="112" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">参数版本 + 结果 + 回收信息</text></g>
+    <text x="644" y="112" font-size="10.5" fill="var(--text-muted)">最后使用者结束</text>
+
+    <rect x="96" y="152" width="802" height="24" rx="4" fill="var(--series-3)" opacity=".18"
+          stroke="var(--series-3)" stroke-width="1"/>
+    <text x="497" y="168" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">
+      按实际引用与<tspan font-weight="650">代际</tspan>管理，不随某个 run 的 finalize 释放</text>
+
+    <!-- class 4: extends beyond -->
+    <rect x="96" y="208" width="790" height="24" rx="4" fill="var(--critical)" opacity=".16"
+          stroke="var(--critical)" stroke-width="1.6"/>
+    <text x="440" y="224" font-size="10.5" fill="var(--text-primary)" text-anchor="middle" font-weight="650">
+      捕获图持有的地址 —— 跨多次 replay</text>
+    <path d="M886 220 L910 220" stroke="var(--critical)" stroke-width="1.6"/>
+    <text x="893" y="212" font-size="14" fill="var(--critical)">›››</text>
+
+    <rect x="96" y="244" width="802" height="28" rx="6" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="1.2"/>
+    <text x="110" y="263" font-size="11" fill="var(--text-secondary)">
+      证据：kernel 模式<tspan font-weight="650" fill="var(--critical)">禁止</tspan>已提交 arena 的扩容/释放，理由就是<tspan font-weight="650">捕获图仍保存地址</tspan>（<tspan font-family="ui-monospace,monospace">device_runner_base.cpp:428</tspan>）</text>
+  </svg>
+  <figcaption>
+    所以"等旧引用退出"这个答案对捕获场景<b>不成立</b>——<b>eager 的最后一次提交完成 ≠ 图的
+    最后一次引用</b>。共享资源的重建规则必须为第四类单列一条禁止。
+  </figcaption>
+</figure>
+
+<h2><span class="num">4</span>同一 callable 的构图并发合同</h2>
+
+<figure>
+  <p class="fig-title">图 3 · <code>g_current_runtime</code> 是 SO 内的普通全局</p>
+  <svg viewBox="0 0 900 320" role="img" aria-labelledby="f3t">
+    <title id="f3t">两个 build 同时重绑定同一个 SO 的全局 runtime 指针，会把 N 的 recorder 导向 N+1 的 runtime</title>
+    <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--critical)"/></marker></defs>
+
+    <!-- two builds -->
+    <rect x="0" y="40" width="170" height="52" rx="8" fill="var(--series-1)" opacity=".12"
+          stroke="var(--series-1)" stroke-width="1.3"/>
+    <text x="85" y="62" font-size="12" font-weight="650" fill="var(--text-primary)" text-anchor="middle">build N</text>
+    <text x="85" y="80" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">bind(rt_N)</text>
+
+    <rect x="0" y="130" width="170" height="52" rx="8" fill="var(--series-2)" opacity=".14"
+          stroke="var(--series-2)" stroke-width="1.3"/>
+    <text x="85" y="152" font-size="12" font-weight="650" fill="var(--text-primary)" text-anchor="middle">build N+1</text>
+    <text x="85" y="170" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">bind(rt_N+1)</text>
+
+    <!-- the SO global -->
+    <rect x="270" y="72" width="230" height="78" rx="8" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="2"/>
+    <text x="385" y="94" font-size="11.5" font-weight="700" fill="var(--text-primary)" text-anchor="middle">orchestration SO</text>
+    <text x="385" y="116" font-size="11.5" font-family="ui-monospace,monospace"
+          fill="var(--critical)" text-anchor="middle" font-weight="650">g_current_runtime</text>
+    <text x="385" y="136" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">普通全局，一个值</text>
+
+    <g stroke="var(--text-muted)" stroke-width="1.4" fill="none">
+      <path d="M172 66 L266 96"/><path d="M172 156 L266 126"/></g>
+
+    <!-- recorders -->
+    <rect x="600" y="40" width="300" height="52" rx="8" fill="var(--series-1)" opacity=".12"
+          stroke="var(--series-1)" stroke-width="1.3"/>
+    <text x="750" y="62" font-size="11.5" font-weight="650" fill="var(--text-primary)" text-anchor="middle">N 的 recorder 线程</text>
+    <text x="750" y="80" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">靠这个全局找 runtime</text>
+
+    <rect x="600" y="130" width="300" height="52" rx="8" fill="var(--series-2)" opacity=".14"
+          stroke="var(--series-2)" stroke-width="1.3"/>
+    <text x="750" y="152" font-size="11.5" font-weight="650" fill="var(--text-primary)" text-anchor="middle">N+1 的 recorder 线程</text>
+
+    <!-- misroute -->
+    <path d="M502 108 C 545 108, 560 150, 596 156" fill="none" stroke="var(--critical)"
+          stroke-width="2" marker-end="url(#ar3)"/>
+    <path d="M502 112 C 545 118, 560 70, 596 66" fill="none" stroke="var(--critical)"
+          stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ar3)"/>
+    <text x="548" y="102" font-size="10.5" font-weight="650" fill="var(--critical)" text-anchor="middle">导错</text>
+
+    <rect x="0" y="204" width="900" height="50" rx="8" fill="var(--surface-1)"
+          stroke="var(--border)"/>
+    <text x="16" y="224" font-size="11" fill="var(--text-secondary)">
+      注释写明了为什么不是 TLS：glibc TLSDESC stale-resolution 崩溃（BZ #32412），SO 在执行轮次之间被 dlclose / re-dlopen。</text>
+    <text x="16" y="242" font-size="11" fill="var(--text-secondary)">
+      同时声明"<tspan font-weight="650">所有 orchestrator 线程绑定同一个 rt 值，所以不需要 per-thread 存储</tspan>"——这条假设正是跨 build 并发会打破的。</text>
+
+    <rect x="0" y="266" width="900" height="50" rx="8" fill="var(--good)" opacity=".10"
+          stroke="var(--good)" stroke-width="1.4"/>
+    <text x="16" y="288" font-size="12" font-weight="700" fill="var(--text-primary)">
+      合同：同一已加载 callable 的 build 串行；保留 build 内部的 recorder 并发；</text>
+    <text x="16" y="306" font-size="12" font-weight="700" fill="var(--good)">
+      build 仍可与前驱的 device 执行重叠 ← 这一句是保住收益的关键</text>
+  </svg>
+  <figcaption>
+    要消掉的是 <b>host 尾巴与设备执行的串行</b>，不是 build 之间的并行。
+    只有确实需要跨 run 并行 build 时，才增加显式 <code>BuildContext</code>、job 绑定和按
+    build 完成等待——<b>不能简单改 TLS</b>，recorder 线程也要绑定。
+    <br>源码：<code>orchestration/common.cpp:39</code>、<code>runtime_maker.cpp:707</code>、
+    <code>graph_recorder_pool.h:25</code>（<code>wait</code> 排空整池，<code>:125</code>）。
+  </figcaption>
+</figure>
+
+<h2><span class="num">5</span>构建的读写合同</h2>
+
+<p>v6 写的是"<b>HBG 构图禁读任何 device 内容</b>"。<b>撤回</b>——那会回退 HEAD。真实不变量是：
+<b>orch 必须在本次 device 执行开始前独立完成</b>。入口 tensor 存放在 device，不等于读它
+依赖本次 device 执行。</p>
+
+<div class="tbl">
+<table>
+  <thead><tr><th>构建时需要的信息</th><th class="c">允许？</th><th>依据</th></tr></thead>
+  <tbody>
+    <tr><td>shape / dtype / stride 等 host 已知元数据</td><td class="c"><span class="pill ok"><i class="dot" style="background:var(--good)"></i>允许</span></td><td>—</td></tr>
+    <tr><td>host Scalar、调用前已就绪的 host-backed 控制输入</td><td class="c"><span class="pill ok"><i class="dot" style="background:var(--good)"></i>允许</span></td><td>—</td></tr>
+    <tr><td>device Tensor 的地址或不透明引用</td><td class="c"><span class="pill ok"><i class="dot" style="background:var(--good)"></i>允许</span></td><td>仅记录/传递</td></tr>
+    <tr><td><b>已就绪入口 tensor 的内容（含 child-memory）</b></td><td class="c"><span class="pill ok"><i class="dot" style="background:var(--good)"></i><b>允许</b></span></td>
+        <td><code>host_tensor_access.cpp:123</code> 映射；<code>:134</code> 无映射走 <code>copy_from_device</code>；<code>runtime_maker.cpp:1182</code> 注册 child-memory region</td></tr>
+    <tr><td><b>本次图内已记录 producer 的区域</b></td><td class="c"><span class="pill bad"><i class="dot" style="background:var(--critical)"></i><b>拒绝</b></span></td>
+        <td><code>runtime_core.cpp:121</code> 的 <code>require_no_producer</code> 同查 <code>owner_task_id</code> 与 TensorMap 重叠 producer</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <code>748c39fbe</code>（HEAD，#2212）加的正是 child-memory 的读取能力：在它之前
+  <span class="m2">residency was mutually exclusive with data-dependent orchestration</span>，
+  那个互斥是它修的 <b>bug</b>。规模：<b>32 个 orchestration 文件调 <code>get_tensor_data</code>，
+  21 个调 <code>set_tensor_data</code></b>。a5 onboard 没有 host-map 路径，那里每次访问
+  本就是一次 device copy。
+</p>
+<p class="note">
+  "已记录 producer"指图中已登记生产者，<b>不需要等到 device 实际写入</b>——恰恰因为还没
+  执行，等待本次任务不能产生进展。review 的全面禁读是<b>比现有不变量更强的限制</b>，
+  记为未来 API 边界提案，需承担 32+21 个 orchestration 的迁移成本。<b>不作为本轮规则。</b>
+</p>
+
+<h3><code>set_tensor_data</code> 是可观察的构建副作用</h3>
+
+<figure>
+  <p class="fig-title">图 4 · 构图写外部 tensor，而这个写就是本次调用应产出的结果</p>
+  <svg viewBox="0 0 900 250" role="img" aria-labelledby="f4t">
+    <title id="f4t">构图把只有 host 知道的 cluster_count 写进外部 shape tensor；缓存命中跳过它不报错</title>
+    <rect x="0" y="30" width="420" height="96" rx="8" fill="var(--code-bg)" stroke="var(--border)"/>
+    <text x="16" y="52" font-size="11" font-family="ui-monospace,monospace" fill="var(--text-muted)">
+      // available_aicore_counts_orch.cpp:74-81</text>
+    <text x="16" y="72" font-size="11.5" font-family="ui-monospace,monospace" fill="var(--text-primary)">
+      uint32_t idx[1] = {0};</text>
+    <text x="16" y="92" font-size="11.5" font-family="ui-monospace,monospace" fill="var(--critical)" font-weight="650">
+      set_tensor_data&lt;int32_t&gt;(shape, 1, idx,</text>
+    <text x="16" y="110" font-size="11.5" font-family="ui-monospace,monospace" fill="var(--critical)" font-weight="650">
+                              cluster_count);</text>
+
+    <g stroke="var(--text-muted)" stroke-width="1.4" fill="none">
+      <path d="M424 78 L466 78" marker-end="url(#ar)"/></g>
+
+    <rect x="474" y="30" width="426" height="96" rx="8" fill="var(--series-2)" opacity=".12"
+          stroke="var(--series-2)" stroke-width="1.3"/>
+    <text x="490" y="52" font-size="11.5" font-weight="650" fill="var(--text-primary)">
+      <tspan font-family="ui-monospace,monospace">cluster_count</tspan> 只有 host 构建知道</text>
+    <text x="490" y="74" font-size="11" fill="var(--text-secondary)">
+      这个写<tspan font-weight="650" fill="var(--text-primary)">就是本次调用应产出的结果之一</tspan></text>
+    <text x="490" y="96" font-size="11" fill="var(--text-secondary)">
+      路径：<tspan font-family="ui-monospace,monospace">host_tensor_write</tspan> → 有映射直写</text>
+    <text x="490" y="114" font-size="11" fill="var(--text-secondary)">
+      无映射 → <tspan font-family="ui-monospace,monospace">copy_to_device</tspan></text>
+
+    <rect x="0" y="146" width="900" height="44" rx="8" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="1.5"/>
+    <text x="16" y="168" font-size="12" font-weight="700" fill="var(--critical)">
+      缓存命中跳过 orchestration ⇒ 跳过这个写 ⇒ 调用方拿到未初始化或上一次的值，<tspan text-decoration="underline">且不报错</tspan></text>
+    <text x="16" y="184" font-size="11" fill="var(--text-secondary)">
+      仅把 H2D 延后不解决问题。而且它<tspan font-weight="650">比读危险</tspan>：读只是拿到旧值，写会破坏前驱正在读的数据。</text>
+
+    <rect x="0" y="202" width="900" height="44" rx="8" fill="var(--good)" opacity=".10"
+          stroke="var(--good)" stroke-width="1.3"/>
+    <text x="16" y="222" font-size="11.5" font-weight="700" fill="var(--text-primary)">
+      所以"可缓存的纯 tiling"要先二选一：① 禁止修改外部输入 ② 把写入变成产物里的显式初始化描述，由每次 bind 按序执行</text>
+    <text x="16" y="239" font-size="11" fill="var(--text-secondary)">
+      初版可只缓存<tspan font-weight="650">确认无此类副作用</tspan>的构建，其余每次构图。<tspan font-weight="650" fill="var(--critical)">禁止静默跳过写入。</tspan></text>
+  </svg>
+</figure>
+
+<h2><span class="num">6</span>五层串行与跨 run 顺序</h2>
+
+<figure>
+  <p class="fig-title">图 5 · 五层，以及两条提交路径各自穿过哪几层</p>
+  <svg viewBox="0 0 920 360" role="img" aria-labelledby="f5t">
+    <title id="f5t">L3 路径穿过全部五层，直连路径只穿过后三层；只改后三层生产负载零收益</title>
+    <defs><marker id="a1b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--series-1)"/></marker>
+      <marker id="a2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--series-2)"/></marker></defs>
+    <text x="34" y="20" font-size="11.5" font-weight="650" fill="var(--series-1)">L3</text>
+    <text x="112" y="20" font-size="11.5" font-weight="650" fill="var(--series-2)">直连</text>
+    <line x1="46" y1="32" x2="46" y2="298" stroke="var(--series-1)" stroke-width="2.5" marker-end="url(#a1b)"/>
+    <line x1="124" y1="146" x2="124" y2="298" stroke="var(--series-2)" stroke-width="2.5" marker-end="url(#a2b)"/>
+
+    <g font-size="12">
+      <rect x="164" y="34" width="756" height="46" rx="8" fill="var(--series-1)" opacity=".10" stroke="var(--series-1)" stroke-width="1.4"/>
+      <circle cx="46" cy="57" r="6" fill="var(--series-1)"/>
+      <text x="180" y="52" font-weight="650" fill="var(--text-primary)">① L3 Orchestrator</text>
+      <text x="180" y="70" font-size="10.5" fill="var(--text-secondary)"><tspan font-family="ui-monospace,monospace">active_run_id_ != INVALID</tspan> 就直接 return</text>
+      <text x="906" y="70" font-size="10.5" text-anchor="end" fill="var(--text-muted)">orchestrator.cpp:183-200 · A5</text>
+
+      <rect x="164" y="86" width="756" height="46" rx="8" fill="var(--series-1)" opacity=".10" stroke="var(--series-1)" stroke-width="1.4"/>
+      <circle cx="46" cy="109" r="6" fill="var(--series-1)"/>
+      <text x="180" y="104" font-weight="650" fill="var(--text-primary)">② WorkerThread 车道</text>
+      <text x="180" y="122" font-size="10.5" fill="var(--text-secondary)">固定 ACTIVE/STAGED，<tspan font-family="ui-monospace,monospace">active.occupied</tspan> 即拒</text>
+      <text x="906" y="122" font-size="10.5" text-anchor="end" fill="var(--text-muted)">worker_manager.cpp:497-511 · A5</text>
+
+      <rect x="164" y="138" width="756" height="46" rx="8" fill="var(--series-2)" opacity=".12" stroke="var(--series-2)" stroke-width="1.4"/>
+      <circle cx="46" cy="161" r="6" fill="var(--series-1)"/><circle cx="124" cy="161" r="6" fill="var(--series-2)"/>
+      <text x="180" y="156" font-weight="650" fill="var(--text-primary)">③ runner execution claim</text>
+      <text x="180" y="174" font-size="10.5" fill="var(--text-secondary)">launch 需要它，finalize 在 drain 之后才还</text>
+      <text x="906" y="174" font-size="10.5" text-anchor="end" fill="var(--text-muted)">c_api_shared.cpp:940→1123 · A3</text>
+
+      <rect x="164" y="190" width="756" height="46" rx="8" fill="var(--series-2)" opacity=".12" stroke="var(--series-2)" stroke-width="1.4"/>
+      <circle cx="46" cy="213" r="6" fill="var(--series-1)"/><circle cx="124" cy="213" r="6" fill="var(--series-2)"/>
+      <text x="180" y="208" font-weight="650" fill="var(--text-primary)">④ chip run lane</text>
+      <text x="180" y="226" font-size="10.5" fill="var(--text-secondary)">后继 <tspan font-family="ui-monospace,monospace">launch_front()</tspan> 排在 <tspan font-family="ui-monospace,monospace">finish(前驱)</tspan> 之后</text>
+      <text x="906" y="226" font-size="10.5" text-anchor="end" fill="var(--text-muted)">chip_run_lane.cpp:196-203 · A3</text>
+
+      <rect x="164" y="242" width="756" height="46" rx="8" fill="var(--series-2)" opacity=".12" stroke="var(--series-2)" stroke-width="1.4"/>
+      <circle cx="46" cy="265" r="6" fill="var(--series-1)"/><circle cx="124" cy="265" r="6" fill="var(--series-2)"/>
+      <text x="180" y="260" font-weight="650" fill="var(--text-primary)">⑤ mailbox frame 数</text>
+      <text x="180" y="278" font-size="10.5" fill="var(--text-secondary)">编译期 2，加定长 <tspan font-family="ui-monospace,monospace">std::array</tspan></text>
+      <text x="906" y="278" font-size="10.5" text-anchor="end" fill="var(--text-muted)">worker_manager.h:98-101 · A4</text>
+    </g>
+
+    <rect x="164" y="302" width="756" height="50" rx="8" fill="var(--surface-1)" stroke="var(--critical)" stroke-width="1.3"/>
+    <text x="180" y="322" font-size="12" font-weight="700" fill="var(--critical)">
+      ① ② 在 L3 Worker.submit 路径上 —— 生产负载从这里进来</text>
+    <text x="180" y="342" font-size="11" fill="var(--text-secondary)">
+      只改 ③④⑤（A3+A4）会让直连 ChipRun 排上队而 L3 仍然串行。所以<tspan font-weight="650">验收必须走 Worker.submit</tspan>。</text>
+  </svg>
+</figure>
+
+<figure>
+  <p class="fig-title">图 6 · 两类 host 侧旁路：kernel 顺序全对，它们仍可能提前落地</p>
+  <svg viewBox="0 0 900 290" role="img" aria-labelledby="f6t">
+    <title id="f6t">copy_to 走 mailbox，set_tensor_data 走 host view 或 device copy，两者都不被 ready queue 排序</title>
+    <defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--critical)"/></marker></defs>
+    <g font-size="11" fill="var(--text-secondary)">
+      <text x="0" y="48">ready queue</text><text x="0" y="122">mailbox</text>
+      <text x="0" y="186">host view /</text><text x="0" y="200">device copy</text>
+    </g>
+    <line x1="154" y1="30" x2="890" y2="30" stroke="var(--grid)"/>
+
+    <g class="bar-g"><title>run N 的 kernel：已提交，仍在读 X</title>
+      <rect class="mark" x="164" y="30" width="330" height="30" rx="4" fill="var(--series-1)"/>
+      <text x="329" y="50" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="600">N 的 kernel — 仍在读 X</text></g>
+    <g class="bar-g"><title>run N+1 的 kernel：提交顺序正确</title>
+      <rect class="mark" x="498" y="30" width="330" height="30" rx="4" fill="var(--series-2)"/>
+      <text x="663" y="50" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="600">N+1 的 kernel — 顺序正确</text></g>
+    <circle cx="848" cy="45" r="6" fill="var(--good)"/>
+
+    <g class="bar-g"><title>copy_to 没有 TaskSlot，ready queue 不排它</title>
+      <rect class="mark" x="230" y="104" width="216" height="28" rx="4" fill="var(--critical)"/>
+      <text x="338" y="123" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N+1 copy_to(X, 新数据)</text></g>
+    <g class="bar-g"><title>set_tensor_data 走第三条路径，同样不被排序</title>
+      <rect class="mark" x="230" y="172" width="216" height="28" rx="4" fill="var(--critical)"/>
+      <text x="338" y="191" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N+1 set_tensor_data(X, …)</text></g>
+
+    <path d="M338 104 L338 88 L329 88 L329 64" fill="none" stroke="var(--critical)"
+          stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ar6)"/>
+    <path d="M452 186 L560 186 L560 88 L340 88" fill="none" stroke="var(--critical)"
+          stroke-width="1.6" stroke-dasharray="4 3"/>
+    <text x="470" y="146" font-size="11.5" font-weight="650" fill="var(--critical)">
+      两者都落在 N 的 kernel 读 X 的中途</text>
+
+    <rect x="0" y="216" width="900" height="70" rx="8" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="1.3"/>
+    <text x="16" y="236" font-size="11" font-style="italic" fill="var(--text-secondary)">
+      "Direct device control — malloc / free / copy_* / domain and region creation — reaches a child</text>
+    <text x="16" y="253" font-size="11" font-style="italic" fill="var(--text-secondary)">
+      <tspan font-weight="700" font-style="normal" fill="var(--critical)">without a TaskSlot</tspan>, so the ready-queue FIFO does not order it."</text>
+    <text x="16" y="275" font-size="11" fill="var(--text-secondary)">
+      今天 <tspan font-family="ui-monospace,monospace">await_run_admission</tspan> 把它们挡到该 run 成为 <tspan font-weight="650">active</tspan>，即所有在先 run 都<tspan font-weight="650">终止</tspan>——那是完成等待，不是排序。</text>
+    <text x="884" y="275" font-size="10.5" text-anchor="end" fill="var(--text-muted)">orchestrator.cpp:554-563</text>
+  </svg>
+  <figcaption>
+    所以"保持父 run 提交顺序"这个默认方案<b>只覆盖同一设备队列能排序的工作</b>。
+    <code>copy_to</code> / <code>copy_from</code> / <code>free</code> / <code>malloc</code> /
+    domain / region / <b><code>set_tensor_data</code></b> 保留完成等待或给明确依赖；
+    跨不同 endpoint 的依赖两条流之间毫无顺序。<br>
+    反过来也要注意："malloc 等一律等待"是沿用整体 FIFO 的保守策略——<b>不是所有新分配都
+    天然依赖前驱</b>。
+  </figcaption>
+</figure>
+
+<h3>多 active 父 run 是正确性门</h3>
+<pre><code>run N   :  A → B      B 写 X，只在 A 完成后 ready
+run N+1 :  C          C 读 X，提交时已 ready
+
+多 active ⇒ ready 队列可给出  A → C → B   ← stream FIFO 忠实执行</code></pre>
+<p>
+  <b>无报错、无超时，只是结果错。</b>而且没有机制能恢复：<code>TensorMap</code> 按
+  <code>(RunId, TensorKey)</code> 隔离（<code>tensormap.h:13</code>），
+  <code>validate_explicit_deps</code> 对跨 run 显式依赖直接抛
+  （<code>orchestrator.cpp:1176-1186</code>）。二选一：<b>① 保持父 run 提交顺序</b>（默认）
+  或 <b>② 建跨 run 依赖</b>。<b>per-execution 的 event join 替代不了这一层</b>，也不应据此
+  得出"必须做外部 tensor 的全局跨 run 依赖跟踪"。
+</p>
+
+<h2><span class="num">7</span>caller stream 顺序与四态</h2>
+
+<figure>
+  <p class="fig-title">图 7 · 内部两流互相 join ≠ 已与 caller stream 对接</p>
+  <svg viewBox="0 0 920 280" role="img" aria-labelledby="f7t">
+    <title id="f7t">契约要同时覆盖 caller 前序到内部执行、内部完成到 caller 后序，以及不同 run 之间</title>
+    <defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--series-2)"/></marker></defs>
+    <g font-size="11.5" fill="var(--text-secondary)">
+      <text x="0" y="46">caller stream</text><text x="0" y="132">内部 AICPU</text><text x="0" y="200">内部 AICore</text>
+    </g>
+    <line x1="108" y1="30" x2="910" y2="30" stroke="var(--grid)"/>
+
+    <g class="bar-g"><title>caller stream 的前序工作</title>
+      <rect class="mark" x="116" y="30" width="150" height="28" rx="4" fill="var(--series-1)" opacity=".45"/>
+      <text x="191" y="49" font-size="11" fill="var(--text-primary)" text-anchor="middle" font-weight="600">前序</text></g>
+    <g class="bar-g"><title>caller stream 的后序工作，必须排在本次执行之后</title>
+      <rect class="mark" x="736" y="30" width="170" height="28" rx="4" fill="var(--series-1)" opacity=".45"/>
+      <text x="821" y="49" font-size="11" fill="var(--text-primary)" text-anchor="middle" font-weight="600">后序</text></g>
+
+    <g class="bar-g"><title>run N 的 AICPU kernel</title>
+      <rect class="mark" x="300" y="112" width="180" height="28" rx="4" fill="var(--series-1)"/>
+      <text x="390" y="131" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N · AICPU</text></g>
+    <g class="bar-g"><title>run N 的 AICore kernel</title>
+      <rect class="mark" x="300" y="180" width="180" height="28" rx="4" fill="var(--series-3)"/>
+      <text x="390" y="199" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N · AICore</text></g>
+    <g class="bar-g"><title>run N+1 的 AICPU kernel</title>
+      <rect class="mark" x="520" y="112" width="180" height="28" rx="4" fill="var(--series-1)"/>
+      <text x="610" y="131" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N+1 · AICPU</text></g>
+    <g class="bar-g"><title>run N+1 的 AICore kernel</title>
+      <rect class="mark" x="520" y="180" width="180" height="28" rx="4" fill="var(--series-3)"/>
+      <text x="610" y="199" font-size="11" fill="#fff" text-anchor="middle" font-weight="600">N+1 · AICore</text></g>
+
+    <!-- entry join -->
+    <path d="M268 48 C 282 70, 286 92, 296 116" fill="none" stroke="var(--series-2)"
+          stroke-width="2" marker-end="url(#ar7)"/>
+    <path d="M268 52 C 284 100, 288 156, 296 184" fill="none" stroke="var(--series-2)"
+          stroke-width="2" marker-end="url(#ar7)"/>
+    <text x="238" y="86" font-size="10.5" font-weight="650" fill="var(--series-2)">入口 join</text>
+
+    <!-- cross-run join -->
+    <path d="M484 126 C 498 146, 502 164, 516 184" fill="none" stroke="var(--series-2)" stroke-width="2" marker-end="url(#ar7)"/>
+    <path d="M484 194 C 498 174, 502 146, 516 126" fill="none" stroke="var(--series-2)" stroke-width="2" marker-end="url(#ar7)"/>
+    <text x="500" y="162" font-size="10.5" font-weight="650" fill="var(--series-2)" text-anchor="middle">run 间</text>
+
+    <!-- exit join -->
+    <path d="M704 126 C 718 96, 722 70, 732 50" fill="none" stroke="var(--series-2)"
+          stroke-width="2" marker-end="url(#ar7)"/>
+    <path d="M704 190 C 722 150, 726 80, 734 54" fill="none" stroke="var(--series-2)"
+          stroke-width="2" marker-end="url(#ar7)"/>
+    <text x="746" y="88" font-size="10.5" font-weight="650" fill="var(--series-2)">出口 join</text>
+
+    <rect x="0" y="226" width="920" height="52" rx="8" fill="var(--surface-1)"
+          stroke="var(--critical)" stroke-width="1.3"/>
+    <text x="16" y="247" font-size="12" font-weight="700" fill="var(--critical)">
+      前几版只画了"run 间"那一对。三对都要有，缺入口/出口 join 就是让后续普通算子抢在本次执行之前。</text>
+    <text x="16" y="266" font-size="11" fill="var(--text-secondary)">
+      也撤回了拿 a2a3 teardown 协议当跨流序证明的做法：a5 没有 return gate，a2a3 上也证不出 AICPU kernel 最后退出。</text>
+  </svg>
+</figure>
+
+<div class="tbl">
+<table>
+  <thead><tr><th>态</th><th>含义</th></tr></thead>
+  <tbody>
+    <tr><td>accepted</td><td>host 队列已接受</td></tr>
+    <tr><td>staged</td><td>帧快照已就位——<b>可能仅 <code>VALIDATED_ONLY</code>，尚未 native prepare</b>（<code>worker.py:3262</code>）</td></tr>
+    <tr><td><b>enqueued</b></td><td><b>已提交到设备，占据了 caller stream 的顺序位置</b></td></tr>
+    <tr><td>completed</td><td>设备完成</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="note">不能把尚未完成构建的 host 请求冒充已占据 caller stream 顺序的位置。
+kernel 路径的 <code>runtime_c_api.h:639</code> 明确"返回 0 表示已入队"。</p>
+
+<h2><span class="num">8</span>部分提交没有完整 fence</h2>
+
+<div class="tbl">
+<table>
+  <thead><tr><th class="c">kernel 已提交</th><th class="c">event 已记录</th><th>应判</th><th>今天</th></tr></thead>
+  <tbody>
+    <tr><td class="c">✗</td><td class="c">✗</td><td><code>NotStarted</code></td><td>✅</td></tr>
+    <tr><td class="c">✓</td><td class="c">✓</td><td><code>Partial</code> / <code>Complete</code></td><td>✅</td></tr>
+    <tr style="background:color-mix(in srgb, var(--critical) 8%, transparent)">
+      <td class="c">✓</td><td class="c">✗</td><td><b><code>Partial</code></b></td>
+      <td><span class="pill bad"><i class="dot" style="background:var(--critical)"></i>判成 <code>NotStarted</code></span>
+          并立即回滚——<b>设备已持有 kernel</b></td></tr>
+  </tbody>
+</table>
+</div>
+<p>
+  机制：<code>progress = Partial</code> 是在 <code>submit_aicore</code> <b>返回 0 之后</b>
+  才赋的（<code>native_run_execution.h:152-160</code>），所以把 <code>aclrtRecordEvent</code>
+  的错误当作该 callback 的返回值，会被判成"首次提交之前的失败"。
+</p>
+<ul>
+  <li><b>kernel 提交与 event 记录分账</b>；<code>Partial</code> 要覆盖
+      <code>kernel_submitted &amp;&amp; !event_recorded</code></li>
+  <li>已提交但无 fence 的工作要有<b>不依赖 event 的</b>有界 drain/teardown</li>
+  <li><b>watchdog 不是替代</b>：AICPU 提交失败后，已排队的 AICore 可能在等它，把回收 event
+      排在后面不能产生进展</li>
+  <li>即使证明设备静止，<b>也不自动证明业务未产生副作用</b>。只在可证明未执行或有专门恢复
+      协议时重试一次，<b>不重新运行 host 编排</b></li>
+</ul>
+
+<h3>event 的引用寿命与失败退出</h3>
+<p>
+  SDK 明写：销毁 event 前，涉及 <code>aclrtSynchronizeEvent</code> /
+  <code>aclrtStreamWaitEvent</code> 的任务必须已完成（<code>acl_rt.h:1458-1464</code>）。
+  而 wait 是在 launch <b>之前</b>入队的：
+</p>
+<pre><code>N+1:  StreamWaitEvent(my_stream, N_event)   ← 成功，任务已在队列
+      rtKernelLaunch(...)                    ← 失败</code></pre>
+<p>
+  按 N+1 回滚释放会销毁队列仍引用的 event；等"N+1 自己的 fence"则永不触发。所以
+  <b>预留 / 提交 / 撤销</b>三态，已提交的引用<b>恰好释放一次</b>（正常 fence 或静默证明），
+  且 <b><code>NotStarted</code> ≠ 没有任何 wait 入队</b>。<br>
+  跨流排序 event 与用于大 args 回收的 timeline event <b>职责不同，不能因都叫 event 就混用</b>。
+</p>
+
+<h2><span class="num">9</span>五个内存所有者</h2>
+
+<div class="tbl">
+<table>
+  <thead><tr><th>所有者</th><th>管理方式</th><th>约束</th></tr></thead>
+  <tbody>
+    <tr><td>外部 device Tensor</td><td>调用方所有</td><td>simpler 不跟踪不释放，<b>也不该无故复制</b></td></tr>
+    <tr><td>host-backed Tensor 的 device staging</td><td>每次分配 + H2D，留到回拷</td><td><code>runtime_maker.cpp:1200-1228</code>，全尺寸</td></tr>
+    <tr><td>Definition block</td><td>simpler 分配并单独上传</td><td><code>:485,510</code>；按 slot 保留，扩容释放旧 device block</td></tr>
+    <tr><td>runtime / SM image + 执行 heap</td><td>simpler 自有 arena</td><td><code>:851,875</code>；串行执行时可复用</td></tr>
+    <tr><td>驻留 callable 与代码</td><td>跨调用复用</td><td><b>callable id 上限 64</b>，且是 host↔AICPU 协议的一部分（<code>callable_protocol.h:31</code>）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="rule danger">
+  <b>本分支没有"整个 HBG 图包随 launch args 交 RTS 管理"的路径。</b>
+  AICPU launch 传 <code>sizeof(KernelArgs)</code>（<code>device_runner_base.cpp:1542</code>），
+  AICore launch 参数只是指向 device <code>KernelArgs</code> 的指针（<code>:1778</code>）。<br>
+  所以 <code>8192</code> / <code>2 GiB</code> / <code>2 MiB</code> / <code>~2048</code> /
+  <code>80 MiB</code> <b>均不采纳为本分支常量</b>；RTS 大 args 与 timeline 回收标为目标/外部实现。
+</div>
+
+<p class="note">
+  <b>预算与回收分开。</b>代码证明的是"需要安全回收和压力出口"，不证明需要一套完整的字节
+  预算系统。当前 retained pool <b>不会仅因 stream sync 自动释放</b>，必须显式 finalize /
+  回收 / 淘汰。而前几版的"两阶段预算"是对<b>当前顺序</b>（staging 先于编排）的推导，
+  <b>不是永久契约</b>——真拆成纯 host build 之后，一个预留点可能就够。
+</p>
+
+<h2><span class="num">10</span>证据状态</h2>
+
+<h3>已实测（本分支）</h3>
+<figure>
+  <p class="fig-title">图 8 · op-execute watchdog 只算执行时间，不算排队时间</p>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--series-3)"></i>正在执行</span>
+    <span><i class="sw sw-dash"></i>已提交，在队列中</span>
+    <span><i class="sw" style="background:var(--critical)"></i>被收割</span>
+  </div>
+  <svg viewBox="0 0 900 300" role="img" aria-labelledby="f8t">
+    <title id="f8t">三臂：只有执行时长超预算才被收割，排队时长超预算不会</title>
+    <g font-size="11" fill="var(--text-muted)" text-anchor="middle">
+      <line x1="120" y1="252" x2="860" y2="252" stroke="var(--axis)"/>
+      <text x="120" y="270">0</text><text x="332" y="270">2</text><text x="437" y="270">3</text>
+      <text x="543" y="270">4</text><text x="755" y="270">6</text><text x="860" y="270">7</text>
+      <text x="490" y="288" fill="var(--text-secondary)" font-size="11.5">从提交起算的经过时间（秒）</text>
+    </g>
+    <line x1="437" y1="26" x2="437" y2="252" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="437" y="20" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">请求预算 3 s</text>
+    <line x1="573" y1="40" x2="573" y2="252" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="573" y="34" font-size="10.5" fill="var(--text-secondary)" text-anchor="middle">回报 actual 4.29 s</text>
+
+    <text x="0" y="66" font-size="11.5" font-weight="650" fill="var(--text-primary)">臂 A 正对照</text>
+    <g class="bar-g"><title>1 s op / 3 s 预算 → sync_rc=0，1008 ms</title>
+      <rect class="mark" x="120" y="54" width="106" height="20" rx="4" fill="var(--series-3)"/>
+      <text x="173" y="68" font-size="10" fill="#fff" text-anchor="middle">执行 1 s</text></g>
+    <g transform="translate(240,56)"><circle cx="8" cy="8" r="4" fill="var(--good)"/>
+      <text x="18" y="12" font-size="10.5" fill="var(--good)" font-weight="650">完成</text></g>
+
+    <text x="0" y="118" font-size="11.5" font-weight="650" fill="var(--text-primary)">臂 B 负对照</text>
+    <g class="bar-g"><title>6 s op / 3 s 预算 → sync_rc=507018，3929 ms</title>
+      <rect class="mark" x="120" y="106" width="416" height="20" rx="4" fill="var(--series-3)"/>
+      <text x="300" y="120" font-size="10" fill="#fff" text-anchor="middle">执行（意图 6 s，被打断于 3.93 s）</text></g>
+    <rect x="536" y="106" width="6" height="20" rx="2" fill="var(--critical)"/>
+    <g transform="translate(556,108)"><circle cx="8" cy="8" r="4" fill="var(--critical)"/>
+      <text x="18" y="12" font-size="10.5" fill="var(--critical)" font-weight="650">507018 收割 → watchdog 确实在武装</text></g>
+
+    <text x="0" y="176" font-size="11.5" font-weight="650" fill="var(--text-primary)">臂 C 问题</text>
+    <g class="bar-g"><title>op#0：0–2 执行</title>
+      <rect class="mark" x="120" y="152" width="212" height="17" rx="4" fill="var(--series-3)"/>
+      <text x="226" y="164" font-size="9.5" fill="#fff" text-anchor="middle">op#0 执行 2 s</text></g>
+    <rect x="120" y="173" width="212" height="17" rx="4" fill="none" stroke="var(--text-muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="226" y="185" font-size="9.5" fill="var(--text-secondary)" text-anchor="middle">op#1 排队</text>
+    <g class="bar-g"><title>op#1：2–4 执行</title>
+      <rect class="mark" x="334" y="173" width="212" height="17" rx="4" fill="var(--series-3)"/>
+      <text x="440" y="185" font-size="9.5" fill="#fff" text-anchor="middle">执行 2 s</text></g>
+    <rect x="120" y="194" width="424" height="17" rx="4" fill="none" stroke="var(--text-muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="332" y="206" font-size="9.5" fill="var(--text-secondary)" text-anchor="middle">op#2 排队 4 s</text>
+    <g class="bar-g"><title>op#2：4–6 执行 → 未被收割</title>
+      <rect class="mark" x="546" y="194" width="212" height="17" rx="4" fill="var(--series-3)"/>
+      <text x="652" y="206" font-size="9.5" fill="#fff" text-anchor="middle">执行 2 s</text></g>
+    <g transform="translate(770,194)"><circle cx="8" cy="9" r="4" fill="var(--good)"/>
+      <text x="18" y="13" font-size="10.5" fill="var(--good)" font-weight="650">3/3 完成</text></g>
+    <path d="M120 220 L120 226 L758 226 L758 220" fill="none" stroke="var(--critical)" stroke-width="1.4"/>
+    <text x="439" y="242" font-size="10.5" font-weight="650" fill="var(--critical)" text-anchor="middle">
+      op#2 提交→结束 6 s：越过两条预算线，却未被收割</text>
+  </svg>
+  <figcaption>
+    <b>臂 B 是让臂 C 成为结论而不是形式的那一步。此结论只代表这个探针，不推广为全平台保证。</b><br>
+    另外已实测：<b>GM heap 是 host 不碰的</b>；<b>dsv4 arg 91 是调用前写好的入口值</b>——
+    依据是共享 driver 在 <code>main.py:678</code> 分配 host buffer 并在 <code>:694</code>
+    写入 <code>[T] * n_ranks</code>，<b>不是 README 的标签</b>；也不能因读取语句出现在 task
+    中间就认定数据来自前序 task。
+  </figcaption>
+</figure>
+
+<h3>未验证 —— 各自卡住一条结论</h3>
+<div class="tbl">
+<table>
+  <thead><tr><th>项</th><th>卡住什么</th></tr></thead>
+  <tbody>
+    <tr><td><b>实际 launch 遇队列压力是阻塞还是返回哪类错误</b></td>
+        <td>"靠 CANN 自动排队承接背压"的可行性全压在它上面，本轮无设备证据</td></tr>
+    <tr><td>watchdog 的有效预算</td>
+        <td>三臂都回报 <code>actual = UINT32_MAX µs</code>（请求 3 s），而臂 B 在 3.93 s 被收割。
+            若钳制是下限，则低于约 4.29 s 的 <code>SIMPLER_OP_EXECUTE_TIMEOUT_US</code> 静默失效，
+            <b>含 CI 的 2 s</b></td></tr>
+    <tr><td>RTS 大 args / timeline 回收</td>
+        <td>属另一实现，本分支无此路径；不作本分支成本模型</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="num">11</span>验收要十条</h2>
+<div class="tbl">
+<table>
+  <thead><tr><th>#</th><th>断言</th><th>何时要有</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>设备侧 inter-run gap 塌缩，<b>走 <code>Worker.submit</code></b></td><td>A1 前测基线</td></tr>
+    <tr><td>2</td><td>至少 4 个 run 提前被接受</td><td>A3</td></tr>
+    <tr><td>3</td><td>A→B / C 顺序正确</td><td><b>A5 前必须有</b></td></tr>
+    <tr><td>4</td><td>event record 失败判 <code>Partial</code> 而非 <code>NotStarted</code></td><td>A1</td></tr>
+    <tr><td>5</td><td>host / child-memory 入口值可读；图内 producer 结果被拒</td><td>A0</td></tr>
+    <tr><td>6</td><td><b>每次调用的 <code>set_tensor_data</code> 写入都发生</b>（缓存命中时尤其）</td><td>A2</td></tr>
+    <tr><td>7</td><td>同 SO 并发被显式串行或被显式支持</td><td>A2</td></tr>
+    <tr><td>8</td><td>caller stream 前序 / 本次 / 后序</td><td>A1</td></tr>
+    <tr><td>9</td><td>各类分配压力与部分提交失败</td><td>A0/A1</td></tr>
+    <tr><td>10</td><td>捕获图跨 replay 的资源寿命</td><td>B 轨</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="note">
+  <code>concurrent_prepare_stress</code> 的四个臂在本改动下<b>全部继续通过</b>——它量的是
+  prepare 重叠，一个本来就成立的性质。<b>不能当验收。</b>
+</p>
+
+<h2><span class="num">12</span>v7 替换了什么</h2>
+<div class="tbl">
+<table>
+  <thead><tr><th>v6 的主张</th><th>v7</th></tr></thead>
+  <tbody>
+    <tr><td>"当且仅当 host 碰它 ⟺ <code>PER_RUN</code>"</td>
+        <td><b>撤回</b>：与自身 ledger 矛盾且不回答释放时机。换成"版本 + 最后使用者"</td></tr>
+    <tr><td>"HBG 构图禁读任何 device 内容"</td>
+        <td><b>撤回</b>：会回退 #2212（HEAD）。真实边界是"入口值可读、图内 producer 拒绝"</td></tr>
+    <tr><td>三类寿命</td>
+        <td><b>改为四类</b>：captured graph 引用不由任何 run 的 fence 界定</td></tr>
+    <tr><td>两阶段预算为主方案</td>
+        <td>降为"当前顺序的产物，非永久契约"；预算与回收分开</td></tr>
+    <tr><td>"复用成熟的 <code>kernel_launch</code>"（隐含）</td>
+        <td><b>撤回</b>：<code>simpler_kernel_mode_supported()</code> 返回 0，依赖方向相反</td></tr>
+    <tr><td>S0–S6 单条路线</td>
+        <td><b>分两轨</b>，A2 是唯一交汇点</td></tr>
+    <tr><td>—</td><td><b>新增</b>：<code>set_tensor_data</code> 是构建副作用，且否决"免费的 tiling 缓存"</td></tr>
+    <tr><td>—</td><td><b>新增</b>：同一 callable 的构图并发合同（<code>g_current_runtime</code>）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="meta" style="margin-top:40px">
+  历次撤回共 20+ 条，全表在 <code>.docs/run-pipeline-redesign.md</code> §14。
+  配色取自项目 dataviz 规范分类色 1–3 槽，两模式均通过校验器；浅色下 aqua 触发 contrast
+  WARN，故每根条都带可见直标。
+</p>
+
+</div>
+<script>
+(function(){var b=document.getElementById('themeBtn'),r=document.documentElement;
+b.addEventListener('click',function(){
+  r.setAttribute('data-theme', r.getAttribute('data-theme')==='dark'?'light':'dark');});})();
+</script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+> **2026-10-21 接管快照**：这是 2026-09-23 的设计/源码分析，不是当前未实现事项清单。现状见[接管入口](../../../kernel-mode-cross-repo-handoff.md)，设计判断以[当前规范](../../../runtime-design-principles.md)为准。
+
 # 主线下一步：可串接的设备异步调用
 
 2026-09-23，重新核对基线 `9ca91c522e8a80483f6a7cf8ad094f994fdcff5f`。依据源码、runtime-design-principles.md G1–G7 和用户 stream 合同；本轮没有读取 Issue 他人计划。主线保持交接状态，此为独立分析，没有恢复实现。
