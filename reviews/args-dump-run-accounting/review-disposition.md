@@ -8,7 +8,7 @@
 - **F4**：CI 日志已读取。HBG sustained refill 输出正确，但仅观察到两条不相连的重叠边；本地不同失败为 TMR 首次 prepare 的驱动映射13/errno16。分别定位，main/candidate 正常资源交替16项通过；独立未改main在2核affinity复现字节一致的链式断言，4核通过。此为既有测试host时间窗口假设的证据，不宣称测试已修复。
 - **F5**：字段/断言说明随同修正；ordinary 的 uint64 headroom 与 retained 的差异保留原限定，不宣称全路径预检。
 
-完整初审：[Claude 原文](claude-review-7448ed4e5.md)。最终 head `2894ac39c` 的[Claude 复核](claude-recheck-2894ac39c.md) **approve code，等待 CI**，无剩余 introduced Must/Should；不是 CI/合入签收。新小建议是 free TEST 的 ASSERT 失败会绕过全局状态清理；当前行为断言使用 EXPECT，结构前置断言风险窄，作为测试清理后续记录，没有追加产品范围。最终上板与CI仍在进行。
+完整初审：[Claude 原文](claude-review-7448ed4e5.md)。最终 head `2894ac39c` 的[Claude 复核](claude-recheck-2894ac39c.md) **approve code，等待 CI**，无剩余 introduced Must/Should；不是 CI/合入签收。新小建议是 free TEST 的 ASSERT 失败会绕过全局状态清理；当前行为断言使用 EXPECT，结构前置断言风险窄，作为测试清理后续记录，没有追加产品范围。最终上板与CI均已完成通过（详见报告），等待用户审核。
 
 
 <a id="device-mapping"></a>

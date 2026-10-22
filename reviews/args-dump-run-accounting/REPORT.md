@@ -1,6 +1,6 @@
 # Args-dump：普通调用的设备入口 accounting 与 lifetime transport
 
-基于 #2663 合入后的 main `2522f02bfead6071a70603d0ccb35431ca03139b`。本地分支 `feat/device-args-dump-run-init`，[#2671](https://github.com/hw-native-sys/simpler/pull/2671)，Ready；当前 head `2894ac39cab86bdd5f101e9a60defb1d81e62c2e`，最终验证/独立审阅中。此页是进度和证据，不进入产品代码 PR。
+基于 #2663 合入后的 main `2522f02bfead6071a70603d0ccb35431ca03139b`。本地分支 `feat/device-args-dump-run-init`，[#2671](https://github.com/hw-native-sys/simpler/pull/2671)，Ready；当前 head `2894ac39cab86bdd5f101e9a60defb1d81e62c2e`，最终验证完成，待用户审核。此页是进度和证据，不进入产品代码 PR。
 
 ## 本笔交付
 
@@ -27,7 +27,7 @@
 - A3sim/A5sim 普通 sweep 通过，分别65/61 resource sessions，包含两 runtime L2 组。TMR partial/hybrid/full 两模拟器共6项串行通过，A3 HBG full 通过。
 - 两架构/两 runtime 的 DFX-off 独立构建通过，未覆盖正常 SDK。提交后 SDK 已重建。
 - 初审 head 的 task-submit `task_20261022_034950_259325520765` 锁定4设备；A3 public args-dump4项、RTS publication probes6项与启用采集全部通过。完整 sweep 的首次 prepare 映射失败及状态分歧见下文，未宣称全绿。日志、源码/加载产物 hash、设备/队列采样独立保存。
-- 最终 head 的 Claude 复核已 approve code；完整 A3 sweep 与 CI 尚在进行，不能据本地成绩代签 A5 硬件或 capture。
+- 最终 head 的 Claude 复核已 approve code；完整A3 sweep和最终CI已通过；A5硬件UT来自CI，仍不据此代签capture。
 
 ## 相关但独立的问题
 
@@ -47,7 +47,7 @@
 - **CI 的 HBG sustained-refill**：真实日志显示四个结果正确，但两条 established edge为 `((1,0),(2,1))`、`((3,0),(4,1))`，不满足链式观测断言。在独立、未改源码的 main `2522f02bf`，仅限制2个CPU核，复现相同断言和同样两条边；4核臂通过。task-submit `task_20261022_041302_35814497607`，设备6。它证明既有测试依赖 host 时间窗口，不证明实现或测试问题已修复。
 - **正常资源对照**：同设备6交替运行 main2522与初审候选7448，refill/outstanding-close各4次/树，共16项全部通过；不据此给出自发失败率或“不能回归”的统计结论。task-submit `task_20261022_040707_34307098614`。
 - **本地驱动映射失败**：首次 prepare 的ret13/errno16日志与故障附近occupancy一并保存；physical1上可见非本次子进程的43GiB占用。支持竞争调查，尚不构成具体归因，也不是AIV。服务记录该任务exit1，客户端另记录daemon重启/137；两份状态均保留，没有当作普通通过。
-- **final head2894**：SDK重新构建；Python3525/192、DFX-off与定向上板已通过，Claude复核approve；4设备完整普通sweep重跑和新CI仍在运行。初始CI失败不会被新head记录覆盖。
+- **final head2894**：SDK重新构建；Python3525/192、DFX-off与定向上板已通过，Claude复核approve；4设备完整普通sweep重跑和新CI已通过。初始CI失败不会被新head记录覆盖。
 
 相关的 loss-accounting 未知值问题已经加入本地 KNOWN_ISSUES，并写入产品文档限制：已有host-owned数据可best-effort导出，但读取失败后的dropped_records0不能证明没有丢失。本笔未引入假“完整”标志。
 
@@ -55,3 +55,18 @@
 ## 最终独立复核
 
 Claude 在最终head `2894ac39c` [复核通过代码](claude-recheck-2894ac39c.md)，合入仍以最终CI为门槛。新的测试cleanup小建议与NPU映射勘误见[处置](review-disposition.md)。首次失败、原始logger、main对照和CPU-affinity最小化已归档于本地 `probes/args-dump-run-accounting-20261022/raw-evidence/`，索引有SHA-256；raw archive不进入产品PR或设计备份分支。
+
+## 最终验收记录：2894ac39c
+
+| 范围 | 结果与边界 |
+| --- | --- |
+| C++ / Python | 386/386程序；3525passed /192skipped；pre-commit、严格文档构建通过 |
+| 最终SDK / DFX-off | 提交后重建正常SDK；两架构、两runtime的DFX-off独立构建通过 |
+| A3定向上板 | owned/borrowed args-dump4项、真实库RTS探针6项、TMR partial/hybrid/full和HBG full共4场景通过 |
+| A3普通完整sweep | task-submit四设备，154resource sessions全部rc0；L2HBG43passed/1skip，TMR60passed；649.18秒，源码/加载产物hash前后一致 |
+| A5硬件 | 最终CI ut-a5：86passed，含owned/borrowed args-dump2项，非本地silicon成绩 |
+| 最终CI | run39769502567 attempt1；18个CheckRun success、1个deploy skip，另CodeRabbit status success，合计19success/1skip；最终head没有重跑或放宽预算 |
+| 独立审查 | Claude最终复核approve代码；3个初审阻断已修正或完成main对照归因；全局测试cleanup小建议与既有错误边界仍单独记录 |
+| GitHub反馈 | 最终head无待处理inline或review summary；CodeRabbit无可操作意见的正文固定于初审head7448，不能当作最终head独立审阅；最终全量范围由Claude复核覆盖 |
+
+最终4设备NPU任务、原始日志和identity证据已保存在本地raw archive；文字报告和设计单独备份。初审失败与最终通过分别保留，最终通过不意味着既有AIV已修复。PR仍Ready，未合入；C1/C4和I1–I3总验收仍开放。

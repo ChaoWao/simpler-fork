@@ -6,7 +6,7 @@
 
 **2026-10-22 当前核对基线 `2522f02bf`：#2660、#2624 与 #2663 已合入。** #2625 的实测 host 异常所有权缺口已评论，A3 cache 新鲜性不能借 A5 成绩代签。#2663 的 scope-stats 设备入口复位保留 ordinary epoch/读取检查、HBG metadata-only 和 retained transport；其 head `97aaed615` 的验证保留原基线，见[报告](reviews/device-scope-stats-run-init/REPORT.md)。
 
-**当前 C1 PR [#2671](https://github.com/hw-native-sys/simpler/pull/2671)：普通 args-dump 的逐调用 accounting 与 lifetime transport。** Host 不再按调用重写设备 transport counters；device init 发布本次 baseline、drop counter、epoch。普通 ACK 与恢复有本次身份/读取门控，retained credit 保留。C++386/386、Python3525/192、A3sim/A5sim 普通 sweep、启用采集 smoke 和 DFX-off 构建通过；head `2894ac39c` 的独立审阅/最终上板/CI 在进行，见[报告](reviews/args-dump-run-accounting/REPORT.md)。普通错误恢复的 stop-proof 缺口另记，不能把本笔当 capture DFX 已完成。
+**当前 C1 PR [#2671](https://github.com/hw-native-sys/simpler/pull/2671)：普通 args-dump 的逐调用 accounting 与 lifetime transport，Ready待用户审核。** Host不再按调用改写设备transport counters；device init发布本次baseline、drop counter、epoch。普通ACK与恢复有本次身份/读取门控，retained credit保留。最终head `2894ac39c` 的C++386/386、Python3525/192、A3四设备154个resource sessions及两runtime L2组、两架构DFX-off构建通过；最终CI19success/1deploy skip包含A5硬件UT，Claude复核approve。初始CI的CPU时间窗口断言与首次local驱动映射失败保留各自原始证据和main对照，见[报告](reviews/args-dump-run-accounting/REPORT.md)。普通错误恢复stop-proof和未知loss表达另记，不把本笔当capture DFX完成。
 
 <a id="c1-args-dump-invocation"></a>
 
