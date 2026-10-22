@@ -24,7 +24,7 @@
 
 **本轮源码核对基线：main `fdcbdcc95`。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
 
-**当前 PR [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（Draft）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，跳过初始化或读回失败禁止导出前次统计。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。PR 与最终验证见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
+**当前 PR [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（待审）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，需要 producer 时跳过初始化或读回失败禁止导出前次统计；HBG 沿用既有 capacity 合同保留 metadata-only 输出。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。最终 head `97aaed615` 的 Claude 独立审查无剩余 Must/Should，CI 全绿（A5 首轮因排队耗尽等待预算，原代码单项重跑通过）；完整验证与边界见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
 
 <a id="c1-args-dump-current"></a>
 

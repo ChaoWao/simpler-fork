@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "a752933f8266b1bb9310d52a85cf4101b30b5d680dfe52b7cc6c46c3cc859ba6",
-      "published_sha256": "a752933f8266b1bb9310d52a85cf4101b30b5d680dfe52b7cc6c46c3cc859ba6",
-      "bytes": 70941
+      "source_sha256": "a5b1c6743a60ad39164ada785ce84664e26249da6a37d739ce13810f44cc8d78",
+      "published_sha256": "a5b1c6743a60ad39164ada785ce84664e26249da6a37d739ce13810f44cc8d78",
+      "bytes": 71181
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "3f926908c458d62f2487a224fe05e80e9ac5cefeec8b0cb2b4cd3852af9a643f",
-      "published_sha256": "3f926908c458d62f2487a224fe05e80e9ac5cefeec8b0cb2b4cd3852af9a643f",
-      "bytes": 52773
+      "source_sha256": "b6d074ef4fd472a2738dfac05d9071dd347ad4559d38afe1015933b7ffb86435",
+      "published_sha256": "b6d074ef4fd472a2738dfac05d9071dd347ad4559d38afe1015933b7ffb86435",
+      "bytes": 52969
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "f5fd7a7a425eb2f82345a3f571e919a36303068d4fa66305fe97a989dfe12f68",
-      "published_sha256": "b375eef42f9d0e2277dc982090e861d0f199ddc486c40b7a0cf5b36266bbb514",
-      "bytes": 89334
+      "source_sha256": "e5fda2696d835129da007c2e618511163b295e13fcae9bf834460bd88cc6ae74",
+      "published_sha256": "3cefaed92d8704c0453f5e5c76baba8ad150235884c525cf12b464d6926568e8",
+      "bytes": 89661
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1310,9 +1310,37 @@
     {
       "path": "reviews/device-scope-stats-run-init/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "2e088b11bec0b44cd54510891833e8c643db33880edfec44f32236384dd204c5",
-      "published_sha256": "2e088b11bec0b44cd54510891833e8c643db33880edfec44f32236384dd204c5",
-      "bytes": 3987
+      "source_sha256": "e6e1fef7c21a60476f8f0548e2f78b56c6bbe2eca858ae5ed7cebbc506523b57",
+      "published_sha256": "e6e1fef7c21a60476f8f0548e2f78b56c6bbe2eca858ae5ed7cebbc506523b57",
+      "bytes": 9901
+    },
+    {
+      "path": "reviews/device-scope-stats-run-init/claude-metadata-recheck-97aaed615.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "109fca91c8de507d862d192661fa5534a54cdc0603f66f38786e98d499ccd4f4",
+      "published_sha256": "13e8ab06dc07404d2baa0169a7e1d935d096df4e652d30019a4847c8a021a048",
+      "bytes": 5354
+    },
+    {
+      "path": "reviews/device-scope-stats-run-init/claude-recheck-0de1e010b.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "9a768a6e8595afbf71867d8a238df016a353033a5048963b06fbc73237844aa2",
+      "published_sha256": "42856d326d1a4e2af951a44fea9e230ec7306bd3e7d136fa1ce0d65b62dbe2b7",
+      "bytes": 6138
+    },
+    {
+      "path": "reviews/device-scope-stats-run-init/claude-review-d8f2696d0.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "12938db99b255b940bfa98bee3f172dfb737f38009aafe25e0cc87a01eb05ce7",
+      "published_sha256": "6d8190d8e690239fe59608b130286871071bf8b5fd7ad73c47860458dac61d68",
+      "bytes": 17079
+    },
+    {
+      "path": "reviews/device-scope-stats-run-init/review-disposition.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "2e18e0c30c786b1d640615cb74a54c94137196312958c0732a7ea2aa52e6d4db",
+      "published_sha256": "2e18e0c30c786b1d640615cb74a54c94137196312958c0732a7ea2aa52e6d4db",
+      "bytes": 4164
     },
     {
       "path": "reviews/direct-native-chip-worker/REPORT.md",
@@ -1563,6 +1591,8 @@
   "latest_merged_pr": 2624,
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
-  "latest_validation_head": "949fb596ce954145ec7c3027ee2fd1b3c148cf12",
-  "pending_pr_head": "d8f2696d0c3482f7fbfcc124dd9d2b1f321ed1d4"
+  "latest_validation_head": "97aaed615d2f42b06f645275cfa3749434c04851",
+  "pending_pr_head": "97aaed615d2f42b06f645275cfa3749434c04851",
+  "latest_validation_ci_run": 39747756140,
+  "latest_validation_ci_attempt": 2
 }

@@ -1,6 +1,6 @@
 # Simpler 运行时设计资料
 
-2026-10-21 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
+2026-10-22 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
 
 ## 从这里开始
 
@@ -23,7 +23,7 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 当前草稿 [#2663](https://github.com/hw-native-sys/simpler/pull/2663)：scope-stats 逐调用设备入口初始化，基于 main `fdcbdcc95`。本地检查通过，A3 板测排队；[证据](reviews/device-scope-stats-run-init/REPORT.md)与 ROADMAP 分别记录交付和剩余门槛。#2660 已合入 `ef17033ba`，历史 args-dump 证据保留原 head。
+- 当前待审 [#2663](https://github.com/hw-native-sys/simpler/pull/2663)：scope-stats 逐调用设备入口初始化，基于 main `fdcbdcc95`，最终 head `97aaed615`。Claude 独立审查及最后复核无剩余 Must/Should，OFF 生命周期与 HBG metadata-only 兼容已修；最终 CI 全绿（含两个硬件 UT 的8臂）；A5 首轮排队超时，原代码/预算单项重跑后场景与 DFX smokes 通过。没有本地板测通过主张；[证据与限制](reviews/device-scope-stats-run-init/REPORT.md)和 ROADMAP 分开记录。#2660 已合入 `ef17033ba`，历史 args-dump 证据保留原 head。
 
 - 前次已合入路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；本笔代码和测试另固定 main `3b5836465`。完整 API 层次审查仍保留页内基线，本次仅文档接管、GitHub 元数据与列出正文的只读核对，没有重跑产品测试。
 - #2638/#2640/#2645/#2643/#2588 已合入，历史测量保留原 head。[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 已合入 `0cf537df1`；审阅 head `e768fab28`（功能验证树 `8f89cc639`；最终差异仅旧注释修正）：Runtime descriptor 携带 swimlane level；保留 #2588 的 HostApi 调用快照、PMU 布局与诊断准入。rebase 后 C++ 378、Python 3501、两架构各 6 个 RTS 桩探针、A3 9 个实板 case、A5 3 个 DFX sim 通过；无本地 A5 silicon 主张。inline 已修正并 resolve，最终 head CI 19 success / 1 预期 skip。macOS A5 首轮 600 秒总 session 超时；只重跑后通过，代码与预算未改，详见证据记录。见 [本笔边界](kernel-eager-open-work.md#c1-swimlane-invocation)。历史 [#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
