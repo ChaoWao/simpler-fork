@@ -26,8 +26,8 @@ struct GraphPacketReadOps {
 // change only together on success. The owner holds the context execution lease
 // and immutable packet storage through parsing, binding and execution preparation.
 GraphSlotStatus read_graph_execution_packet(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    GraphSlotRegistration &registration, ParsedGraphPacket &parsed, const GraphPacketReadOps &ops = {},
+    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id, GraphSlotRegistration &registration,
+    ParsedGraphPacket &parsed, const GraphPacketReadOps &ops = {},
     GraphPacketAddress address_mode = GraphPacketAddress::DeviceCopy
 ) noexcept;
 

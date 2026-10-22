@@ -146,8 +146,7 @@ GraphSlotStatus install_graph_execution_slot(const void *registration, size_t by
     if (bound != nullptr && bound != registry) return GraphSlotStatus::Conflict;
     // An unbound registry can still belong to this context. Preserve its execution
     // counters and poison state instead of treating absence of a binding as freshness.
-    if (bound != nullptr || (valid_registry(registry) &&
-                            registry->context_generation == candidate.slot_generation)) {
+    if (bound != nullptr || (valid_registry(registry) && registry->context_generation == candidate.slot_generation)) {
         GraphSlotRegistration existing{};
         auto status =
             acquire_graph_execution_slot(registry, candidate.device_id, candidate.runtime_binary_id, existing);
@@ -213,14 +212,15 @@ GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcep
     return GraphSlotStatus::Ok;
 }
 
-
 }  // namespace hbg
 
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_register_execution_slot(void *arg) {
     const auto status = hbg::install_graph_execution_slot(arg, sizeof(hbg::GraphSlotRegistration));
     if (status != hbg::GraphSlotStatus::Ok)
-        LOG_ERROR("HBG execution slot registration failed: %s (%u)", hbg::graph_slot_status_name(status),
-                  static_cast<unsigned>(status));
+        LOG_ERROR(
+            "HBG execution slot registration failed: %s (%u)", hbg::graph_slot_status_name(status),
+            static_cast<unsigned>(status)
+        );
     return status == hbg::GraphSlotStatus::Ok ? 0 : -1;
 }
 

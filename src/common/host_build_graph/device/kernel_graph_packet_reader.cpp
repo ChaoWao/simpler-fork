@@ -18,9 +18,8 @@
 namespace hbg {
 
 GraphSlotStatus read_graph_execution_packet(
-    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id,
-    GraphSlotRegistration &registration, ParsedGraphPacket &parsed, const GraphPacketReadOps &ops,
-    GraphPacketAddress address_mode
+    const void *packet, size_t bytes, int device_id, uint64_t runtime_binary_id, GraphSlotRegistration &registration,
+    ParsedGraphPacket &parsed, const GraphPacketReadOps &ops, GraphPacketAddress address_mode
 ) noexcept {
     const GraphSlotRegistry *registry = current_graph_slot_registry();
     if (registry == nullptr) return GraphSlotStatus::NotReady;

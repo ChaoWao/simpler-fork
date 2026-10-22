@@ -42,9 +42,7 @@ protected:
         ASSERT_TRUE(hbg::calculate_graph_slot_packet_capacity(value.destinations, value.max_packet_bytes));
         value.checksum = hbg::calculate_graph_slot_registration_checksum(value);
     }
-    hbg::GraphSlotStatus install() {
-        return hbg::install_graph_execution_slot(&registration, sizeof(registration));
-    }
+    hbg::GraphSlotStatus install() { return hbg::install_graph_execution_slot(&registration, sizeof(registration)); }
 };
 
 TEST_F(HbgSlotControlTest, DuplicateInstallPreservesExecutionState) {
@@ -103,7 +101,6 @@ TEST_F(HbgSlotControlTest, StaleDetachKeepsCurrentBinding) {
     EXPECT_EQ(simpler_aicpu_l1_hbg_detach_execution_slot(&request), 0);
     EXPECT_EQ(hbg::current_graph_slot_registry(), nullptr);
 }
-
 
 TEST_F(HbgSlotControlTest, DirectInitializationCannotClearPoisonForSameGeneration) {
     ASSERT_EQ(install(), hbg::GraphSlotStatus::Ok);

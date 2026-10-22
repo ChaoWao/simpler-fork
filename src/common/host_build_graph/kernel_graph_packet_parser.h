@@ -21,9 +21,8 @@ uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept;
 // The caller supplies immutable, readable storage. No device/cache operation or
 // registry lookup occurs here. On failure out is unchanged; on success it borrows
 // payload storage and owns copies of the parsed headers and region descriptors.
-GraphPacketStatus parse_graph_packet(
-    const void *packet, size_t size, GraphPacketAddress address_mode, ParsedGraphPacket &out
-) noexcept;
+GraphPacketStatus
+parse_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode, ParsedGraphPacket &out) noexcept;
 
 // Status-only convenience entry; uses the same parser and format rules.
 GraphPacketStatus validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept;

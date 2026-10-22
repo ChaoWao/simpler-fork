@@ -122,8 +122,13 @@ int bind_definition_images(const GraphBuild &build, std::byte *sm) {
         static_cast<const std::byte *>(build.sm_mirror) + source_offsets.storage
     );
     auto *target = reinterpret_cast<ChipTaskStorage *>(sm + target_offsets.storage);
-    for (int32_t i = 0; i < build.total_tasks; ++i)
+    // The Host mirror is retained across binds, so a slot can still carry the
+    // previous bind's Graph identity. The canonical image starts every task
+    // without one and then applies only this build's bindings.
+    for (int32_t i = 0; i < build.total_tasks; ++i) {
         target[i].slot.graph_context = nullptr;
+        target[i].task.graph_definition_offset = 0;
+    }
     for (const auto &[slot, definition_offset] : build.definitions.bindings) {
         const uintptr_t first = reinterpret_cast<uintptr_t>(&source[0].slot);
         const uintptr_t address = reinterpret_cast<uintptr_t>(slot);

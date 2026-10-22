@@ -93,7 +93,6 @@ hbg::GraphExecutionStatus prepare_packet_for_test(
     return hbg::prepare_graph_execution(binding, out, ops);
 }
 
-
 constexpr size_t kAlign = 1024;
 
 // Mirrors the file-local HostOrchEntryPoints in runtime_maker.cpp: bind reads
@@ -2804,4 +2803,69 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         hbg::build_graph(&runtime, &api_, access, &context, sm_bytes, capacity, &eps_, args, build),
         PTO_RUNTIME_ERR_INVALID_STATE
     );
+}
+
+TEST_F(HbgBindLedgerTest, TemplateClearsStaleDefinitionIdentityFromRetainedMirror) {
+    Runtime runtime;
+    init_runtime(runtime);
+    RuntimeContext context{};
+    HostTensorAccessor access;
+    constexpr uint64_t capacity = 16;
+    const uint64_t sm_bytes = SharedMemoryHandle::calculate_size(capacity);
+    eps_ = {mixed_orch_entry, capture_orch_bind};
+    ChipTaskArgs args;
+    hbg::GraphBuild build;
+    ASSERT_GT(hbg::build_graph(&runtime, &api_, access, &context, sm_bytes, capacity, &eps_, args, build), 0);
+    ASSERT_EQ(build.total_tasks, 1);
+
+    const auto mirror_offsets = sm_layout::segment_offsets(build.task_capacity);
+    auto *mirror_tasks =
+        reinterpret_cast<ChipTaskStorage *>(static_cast<std::byte *>(build.sm_mirror) + mirror_offsets.storage);
+    ASSERT_EQ(mirror_tasks[0].slot.task_kind, TaskKind::KERNEL);
+    // The platform retains this mirror across binds; a previous Graph bind can
+    // leave its Definition offset in a slot this build reuses as an ordinary task.
+    mirror_tasks[0].task.graph_definition_offset = 0x1234;
+
+    DeviceArena arena;
+    const RuntimeArenaLayout layout = runtime_reserve_layout(arena, capacity);
+    hbg::GraphResourceRequirements requirements;
+    ASSERT_EQ(hbg::measure_graph_resources(build, layout, hbg::RuntimeArchitecture::A2A3, 0, requirements), 0);
+    alignas(1024) hbg::GraphSlotRegistry registry{};
+    hbg::GraphSlotRegistration registration{};
+    registration.magic = hbg::GRAPH_SLOT_MAGIC;
+    registration.version = hbg::GRAPH_SLOT_VERSION;
+    registration.bytes = sizeof(registration);
+    registration.flags = hbg::GRAPH_SLOT_FROZEN_SERIAL;
+    registration.device_id = 0;
+    registration.slot_generation = 7;
+    registration.runtime_binary_id = 123;
+    registration.destinations[0] = {0x100000, requirements.gm_heap_bytes};
+    registration.destinations[1] = {0x200000, requirements.runtime_arena_bytes};
+    registration.destinations[2] = requirements.graph_definition_bytes == 0 ?
+                                       hbg::GraphDestination{0, 0} :
+                                       hbg::GraphDestination{0x300000, requirements.graph_definition_bytes};
+    registration.registry = {reinterpret_cast<uintptr_t>(&registry), sizeof(registry)};
+    ASSERT_TRUE(hbg::calculate_graph_slot_packet_capacity(registration.destinations, registration.max_packet_bytes));
+    registration.checksum = hbg::calculate_graph_slot_registration_checksum(registration);
+    ASSERT_TRUE(hbg::is_valid_graph_slot_registration(registration));
+
+    const hbg::GraphInvocationIdentity identity{0, 0, 0, 19, 11, 12, 13};
+    hbg::GraphLaunchTemplate snapshot;
+    ASSERT_EQ(hbg::make_graph_launch_template(build, context, registration, identity, snapshot), 0);
+    hbg::ParsedGraphPacket parsed;
+    ASSERT_EQ(
+        hbg::parse_graph_packet(snapshot.data(), snapshot.size(), hbg::GraphPacketAddress::HostTemplate, parsed),
+        hbg::GraphPacketStatus::Ok
+    );
+    ASSERT_EQ(parsed.graph.region_count, 1U);
+    const uint64_t copied_begin = parsed.regions[1].destination_offset;
+    ASSERT_GE(parsed.graph.sm_offset, copied_begin);
+    const auto task_offsets = sm_layout::segment_offsets(
+        sm_layout::image_extents({static_cast<uint64_t>(parsed.graph.total_tasks), 0, 0, 0})
+    );
+    const auto *image_tasks = reinterpret_cast<const ChipTaskStorage *>(
+        parsed.payload + (parsed.graph.sm_offset - copied_begin) + task_offsets.storage
+    );
+    EXPECT_EQ(image_tasks[0].slot.task_kind, TaskKind::KERNEL);
+    EXPECT_EQ(image_tasks[0].task.graph_definition_offset, 0U);
 }

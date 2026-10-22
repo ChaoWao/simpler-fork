@@ -65,7 +65,6 @@ protected:
     hbg::GraphPacketStatus parse(hbg::ParsedGraphPacket &out) const {
         return hbg::parse_graph_packet(packet.data(), packet.size(), hbg::GraphPacketAddress::HostTemplate, out);
     }
-
 };
 
 TEST_F(HbgPacketParserTest, ParserProducesOneCompleteBorrowedView) {
@@ -87,8 +86,10 @@ TEST_F(HbgPacketParserTest, ParsingFailureDoesNotPublishPartialResult) {
     packet.back() = std::byte{1};
     EXPECT_EQ(parse(parsed), hbg::GraphPacketStatus::InvalidChecksum);
     EXPECT_EQ(std::memcmp(&before, &parsed, sizeof(parsed)), 0);
-    EXPECT_EQ(hbg::parse_graph_packet(packet.data(), 1, hbg::GraphPacketAddress::HostTemplate, parsed),
-              hbg::GraphPacketStatus::InvalidEnvelope);
+    EXPECT_EQ(
+        hbg::parse_graph_packet(packet.data(), 1, hbg::GraphPacketAddress::HostTemplate, parsed),
+        hbg::GraphPacketStatus::InvalidEnvelope
+    );
     EXPECT_EQ(std::memcmp(&before, &parsed, sizeof(parsed)), 0);
 }
 
@@ -96,15 +97,19 @@ TEST_F(HbgPacketParserTest, AddressModesShareParserButRequireDifferentPatchState
     make_packet();
     hbg::ParsedGraphPacket parsed;
     ASSERT_EQ(parse(parsed), hbg::GraphPacketStatus::Ok);
-    EXPECT_EQ(hbg::parse_graph_packet(packet.data(), packet.size(), hbg::GraphPacketAddress::DeviceCopy, parsed),
-              hbg::GraphPacketStatus::InvalidHeader);
+    EXPECT_EQ(
+        hbg::parse_graph_packet(packet.data(), packet.size(), hbg::GraphPacketAddress::DeviceCopy, parsed),
+        hbg::GraphPacketStatus::InvalidHeader
+    );
     auto header = packet_header();
-    header.inline_payload_addr = reinterpret_cast<uintptr_t>(packet.data()) + sizeof(SimplerKernelInvocationHeader) +
-                                 payload_offset;
+    header.inline_payload_addr =
+        reinterpret_cast<uintptr_t>(packet.data()) + sizeof(SimplerKernelInvocationHeader) + payload_offset;
     // CANN's address patch must not require recomputing the checksum.
     std::memcpy(packet.data() + sizeof(SimplerKernelInvocationHeader), &header, sizeof(header));
-    EXPECT_EQ(hbg::parse_graph_packet(packet.data(), packet.size(), hbg::GraphPacketAddress::DeviceCopy, parsed),
-              hbg::GraphPacketStatus::Ok);
+    EXPECT_EQ(
+        hbg::parse_graph_packet(packet.data(), packet.size(), hbg::GraphPacketAddress::DeviceCopy, parsed),
+        hbg::GraphPacketStatus::Ok
+    );
     EXPECT_EQ(parse(parsed), hbg::GraphPacketStatus::InvalidHeader);
 }
 
@@ -120,8 +125,9 @@ TEST_F(HbgPacketParserTest, RejectsUnsupportedVersionAndInvalidRegionBounds) {
     EXPECT_EQ(std::memcmp(&before, &parsed, sizeof(parsed)), 0);
     make_packet();
     hbg::GraphImageRegion region{hbg::GraphImageKind::Runtime, 0, 0, payload_bytes + 64, 0};
-    std::memcpy(packet.data() + sizeof(SimplerKernelInvocationHeader) + sizeof(hbg::GraphPacketHeader),
-                &region, sizeof(region));
+    std::memcpy(
+        packet.data() + sizeof(SimplerKernelInvocationHeader) + sizeof(hbg::GraphPacketHeader), &region, sizeof(region)
+    );
     write_header(packet_header());
     EXPECT_EQ(parse(parsed), hbg::GraphPacketStatus::InvalidRegion);
     EXPECT_EQ(std::memcmp(&before, &parsed, sizeof(parsed)), 0);
@@ -129,8 +135,8 @@ TEST_F(HbgPacketParserTest, RejectsUnsupportedVersionAndInvalidRegionBounds) {
 
 TEST_F(HbgPacketParserTest, RejectsNonzeroPaddingEvenWithMatchingChecksum) {
     make_packet();
-    const size_t padding = sizeof(SimplerKernelInvocationHeader) + sizeof(hbg::GraphPacketHeader) +
-                           sizeof(hbg::GraphImageRegion);
+    const size_t padding =
+        sizeof(SimplerKernelInvocationHeader) + sizeof(hbg::GraphPacketHeader) + sizeof(hbg::GraphImageRegion);
     packet[padding] = std::byte{1};
     write_header(packet_header());
     hbg::ParsedGraphPacket parsed;

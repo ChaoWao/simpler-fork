@@ -32,9 +32,8 @@ uint64_t graph_packet_checksum(const void *packet, size_t size) noexcept {
 // out is changed only after every format and checksum check succeeds.
 // Registry identity checks and semantic validation of execution images precede
 // execution separately; a checksum-valid packet alone never authorizes execution preparation.
-GraphPacketStatus parse_graph_packet(
-    const void *packet, size_t size, GraphPacketAddress address_mode, ParsedGraphPacket &out
-) noexcept {
+GraphPacketStatus
+parse_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode, ParsedGraphPacket &out) noexcept {
     constexpr size_t prefix = sizeof(SimplerKernelInvocationHeader);
     if (packet == nullptr || size < prefix + sizeof(GraphPacketHeader) || size > UINT32_MAX)
         return GraphPacketStatus::InvalidEnvelope;
@@ -119,8 +118,7 @@ GraphPacketStatus parse_graph_packet(
 }
 
 // Status-only callers share exactly the same parser and format rules.
-GraphPacketStatus
-validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept {
+GraphPacketStatus validate_graph_packet(const void *packet, size_t size, GraphPacketAddress address_mode) noexcept {
     ParsedGraphPacket parsed;
     return parse_graph_packet(packet, size, address_mode, parsed);
 }

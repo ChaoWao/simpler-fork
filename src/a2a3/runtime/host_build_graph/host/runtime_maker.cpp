@@ -536,7 +536,8 @@ struct DefinitionUploads {
 // records the used prefix for synchronous publication. Device initial classify
 // replaces each task's graph_context with an execution constructed in its own heap.
 int32_t bind_graph_definitions(
-    Runtime *runtime, const HostApi *api, const hbg::GraphTaskDefinitionBindings &definition_bindings, DefinitionUploads *uploads
+    Runtime *runtime, const HostApi *api, const hbg::GraphTaskDefinitionBindings &definition_bindings,
+    DefinitionUploads *uploads
 ) {
     *uploads = DefinitionUploads{};
     const size_t count = definition_bindings.bindings.size();

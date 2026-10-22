@@ -247,8 +247,7 @@ void publish(GraphExecutionSlotControl &control, GraphExecutionSlotPhase phase, 
 }  // namespace
 
 GraphExecutionStatus prepare_graph_execution(
-    const ValidatedGraphExecutionBinding &view, GraphExecutionPreparation &out,
-    const GraphExecutionPreparationOps &ops
+    const ValidatedGraphExecutionBinding &view, GraphExecutionPreparation &out, const GraphExecutionPreparationOps &ops
 ) noexcept {
     const auto &packet = view.packet;
     RuntimeArenaLayout layout{};
@@ -307,9 +306,9 @@ GraphExecutionStatus prepare_graph_execution(
     if (!flush_region(ops, reinterpret_cast<void *>(heap.address), packet.graph.heap_bytes)) return fail();
     for (size_t i = 1; i < 4; ++i)
         if (packet.regions[i].bytes && !flush_region(
-                                         ops, reinterpret_cast<void *>(view.slot.destinations[i].address),
-                                         packet.regions[i].destination_offset + packet.regions[i].bytes
-                                     ))
+                                           ops, reinterpret_cast<void *>(view.slot.destinations[i].address),
+                                           packet.regions[i].destination_offset + packet.regions[i].bytes
+                                       ))
             return fail();
     control.runtime_address = reinterpret_cast<uintptr_t>(runtime);
     control.sm_bytes = sm_bytes;
@@ -339,7 +338,7 @@ GraphExecutionStatus retire_graph_execution(
     uint32_t phase = __atomic_load_n(&control.phase, __ATOMIC_ACQUIRE);
     if (phase == static_cast<uint32_t>(GraphExecutionSlotPhase::Preparing)) return GraphExecutionStatus::Busy;
     if (control.attempt != attempt || (phase != static_cast<uint32_t>(GraphExecutionSlotPhase::Ready) &&
-                                      phase != static_cast<uint32_t>(GraphExecutionSlotPhase::Failed)))
+                                       phase != static_cast<uint32_t>(GraphExecutionSlotPhase::Failed)))
         return GraphExecutionStatus::NotReady;
     const auto outcome = completion.outcome;
     if (completion.runtime_status != 0 || completion.unexpected_teardown_status != 0 ||

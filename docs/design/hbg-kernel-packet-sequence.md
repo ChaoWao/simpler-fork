@@ -126,7 +126,7 @@ sequenceDiagram
 Paths below are relative to `src/common/host_build_graph` unless stated otherwise.
 
 | Participant | Files and responsibilities |
-| --- | --- |
+| ----------- | -------------------------- |
 | Host graph builder | `src/{a2a3,a5}/runtime/host_build_graph/host/runtime_maker.cpp` implements `build_graph()` and preserves the native bind/publication path; `host_graph_build.h` defines the result contract. |
 | Definition resolution | `host/graph_task_definition_binding.h` resolves task/Definition relationships and queue populations; `host/definition_packing.h` measures section offsets and sizes. |
 | Resource planning | `kernel_resource_requirements.h` measures graph needs, aggregates fixed capacities and constructs registration from frozen resources. Actual resource ownership belongs to `KernelExecutionState` and `KernelDeviceResources` under `src/common/platform`. |

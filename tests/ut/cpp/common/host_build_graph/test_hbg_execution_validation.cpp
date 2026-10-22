@@ -93,9 +93,7 @@ protected:
         ASSERT_TRUE(hbg::calculate_graph_slot_packet_capacity(value.destinations, value.max_packet_bytes));
         value.checksum = hbg::calculate_graph_slot_registration_checksum(value);
     }
-    hbg::GraphSlotStatus install() {
-        return hbg::install_graph_execution_slot(&registration, sizeof(registration));
-    }
+    hbg::GraphSlotStatus install() { return hbg::install_graph_execution_slot(&registration, sizeof(registration)); }
 };
 
 TEST_F(HbgExecutionValidationTest, OverlappingPacketIsRejectedBeforeReadingAndLeavesOutputUntouched) {
@@ -106,12 +104,14 @@ TEST_F(HbgExecutionValidationTest, OverlappingPacketIsRejectedBeforeReadingAndLe
     const auto before = output;
     bool read = false;
     hbg::GraphPacketReadOps ops{&read, [](void *context, const void *, size_t) {
-        *static_cast<bool *>(context) = true;
-        return true;
-    }};
+                                    *static_cast<bool *>(context) = true;
+                                    return true;
+                                }};
 
-    EXPECT_EQ(hbg::read_graph_execution_packet(&registry, sizeof(registry), 0, 123, snapshot, output, ops),
-              hbg::GraphSlotStatus::SourceOverlap);
+    EXPECT_EQ(
+        hbg::read_graph_execution_packet(&registry, sizeof(registry), 0, 123, snapshot, output, ops),
+        hbg::GraphSlotStatus::SourceOverlap
+    );
     EXPECT_FALSE(read);
     EXPECT_EQ(std::memcmp(&before, &output, sizeof(output)), 0);
 }
@@ -122,8 +122,7 @@ TEST_F(HbgExecutionValidationTest, MissingRegistryLeavesOutputUntouched) {
     output.graph.device_id = 55;
     const auto before = output;
 
-    EXPECT_EQ(hbg::read_graph_execution_packet(nullptr, 0, 0, 123, snapshot, output),
-              hbg::GraphSlotStatus::NotReady);
+    EXPECT_EQ(hbg::read_graph_execution_packet(nullptr, 0, 0, 123, snapshot, output), hbg::GraphSlotStatus::NotReady);
     EXPECT_EQ(std::memcmp(&before, &output, sizeof(output)), 0);
 }
 
@@ -135,8 +134,7 @@ TEST_F(HbgExecutionValidationTest, PoisonedRegistryRejectsValidationWithoutChang
     output.graph.device_id = 55;
     const auto before = output;
 
-    EXPECT_EQ(hbg::read_graph_execution_packet(nullptr, 0, 0, 123, snapshot, output),
-              hbg::GraphSlotStatus::Poisoned);
+    EXPECT_EQ(hbg::read_graph_execution_packet(nullptr, 0, 0, 123, snapshot, output), hbg::GraphSlotStatus::Poisoned);
     EXPECT_EQ(std::memcmp(&before, &output, sizeof(output)), 0);
 }
 
@@ -151,18 +149,17 @@ TEST_F(HbgExecutionValidationTest, UnavailablePacketLeavesRegistryAndOutputUntou
 
     bool read = false;
     hbg::GraphPacketReadOps ops{&read, [](void *context, const void *, size_t) {
-        *static_cast<bool *>(context) = true;
-        return false;
-    }};
-    EXPECT_EQ(hbg::read_graph_execution_packet(packet, sizeof(packet), 0, 123, snapshot, output, ops),
-              hbg::GraphSlotStatus::SourceUnavailable);
+                                    *static_cast<bool *>(context) = true;
+                                    return false;
+                                }};
+    EXPECT_EQ(
+        hbg::read_graph_execution_packet(packet, sizeof(packet), 0, 123, snapshot, output, ops),
+        hbg::GraphSlotStatus::SourceUnavailable
+    );
     EXPECT_TRUE(read);
     EXPECT_EQ(std::memcmp(&before, &output, sizeof(output)), 0);
     EXPECT_EQ(std::memcmp(&registry_before, &registry, sizeof(registry)), 0);
 }
-
-
-
 
 TEST_F(HbgExecutionValidationTest, ParsedStructureDoesNotAuthorizeResourceIdentity) {
     make_packet();
@@ -209,13 +206,16 @@ TEST_F(HbgExecutionValidationTest, BindingUsesParsedHeadersAndIndependentCallabl
     const auto before = output;
     auto stale = trusted;
     ++stale.generation;
-    EXPECT_EQ(hbg::validate_graph_execution_binding(parsed, registration, stale, output),
-              hbg::GraphSlotStatus::CallableMismatch);
+    EXPECT_EQ(
+        hbg::validate_graph_execution_binding(parsed, registration, stale, output),
+        hbg::GraphSlotStatus::CallableMismatch
+    );
     EXPECT_EQ(std::memcmp(&before, &output, sizeof(output)), 0);
     auto counts = trusted;
     ++counts.tensor_count;
-    EXPECT_EQ(hbg::validate_graph_execution_binding(parsed, registration, counts, output),
-              hbg::GraphSlotStatus::InvalidPacket);
+    EXPECT_EQ(
+        hbg::validate_graph_execution_binding(parsed, registration, counts, output), hbg::GraphSlotStatus::InvalidPacket
+    );
 }
 
 TEST_F(HbgExecutionValidationTest, ReadBoundaryPublishesSnapshotAndParsedPacketTogether) {
@@ -223,17 +223,24 @@ TEST_F(HbgExecutionValidationTest, ReadBoundaryPublishesSnapshotAndParsedPacketT
     make_packet();
     hbg::ParsedGraphPacket parsed;
     hbg::GraphSlotRegistration snapshot{};
-    ASSERT_EQ(hbg::read_graph_execution_packet(packet.data(), packet.size(), 0, 123, snapshot, parsed, {},
-                                             hbg::GraphPacketAddress::HostTemplate), hbg::GraphSlotStatus::Ok);
+    ASSERT_EQ(
+        hbg::read_graph_execution_packet(
+            packet.data(), packet.size(), 0, 123, snapshot, parsed, {}, hbg::GraphPacketAddress::HostTemplate
+        ),
+        hbg::GraphSlotStatus::Ok
+    );
     EXPECT_EQ(snapshot.slot_generation, 8U);
     hbg::ValidatedGraphExecutionBinding binding;
     EXPECT_EQ(hbg::validate_graph_execution_binding(parsed, snapshot, trusted, binding), hbg::GraphSlotStatus::Ok);
     const auto before = snapshot;
     const auto parsed_before = parsed;
     packet.back() = std::byte{1};
-    EXPECT_EQ(hbg::read_graph_execution_packet(packet.data(), packet.size(), 0, 123, snapshot, parsed, {},
-                                             hbg::GraphPacketAddress::HostTemplate),
-              hbg::GraphSlotStatus::InvalidPacket);
+    EXPECT_EQ(
+        hbg::read_graph_execution_packet(
+            packet.data(), packet.size(), 0, 123, snapshot, parsed, {}, hbg::GraphPacketAddress::HostTemplate
+        ),
+        hbg::GraphSlotStatus::InvalidPacket
+    );
     EXPECT_EQ(std::memcmp(&before, &snapshot, sizeof(snapshot)), 0);
     EXPECT_EQ(std::memcmp(&parsed_before, &parsed, sizeof(parsed)), 0);
 }
