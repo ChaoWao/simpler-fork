@@ -42,11 +42,11 @@
 
 | 工作项 | 依赖 / 写入边界 | 当前产物与验收 |
 |---|---|---|
-| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) `19ed2e462` 组合四组通过，C++390/390、Python3525/192与A3定向上板通过；Claude与CI继续 |
-| ordinary manifest loss 完整性 | 子 agent 独立改统计与 manifest，保留 retained 合同；集成时核对与上一项的 collector 重叠 | [本地候选21537980b](reviews/args-dump-loss-accounting/REPORT.md) 已通过主执行组合验收：16目标160cases；待#2677合入后提PR；未读取或读取失败不能将未知 loss 表示为已证明的零 |
+| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) 合成head `d9808101e` 已集入stop-proof、late-publication退出与loss完整性；8个close/read-failure目标通过，完整重建/Claude/CI继续。首head19ed的C++390、Python3525/192与A3定向成绩不移挂 |
+| ordinary manifest loss 完整性 | 子 agent 独立改统计与 manifest，保留 retained 合同；集成时核对与上一项的 collector 重叠 | [并行成果21537980b](reviews/args-dump-loss-accounting/REPORT.md) 已通过初轮组合验收：16目标160cases；独立审阅确认unknown manifest属于同一关闭行为，现整体集入#2677并重验，不另拆PR；未读取或读取失败不能将未知 loss 表示为已证明的零 |
 | I1 实际入口与缺口映射 | 完成回归子项的 agent 转只读调查，不改已有 owner 的候选实现 | 已接受[静态入口报告](reviews/kernel-i1-entry-mapping/REPORT.md)：PyPTO main 已有 artifact/CallFrame；#3100 占初始化 owner，缺真实 queue callback→Worker.submit 接线；无新增上板成绩 |
 
-输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。上述第一项和 loss 项分别按完整功能组织 PR，内部测试拆分不形成额外测试-only PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。
+输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。上述 stop-proof、loss 项和回归最终组成同一个完整功能 PR：未知停机既不读取producer-held数据，也不输出已证明零丢失的假象。内部子项不机械对应 PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。
 
 
 **本轮候选刷新仅核对 GitHub 元数据，未据此完成新 diff 审查：** #2626 仍为 Draft `f701832b`；HBG #2646 已更新为 `6cb08c73`，#2647 为 `4c0eacce`，均 Draft，须按新 head 全面审阅。#2625 当前公开 head 仍是 `7848e06e`；新 [#2669](https://github.com/hw-native-sys/simpler/issues/2669) 的 A5 fatal replay 超时发生在未公开的本地 restack 候选，尚未建立在未修改 main 或公开 PR head 上。该故障须在受影响候选验收前分类修复，不把它改写为当前 main 的已证实故障。

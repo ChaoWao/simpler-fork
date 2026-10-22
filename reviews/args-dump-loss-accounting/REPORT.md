@@ -1,5 +1,8 @@
 # Ordinary args-dump loss accounting: combined candidate
 
+> 本文保留并行子任务的候选与验收证据；其代码已集入同一个#2677，不另提loss PR。当前合成head及最终验证见[主执行报告](../args-dump-stop-proof/REPORT.md)。
+
+
 Status: combined CPU acceptance passed; local candidate awaiting parent final review.
 No push, PR, GitHub message, new issue, or onboard work was performed.
 
@@ -139,3 +142,7 @@ LOCAL_PATH
 ## 主执行验收状态
 
 已检查候选源码及真实manifest回归，组合基线是#2677 head19ed2e462，后续loss单commit21537980b。16目标160cases通过；接受为本地后续候选，未push/提PR，不表示已合入主线。生产语义必须先消费停机证明，不能把成功读取等同producer已停止。
+
+## 集成交付边界修订
+
+上文保留子任务初始独立候选及原head证据。独立Claude审阅指出，unknown close若跳过counter读取却仍只输出0，报告本身不完整。主执行因此将21537980b的统计/manifest/回归整体集入#2677，和停机证明一起交付同一完整功能，不再计划独立loss PR。原候选成绩不自动移挂最终合成head；组合重验与最终审查由主执行统一负责。
