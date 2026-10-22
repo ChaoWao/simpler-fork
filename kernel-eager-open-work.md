@@ -2,6 +2,8 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
+远端完整交付由 [#2666](https://github.com/hw-native-sys/simpler/issues/2666) 跟踪；本页与 ROADMAP 同步状态，保留接口及验证细节。HBG #2646/#2647 已有新 head，尚需完整审查；A5 本地 restack 候选故障 #2669 不等于已证明 main 回归，按该 Issue 的证据边界处理。
+
 **2026-10-21 当前核对基线 `fdcbdcc95`：#2660 和 #2624 已合入。** #2625 的实测 host 异常所有权缺口已评论，A3 cache 新鲜性要求不能借 A5 成绩代签。当前 C1 待审 PR #2663 为 scope-stats 设备入口复位，普通/unmapped 在需要 producer 时检查本次 epoch，并检查复制结果；HBG 保留 metadata-only 输出；保留 mapped 终态银行与 transport 寿命。最终 head `97aaed615` 已完成 Claude 独立审查，CI 全绿（保留首轮 A5 排队超时及单项重跑记录），尚未合入。完整边界与验证见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。历史 snapshot 表和测量不改挂。
 
 <a id="c1-args-dump-invocation"></a>

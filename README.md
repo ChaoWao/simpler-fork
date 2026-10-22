@@ -7,6 +7,7 @@
 | 阅读目的 | 文件 |
 | --- | --- |
 | 判断设计是否正确 | [运行时设计原则](runtime-design-principles.md)，唯一规范性来源 |
+| 跟踪远端实施与最终验收 | [Issue #2666](https://github.com/hw-native-sys/simpler/issues/2666)，与 ROADMAP/HTML 同步 |
 | 看统一顺序、当前状态与验收门 | [ROADMAP](ROADMAP.md) / [路线图 HTML](kernel-mode-roadmap.html)：runtime K/C、四仓 I1–I3、普通 Async V1 |
 | 看四仓接管来源与候选归属 | [接管说明](kernel-mode-cross-repo-handoff.md) / [HTML](kernel-mode-cross-repo-handoff.html) |
 | 获取四仓协作任务 | [提示词](kernel-mode-cross-repo-prompt.md) / [HTML](kernel-mode-cross-repo-prompt.html) |

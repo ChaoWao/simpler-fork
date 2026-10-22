@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "a5b1c6743a60ad39164ada785ce84664e26249da6a37d739ce13810f44cc8d78",
-      "published_sha256": "a5b1c6743a60ad39164ada785ce84664e26249da6a37d739ce13810f44cc8d78",
-      "bytes": 71181
+      "source_sha256": "1e197727bebc2c00500d9a0023648e4485fe77299987260ddebeb7c229fba86f",
+      "published_sha256": "1e197727bebc2c00500d9a0023648e4485fe77299987260ddebeb7c229fba86f",
+      "bytes": 72342
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "b6d074ef4fd472a2738dfac05d9071dd347ad4559d38afe1015933b7ffb86435",
-      "published_sha256": "b6d074ef4fd472a2738dfac05d9071dd347ad4559d38afe1015933b7ffb86435",
-      "bytes": 52969
+      "source_sha256": "4dfb1f5372c064ef53055309b4a9842670d2d5e7ee65250d01babd50595cf729",
+      "published_sha256": "4dfb1f5372c064ef53055309b4a9842670d2d5e7ee65250d01babd50595cf729",
+      "bytes": 53288
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "e5fda2696d835129da007c2e618511163b295e13fcae9bf834460bd88cc6ae74",
-      "published_sha256": "3cefaed92d8704c0453f5e5c76baba8ad150235884c525cf12b464d6926568e8",
-      "bytes": 89661
+      "source_sha256": "00dfe92ddb83ddc90d7fedee9fc0d1de365ca2a272580813f4169e3384adab3e",
+      "published_sha256": "153afbbed5271f3e1229770db4fefe7bd3be04b3d0c9da62f737c93344950074",
+      "bytes": 91026
     },
     {
       "path": "kernel-mode-tmr-flow.md",
