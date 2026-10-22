@@ -24,19 +24,30 @@
 
 **Kernel 远端总跟踪：[Issue #2666](https://github.com/hw-native-sys/simpler/issues/2666)；仓库重点工作总览为 [#2670](https://github.com/hw-native-sys/simpler/issues/2670)。** 2026-10-22 已将本路线的设计约束、K2/C1–C4、I1–I3、V1、现有候选与最终验收刷新到该 Issue。Issue 作为远端执行入口，本页与 HTML 保留详细依赖和证据解释；设计判断仍以 principles 为准。后续状态同次刷新，不新建另一条按 PR 编号推进的路线。
 
-**本轮源码核对基线：main `2522f02bf`（#2663 合入）。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
+**本轮源码核对基线：main `fa6528f4e`（#2671 合入）。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
 
 **已合入 [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（`2522f02bf`）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，需要 producer 时跳过初始化或读回失败禁止导出前次统计；HBG 沿用既有 capacity 合同保留 metadata-only 输出。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。最终 head `97aaed615` 的 Claude 独立审查无剩余 Must/Should，CI 全绿（A5 首轮因排队耗尽等待预算，原代码单项重跑通过）；完整验证与边界见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
 
 <a id="c1-args-dump-accounting"></a>
 
-**当前 PR [#2671](https://github.com/hw-native-sys/simpler/pull/2671)（Ready，最终验证完成，待用户审核）：普通 args-dump 的逐调用 accounting 与 lifetime transport。** Host admission 只清自己的窗口；设备 init 建立本次 baseline、drop counter 和 epoch，普通 ACK/恢复要求本次身份及成功读取，retained transport 合同保留。新字段使用既有 padding，DumpBufferState 仍256字节；普通ACK窄读由8增为48字节，不宣称性能收益。最终 head `2894ac39c`：C++386/386、Python3525/192；A3 task-submit 的154个resource sessions和两runtime L2组通过，源码/SDK hash不变；A5硬件UT在CI通过；最终CI **19 success /1 deploy skipped**（含CodeRabbit状态），Claude独立复核approve代码。修正了host闲置lane误报。初始CI的refill观测断言已在未修改main上以2核affinity复现，原始失败不抹除。它是已核实的C1协议交付，不另造执行器。普通错误恢复缺少stop-proof消费、manifest未知loss表达与输出同秒冲突分别记录，不宣布capture DFX或整个C1完成。完整证据见[报告](reviews/args-dump-run-accounting/REPORT.md)。
+**已合入 [#2671](https://github.com/hw-native-sys/simpler/pull/2671)（main `fa6528f4e`）：普通 args-dump 的逐调用 accounting 与 lifetime transport。** Host admission 只清自己的窗口；设备 init 建立本次 baseline、drop counter 和 epoch，普通 ACK/恢复要求本次身份及成功读取，retained transport 合同保留。新字段使用既有 padding，DumpBufferState 仍256字节；普通ACK窄读由8增为48字节，不宣称性能收益。最终 head `2894ac39c`：C++386/386、Python3525/192；A3 task-submit 的154个resource sessions和两runtime L2组通过，源码/SDK hash不变；A5硬件UT在CI通过；最终CI **19 success /1 deploy skipped**（含CodeRabbit状态），Claude独立复核approve代码。修正了host闲置lane误报。初始CI的refill观测断言已在未修改main上以2核affinity复现，原始失败不抹除。它是已核实的C1协议交付，不另造执行器。普通错误恢复缺少stop-proof消费、manifest未知loss表达与输出同秒冲突分别记录，不宣布capture DFX或整个C1完成。完整证据见[报告](reviews/args-dump-run-accounting/REPORT.md)。
 
 <a id="c1-args-dump-current"></a>
 
 **当前 C1 交付：逐调用 args-dump 选择（[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 已合入 `ef17033ba`）。** 本笔基于 main `3b5836465`（含 #2630/#2639）；把共享 pool header 的可变级别与同步读回移出 host admission，让本次级别随既有 descriptor 异步发布，六个 scheduler init 显式消费。HBG 使用一字 reserved，TMR 使用对齐空隙，四组合大小/握手地址不变；普通 counter reset 与 retained 队列/游标寿命保持原合同。沿用共同 executor，不重复现有 TMR/HBG capture 候选。初筛候选范围不等于全量审查完成；I1 映射仍是下一步。验证、负对照和边界见[本笔报告](reviews/invocation-local-args-dump/REPORT.md)。下方已合入记录保留各自基线。
 
 **下一步（接管后统一安排）：先做双 runtime 候选审查，同时梳理 I1 的真实消费者入口。**
+
+**2026-10-22 并行执行安排（原 #2666 内部拆分，不新建按 agent 划分的业务 Issue）：** 参考 multi-agent 原则的新 S3 主执行方案，由一个主 agent 负责验收、组合验证与交付；各子项使用隔离 worktree，completed 不直接视为 accepted。
+
+| 工作项 | 依赖 / 写入边界 | 当前产物与验收 |
+|---|---|---|
+| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) `19ed2e462` 组合四组通过，C++390/390、Python3525/192与A3定向上板通过；Claude与CI继续 |
+| ordinary manifest loss 完整性 | 子 agent 独立改统计与 manifest，保留 retained 合同；集成时核对与上一项的 collector 重叠 | [本地候选21537980b](reviews/args-dump-loss-accounting/REPORT.md) 已通过主执行组合验收：16目标160cases；待#2677合入后提PR；未读取或读取失败不能将未知 loss 表示为已证明的零 |
+| I1 实际入口与缺口映射 | 完成回归子项的 agent 转只读调查，不改已有 owner 的候选实现 | 已接受[静态入口报告](reviews/kernel-i1-entry-mapping/REPORT.md)：PyPTO main 已有 artifact/CallFrame；#3100 占初始化 owner，缺真实 queue callback→Worker.submit 接线；无新增上板成绩 |
+
+输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。上述第一项和 loss 项分别按完整功能组织 PR，内部测试拆分不形成额外测试-only PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。
+
 
 **本轮候选刷新仅核对 GitHub 元数据，未据此完成新 diff 审查：** #2626 仍为 Draft `f701832b`；HBG #2646 已更新为 `6cb08c73`，#2647 为 `4c0eacce`，均 Draft，须按新 head 全面审阅。#2625 当前公开 head 仍是 `7848e06e`；新 [#2669](https://github.com/hw-native-sys/simpler/issues/2669) 的 A5 fatal replay 超时发生在未公开的本地 restack 候选，尚未建立在未修改 main 或公开 PR head 上。该故障须在受影响候选验收前分类修复，不把它改写为当前 main 的已证实故障。
 
@@ -161,7 +172,7 @@ S1/S2 与 K1/K2 的共同 eager 生产接线已交付；K2 的实际框架/失�
 | **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **#2638 已合入 `2a6d2d50c`**：集中 loader 所有权与 typed lookup，context/slot 共持 module；保留既有导出合同。图的长期引用仍须由 C2 接入，不据本笔标记整阶段完成 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
 | **K1 · 借用环境与参数** | Kernel 接入共同执行层，无 tensor staging 和设备所有权 | A + S2 | **native 与 public Worker eager 接线已交付；完整资格分别验收**：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 由 #2599 接入，#2604/#2606/#2608/#2610–#2618 补齐相应语义与寿命。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 [当前记录](kernel-eager-open-work.md) | TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过 |
 | **K2 · caller 顺序与框架接入** | Native 和框架可用的 kernel eager | K1 | **生产接线已交付，完整资格待验收**：#2567/#2572/#2578、#2580–#2599 与后续语义修复接通共同 caller/环境/public Worker。I1 补实际框架调用；#2605 短序列通过但 128-token 输出不一致，不能据此关闭 K2。见 [剩余范围](kernel-eager-open-work.md) | caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过 |
-| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择已合入 ef17033ba；[#2663](https://github.com/hw-native-sys/simpler/pull/2663) 的 scope-stats 入口复位已合入 `2522f02bf`；[#2671](https://github.com/hw-native-sys/simpler/pull/2671) 的普通 args-dump accounting Ready，独立复核/最终CI与完整A3验证通过；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
+| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择已合入 ef17033ba；[#2663](https://github.com/hw-native-sys/simpler/pull/2663) 的 scope-stats 入口复位已合入 `2522f02bf`；[#2671](https://github.com/hw-native-sys/simpler/pull/2671) 的普通 args-dump accounting 已合入 `fa6528f4e`，独立复核/最终CI与完整A3验证通过；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
 | **C2 · 图资源所有权** | capture wrapper、generation、bank/event/source 的图引用 | C1 + S3 | **未合入；已有候选实现**：#2625 TMR，#2626/#2646/#2647 共同资源与 HBG；须审查与共同 native owner 的一致性 | 每图 cold-path 预检；module/code 与 bank/event/source 均由图保活；失败/销毁无悬空引用 |
 | **C3 · TMR 与 HBG replay** | 两种 runtime 的真实 executor 可重复运行 | C2 | **主线未交付；端到端候选 PR 未合入**：TMR #2625；A2/A3 HBG #2647（draft），A5 HBG 仍需单独资格化 | TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确 |
 | **C4 · runtime 完整验收** | 换参、多图、DFX、超时/故障、关闭与容量完整行为 | C3 | **未完成；是必交付阶段** | 下文验收矩阵全通过，不能只以单图普通模式宣布完成 |

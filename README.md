@@ -24,7 +24,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- #2663 已合入 main `2522f02bf`；它在 head `97aaed615` 的审阅/CI证据保留原基线。当前 [#2671](https://github.com/hw-native-sys/simpler/pull/2671) 为普通args-dump accounting与lifetime transport，head `2894ac39c`，Ready。C++386/386、Python3525/192、两模拟器普通/启用采集验证与DFX-off构建通过；Claude最终复核approve代码，**最终CI19success/1deploy skip、完整A3四设备154resource sessions及两runtime L2组通过，源码/SDK hash不变；A5硬件UT在CI通过**。初始CI的链式观测断言已在未修改main上用2核affinity复现，没有放宽测试；local映射13/errno16与物理device占用证据单独保留。[报告及初审/复核](reviews/args-dump-run-accounting/REPORT.md)记录具体适用head、失败和限制，不宣布capture DFX或整个C1完成。
+- #2671 已合入 main `fa6528f4e`；原head `2894ac39c` 的完整验证仍归[原报告](reviews/args-dump-run-accounting/REPORT.md)。当前 [#2677](https://github.com/hw-native-sys/simpler/pull/2677) `19ed2e462` 修复 ordinary args-dump 关闭时的停机证明：真实边界回归四组合先红后绿、C++390/390、Python3525/192及A3定向task-submit通过；Claude和CI仍在进行，未宣布最终通过。完整边界见[报告](reviews/args-dump-stop-proof/REPORT.md)。
+- 并行子项已经回收：ordinary loss完整性[本地候选](reviews/args-dump-loss-accounting/REPORT.md)在stop-proof上组合16目标160cases通过，待#2677合入后提PR；[I1静态映射](reviews/kernel-i1-entry-mapping/REPORT.md)发现PyPTO#3100现owner，真实queue callback到共同Worker.submit仍缺接线，不重复初始化实现。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 
 - 历史路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；#2660的代码和测试另固定 main `3b5836465`。完整API层次审查保留页内基线；当前#2671验证见上条，不把历史只读核对或旧测量移挂到当前head。

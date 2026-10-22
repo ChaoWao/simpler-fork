@@ -6,7 +6,7 @@
 
 **2026-10-22 当前核对基线 `2522f02bf`：#2660、#2624 与 #2663 已合入。** #2625 的实测 host 异常所有权缺口已评论，A3 cache 新鲜性不能借 A5 成绩代签。#2663 的 scope-stats 设备入口复位保留 ordinary epoch/读取检查、HBG metadata-only 和 retained transport；其 head `97aaed615` 的验证保留原基线，见[报告](reviews/device-scope-stats-run-init/REPORT.md)。
 
-**当前 C1 PR [#2671](https://github.com/hw-native-sys/simpler/pull/2671)：普通 args-dump 的逐调用 accounting 与 lifetime transport，Ready待用户审核。** Host不再按调用改写设备transport counters；device init发布本次baseline、drop counter、epoch。普通ACK与恢复有本次身份/读取门控，retained credit保留。最终head `2894ac39c` 的C++386/386、Python3525/192、A3四设备154个resource sessions及两runtime L2组、两架构DFX-off构建通过；最终CI19success/1deploy skip包含A5硬件UT，Claude复核approve。初始CI的CPU时间窗口断言与首次local驱动映射失败保留各自原始证据和main对照，见[报告](reviews/args-dump-run-accounting/REPORT.md)。普通错误恢复stop-proof和未知loss表达另记，不把本笔当capture DFX完成。
+**已合入 C1 [#2671](https://github.com/hw-native-sys/simpler/pull/2671)：普通 args-dump 的逐调用 accounting 与 lifetime transport，main `fa6528f4e`。** Host不再按调用改写设备transport counters；device init发布本次baseline、drop counter、epoch。普通ACK与恢复有本次身份/读取门控，retained credit保留。最终head `2894ac39c` 的C++386/386、Python3525/192、A3四设备154个resource sessions及两runtime L2组、两架构DFX-off构建通过；最终CI19success/1deploy skip包含A5硬件UT，Claude复核approve。初始CI的CPU时间窗口断言与首次local驱动映射失败保留各自原始证据和main对照，见[报告](reviews/args-dump-run-accounting/REPORT.md)。普通错误恢复stop-proof和未知loss表达另记，不把本笔当capture DFX完成。
 
 <a id="c1-args-dump-invocation"></a>
 
@@ -393,3 +393,10 @@ PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620) 已合入 main `f
 ### 当前 #2628：A5 HBG scheduler metadata 进入共同 launch
 
 每次 HBG bind 的 resident scheduler metadata 经 HostApi 按值保存，prepare 预留 slot pinned 源，launch 以 metadata→descriptor→Fork 顺序入队。大块 execution image 保持 prepare 上传；Graph Definitions 不另做 H2D。失败与源保活消费 #2620 同一事务与 completion proof，不增加接口版本、公开准备句柄或执行器。PR、成本、板测与 CI 的边界见[本轮报告](reviews/hbg-async-launch-metadata/REPORT.md)。
+
+
+## 2026-10-22 并行增量
+
+- #2671 已合入。普通错误恢复的停机证明修复为 [#2677](https://github.com/hw-native-sys/simpler/pull/2677)，真实runner/producer四组合回归先红后绿；完整交付仍待CI与独立审阅。
+- manifest未知loss为独立本地候选，生产语义消费#2677的stop-proof，组合验收后再交付。
+- [I1静态入口映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实PyPTO shared artifact/CallFrame已在main、#3100已拥有初始化/注册/pending/close。真实framework queue callback→共同Worker.submit仍缺接线，须与owner协调；不等待capture，也不重复初始化实现。当前无framework上板新证据。
