@@ -30,7 +30,7 @@
 <tr>
 <td>普通 args-dump stop proof</td>
 <td>主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归</td>
-<td>基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；<a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 合成head <code>d9808101e</code> 已集入stop-proof、late-publication退出与loss完整性；8个close/read-failure目标通过，完整重建/Claude/CI继续。首head19ed的C++390、Python3525/192与A3定向成绩不移挂</td>
+<td>基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；<a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 最终head <code>154c77af6</code>（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve，最终CI继续，记录不移挂</td>
 </tr>
 <tr>
 <td>ordinary manifest loss 完整性</td>
@@ -44,7 +44,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。上述 stop-proof、loss 项和回归最终组成同一个完整功能 PR：未知停机既不读取producer-held数据，也不输出已证明零丢失的假象。内部子项不机械对应 PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。</p>
+<p>输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。 下一完整C1范围经<a href="reviews/scope-stats-proof-audit/REPORT.md">静态核对</a>为ordinary ScopeStats proof-aware错误关闭：保留host-owned样本、明确未知统计并修正plot消费；新读50项open PR未发现同功能实现，仍保留现DFX作者范围，不转移他们分支。它消费#2677完整common stop(false)，目前未实现/测试，不把一个if判断当交付。上述 stop-proof、loss 项和回归最终组成同一个完整功能 PR：未知停机既不读取producer-held数据，也不输出已证明零丢失的假象。内部子项不机械对应 PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。</p>
 <p><strong>本轮候选刷新仅核对 GitHub 元数据，未据此完成新 diff 审查：</strong> #2626 仍为 Draft <code>f701832b</code>；HBG #2646 已更新为 <code>6cb08c73</code>，#2647 为 <code>4c0eacce</code>，均 Draft，须按新 head 全面审阅。#2625 当前公开 head 仍是 <code>7848e06e</code>；新 <a href="https://github.com/hw-native-sys/simpler/issues/2669">#2669</a> 的 A5 fatal replay 超时发生在未公开的本地 restack 候选，尚未建立在未修改 main 或公开 PR head 上。该故障须在受影响候选验收前分类修复，不把它改写为当前 main 的已证实故障。</p>
 <ol>
 <li>以已合入 #2624 为 TMR eager 基线，对照共同 executor 继续闭合 #2625 的已评论问题，并审 shared resources #2626、HBG #2646/#2647：注册/参数、stream、完成、close 和 graph 引用。TMR 两笔已完成本轮审查；其余候选与 I1 映射尚未整体验收。</li>

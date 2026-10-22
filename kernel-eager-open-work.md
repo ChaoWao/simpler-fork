@@ -400,3 +400,5 @@ PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620) 已合入 main `f
 - #2671 已合入。普通错误恢复的停机证明修复为 [#2677](https://github.com/hw-native-sys/simpler/pull/2677)，真实runner/producer四组合回归先红后绿；完整交付仍待CI与独立审阅。
 - manifest未知loss子项已形成独立验证成果；Claude指出未知close导出0必须同时说明统计未知，故现与stop-proof一起集入#2677，重新验证后统一交付，不另造一笔依赖修复PR。
 - [I1静态入口映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实PyPTO shared artifact/CallFrame已在main、#3100已拥有初始化/注册/pending/close。真实framework queue callback→共同Worker.submit仍缺接线，须与owner协调；不等待capture，也不重复初始化实现。当前无framework上板新证据。
+
+- 下一完整普通DFX错误关闭范围已核对：[ScopeStats静态调查](reviews/scope-stats-proof-audit/REPORT.md)，需要stop proof、host-only partial导出和consumer unknown语义一同闭合，消费最终#2677。仅静态证据，尚未实现；不借此扩写当前args-dump PR。

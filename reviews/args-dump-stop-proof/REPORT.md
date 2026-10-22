@@ -1,7 +1,7 @@
 # Ordinary args-dump stop-proof close
 
 - Base: `fa6528f4e45c42242e2162c2ba0192d09cbd3b88` (#2671 merge).
-- Product PR: [#2677](https://github.com/hw-native-sys/simpler/pull/2677), integrated head `d9808101e9b4080bcbd3752f913794b41e1b8f39`. First-head evidence below belongs to `19ed2e462`.
+- Product PR: [#2677](https://github.com/hw-native-sys/simpler/pull/2677), final documentation head `154c77af6baad138ec8b05b37f2253bb2188c55a` (code-equivalent to tested/reviewed `a547efa3d`). First-head evidence below belongs to `19ed2e462`.
 - Parent tracker: #2666. This is one bounded C1 correctness fix, not capture DFX qualification.
 
 ## Behavior
@@ -49,3 +49,24 @@ The related ordinary ScopeStats proof gap is recorded in KNOWN_ISSUES and the pa
 At d9808101e, full CPU C++390/390 passed in47.45s; Python3525 passed/192 skipped in184.42s after rebuilding at the fixed HEAD. Axis check and strict docs build pass. Final-head A3 task-submit (exclusive device14) passed public args-dump4 cases plus TMR full and HBG full; source/runtime16-file hashes are identical before and after. No A5 local silicon claim or injected hardware hang. Actual Claude re-review and final-head CI remain pending; no full acceptance yet.
 
 GitHub comment4348885168 was replied to with the concrete conditional drain/entry guard and red/green evidence, then resolved. First-head Claude review is preserved separately and is not approval of the expanded final head.
+
+## Second independent review and focused rework
+
+Claude reviewed the entire d9808101e expanded scope and confirmed proof/stop memory ordering and retained compatibility, but found a real host drain-drop counter carryover after unknown close, a multi-lane recovery retry duplication, and documentation exceptions/drift. The parent accepts the carryover and requires the host-only count consumed in its own failed-run boundary. A new real boundary/next-run regression fails on d980. Parallel multi-lane tests reproduce duplicate metadata/payload despite a non-additive counter; that child is correcting successful held-buffer identity bookkeeping per run. The no-record/no-manifest convention is preserved and explicitly documented, rather than extending this fix into a new empty-artifact API. Canonical manifest keys, teardown comment and diagram alignment are corrected. These changes require a new fixed-head qualification; d980 CI/local results remain its own evidence.
+
+## Accepted parallel rework and current head: a547efa3d
+
+- Parent real boundary+clean-successor regression proves d980 leaves a host drain-loss counter pending and taints the next manifest. Unknown close now consumes that host-only counter after stopping its readers.
+- Child commit523ee7a (based exactly on d980) reproduces two-lane duplicate recovery: old artifacts contain5 metadata records/20 bytes instead of2 records/8 bytes, although the drop counter remains10. The parent inspected/accepted run-scoped lane+buffer-address/sequence bookkeeping, lifecycle resets and both failure-lane orders. Child focused128cases and adjacent68cases pass; parent combined8targets pass, including the host-counter regression.
+- Explicit no-record/no-manifest policy is retained and documented; absence does not prove zero loss. Example JSON/key list, teardown contract, diagram alignment and quiesce/residency comments are corrected.
+- Integrated and pushed as a547efa3d, still one product commit11files +947/-102. No independent loss/retry PR. Final-head Python3525/192, strict docs and A3 targeted task-submit pass; final CPP, actual Claude re-review and CI are in progress. Earlier head results are not transferred.
+
+Final-head local completion: CPP390/390 in46.95s, Python3525/192 in195.30s, axis and strict docs pass. Final-head task-submit A3 public4cases plus TMR/HBG full scenes pass;17 source/runtime hashes unchanged. The two resolved ordinary args-dump KNOWN_ISSUES entries are removed; ScopeStats, output-root collision, host scheduling observation and unclassified AIV remain. Final actualClaude/CI still pending.
+
+## Code approval and final documentation delta
+
+Actual Claude approved the complete implementation at a547efa3d after independently rechecking recovery identity/lifecycle, stop ordering, counter consumption, proof disjunction and retained compatibility. Its remaining Should was the §7.4 summary matrix. Final154c77af6 adds exactly2lines/removes1 in that doc: record-loss confidence in the buffer-full row and the unproven-close/no-artifact row. All other tracked files, including source/tests/build/CI, are byte-identical to a547. Docs hooks and strict build pass. No a547 runtime result is relabelled as a154c77 execution; a final doc/equivalence verification and final-head CI are pending.
+
+## Final independent review acceptance
+
+Actual Claude approved a547 implementation, then independently verified154c77 changes only the summary matrix and resolves the last Should. Final verdictapprove, all Must/Should closed. Optional Consider items remain explicitly dispositioned, not silently described as fixed. See review-disposition.md and per-head independent reports. Final154c77 CI still pending; product worktree clean and fixed.

@@ -24,8 +24,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- #2671 已合入 main `fa6528f4e`；原head `2894ac39c` 的完整验证仍归[原报告](reviews/args-dump-run-accounting/REPORT.md)。当前 [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 合成head `d9808101e`，将ordinary args-dump停机证明、安全停止追赶publication与unknown loss manifest组成同一完整功能。最终源码C++390/390、Python3525/192、strict docs/axis及A3定向task-submit通过；Claude最终复核和CI仍在进行，未宣布完整通过。见[主执行报告](reviews/args-dump-stop-proof/REPORT.md)与[第一版独立审阅](reviews/args-dump-stop-proof/claude-review-19ed2e462.md)。
-- 并行分支按主执行验收后集成，不按子agent机械拆PR。[loss子项证据](reviews/args-dump-loss-accounting/REPORT.md)保留候选指纹，代码已集入#2677，不再另提loss PR。[I1静态映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实PyPTO#3100现owner和queue callback→共同Worker.submit缺口；不重复初始化，不以静态映射代替框架上板。
+- #2671 已合入 main `fa6528f4e`，历史验证仍归[原报告](reviews/args-dump-run-accounting/REPORT.md)。当前 [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6` 与已验证的a547仅差文档汇总表；C++390/390、Python3525/192、strictdocs/axis和A3定向task-submit成绩归a547，最终docs检查通过。实际Claude最终approve、全部Must/Should关闭；**最终154c77 CI仍待完成**，不据此宣称可以合入。见[报告](reviews/args-dump-stop-proof/REPORT.md)和[意见处置](reviews/args-dump-stop-proof/review-disposition.md)。
+- 并行工作已验收集成：stop-proof、停止追赶publication、host计数结清、loss完整性与双lane重试去重共同组成#2677的完整关闭行为，不按agent机械拆PR。[I1静态映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实#3100归属与实际queue接线缺口；[ScopeStats下一完整范围](reviews/scope-stats-proof-audit/REPORT.md)尚仅静态核查，未实施、不扩大当前PR。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 
 - 历史路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；#2660的代码和测试另固定 main `3b5836465`。完整API层次审查保留页内基线；当前#2671验证见上条，不把历史只读核对或旧测量移挂到当前head。

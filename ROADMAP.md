@@ -42,11 +42,11 @@
 
 | 工作项 | 依赖 / 写入边界 | 当前产物与验收 |
 |---|---|---|
-| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) 合成head `d9808101e` 已集入stop-proof、late-publication退出与loss完整性；8个close/read-failure目标通过，完整重建/Claude/CI继续。首head19ed的C++390、Python3525/192与A3定向成绩不移挂 |
+| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6`（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve，最终CI继续，记录不移挂 |
 | ordinary manifest loss 完整性 | 子 agent 独立改统计与 manifest，保留 retained 合同；集成时核对与上一项的 collector 重叠 | [并行成果21537980b](reviews/args-dump-loss-accounting/REPORT.md) 已通过初轮组合验收：16目标160cases；独立审阅确认unknown manifest属于同一关闭行为，现整体集入#2677并重验，不另拆PR；未读取或读取失败不能将未知 loss 表示为已证明的零 |
 | I1 实际入口与缺口映射 | 完成回归子项的 agent 转只读调查，不改已有 owner 的候选实现 | 已接受[静态入口报告](reviews/kernel-i1-entry-mapping/REPORT.md)：PyPTO main 已有 artifact/CallFrame；#3100 占初始化 owner，缺真实 queue callback→Worker.submit 接线；无新增上板成绩 |
 
-输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。上述 stop-proof、loss 项和回归最终组成同一个完整功能 PR：未知停机既不读取producer-held数据，也不输出已证明零丢失的假象。内部子项不机械对应 PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。
+输出目录冲突已有 #2655 output_root/path 工作，先对齐该 owner，不重复实现。 下一完整C1范围经[静态核对](reviews/scope-stats-proof-audit/REPORT.md)为ordinary ScopeStats proof-aware错误关闭：保留host-owned样本、明确未知统计并修正plot消费；新读50项open PR未发现同功能实现，仍保留现DFX作者范围，不转移他们分支。它消费#2677完整common stop(false)，目前未实现/测试，不把一个if判断当交付。上述 stop-proof、loss 项和回归最终组成同一个完整功能 PR：未知停机既不读取producer-held数据，也不输出已证明零丢失的假象。内部子项不机械对应 PR。无新增 WudiTask/Hub 或已部署执行锁的声明；硬件由主执行统一通过 task-submit 调度。
 
 
 **本轮候选刷新仅核对 GitHub 元数据，未据此完成新 diff 审查：** #2626 仍为 Draft `f701832b`；HBG #2646 已更新为 `6cb08c73`，#2647 为 `4c0eacce`，均 Draft，须按新 head 全面审阅。#2625 当前公开 head 仍是 `7848e06e`；新 [#2669](https://github.com/hw-native-sys/simpler/issues/2669) 的 A5 fatal replay 超时发生在未公开的本地 restack 候选，尚未建立在未修改 main 或公开 PR head 上。该故障须在受影响候选验收前分类修复，不把它改写为当前 main 的已证实故障。
