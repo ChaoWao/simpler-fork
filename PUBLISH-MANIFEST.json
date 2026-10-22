@@ -1,5 +1,5 @@
 {
-  "snapshot_date": "2026-10-21",
+  "snapshot_date": "2026-10-22",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
   "latest_roadmap_source_baseline": "fdcbdcc9502195f7837030cf3c130f75f83d3719",
@@ -1310,9 +1310,9 @@
     {
       "path": "reviews/device-scope-stats-run-init/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "642fc8ac5d1331273e10794e05e1504d07386c39a9c7e42786d57b26132cf5f2",
-      "published_sha256": "642fc8ac5d1331273e10794e05e1504d07386c39a9c7e42786d57b26132cf5f2",
-      "bytes": 3478
+      "source_sha256": "2e088b11bec0b44cd54510891833e8c643db33880edfec44f32236384dd204c5",
+      "published_sha256": "2e088b11bec0b44cd54510891833e8c643db33880edfec44f32236384dd204c5",
+      "bytes": 3987
     },
     {
       "path": "reviews/direct-native-chip-worker/REPORT.md",
@@ -1564,5 +1564,5 @@
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
   "latest_validation_head": "949fb596ce954145ec7c3027ee2fd1b3c148cf12",
-  "pending_pr_head": "949fb596c"
+  "pending_pr_head": "d8f2696d0c3482f7fbfcc124dd9d2b1f321ed1d4"
 }

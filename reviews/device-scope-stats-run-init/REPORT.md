@@ -1,6 +1,6 @@
 # Scope-stats 设备入口初始化：C1 增量
 
-本轮基于 main `fdcbdcc95`。最终本地提交 `949fb596c`，单提交分支 `feat/device-scope-stats-run-init`。[PR #2663](https://github.com/hw-native-sys/simpler/pull/2663) 为 Draft，本地检查已完成，A3 板测排队中。
+本轮基于 main `fdcbdcc95`。生产功能验证提交 `949fb596c`，当前单提交 `d8f2696d0`（仅把新硬件测试的整数字面量改成布尔值，src/docs 树相同），单提交分支 `feat/device-scope-stats-run-init`。[PR #2663](https://github.com/hw-native-sys/simpler/pull/2663) 为 Draft，本地检查已完成，A3 板测排队中。
 
 ## 功能边界
 
@@ -28,6 +28,9 @@
 
 两轴复核剩余 comment 契约已同步：host begin 不再有 re-stamp 失败/日志；device begin 在初始化 leader，close 仍在 orchestration 退出。没有修改历史报告的测试归属。
 
-板测通过 task-submit 提交，任务 `task_20261021_234819_391627928975`。截至当前正在等待共享设备锁；没有绕过排队。脚本先验 public owned/borrowed 连续 ON→OFF→ON→ON 与 SDK 桩，再验 scope-stats 场景和非 SDMA/non-level4 普通 sweep。设备日志、二进制 hash、固定 basetemp、每约10秒队列/设备占用快照均使用独立路径；采样不能排除间隙内旁路占用。未在本地验证 A5 silicon。
+板测通过 task-submit 提交，当前任务 `task_20261022_000018_70153720238`。截至当前正在等待共享设备锁；没有绕过排队。脚本先验 public owned/borrowed 连续 ON→OFF→ON→ON 与 SDK 桩，再验 scope-stats 场景和非 SDMA/non-level4 普通 sweep。设备日志、二进制 hash、固定 basetemp、每约10秒队列/设备占用快照均使用独立路径；采样不能排除间隙内旁路占用。未在本地验证 A5 silicon。
 
 不增加新公开 API、版本查询、PreparedCall 或第二执行器。不开放 capture DFX，不改变 HBG 的 scope-stats 能力。不声称修复未分类 AIV。与 #2633 初始化预热和 #2625 图 owner 分开记账。
+
+
+2026-10-22 更新：首个上板 task `task_20261021_234819_391627928975` 在新增测试设置 `CallConfig.enable_scope_stats` 时 TypeError，未到 kernel launch。原因是 nanobind 的 bool 属性拒绝 int；修为 `(True, False, True, True)`，直接配置烟测通过，pre-commit 通过。重建最终 extension 后重新排队，未把旧失败叫作设备异常或撤回。
