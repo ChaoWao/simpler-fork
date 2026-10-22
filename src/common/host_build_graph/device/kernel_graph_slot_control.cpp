@@ -224,6 +224,10 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_regis
     return status == hbg::GraphSlotStatus::Ok ? 0 : -1;
 }
 
+namespace {
+hbg::GraphSlotDetachRequest last_detached{};
+}  // namespace
+
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detach_execution_slot(void *arg) {
     if (arg == nullptr) {
         LOG_ERROR("%s", "HBG execution slot detach failed: null control record");
@@ -236,7 +240,12 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detac
         return -1;
     }
     auto *registry = reinterpret_cast<hbg::GraphSlotRegistry *>(detach.registry_address);
-    if (registry != hbg::current_graph_slot_registry()) {
+    auto *current = hbg::current_graph_slot_registry();
+    if (current == nullptr) {
+        cache_invalidate_range(&last_detached, sizeof(last_detached));
+        return std::memcmp(&last_detached, &detach, sizeof(detach)) == 0 ? 0 : -1;
+    }
+    if (registry != current) {
         LOG_ERROR("%s", "HBG execution slot detach failed: registry is not currently bound");
         return -1;
     }
@@ -252,5 +261,7 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detac
         LOG_ERROR("%s", "HBG execution slot detach failed: binding changed during control operation");
         return -1;
     }
+    last_detached = detach;
+    cache_flush_range(&last_detached, sizeof(last_detached));
     return 0;
 }

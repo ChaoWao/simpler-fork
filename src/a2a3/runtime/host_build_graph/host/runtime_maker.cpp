@@ -1773,9 +1773,8 @@ extern "C" int copy_back_run_outputs_impl(const Runtime *runtime, const HostApi 
 
 extern "C" const char *const *runtime_extra_aicpu_symbols(size_t *count) {
     static const char *symbols[] = {
-        "simpler_aicpu_l1_hbg_register_execution_slot",
-        "simpler_aicpu_l1_hbg_detach_execution_slot",
-
+        "simpler_aicpu_l1_hbg_register_execution_slot", "simpler_aicpu_l1_hbg_detach_execution_slot",
+        "simpler_aicpu_l1_hbg_register_callable", "simpler_aicpu_l1_hbg_revoke_callable"
     };
     if (count != nullptr) *count = sizeof(symbols) / sizeof(symbols[0]);
     return symbols;

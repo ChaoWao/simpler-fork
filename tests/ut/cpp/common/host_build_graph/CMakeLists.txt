@@ -111,8 +111,11 @@ hbg_case(test_hbg_execution_validation.cpp
 
 hbg_case(test_hbg_bind_ledger.cpp
     SOURCES
+        ${SIMPLER_SRC}/common/platform/shared/aicpu/platform_entry_args.cpp
+        ${SIMPLER_SRC}/common/platform/sim/aicpu/platform_aicpu_affinity.cpp
         ${HBG_HOST_DIR}/kernel_graph_template.cpp
         ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution_entry.cpp
         ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution_validation.cpp
         ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_packet_reader.cpp
         ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_slot_control.cpp
@@ -198,4 +201,14 @@ hbg_case(test_hbg_tensor_access.cpp
 # Everything else here is a case of this runtime with nothing beyond the
 # directory's own contract, built for both arches. Declaring one above takes it
 # out of this sweep, so the exceptions are the declarations themselves.
+hbg_case(test_hbg_kernel_registration.cpp ORCH
+    SOURCES
+        ${SIMPLER_SRC}/common/platform/sim/aicpu/platform_aicpu_affinity.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution_entry.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_execution_validation.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_packet_reader.cpp
+        ${SIMPLER_SRC}/common/host_build_graph/device/kernel_graph_slot_control.cpp
+        ${SIMPLER_SRC}/common/platform/shared/aicpu/platform_entry_args.cpp)
+
 simpler_ut_glob_cases(hbg_case)

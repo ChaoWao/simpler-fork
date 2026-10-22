@@ -40,7 +40,9 @@ inline bool is_valid_graph_tensor_descriptor(const simpler::hbg::TensorData &ten
     if (tensor.owner_task_id.space() == TaskId::Space::PARAM) return tensor.buffer.addr == 0;
     if ((extent + tensor.start_offset) * get_element_size(tensor.dtype) > tensor.buffer.size) return false;
     if (tensor.buffer.addr >= HEAP_VIRTUAL_BASE) return true;
-    return tensor.address_space == AddressSpace::DEVICE && is_supported_external_tensor_layout(tensor);
+    // Definition-local outputs acquire backing only when their body materializes.
+    return (tensor.buffer.addr != 0 || tensor.owner_task_id.space() == TaskId::Space::SUB_TASK) &&
+           tensor.address_space == AddressSpace::DEVICE && is_supported_external_tensor_layout(tensor);
 }
 
 inline bool

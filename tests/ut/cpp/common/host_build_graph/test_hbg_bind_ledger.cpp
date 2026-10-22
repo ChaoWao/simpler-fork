@@ -46,10 +46,15 @@
 #include "host_build_graph/host_graph_build.h"
 #include "host_build_graph/kernel_resource_requirements.h"
 #include "host_build_graph/kernel_graph_template.h"
+#include "aicpu/platform_aicpu_affinity.h"
+#include "aicpu/platform_entry_args.h"
+#include "host_build_graph/kernel_callable_registration.h"
 #include "host_build_graph/kernel_graph_execution.h"
+#include "host_build_graph/kernel_graph_execution_entry.h"
 #include "host_build_graph/kernel_graph_slot_control.h"
 #include "host_build_graph/kernel_graph_packet_reader.h"
 #include "host_build_graph/kernel_graph_packet_parser.h"
+#include "host_build_graph/device/graph_image_source.h"
 #include "host_build_graph/host/dep_gen_host_graph.h"
 #include "host_build_graph/host/host_tensor_access.h"
 #include "host/raii_scope_guard.h"
@@ -2705,6 +2710,36 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     });
     const simpler::kernel::PreparedInvocationView trusted{identity.callable_id, 0, 0, identity.generation};
     hbg::GraphExecutionPreparation prepared;
+    simpler::kernel::HbgCallableBinding live{
+        reinterpret_cast<uint64_t>(&runtime), 7, identity.generation, identity.callable_id, 0, 0, 0
+    };
+    ASSERT_EQ(simpler_aicpu_l1_hbg_register_callable(&live), 0);
+    RAIIScopeGuard callable_revoke([&live] {
+        EXPECT_EQ(simpler_aicpu_l1_hbg_revoke_callable(&live), 0);
+        set_platform_entry_args(0, {});
+    });
+    platform_aicpu_affinity_set_thread_idx(0);
+    std::vector<std::byte> invocation(LAUNCH_ENVELOPE_HEADER_BYTES + second.bytes);
+    std::memcpy(invocation.data() + LAUNCH_ENVELOPE_HEADER_BYTES, second.storage.data(), second.bytes);
+    PlatformEntryArgs launch_view{};
+    launch_view.args_base = invocation.data();
+    launch_view.offset = LAUNCH_ENVELOPE_HEADER_BYTES;
+    launch_view.source = static_cast<uint32_t>(EntryArgsSource::HbgKernelInvocation);
+    launch_view.graph_offset = LAUNCH_ENVELOPE_HEADER_BYTES;
+    launch_view.graph_bytes = second.bytes;
+    launch_view.graph_source = static_cast<uint32_t>(GraphSectionSource::RestoredSlot);
+    set_platform_entry_args(0, launch_view);
+    ASSERT_EQ(hbg::restore_kernel_graph(&runtime), 0);
+    EXPECT_EQ(runtime.dev.host_total_tasks, build.total_tasks);
+    EXPECT_EQ(runtime.get_graph_section_source(), GraphSectionSource::RestoredSlot);
+    const auto reader = graph_image_view_for_reader(runtime);
+    EXPECT_EQ(reader.section, reinterpret_cast<const std::byte *>(registration.destinations[2].address));
+    EXPECT_GT(reader.bytes, 0U);
+    ASSERT_EQ(hbg::retire_kernel_graph(&runtime, 0), 0);
+    ASSERT_EQ(simpler_aicpu_l1_hbg_revoke_callable(&live), 0);
+    EXPECT_NE(hbg::restore_kernel_graph(&runtime), 0);
+    ASSERT_EQ(simpler_aicpu_l1_hbg_register_callable(&live), 0);
+    set_platform_entry_args(0, {});
     EXPECT_EQ(
         hbg::validate_graph_packet(second.storage.data(), second.bytes, hbg::GraphPacketAddress::DeviceCopy),
         hbg::GraphPacketStatus::InvalidHeader

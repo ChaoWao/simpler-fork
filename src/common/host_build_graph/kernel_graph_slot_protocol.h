@@ -109,7 +109,10 @@ static_assert(offsetof(GraphSlotRegistration, destinations) == 40);
 static_assert(offsetof(GraphSlotRegistration, registry) == 104);
 static_assert(offsetof(GraphSlotRegistration, checksum) == 120);
 static_assert(sizeof(GraphSlotRegistry) == 320 && alignof(GraphSlotRegistry) == 64);
-static_assert(sizeof(GraphSlotDetachRequest) == 32 && std::is_trivially_copyable_v<GraphSlotDetachRequest>);
+static_assert(
+    sizeof(GraphSlotDetachRequest) == 32 && std::is_trivially_copyable_v<GraphSlotDetachRequest> &&
+    std::is_standard_layout_v<GraphSlotDetachRequest>
+);
 static_assert(offsetof(GraphSlotRegistry, phase) == 8);
 static_assert(offsetof(GraphSlotRegistry, registration) == 64);
 static_assert(offsetof(GraphSlotRegistry, execution) == 192);

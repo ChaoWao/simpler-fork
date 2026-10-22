@@ -59,4 +59,8 @@ GraphSlotStatus poison_graph_execution_slot(GraphSlotRegistry *registry) noexcep
 // not report this symbol. CANN HostArgs may be unaligned, so the implementation
 // copies the fixed-size record before inspecting it.
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_register_execution_slot(void *arg);
+// arg names a readable GraphSlotDetachRequest; null/malformed/foreign identities fail
+// with -1. Exact detachment and retry of the last successful identity return 0.
+// The Host owner retains registry storage and excludes execution until this
+// cold control task has completed; device control entries do not free resources.
 extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_detach_execution_slot(void *arg);
