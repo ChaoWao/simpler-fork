@@ -1,6 +1,6 @@
 # Simpler 功能演进路线图
 
-> **发布快照：2026-10-19。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > 状态：架构路线图。P0.1 eager-init core 与 P0.2 lifecycle/teardown
 > correctness 已交付；P0.2 的 admission、动态 eligibility、cooperative init
@@ -841,6 +841,8 @@ payload-in-Device-GM 的 persistent-kernel 示例，演示正确的 lifetime、b
 backpressure 和 shutdown；用户或上层库负责自定义 queue schema、ring/index
 布局、opcode、batching、MPMC 算法和业务循环。只有被多个上层反复证明通用且
 能够独立验收的同步原语，才从示例提升为 runtime API。
+
+应用决定同步协议，backend 负责访问原语的可见性、顺序和支持的原子性；“共享区间可写”不自动承诺 coherence。SPSC 的验收是应用能在仓库外只用公开资源/访问接口构建不同 queue，不要求 runtime 公开 queue 工厂。runtime 内部调度队列和资源 drain 仍归 runtime。整体职责与代码证据见 [L3+ 设计](l3plus-design.md)。
 
 ## 3. 定向调度与上下级并行
 

@@ -209,7 +209,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-19 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-10-21 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
 <div class="viz-root">
 
 <h1>simpler · 设计轨道与在飞项全景</h1>
@@ -398,7 +398,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "RA-11",
           "nm": "最小同步原语 ＋ 首个 SPSC 示例",
           "p": "flight",
-          "hnote": "🟡 <b>部分交付：#2096 已合入 main</b>（<code>ae234fad0</code>，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head <code>2297a9a4f29a</code> 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。schema/policy 属上层，常驻循环归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。合入不关闭 RA-11/P3④；具名证据见 <a href=\"review/pr-2096.md\">评审与合入记录</a>。 #2635 endpoint 公共入口在飞；850a36bd9 的 finalize identity/slot 复用须修并重验。",
+          "hnote": "#2096 部分交付；区间/访问保证归 runtime，queue 协议属上层示例。#2635 新 head 不沿用旧评审结论。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -504,7 +504,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-6",
           "nm": "mpirun 启动与发现 ＋ 跨-L3 域接口",
           "p": "flight",
-          "hnote": "🟡 <b>mpirun 启动/派发已交付，统一域 API 待交付</b>。#2593 <code>3351950f4</code> 将 communicator control state 保留在 chip child；main 仍区分 allocate_domain 与 allocate_global_domain。#2594 为统一成员/rank/查找/复用/Buffer/释放的主登记，RA-12/RA-13/RA-14/RA-15、DS-3/DS-9 分别承接子契约。#1888 OPEN 是 MPI direct 候选；部署/发现与共享窗口能力分开验收。",
+          "hnote": "#2634 direct MPI、#2639 统一域入口/配置复用已合入；group/TCP、资源退休与生产清理仍分别验收。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -1985,6 +1985,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-10-21 · L3+ 设计原则与代码地图",
+        "b": "main <code>fdcbdcc95021</code>；<a href=\"l3plus-design.md\">设计入口</a>区分编排树、任务 DAG 与资源访问关系，并追踪启动、run、建域及清理。<b>判断更正：</b>SPSC 可复用不代表应进入 runtime 公共接口；上次评审对公共入口的认可须限定到资源/访问机制。应用选择同步协议，backend 保证必要的可见性与顺序。<b>代码判据：</b>begin_run 的 pending FIFO 接纳不等于立即取得 native slot；#2639 的统一建域入口不等于 local/global 生命周期已统一；#2634 direct MPI 合入不等于 group 已退役。<b>覆盖：</b>相对 10 月 19 日 13 条 main 合入及新 open 项登记；全目标基线仍为 10 月 18 日。源码/测试入口已读，本轮不宣称硬件 PASS；#2635 新 head 不继承旧 head 的缺陷结论。"
+      },
       {
         "t": "2026-10-19 · #2635 · endpoint 公共 API 评审",
         "b": "head <code>850a36bd9</code>，main <code>2a6d2d50c</code>；RA-11 的公共入口方向符合设计，但建议 request changes：finalize 释放 slot 后才消费 identity，后继可被误归属或清空；三个集成冲突。<b>判据：</b>prepare 端 admission 后清零不代表 finalize 端安全；slot-local 诊断也要跟 run 生命周期一起退休。提取实际函数的 CPU 调度 harness 有无复用阳性对照，不能冒充完整硬件复现。CI 实际树 <code>5ef32743</code> 的双架构正常场景 PASS，故障 ST 限 sim；不向最新 main 外推。旧评论 addressed 标记与当前源码分别核对，原有 HOST Buffer 校验缺口不冒充新增回归。<a href=\"review/pr-2635.md\">完整评审</a>；不推进全目标核验基线。"

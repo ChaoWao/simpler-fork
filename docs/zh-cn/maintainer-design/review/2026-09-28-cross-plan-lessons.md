@@ -1,6 +1,6 @@
 # 两套方案的借鉴评估
 
-> **发布快照：2026-10-19。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 
 日期：2026-09-28。性质：来源评估与取舍记录；当前吸收的目标约束以 [访问与退休契约](../worker-memory-model/access-retirement-contract.md)、[用户面](../worker-memory-model/user-surface.md) 和 [分线 C/D](../track-boundaries.md) 为准。下文保留评估时的建议口径；工作项状态只见 [work-items](../work-items.md)。
 

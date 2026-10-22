@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-10-19。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -88,6 +88,8 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
  | 同步原语（publish/observe/wait，由 counter `notify/test/wait` 提升为 Buffer-backed Attachment 通用 API）＋ 首个有界 SPSC 示例 | **`RA-11`**，只此一份工作项与验收清单 |
  | queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
  | 常驻循环本身的契约（`orch_fn` while 循环 · STOP · drain） | **`EX-2`** |
+
+**公共职责约束**：RA-11 提供受管理区间及必要的访问/可见性保证，SPSC 是受 CI 看护的上层示例；应用选择信号含义、握手与 queue 算法。runtime 自己的调度队列、取消与 drain 不转交应用。公开 queue 工厂不能仅凭复用价值进入核心接口；验收应证明仓库外能只用公开基础接口实现不同 queue，见 [L3+ 设计](l3plus-design.md)。
 
 ⇒ **`RA-11` 与 `EX-2` 不重复排期**：前者做原语，后者做循环，示例同时用到两者。
 
