@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-21",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "3b58364657c15c14c753bea44824ebe04fb8f23c",
-  "pending_pr": 2660,
+  "latest_roadmap_source_baseline": "fdcbdcc9502195f7837030cf3c130f75f83d3719",
+  "pending_pr": 2663,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,16 +22,16 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "3f3027d8ea72896c13c9379cfd9fe75e82c00670b8c1d6e921d2f1ddfad03dd3",
-      "published_sha256": "3f3027d8ea72896c13c9379cfd9fe75e82c00670b8c1d6e921d2f1ddfad03dd3",
-      "bytes": 69872
+      "source_sha256": "a752933f8266b1bb9310d52a85cf4101b30b5d680dfe52b7cc6c46c3cc859ba6",
+      "published_sha256": "a752933f8266b1bb9310d52a85cf4101b30b5d680dfe52b7cc6c46c3cc859ba6",
+      "bytes": 70941
     },
     {
       "path": "SOURCE_BASELINE.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1a57d4f6c9bb2ee9244154f041c269de02741b12032bda8c07278c809279a361",
-      "published_sha256": "1a57d4f6c9bb2ee9244154f041c269de02741b12032bda8c07278c809279a361",
-      "bytes": 13063
+      "source_sha256": "3878262bd00490a0e0ccf66e5009a08f9f20bbe727db39514e55ba7d868c18e8",
+      "published_sha256": "3878262bd00490a0e0ccf66e5009a08f9f20bbe727db39514e55ba7d868c18e8",
+      "bytes": 13326
     },
     {
       "path": "aiv-evidence-plan.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "786c3c437e34599c35fff84f1504d971b3fe9e7565e803f3fd8fe9c3fe0e12ff",
-      "published_sha256": "786c3c437e34599c35fff84f1504d971b3fe9e7565e803f3fd8fe9c3fe0e12ff",
-      "bytes": 52253
+      "source_sha256": "3f926908c458d62f2487a224fe05e80e9ac5cefeec8b0cb2b4cd3852af9a643f",
+      "published_sha256": "3f926908c458d62f2487a224fe05e80e9ac5cefeec8b0cb2b4cd3852af9a643f",
+      "bytes": 52773
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "c77a4e947d28c80e72d2773e9cc902664a51975539624b2d699c0868c27b516e",
-      "published_sha256": "33a5c1f246cd555c11e4789aa7a56212c30731491f24b47416293c426a4e7a2d",
-      "bytes": 88079
+      "source_sha256": "f5fd7a7a425eb2f82345a3f571e919a36303068d4fa66305fe97a989dfe12f68",
+      "published_sha256": "b375eef42f9d0e2277dc982090e861d0f199ddc486c40b7a0cf5b36266bbb514",
+      "bytes": 89334
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1308,6 +1308,13 @@
       "bytes": 5999
     },
     {
+      "path": "reviews/device-scope-stats-run-init/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "642fc8ac5d1331273e10794e05e1504d07386c39a9c7e42786d57b26132cf5f2",
+      "published_sha256": "642fc8ac5d1331273e10794e05e1504d07386c39a9c7e42786d57b26132cf5f2",
+      "bytes": 3478
+    },
+    {
       "path": "reviews/direct-native-chip-worker/REPORT.md",
       "source_collection": "kernel-design",
       "source_sha256": "6d5b9ae4ecedef76b051dbb71e453c21cb8e84beb2b6c05452d66a5e4f2af8b8",
@@ -1352,9 +1359,9 @@
     {
       "path": "reviews/invocation-local-args-dump/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "16f41421b65231da9ce5899e6e095344174b8b510a1b63c46e8bd4488509d38c",
-      "published_sha256": "16f41421b65231da9ce5899e6e095344174b8b510a1b63c46e8bd4488509d38c",
-      "bytes": 6709
+      "source_sha256": "14cbe8126719a403d5dfdfc051a6edac332318fbad1c71181206f4eded9eee17",
+      "published_sha256": "14cbe8126719a403d5dfdfc051a6edac332318fbad1c71181206f4eded9eee17",
+      "bytes": 6712
     },
     {
       "path": "reviews/issue2460-tensor-buffer-design.md",
@@ -1553,8 +1560,9 @@
       "bytes": 10657
     }
   ],
-  "latest_merged_pr": 2653,
+  "latest_merged_pr": 2624,
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
-  "latest_validation_head": "b59f6fdec9ed90381301dbdf8d9ea9481e25a001"
+  "latest_validation_head": "949fb596ce954145ec7c3027ee2fd1b3c148cf12",
+  "pending_pr_head": "949fb596c"
 }

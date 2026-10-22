@@ -1,6 +1,6 @@
 # 逐调用 args-dump 选择：C1 交付与验证
 
-日期：2026-10-21。PR [#2660](https://github.com/hw-native-sys/simpler/pull/2660) 待审，未合入。生产改动基于 Simpler main `3b58364657c15c14c753bea44824ebe04fb8f23c`；功能验证 head `f24d0a7367685492f9b65cea1a7217aacabfcc92`，最终单提交 `b59f6fdec`（仅两条 UT 的字节快照保存方式不同；src/python/docs 树相同）。这是共同执行路径的增量，不是 capture/replay 或全路线验收。
+日期：2026-10-21。PR [#2660](https://github.com/hw-native-sys/simpler/pull/2660) 已合入 `ef17033ba`。生产改动基于 Simpler main `3b58364657c15c14c753bea44824ebe04fb8f23c`；功能验证 head `f24d0a7367685492f9b65cea1a7217aacabfcc92`，最终单提交 `b59f6fdec`（仅两条 UT 的字节快照保存方式不同；src/python/docs 树相同）。这是共同执行路径的增量，不是 capture/replay 或全路线验收。
 
 ## 本笔做什么
 

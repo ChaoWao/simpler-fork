@@ -22,13 +22,17 @@
 
 ## 1. 现在做什么
 
+**本轮源码核对基线：main `fdcbdcc95`。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
+
+**当前 PR [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（Draft）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，跳过初始化或读回失败禁止导出前次统计。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。PR 与最终验证见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
+
 <a id="c1-args-dump-current"></a>
 
-**当前 C1 交付：逐调用 args-dump 选择（[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 待审，未合入）。** 本笔基于 main `3b5836465`（含 #2630/#2639）；把共享 pool header 的可变级别与同步读回移出 host admission，让本次级别随既有 descriptor 异步发布，六个 scheduler init 显式消费。HBG 使用一字 reserved，TMR 使用对齐空隙，四组合大小/握手地址不变；普通 counter reset 与 retained 队列/游标寿命保持原合同。沿用共同 executor，不重复现有 TMR/HBG capture 候选。初筛候选范围不等于全量审查完成；I1 映射仍是下一步。验证、负对照和边界见[本笔报告](reviews/invocation-local-args-dump/REPORT.md)。下方已合入记录保留各自基线。
+**当前 C1 交付：逐调用 args-dump 选择（[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 已合入 `ef17033ba`）。** 本笔基于 main `3b5836465`（含 #2630/#2639）；把共享 pool header 的可变级别与同步读回移出 host admission，让本次级别随既有 descriptor 异步发布，六个 scheduler init 显式消费。HBG 使用一字 reserved，TMR 使用对齐空隙，四组合大小/握手地址不变；普通 counter reset 与 retained 队列/游标寿命保持原合同。沿用共同 executor，不重复现有 TMR/HBG capture 候选。初筛候选范围不等于全量审查完成；I1 映射仍是下一步。验证、负对照和边界见[本笔报告](reviews/invocation-local-args-dump/REPORT.md)。下方已合入记录保留各自基线。
 
 **下一步（接管后统一安排）：先做双 runtime 候选审查，同时梳理 I1 的真实消费者入口。**
 
-1. 对照 main 与共同 executor，审 TMR #2624/#2625、shared resources #2626、HBG #2646/#2647 的真实 stacked diff：注册/参数、stream、完成、close 和 graph 引用。分别写明可接收范围、重复实现和缺口；本轮尚未完成该源码审查。
+1. 以已合入 #2624 为 TMR eager 基线，对照共同 executor 继续闭合 #2625 的已评论问题，并审 shared resources #2626、HBG #2646/#2647：注册/参数、stream、完成、close 和 graph 引用。TMR 两笔已完成本轮审查；其余候选与 I1 映射尚未整体验收。
 2. I1 从真实 compile/load 产物到 public Worker/native bridge 建立调用映射，核实旧 integration 的迁移与重叠。I2/I3 可并行准备真实输入、参考输出、KV/MTP 状态和请求测试；eager 与 capture 按各自 runtime 门槛接通，不等所有 capture 工作完成才做 eager 消费者。
 3. V1 按 #2658 验收现有普通 Async 业务组合；它不等待 kernel capture。输入权限、长序列输出差异和性能归因独立闭合。
 
@@ -64,7 +68,7 @@ CallConfig + 既有 PMU env override
 
 **四仓交接已纳入本路线。** 原 manager 目录计划移除；[接管入口](kernel-mode-cross-repo-handoff.md) / [HTML](kernel-mode-cross-repo-handoff.html)保存原提示词、Pipeline A/DFX 正文和证据索引。依赖见 §2，总交付见 §3，I1–I3/V1 的具体范围见 [§8 跨仓交付](#cross-repo-delivery)。原作者分支、自动化和未承诺任务不由文档迁移接管。
 
-#2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。 #2624 已跟到 main `7d27e6104`；#2625 叠加其上。#2626/#2646/#2647 当前均为 draft，描述的完整实现不能算主线已验收。#2605 vLLM 固定 eager 的两轮 16 请求短序列已通过，但 128-token 与参考输出不一致；K2c 业务资格不能据此标记完成。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。
+#2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。 #2624 已 squash 合入 `fdcbdcc95`；#2625 的本轮审阅固定于 `7848e06e`，不能把该 stacked snapshot 当作当前 main。#2626/#2646/#2647 当前均为 draft，描述的完整实现不能算主线已验收。#2605 vLLM 固定 eager 的两轮 16 请求短序列已通过，但 128-token 与参考输出不一致；K2c 业务资格不能据此标记完成。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。
 
 #2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head `27098ab9` 的完整 17 项 CI 已通过；其合入提交为 `a8c682a32`，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。
 
@@ -148,7 +152,7 @@ S1/S2 与 K1/K2 的共同 eager 生产接线已交付；K2 的实际框架/失�
 | **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **#2638 已合入 `2a6d2d50c`**：集中 loader 所有权与 typed lookup，context/slot 共持 module；保留既有导出合同。图的长期引用仍须由 C2 接入，不据本笔标记整阶段完成 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
 | **K1 · 借用环境与参数** | Kernel 接入共同执行层，无 tensor staging 和设备所有权 | A + S2 | **native 与 public Worker eager 接线已交付；完整资格分别验收**：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 由 #2599 接入，#2604/#2606/#2608/#2610–#2618 补齐相应语义与寿命。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 [当前记录](kernel-eager-open-work.md) | TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过 |
 | **K2 · caller 顺序与框架接入** | Native 和框架可用的 kernel eager | K1 | **生产接线已交付，完整资格待验收**：#2567/#2572/#2578、#2580–#2599 与后续语义修复接通共同 caller/环境/public Worker。I1 补实际框架调用；#2605 短序列通过但 128-token 输出不一致，不能据此关闭 K2。见 [剩余范围](kernel-eager-open-work.md) | caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过 |
-| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择待审，未合入；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
+| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择已合入 ef17033ba；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
 | **C2 · 图资源所有权** | capture wrapper、generation、bank/event/source 的图引用 | C1 + S3 | **未合入；已有候选实现**：#2625 TMR，#2626/#2646/#2647 共同资源与 HBG；须审查与共同 native owner 的一致性 | 每图 cold-path 预检；module/code 与 bank/event/source 均由图保活；失败/销毁无悬空引用 |
 | **C3 · TMR 与 HBG replay** | 两种 runtime 的真实 executor 可重复运行 | C2 | **主线未交付；端到端候选 PR 未合入**：TMR #2625；A2/A3 HBG #2647（draft），A5 HBG 仍需单独资格化 | TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确 |
 | **C4 · runtime 完整验收** | 换参、多图、DFX、超时/故障、关闭与容量完整行为 | C3 | **未完成；是必交付阶段** | 下文验收矩阵全通过，不能只以单图普通模式宣布完成 |
