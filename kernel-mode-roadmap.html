@@ -30,7 +30,7 @@
 <tr>
 <td>普通 args-dump stop proof</td>
 <td>主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归</td>
-<td>基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；<a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 最终head <code>154c77af6</code>（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve，最终CI继续，记录不移挂</td>
+<td>基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；<a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 最终head <code>154c77af6</code>（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve；最终154c77 CI <strong>19 success /1 deploy skipped</strong>，其中18个check-runs成功加CodeRabbit状态成功；记录不移挂，待用户审核</td>
 </tr>
 <tr>
 <td>ordinary manifest loss 完整性</td>

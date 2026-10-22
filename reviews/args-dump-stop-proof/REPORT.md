@@ -70,3 +70,9 @@ Actual Claude approved the complete implementation at a547efa3d after independen
 ## Final independent review acceptance
 
 Actual Claude approved a547 implementation, then independently verified154c77 changes only the summary matrix and resolves the last Should. Final verdictapprove, all Must/Should closed. Optional Consider items remain explicitly dispositioned, not silently described as fixed. See review-disposition.md and per-head independent reports. Final154c77 CI still pending; product worktree clean and fixed.
+
+## Final acceptance: 154c77af6
+
+The exact-final-head checks are complete: **18 successful check-runs plus the successful CodeRabbit commit status, with one expected deploy skip**. CI run [39796063157](https://github.com/hw-native-sys/simpler/actions/runs/39796063157), attempt1, includes both onboard architectures, four sim jobs, both hardware UT jobs, both host UT jobs, profiling-flags smoke, packaging and A3 network/deepseek. The outer build/deploy run is39796063173. CodeRabbit's incremental review was skipped: its status is not counted as an independent final code review. Actual Claude separately approved implementation a547 and independently verified/approved final154c77's doc-only delta. The one actionable inline thread is replied/resolved. PR2677 is non-draft and ready for user review, not merged or auto-approved on GitHub.
+
+Runtime validations remain attached to a547: CPP390/390, Python3525/192, axis/strictdocs and task-submit A3 public4+TMR/HBGfull,17 hashes unchanged. Final154c77 has exact-head CI and documentation checks; all other tracked files equal a547. Earlier pending statements above are chronological checkpoints, superseded by this acceptance. The parent inspected and accepted each child result before integration. ScopeStats proof-aware ordinary close is the next bounded functional scope, not implemented here; I1 queue integration must align with existing PyPTO#3100 ownership.

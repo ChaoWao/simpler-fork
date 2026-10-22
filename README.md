@@ -24,7 +24,7 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- #2671 已合入 main `fa6528f4e`，历史验证仍归[原报告](reviews/args-dump-run-accounting/REPORT.md)。当前 [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6` 与已验证的a547仅差文档汇总表；C++390/390、Python3525/192、strictdocs/axis和A3定向task-submit成绩归a547，最终docs检查通过。实际Claude最终approve、全部Must/Should关闭；**最终154c77 CI仍待完成**，不据此宣称可以合入。见[报告](reviews/args-dump-stop-proof/REPORT.md)和[意见处置](reviews/args-dump-stop-proof/review-disposition.md)。
+- #2671 已合入 main `fa6528f4e`，历史验证仍归[原报告](reviews/args-dump-run-accounting/REPORT.md)。当前 [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6` 与已验证的a547仅差文档汇总表；C++390/390、Python3525/192、strictdocs/axis和A3定向task-submit成绩归a547，最终docs检查通过。实际Claude最终approve、全部Must/Should关闭；**最终154c77全部检查19success/1deploy skip**（18个check-runs加CodeRabbit状态成功）。[CI证据](https://github.com/hw-native-sys/simpler/actions/runs/39796063157)为attempt1；PR非draft，待用户审核，尚未合入。CodeRabbit增量审查被跳过，独立审阅由实际Claude完成。见[报告](reviews/args-dump-stop-proof/REPORT.md)和[意见处置](reviews/args-dump-stop-proof/review-disposition.md)。
 - 并行工作已验收集成：stop-proof、停止追赶publication、host计数结清、loss完整性与双lane重试去重共同组成#2677的完整关闭行为，不按agent机械拆PR。[I1静态映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实#3100归属与实际queue接线缺口；[ScopeStats下一完整范围](reviews/scope-stats-proof-audit/REPORT.md)尚仅静态核查，未实施、不扩大当前PR。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 

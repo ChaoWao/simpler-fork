@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "760b5afbeb08c0ca5b66f64eeae8bd06158ee26e15fe297be9e8dd831e9de5f9",
-      "published_sha256": "760b5afbeb08c0ca5b66f64eeae8bd06158ee26e15fe297be9e8dd831e9de5f9",
-      "bytes": 76348
+      "source_sha256": "0826ea2b518c03e76e5343403a5597c622f9d73f8cda54c05fe6cf1d37682234",
+      "published_sha256": "0826ea2b518c03e76e5343403a5597c622f9d73f8cda54c05fe6cf1d37682234",
+      "bytes": 76455
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "12168f4bde166b00303ce7ea09b787fe87b9ab5ae905f7f853d1c6582af79eff",
-      "published_sha256": "12168f4bde166b00303ce7ea09b787fe87b9ab5ae905f7f853d1c6582af79eff",
-      "bytes": 54939
+      "source_sha256": "e081b4d00866b2b72ddcc386f0896d594211b7aaff0f2cc00dd34969ec09b2ec",
+      "published_sha256": "e081b4d00866b2b72ddcc386f0896d594211b7aaff0f2cc00dd34969ec09b2ec",
+      "bytes": 55016
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "a6941b953989dfc4de70ec3961482925273f5d0ebfa14f404eedc78dd1d81db8",
-      "published_sha256": "eac6ce6463803837919cc414a2d81bd67045757dfd3d1d4c9ee23209e06247ce",
-      "bytes": 95614
+      "source_sha256": "dc936e85f587172d4d519d6291e669a62784e613c82941352537a96bd8480d46",
+      "published_sha256": "27024ed91d0eebd77bffd9f55943fce522cbf780002a8e0fc4f783e47c5ec9c8",
+      "bytes": 95734
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1198,9 +1198,9 @@
     {
       "path": "reviews/args-dump-stop-proof/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "0aa63a012500fb161e2814f392ea8cd597020508c80beaad708cf15915b35ff7",
-      "published_sha256": "0aa63a012500fb161e2814f392ea8cd597020508c80beaad708cf15915b35ff7",
-      "bytes": 10255
+      "source_sha256": "47bac26d4053d190689ee0a389bc3712bd6859ec227d41d2a4417f700d10681f",
+      "published_sha256": "47bac26d4053d190689ee0a389bc3712bd6859ec227d41d2a4417f700d10681f",
+      "bytes": 11672
     },
     {
       "path": "reviews/args-dump-stop-proof/claude-doc-recheck-154c77af6.md",
@@ -1240,9 +1240,9 @@
     {
       "path": "reviews/args-dump-stop-proof/review-disposition.md",
       "source_collection": "kernel-design",
-      "source_sha256": "8d7fe7a5d940747f626bc46229413e774fe01b35e3cabc405a4fef6e1f22b3b8",
-      "published_sha256": "8d7fe7a5d940747f626bc46229413e774fe01b35e3cabc405a4fef6e1f22b3b8",
-      "bytes": 3421
+      "source_sha256": "a4b60fe88f50a5b602fa49f0f985565c8fd85c08a64aafd45affd04cdc6f37f5",
+      "published_sha256": "a4b60fe88f50a5b602fa49f0f985565c8fd85c08a64aafd45affd04cdc6f37f5",
+      "bytes": 4838
     },
     {
       "path": "reviews/argument-storage-contract-1761d130.md",
@@ -1689,12 +1689,12 @@
   "latest_merged_pr": 2671,
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
-  "latest_validation_head": "2894ac39cab86bdd5f101e9a60defb1d81e62c2e",
+  "latest_validation_head": "154c77af6baad138ec8b05b37f2253bb2188c55a",
   "pending_pr_head": "154c77af6baad138ec8b05b37f2253bb2188c55a",
-  "latest_validation_ci_run": 39769502567,
+  "latest_validation_ci_run": 39796063157,
   "latest_validation_ci_attempt": 1,
   "latest_validation_status": "passed",
-  "pending_validation_status": "review_approved_final_ci_pending",
+  "pending_validation_status": "review_approved_all_checks_passed",
   "pending_code_validation_head": "a547efa3da48d97b7d34c95c4a1e6989b91c7799",
   "pending_code_equivalent_to_final": true,
   "pending_review_status": "approved"

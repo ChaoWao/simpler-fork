@@ -42,7 +42,7 @@
 
 | 工作项 | 依赖 / 写入边界 | 当前产物与验收 |
 |---|---|---|
-| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6`（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve，最终CI继续，记录不移挂 |
+| 普通 args-dump stop proof | 主执行改 ordinary close 与两后端；子 agent 仅新增真实 runner/producer 回归 | 基线四 arch/runtime 组合中 proof controls 通过、unknown close 可复现违规恢复与 over-credit；[#2677](https://github.com/hw-native-sys/simpler/pull/2677) 最终head `154c77af6`（仅文档差异于已验证/审阅a547）集入stop-proof、停止追赶publication、host计数结清与loss/双lane恢复一致性；a547的CPP390/390、Python3525/192、strict docs/axis和A3定向通过；Claude最终approve；最终154c77 CI **19 success /1 deploy skipped**，其中18个check-runs成功加CodeRabbit状态成功；记录不移挂，待用户审核 |
 | ordinary manifest loss 完整性 | 子 agent 独立改统计与 manifest，保留 retained 合同；集成时核对与上一项的 collector 重叠 | [并行成果21537980b](reviews/args-dump-loss-accounting/REPORT.md) 已通过初轮组合验收：16目标160cases；独立审阅确认unknown manifest属于同一关闭行为，现整体集入#2677并重验，不另拆PR；未读取或读取失败不能将未知 loss 表示为已证明的零 |
 | I1 实际入口与缺口映射 | 完成回归子项的 agent 转只读调查，不改已有 owner 的候选实现 | 已接受[静态入口报告](reviews/kernel-i1-entry-mapping/REPORT.md)：PyPTO main 已有 artifact/CallFrame；#3100 占初始化 owner，缺真实 queue callback→Worker.submit 接线；无新增上板成绩 |
 
