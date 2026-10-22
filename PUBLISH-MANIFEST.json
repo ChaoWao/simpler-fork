@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-22",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "fdcbdcc9502195f7837030cf3c130f75f83d3719",
-  "pending_pr": 2663,
+  "latest_roadmap_source_baseline": "2522f02bfead6071a70603d0ccb35431ca03139b",
+  "pending_pr": 2671,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1e197727bebc2c00500d9a0023648e4485fe77299987260ddebeb7c229fba86f",
-      "published_sha256": "1e197727bebc2c00500d9a0023648e4485fe77299987260ddebeb7c229fba86f",
-      "bytes": 72342
+      "source_sha256": "7ce6f29930e0ce558d2badab245f1bcdd2bc89782b0aa67949328c33c9c30c99",
+      "published_sha256": "7ce6f29930e0ce558d2badab245f1bcdd2bc89782b0aa67949328c33c9c30c99",
+      "bytes": 73624
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "4dfb1f5372c064ef53055309b4a9842670d2d5e7ee65250d01babd50595cf729",
-      "published_sha256": "4dfb1f5372c064ef53055309b4a9842670d2d5e7ee65250d01babd50595cf729",
-      "bytes": 53288
+      "source_sha256": "27261a1f34d89241cd259704c60310875e2da1939015dee218ab4ce73da96d9b",
+      "published_sha256": "27261a1f34d89241cd259704c60310875e2da1939015dee218ab4ce73da96d9b",
+      "bytes": 53674
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "00dfe92ddb83ddc90d7fedee9fc0d1de365ca2a272580813f4169e3384adab3e",
-      "published_sha256": "153afbbed5271f3e1229770db4fefe7bd3be04b3d0c9da62f737c93344950074",
-      "bytes": 91026
+      "source_sha256": "aded2abe62ce06afabed27a820d731a6e9c4a33fcd22d9cfd0b6866e833c1ac6",
+      "published_sha256": "1d1ef9d3a77857c8a27dda83c141711664c5ac3877c88987a27b0b9809970568",
+      "bytes": 92440
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1161,6 +1161,34 @@
       "bytes": 16389
     },
     {
+      "path": "reviews/args-dump-run-accounting/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "7a9e6b224d914a762b076b3d0a3e2bd724b9d5d653f55bc2ba7f88c66defa94f",
+      "published_sha256": "7a9e6b224d914a762b076b3d0a3e2bd724b9d5d653f55bc2ba7f88c66defa94f",
+      "bytes": 7869
+    },
+    {
+      "path": "reviews/args-dump-run-accounting/claude-recheck-2894ac39c.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "b839310f7c33a76e3cb2d9cfd3309d528bdb8fceb08f76c4c39efd1062102440",
+      "published_sha256": "b839310f7c33a76e3cb2d9cfd3309d528bdb8fceb08f76c4c39efd1062102440",
+      "bytes": 13696
+    },
+    {
+      "path": "reviews/args-dump-run-accounting/claude-review-7448ed4e5.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "1793781f5174ef00da2d30eb3c0c3f9f59bae803ad6229df6f4ab288ac6f9cc9",
+      "published_sha256": "3ded09d411c6be7671ea08ad5c5a789388f4c1c496b4c7a6b0574c3d113e4382",
+      "bytes": 18581
+    },
+    {
+      "path": "reviews/args-dump-run-accounting/review-disposition.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "49ceb59317a4fc61389825c04eb53b40bc499b1f168ab9e00013df8c3799c165",
+      "published_sha256": "49ceb59317a4fc61389825c04eb53b40bc499b1f168ab9e00013df8c3799c165",
+      "bytes": 2456
+    },
+    {
       "path": "reviews/argument-storage-contract-1761d130.md",
       "source_collection": "kernel-design",
       "source_sha256": "fdd2a742b9b8661bfe0e1dd896acd486082e797046e573a26f1b43c8ba918401",
@@ -1588,11 +1616,12 @@
       "bytes": 10657
     }
   ],
-  "latest_merged_pr": 2624,
+  "latest_merged_pr": 2663,
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
-  "latest_validation_head": "97aaed615d2f42b06f645275cfa3749434c04851",
-  "pending_pr_head": "97aaed615d2f42b06f645275cfa3749434c04851",
-  "latest_validation_ci_run": 39747756140,
-  "latest_validation_ci_attempt": 2
+  "latest_validation_head": "2894ac39cab86bdd5f101e9a60defb1d81e62c2e",
+  "pending_pr_head": "2894ac39cab86bdd5f101e9a60defb1d81e62c2e",
+  "latest_validation_ci_run": 39769502567,
+  "latest_validation_ci_attempt": 1,
+  "latest_validation_status": "in_progress"
 }

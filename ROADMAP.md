@@ -22,11 +22,15 @@
 
 ## 1. 现在做什么
 
-**远端总跟踪：[Issue #2666](https://github.com/hw-native-sys/simpler/issues/2666)。** 2026-10-22 已将本路线的设计约束、K2/C1–C4、I1–I3、V1、现有候选与最终验收刷新到该 Issue。Issue 作为远端执行入口，本页与 HTML 保留详细依赖和证据解释；设计判断仍以 principles 为准。后续状态同次刷新，不新建另一条按 PR 编号推进的路线。
+**Kernel 远端总跟踪：[Issue #2666](https://github.com/hw-native-sys/simpler/issues/2666)；仓库重点工作总览为 [#2670](https://github.com/hw-native-sys/simpler/issues/2670)。** 2026-10-22 已将本路线的设计约束、K2/C1–C4、I1–I3、V1、现有候选与最终验收刷新到该 Issue。Issue 作为远端执行入口，本页与 HTML 保留详细依赖和证据解释；设计判断仍以 principles 为准。后续状态同次刷新，不新建另一条按 PR 编号推进的路线。
 
-**本轮源码核对基线：main `fdcbdcc95`。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
+**本轮源码核对基线：main `2522f02bf`（#2663 合入）。** #2660 的 args-dump 选择和 #2624 的 TMR eager 已合入；此前各项测量仍保留各自原 head。#2625 capture 候选已审阅并评论：部分 enqueue 后 host 异常的所有权记账存在实测缺口，A3 cold registration 的缓存新鲜性另待证明，不能按候选存在宣布 capture 已验收。
 
-**当前 PR [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（待审）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，需要 producer 时跳过初始化或读回失败禁止导出前次统计；HBG 沿用既有 capacity 合同保留 metadata-only 输出。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。最终 head `97aaed615` 的 Claude 独立审查无剩余 Must/Should，CI 全绿（A5 首轮因排队耗尽等待预算，原代码单项重跑通过）；完整验证与边界见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
+**已合入 [#2663](https://github.com/hw-native-sys/simpler/pull/2663)（`2522f02bf`）：C1 scope-stats 设备入口复位。** 普通路径与 retained 路径共用 AICPU leader 初始化；移除 host admission 的 producer counter 写入和 held-buffer 读回/重盖章。保留 queue cursor、持有指针及 terminal bank 寿命；本次初始化 epoch 使用既有 padding，需要 producer 时跳过初始化或读回失败禁止导出前次统计；HBG 沿用既有 capacity 合同保留 metadata-only 输出。它与 #2633 冷预热、#2625 图 owner 并行，不开放 capture DFX。最终 head `97aaed615` 的 Claude 独立审查无剩余 Must/Should，CI 全绿（A5 首轮因排队耗尽等待预算，原代码单项重跑通过）；完整验证与边界见[本笔报告](reviews/device-scope-stats-run-init/REPORT.md)。
+
+<a id="c1-args-dump-accounting"></a>
+
+**当前 PR [#2671](https://github.com/hw-native-sys/simpler/pull/2671)（Ready，审阅/最终验证中）：普通 args-dump 的逐调用 accounting 与 lifetime transport。** Host admission 只清自己的窗口；设备 init 建立本次 payload baseline、drop counter 和 epoch，普通 ACK/恢复要求本次身份及成功读取，retained transport 合同保留。三个新字段使用既有 padding，DumpBufferState 仍为256字节；普通 ACK 的窄读由8增为48字节，未宣称性能收益。当前 head `2894ac39c` 的 C++386/386、Python3525/192、两架构普通 sim sweep、启用采集 smoke 和 DFX-off 构建通过；上板、独立 Claude 与最终 CI 在进行。它是现有 capture/HBG 作者工作之外已核实的 C1 协议缺口，不另造执行器。普通错误恢复缺少 producer-stop proof 的消费、测试输出目录同秒冲突分别记录，未借 epoch 检查宣称消除它们。完整证据见[本笔报告](reviews/args-dump-run-accounting/REPORT.md)。
 
 <a id="c1-args-dump-current"></a>
 
@@ -157,7 +161,7 @@ S1/S2 与 K1/K2 的共同 eager 生产接线已交付；K2 的实际框架/失�
 | **S3 · 动态模块与能力合同** | module owner、既有导出与真实调用合同 | 已有 ChipWorker loader；可与 K2 并行 | **#2638 已合入 `2a6d2d50c`**：集中 loader 所有权与 typed lookup，context/slot 共持 module；保留既有导出合同。图的长期引用仍须由 C2 接入，不据本笔标记整阶段完成 | run/有效 callable/graph/replay 最后引用退出前不 unload；不预设查询或版本协商；C2 前完成 |
 | **K1 · 借用环境与参数** | Kernel 接入共同执行层，无 tensor staging 和设备所有权 | A + S2 | **native 与 public Worker eager 接线已交付；完整资格分别验收**：#2501/#2507/#2510 均已合入。#2557/#2561/#2567 已接实际 stream、失败退休和共同 native caller launch；#2572/#2578 已接 lane/caller 与 borrowed ChipWorker；generation/source 已由 #2587 交付；public Worker 由 #2599 接入，#2604/#2606/#2608/#2610–#2618 补齐相应语义与寿命。U2b/Remote 非前置。旧 supported()=0、旧 kernel launch 仍拒绝。AIV 独立跟踪，详见 [当前记录](kernel-eager-open-work.md) | TMR/HBG device 地址参数直达执行；close 不 reset caller 设备；program 回归通过 |
 | **K2 · caller 顺序与框架接入** | Native 和框架可用的 kernel eager | K1 | **生产接线已交付，完整资格待验收**：#2567/#2572/#2578、#2580–#2599 与后续语义修复接通共同 caller/环境/public Worker。I1 补实际框架调用；#2605 短序列通过但 128-token 输出不一致，不能据此关闭 K2。见 [剩余范围](kernel-eager-open-work.md) | caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过 |
-| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择已合入 ef17033ba；[#2663](https://github.com/hw-native-sys/simpler/pull/2663) 的 scope-stats 入口复位 Ready/CI 全绿待审；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
+| **C1 · 可捕获设备闭包** | 异步发布、独立握手复位、两侧完成、device 错误门 | K2 + S2 | **共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付**；[#2660](https://github.com/hw-native-sys/simpler/pull/2660) 逐调用 args-dump 选择已合入 ef17033ba；[#2663](https://github.com/hw-native-sys/simpler/pull/2663) 的 scope-stats 入口复位已合入 `2522f02bf`；[#2671](https://github.com/hw-native-sys/simpler/pull/2671) 的普通 args-dump accounting Ready，最终验证中；独立握手 ABI、图闭包及完整设备错误门仍待验收 | 真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行 |
 | **C2 · 图资源所有权** | capture wrapper、generation、bank/event/source 的图引用 | C1 + S3 | **未合入；已有候选实现**：#2625 TMR，#2626/#2646/#2647 共同资源与 HBG；须审查与共同 native owner 的一致性 | 每图 cold-path 预检；module/code 与 bank/event/source 均由图保活；失败/销毁无悬空引用 |
 | **C3 · TMR 与 HBG replay** | 两种 runtime 的真实 executor 可重复运行 | C2 | **主线未交付；端到端候选 PR 未合入**：TMR #2625；A2/A3 HBG #2647（draft），A5 HBG 仍需单独资格化 | TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确 |
 | **C4 · runtime 完整验收** | 换参、多图、DFX、超时/故障、关闭与容量完整行为 | C3 | **未完成；是必交付阶段** | 下文验收矩阵全通过，不能只以单图普通模式宣布完成 |
