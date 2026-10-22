@@ -23,7 +23,9 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- 最新路线状态固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653。完整 API 层次审查仍保留页内基线，本次仅文档接管、GitHub 元数据与列出正文的只读核对，没有重跑产品测试。
+- 当前待审 [#2660](https://github.com/hw-native-sys/simpler/pull/2660)：args-dump 选择随逐调用 descriptor 发布，基于 main `3b5836465`，未合入。运行时/布局与验证归属见[报告](reviews/invocation-local-args-dump/REPORT.md)；C1 完整闭包、候选全量审查与 I1–I3 继续由 ROADMAP 维护。
+
+- 前次已合入路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；本笔代码和测试另固定 main `3b5836465`。完整 API 层次审查仍保留页内基线，本次仅文档接管、GitHub 元数据与列出正文的只读核对，没有重跑产品测试。
 - #2638/#2640/#2645/#2643/#2588 已合入，历史测量保留原 head。[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 已合入 `0cf537df1`；审阅 head `e768fab28`（功能验证树 `8f89cc639`；最终差异仅旧注释修正）：Runtime descriptor 携带 swimlane level；保留 #2588 的 HostApi 调用快照、PMU 布局与诊断准入。rebase 后 C++ 378、Python 3501、两架构各 6 个 RTS 桩探针、A3 9 个实板 case、A5 3 个 DFX sim 通过；无本地 A5 silicon 主张。inline 已修正并 resolve，最终 head CI 19 success / 1 预期 skip。macOS A5 首轮 600 秒总 session 超时；只重跑后通过，代码与预算未改，详见证据记录。见 [本笔边界](kernel-eager-open-work.md#c1-swimlane-invocation)。历史 [#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
 - [#2653](https://github.com/hw-native-sys/simpler/pull/2653) 已合入 `7503761a6`；最终 head `dcdb55ef2` 的 CI 19 success / 1 deploy skipped，包括 DFX-off 构建。历史功能验证仍归 `08d239293`；首次 AIV 仍未分类，证据未因 CI 全绿撤回。详见[本笔合同与证据](kernel-eager-open-work.md#c1-pmu-invocation)。
 - 当前未合入的候选实现：TMR #2624/#2625，shared resources #2626，HBG #2646/#2647（后三项 draft）。框架 #2605 的 128-token 输出仍不一致。候选代码和主线资格分别记账。

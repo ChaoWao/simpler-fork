@@ -2,7 +2,12 @@
 
 ## 1. 统一路线：API 收口嵌入 K2，不另起执行器
 
-**当前进度基线 main `7503761a6`（2026-10-21）；交付状态以 [ROADMAP](ROADMAP.md#1-现在做什么) 为准。** #2638/#2640/#2645/#2643/#2649/#2648/#2653 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作；本轮 #2653 收口本次 PMU 配置和复位，不重复其设备协议。
+<a id="c1-args-dump-invocation"></a>
+
+**当前交付 [#2660](https://github.com/hw-native-sys/simpler/pull/2660)：逐调用 args-dump 选择，待审未合入。** 基于 main `3b5836465`，本次 dump level 与既有 swimlane/PMU 一起走 Runtime descriptor 的值快照/同流发布；host admission 冻结导出而不发布/读回共享设备级别。六个 TMR/HBG init 入口共用显式选择。pool 和 descriptor 布局不变，A5 HBG 既有限制保留；counter reset、retained 游标和 payload ack 不改。它推进 C1，不代替 capture owner、候选完整审查或 I1–I3。证据见[本笔报告](reviews/invocation-local-args-dump/REPORT.md)。
+
+
+**此前已合入记录固定于 main `7503761a6`（2026-10-21）；本笔新基线和待审状态见上节及 [ROADMAP](ROADMAP.md#1-现在做什么)，旧验证不改挂。** #2638/#2640/#2645/#2643/#2649/#2648/#2653 已合入；[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 收口本次 swimlane level，A5 HBG 也使用相同 descriptor；#2588 的 per-run HostApi 快照已合入，原前驱级别缺陷不再是当前基线的问题。#2624–#2626 与 #2646/#2647 分别已有 TMR、共同资源和 HBG graph/执行工作；本轮 #2653 收口本次 PMU 配置和复位，不重复其设备协议。
 
 当前交付边界：共同公开 eager 已接线，完整 K2c 业务资格与故障/DFX 矩阵继续验收。#2605 短序列输出正确，但 128-token 仍不一致。#2624/#2625 已有 TMR eager/capture 候选；#2626/#2646/#2647 的共同资源/HBG graph 与 A2/A3 execution 候选仍为 draft、均未合入。候选实现不是“尚无人实现”，也不是“主线已可用”；后续审查须消费共同 native owner 和寿命合同，避免独立专用路径形成第二套 executor。A5 HBG 不从 A2/A3 成绩推定通过。
 

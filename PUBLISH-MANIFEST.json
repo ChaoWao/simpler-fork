@@ -2,8 +2,8 @@
   "snapshot_date": "2026-10-21",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "7503761a6c01a6d07ccd8d9c82b8060da843d1af",
-  "pending_pr": null,
+  "latest_roadmap_source_baseline": "3b58364657c15c14c753bea44824ebe04fb8f23c",
+  "pending_pr": 2660,
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "aad8e027bd21cbd544620c6798af49f8749b9b7da917ae4d986c65db87cd1ad0",
-      "published_sha256": "aad8e027bd21cbd544620c6798af49f8749b9b7da917ae4d986c65db87cd1ad0",
-      "bytes": 68938
+      "source_sha256": "3f3027d8ea72896c13c9379cfd9fe75e82c00670b8c1d6e921d2f1ddfad03dd3",
+      "published_sha256": "3f3027d8ea72896c13c9379cfd9fe75e82c00670b8c1d6e921d2f1ddfad03dd3",
+      "bytes": 69872
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,9 +78,9 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "c9d5274998a1b413b0301b04a0b6802bc4cd731a8587de7b7310153c5c0b38f9",
-      "published_sha256": "c9d5274998a1b413b0301b04a0b6802bc4cd731a8587de7b7310153c5c0b38f9",
-      "bytes": 51530
+      "source_sha256": "786c3c437e34599c35fff84f1504d971b3fe9e7565e803f3fd8fe9c3fe0e12ff",
+      "published_sha256": "786c3c437e34599c35fff84f1504d971b3fe9e7565e803f3fd8fe9c3fe0e12ff",
+      "bytes": 52253
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "2661f35d1b8080f82e6fa1abafb60d2c2fd4deb89c3497c0507c0ae2add80165",
-      "published_sha256": "2d0e2d5f20c1eb1fa1a10743eeb296ee1d6a8737ea12181cf3ac25f9da99f509",
-      "bytes": 87010
+      "source_sha256": "c77a4e947d28c80e72d2773e9cc902664a51975539624b2d699c0868c27b516e",
+      "published_sha256": "33a5c1f246cd555c11e4789aa7a56212c30731491f24b47416293c426a4e7a2d",
+      "bytes": 88079
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1350,6 +1350,13 @@
       "bytes": 4684
     },
     {
+      "path": "reviews/invocation-local-args-dump/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "16f41421b65231da9ce5899e6e095344174b8b510a1b63c46e8bd4488509d38c",
+      "published_sha256": "16f41421b65231da9ce5899e6e095344174b8b510a1b63c46e8bd4488509d38c",
+      "bytes": 6709
+    },
+    {
       "path": "reviews/issue2460-tensor-buffer-design.md",
       "source_collection": "kernel-design",
       "source_sha256": "53294720134e7a728526b1ec40f347072da82ded3f99bf8a6c42517c95a34d6a",
@@ -1548,5 +1555,6 @@
   ],
   "latest_merged_pr": 2653,
   "cross_repo_handoff_date": "2026-10-21",
-  "cross_repo_roadmap_integration_date": "2026-10-21"
+  "cross_repo_roadmap_integration_date": "2026-10-21",
+  "latest_validation_head": "b59f6fdec9ed90381301dbdf8d9ea9481e25a001"
 }
