@@ -6,9 +6,11 @@
 
 当前交付边界：共同公开 eager 已接线，完整 K2c 业务资格与故障/DFX 矩阵继续验收。#2605 短序列输出正确，但 128-token 仍不一致。#2624/#2625 已有 TMR eager/capture 候选；#2626/#2646/#2647 的共同资源/HBG graph 与 A2/A3 execution 候选仍为 draft、均未合入。候选实现不是“尚无人实现”，也不是“主线已可用”；后续审查须消费共同 native owner 和寿命合同，避免独立专用路径形成第二套 executor。A5 HBG 不从 A2/A3 成绩推定通过。
 
-四仓任务和原 manager 移除后的资料归属见[接管说明](kernel-mode-cross-repo-handoff.md)。下一步先审候选与共同执行接口对齐，不在未审清依赖时另开重复实现。
+四仓交接已纳入 [ROADMAP 的 I1–I3 / V1](ROADMAP.md#cross-repo-delivery)，实施顺序以该入口为准；[接管说明](kernel-mode-cross-repo-handoff.md)仅保存资料来源与候选快照。下一步先审候选与共同执行接口对齐，并建立 I1 真实入口映射；V1 普通 Async 系统验收独立并行，不在未审清依赖时另开重复实现。
 
 设计判断唯一来源仍是 [runtime-design-principles.md](runtime-design-principles.md)；全路线以 [ROADMAP](ROADMAP.md) 为入口。[API 层次审查](current-api-layers.html)记录代码事实与其在本路线的位置，不再独立维护另一条交付顺序。
+
+以下是运行时子路线的细分，不代替 ROADMAP 的四仓完整交付图；K2a/K2b 已交付、K2c 共同接线已交付且完整资格待验收，历史步骤顺序保留。
 
 ```text
 Pipeline A 已验收基础 + S1/S2

@@ -7,9 +7,16 @@
 @media print{@page{size:A4 landscape;margin:13mm}nav,.print,.skip{display:none}main{margin:0;padding:0;max-width:none}body{background:white;font-size:11px}h1{font-size:30px}h2{font-size:22px}.summary{grid-template-columns:repeat(3,1fr)}.table-scroll,.diagram-scroll{overflow:visible}table,#section-3 table{min-width:0;font-size:10px}td,th{padding:8px}svg{min-width:0}.dependency,.card{break-inside:avoid}h2,h3{break-after:avoid}a{color:inherit}section{padding-top:22px}pre{font-size:10px}}
 </style></head>
 <body><a class="skip" href="#section-1">跳到当前下一步</a>
-<nav aria-label="路线导航"><div class="brand">SIMPLER / DELIVERY MAP</div><h2>Kernel mode<br>实施路线</h2><div class="toc"><a href="#section-1">1. 现在做什么</a><a href="#section-2">2. 依赖关系</a><a href="#section-3">3. 总交付表</a><a href="#section-4">4. A：我们接收什么，不重复实现什么</a><a href="#section-5">5. S1 / S2：现在与 A 并行的工作</a><a href="#section-6">6. K1 / K2：把 kernel eager 做完整</a><a href="#section-7">7. C1 / C2：建立可重放的命令与资源合同</a><a href="#section-8">8. C3 / C4：TMR 和 HBG 都必须走到终点</a><a href="#section-9">9. 已有工作怎样计入进度</a><a href="#section-10">10. 如何维护这份路线</a><a href="#section-11">2026-10-08：当前接线与剩余问题</a></div><div class="other"><a href="runtime-design-principles.md">设计原则：判断依据 ↗</a><a href="ROADMAP.md">Markdown 内容源 ↗</a><a href="kernel-mode-unified-design.html">目标架构与调用流程 ↗</a><a href="references/pipeline-a/run-pipeline-track-a.html#roadmap">Pipeline A 路线 ↗</a></div></nav>
-<main id="roadmap"><header><div class="top"><span class="eyebrow">一条主线 · 一组并行基础 · 明确的验收门</span><button class="print" type="button" onclick="window.print()">打印 / 保存 PDF</button></div><h1>现在做什么，<br>做完后进入哪一步。</h1><p class="intro">Pipeline A → Kernel eager → Capture / Replay。把每一步落到修改范围、前置条件和可观察的完成标准；TMR 与 HBG 都走到同一个终点。</p><div class="summary"><article class="card current"><span class="tag">现在 / K1 → K2</span><b>K2a 合同 → K2b 环境 → K2c eager</b><p>#2599/#2604/#2606/#2608/#2610/#2612/#2614/#2615/#2618 已合入。共同 descriptor 与 A5 HBG scheduler metadata 同流发布已合入，保留 bulk image 的 prepare 重叠；S3 #2638 已合入；#2640 计时与 #2645 结果区首次初始化已合入；已合入 #2649 收口本次 swimlane level，统一 A5 HBG descriptor 级别来源，保留 #2588 的每次调用快照。已合入 #2653：逐调用 PMU event group 与 device accounting 复位；当前接管四仓候选与消费者对齐，图和 replay 仍分别验收。</p></article><article class="card"><span class="tag">消费已交付的执行基础</span><b>A + S2 → K1 → K2</b><p>同一 Worker、参数与执行器；环境/generation、caller 顺序、拒绝与寿命闭合后验收 eager。</p></article><article class="card"><span class="tag">后续必交付</span><b>C1 → C2 → C3 → C4</b><p>设备闭包、图所有权、双 runtime replay，再完成换参、多图、DFX 和故障验收。</p></article></div><p class="meta">当前接线：2026-10-21 · main 7503761a6 · #2619/#2620/#2628/#2600/#2638/#2640/#2645/#2643/#2588/#2649/#2648/#2653 已合入 · 历史验证保留各自基线<br>本页为本地规划资料；生产接口与完整验收分别记账。</p><p class="callout">旧 kernel launch 入口仍拒绝、supported=0。主线共同 native API 已接 public Worker、caller 顺序和 arena 增长；完整 eager 验收继续按矩阵闭合。AIV 取证独立推进，不以重复复现替代主线任务。<a href="kernel-eager-open-work.md">剩余问题与验证边界</a> · <a href="aiv-evidence-plan.md">AIV 现场规划</a>。</p></header>
-<section id="section-1"><h2>1. 现在做什么</h2><p><strong>2026-10-21 / main <code>7503761a6</code>：#2619、#2620、#2628、#2600、#2638、#2640、#2645、#2643、#2588、#2649、#2648 与 #2653 已合入。</strong> 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。</p>
+<nav aria-label="路线导航"><div class="brand">SIMPLER / DELIVERY MAP</div><h2>Kernel mode<br>实施路线</h2><div class="toc"><a href="#section-1">1. 现在做什么</a><a href="#section-2">2. 依赖关系</a><a href="#section-3">3. 总交付表</a><a href="#section-4">4. A：我们接收什么，不重复实现什么</a><a href="#section-5">5. S1 / S2：现在与 A 并行的工作</a><a href="#section-6">6. K1 / K2：把 kernel eager 做完整</a><a href="#section-7">7. C1 / C2：建立可重放的命令与资源合同</a><a href="#section-8">8. C3 / C4：TMR 和 HBG 都必须走到终点</a><a href="#section-9">9. 已有工作怎样计入进度</a><a href="#section-10">10. 如何维护这份路线</a><a href="#section-11">2026-10-08：当前接线与剩余问题</a></div><div class="other"><a href="runtime-design-principles.md">设计原则：判断依据 ↗</a><a href="ROADMAP.md">Markdown 内容源 ↗</a><a href="kernel-mode-cross-repo-handoff.html">四仓接管来源与候选 ↗</a><a href="kernel-mode-unified-design.html">目标架构与调用流程 ↗</a><a href="references/pipeline-a/run-pipeline-track-a.html#roadmap">Pipeline A 路线 ↗</a></div></nav>
+<main id="roadmap"><header><div class="top"><span class="eyebrow">一条主线 · 一组并行基础 · 明确的验收门</span><button class="print" type="button" onclick="window.print()">打印 / 保存 PDF</button></div><h1>现在做什么，<br>做完后进入哪一步。</h1><p class="intro">Pipeline A → Kernel eager → Capture / Replay；由 PyPTO 适配、pypto-lib 真实用例与 serving 请求完成业务交付。TMR 与 HBG 都走到终点，普通 Async 系统验收并行推进。</p><div class="summary"><article class="card current"><span class="tag">现在 / 候选审查 + I1</span><b>对齐双 runtime，接通真实消费者</b><p>共同 native/public eager、S3 native owner 与逐调用 DFX 增量已合入。下一步核对 TMR/HBG 候选和共同 executor，建立 PyPTO 真实入口映射；尚未完成候选完整 diff 审查。</p></article><article class="card"><span class="tag">跨仓必交付 / I1 → I2 → I3</span><b>适配 → 库用例 → 请求</b><p>按 eager/capture 分别消费 runtime 能力。固定四仓组合，验证 KV/MTP 状态、长序列正确性与请求寿命；C1–C4 完成不能代替消费者验收。</p></article><article class="card"><span class="tag">并行 / V1 · #2658</span><b>HBG × 普通 Async 系统验收</b><p>复用已交付 Pipeline A 与现有 Program/业务路径，不等待 kernel capture。先闭合输入与参考、连续执行正确性，再按同等工作量和资源比较性能。</p></article></div><p class="meta">当前接线：2026-10-21 · main 7503761a6 · #2619/#2620/#2628/#2600/#2638/#2640/#2645/#2643/#2588/#2649/#2648/#2653 已合入 · 历史验证保留各自基线<br>本页为本地规划资料；生产接口与完整验收分别记账。</p><p class="callout">旧 kernel launch 入口仍拒绝、supported=0。主线共同 native API 已接 public Worker、caller 顺序和 arena 增长；完整 eager 验收继续按矩阵闭合。AIV 取证独立推进，不以重复复现替代主线任务。<a href="kernel-eager-open-work.md">剩余问题与验证边界</a> · <a href="aiv-evidence-plan.md">AIV 现场规划</a>。</p></header>
+<section id="section-1"><h2>1. 现在做什么</h2><p><strong>下一步（接管后统一安排）：先做双 runtime 候选审查，同时梳理 I1 的真实消费者入口。</strong></p>
+<ol>
+<li>对照 main 与共同 executor，审 TMR #2624/#2625、shared resources #2626、HBG #2646/#2647 的真实 stacked diff：注册/参数、stream、完成、close 和 graph 引用。分别写明可接收范围、重复实现和缺口；本轮尚未完成该源码审查。</li>
+<li>I1 从真实 compile/load 产物到 public Worker/native bridge 建立调用映射，核实旧 integration 的迁移与重叠。I2/I3 可并行准备真实输入、参考输出、KV/MTP 状态和请求测试；eager 与 capture 按各自 runtime 门槛接通，不等所有 capture 工作完成才做 eager 消费者。</li>
+<li>V1 按 #2658 验收现有普通 Async 业务组合；它不等待 kernel capture。输入权限、长序列输出差异和性能归因独立闭合。</li>
+</ol>
+<p>本路线统一维护上述顺序与退出条件；<a href="kernel-mode-cross-repo-handoff.md">接管说明</a>保存来源、四仓固定快照、原作者联系人和候选归属。这里没有替其他作者认领实现，也没有将 OPEN PR 作为已验收能力。</p>
+<p><strong>2026-10-21 / main <code>7503761a6</code>：#2619、#2620、#2628、#2600、#2638、#2640、#2645、#2643、#2588、#2649、#2648 与 #2653 已合入。</strong> 共同 eager 已按 AICPU stream 顺序异步发布 descriptor 和 A5 HBG scheduler metadata；HBG bulk execution image 仍在 prepare 上传，以保留与前驱执行重叠。注册共用入口与失败初始化拒绝、PMU/DFX 资源回滚按各自 PR 范围消费，不把它们当作 capture 完成。</p>
 <p><strong>已合入 <a href="https://github.com/hw-native-sys/simpler/pull/2638">#2638</a>：S3 的实际模块保活。</strong> 同一 <code>RuntimeModule</code> 由 ChipWorker binding 和每个预分配 native-run slot 共同持有；正常清理先结束 context/carrier，再退出最后的代码引用；失败 close 保留重试，终端 abandonment 保留到进程退出。沿用全部 C ABI，不增加版本/能力查询或另一套执行器。338 个 C++ 测试程序、3434 个 Python UT、两套定向 sim 与 task-submit 上板 22 项通过；具体矩阵和负对照见 <a href="kernel-eager-open-work.md#s3-current-delivery">S3 当前交付</a>。合入提交 <code>2a6d2d50c</code>；graph 引用和 replay 仍由 C2–C4 验收。</p>
 <p><strong>已合入 <a href="https://github.com/hw-native-sys/simpler/pull/2640">#2640</a>（<code>63e651fcc</code>）：C1 的逐调用计时复位同流发布。</strong> 启用 device-phase/task timing 时，prepare 只分配并保存复位值；launch 按 scheduler metadata → timing reset → descriptor → entry fork 排队。复用已有 slot pinned source，持有到完成/隔离；复位或 descriptor 入队失败阻止 kernel，保留 Partial，不读取前次计时。prepare 回滚清除未消费快照。两架构真实库探针、338 C++ 测试程序与 3434 Python UT 通过；本地 A3 task-submit 的 16 次计时/caller 调用通过；CI network1 与独立 main Daily 对照均在同一 peer 的 dispatcher 初始化失败，已登记 #2642，红项仍未解决，未据此宣布 capture 或全量 DFX 完成。具体边界见 <a href="kernel-eager-open-work.md#c1-timing-publication">C1 当前交付</a>。#2624/#2625 的 TMR eager/capture、#2626 资源迁移和 #2633 collector prewarm 仍各自审阅，不重复它们的范围。</p>
 <p><strong>已合入 <a href="https://github.com/hw-native-sys/simpler/pull/2645">#2645</a>（<code>ed421bf33</code>）：结果区首次初始化同流发布。</strong> cold slot 的 <code>published=0</code> 保存为八字节快照，launch 经已有 pinned source 在 AICPU stream 发布，再 fork 到两侧 kernel；未成功发布时拒绝读取该 allocation，即使其中恰好有本次 epoch 和 success。warm 复用不增加 marker 复制。TMR/HBG × 两架构真实库桩探针通过；338 C++、3434 Python、两套 sim 各 2 项和 task-submit A3 板测 34 项通过；负对照抓住 prepare 同步初始化与未初始化结果误读。这些数字保留原 head 归属，无本地 A5 silicon 或 capture 完成主张。见 <a href="kernel-eager-open-work.md#c1-result-publication">本笔边界</a>。</p>
@@ -26,7 +33,7 @@ host admission → 自己的 export level / pool 检查；record queue 所有权
            → AICPU init(group) → 本次 accounting reset → producer
 共享 pool / queues / terminal banks / driver lease：仍各自保活到最后使用者
 </code></pre>
-<p><strong>四仓交接已接管。</strong> 原 manager 目录计划移除；<a href="kernel-mode-cross-repo-handoff.md">接管入口</a> / <a href="kernel-mode-cross-repo-handoff.html">HTML</a> 接收原提示词、Pipeline A/DFX 正文和证据索引。下一步先审双 runtime 候选与共同执行设计的对齐及真实 stacked diff，再完成 PyPTO adapter → pypto-lib → serving 的调用与验收映射；#2658 的普通 Async 系统验收独立记账。原作者分支、自动化和未承诺任务不由文档迁移接管。</p>
+<p><strong>四仓交接已纳入本路线。</strong> 原 manager 目录计划移除；<a href="kernel-mode-cross-repo-handoff.md">接管入口</a> / <a href="kernel-mode-cross-repo-handoff.html">HTML</a>保存原提示词、Pipeline A/DFX 正文和证据索引。依赖见 §2，总交付见 §3，I1–I3/V1 的具体范围见 <a href="#cross-repo-delivery">§8 跨仓交付</a>。原作者分支、自动化和未承诺任务不由文档迁移接管。</p>
 <h1>2646/#2647 已有 HBG graph 模块与执行/capture 接线，分别依赖 #2626；与 #2624/#2625 的 TMR 工作一起审阅，不复制另一套实现。 #2624 已跟到 main <code>7d27e6104</code>；#2625 叠加其上。#2626/#2646/#2647 当前均为 draft，描述的完整实现不能算主线已验收。#2605 vLLM 固定 eager 的两轮 16 请求短序列已通过，但 128-token 与参考输出不一致；K2c 业务资格不能据此标记完成。#2633 collector prewarm 独立推进；#2643 的 PMU driver lease 按其本身范围记账。</h1>
 <h1>2587 的环境/source 身份和 #2589 的 direct L2 原生 owner 已交付。#2589 验证 head <code>27098ab9</code> 的完整 17 项 CI 已通过；其合入提交为 <code>a8c682a32</code>，历史测量不改挂。#2579 的 HBG host/device surface 分离也已包含在此主线；它没有替代 eager/capture 的剩余接线。</h1>
 <p><a href="https://github.com/hw-native-sys/simpler/pull/2593">PR #2593</a> 和 <a href="https://github.com/hw-native-sys/simpler/pull/2595">#2595</a> 已合入：child serve loop 保留控制句柄和本地 registry，direct L2 与 child 均直接持有原生 <code>_ChipWorker</code>，共用初始化。已合入的 <strong><a href="https://github.com/hw-native-sys/simpler/pull/2597">PR #2597</a></strong> 将 direct L2、child 串行/暂存提交和兼容 <code>ChipWorker</code> 的描述符解析→POD 构造收口到一个私有函数。各入口的快照、授权/source 引用和 ImportRegistry 寿命仍各归原 owner。已合入的 #2599 交付 K2c 的公开 borrowed init/submit；不增加 PreparedCall、整次准备缓存或重复 submit。</p>
@@ -61,8 +68,8 @@ host admission → 自己的 export level / pool 检查；record queue 所有权
 </tr>
 <tr>
 <td>我们当前推进</td>
-<td><strong>#2580 → K2a 共同拒绝合同 → K2b 环境/generation/内部接入 → K2c public Worker eager；原 native caller 与 borrowed ChipWorker 已交付</strong></td>
-<td>公开入口消费同一执行、错误与保活合同；U2b/Remote 非前置</td>
+<td><strong>共同 public eager 已接通；先审双 runtime capture 候选与共同 owner，再按 I1 → I2 → I3 闭合消费者；V1 并行</strong></td>
+<td>eager/capture 分开验收；实际框架资格、长序列正确性与跨仓安装组合仍待闭合；U2b/Remote 非前置</td>
 </tr>
 <tr>
 <td>API 模块收口</td>
@@ -85,33 +92,36 @@ host admission → 自己的 export level / pool 检查；record queue 所有权
 <p>原 descriptor 本地提交 <code>e6cd39d4</code> → PR head <code>7220dd01</code> → merge <code>4e14364f</code>。代码与日志保留在<a href="reviews/descriptor-main-0dbf12ae.md">迁移验证</a>。原本地分支和更早的 image 实验均为历史记录，不重复叠加。路线图、HTML 和规划证据继续只保存在本地。</p>
 <p>S1 已以 <code>Runtime { dev; host_; }</code> 落地主线；S2 以该布局为起点，保留现有 host lease 接口。S2 不修改 A 的 lane / fence / drain，合并时与 A 共享的上下文、release 接口要对齐。</p></section>
 <section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 775" role="img" aria-labelledby="dependency-title dependency-desc">
-<title id="dependency-title">API 收口与 kernel eager、capture 的统一依赖图</title>
-<desc id="dependency-desc">共同基础已交付；2580之后按K2a拒绝合同、K2b环境代际、K2c公开eager验收推进。S3模块所有权可并行，C2同时依赖C1与S3。之后C3双runtime replay和C4完整验收，参数与Remote沿U路线推进。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1120" role="img" aria-labelledby="dependency-title dependency-desc">
+<title id="dependency-title">运行时、四仓消费者与普通 Async 验收的统一路线</title>
+<desc id="dependency-desc">共同 eager 已接线；K2 完整资格后按 C1 设备闭包、C2 图 owner、C3 双 runtime replay、C4 runtime 完整验收推进。S3 native module 已交付，C2 接入图引用。I1 PyPTO、I2 pypto-lib、I3 serving 按 eager/capture 分别消费对应能力；数据和契约准备可并行。V1 的 HBG 普通 Async 系统验收不依赖 capture。</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#658278"/></marker></defs>
 <g class="edge">
-<path d="M135 130V210"/><path d="M80 130H5V452H20"/>
-<path d="M250 266H290"/><path d="M520 266H560"/><path d="M840 266H880"/>
-<path d="M1030 322V358H405V400"/>
-<path d="M520 453H560"/><path d="M840 453H880"/>
-<path d="M135 506V548H700V506"/><path d="M1030 506V598"/>
+<path d="M140 120V185"/><path d="M250 240H310"/><path d="M530 240H590"/><path d="M810 240H870"/><path d="M1090 240H1150"/>
+<path d="M700 345V295"/><path d="M140 295V550"/>
+<path d="M980 295V490H300V550"/>
+<path d="M1260 295V550"/><path d="M440 615H500"/><path d="M910 615H970"/>
+<path d="M440 855H500"/>
 </g>
-<a href="#section-1"><rect x="20" y="20" width="1160" height="110" rx="12" class="external"/><text x="42" y="52" class="name">已交付基础：Pipeline A 批准范围 + S1/S2 + native eager 接线</text><text x="42" y="82">共同 prepare/launch/完成/退休；#2572 caller lane；#2578 borrowed ChipWorker</text><text x="42" y="110" class="status">公开 eager 与 #2615 启动异常保活已合入；#2640/#2645 已合入；#2649 已合入：本次 swimlane level；已合入 #2653 PMU；当前接管四仓候选/消费者对齐</text></a>
-<a href="#section-6"><rect x="20" y="210" width="230" height="112" rx="12" class="future"/><text x="38" y="242" class="name">#2580 · handle 保护</text><text x="38" y="270">Python wait/result 拒绝</text><text x="38" y="297" class="status">已合入 · 等待拒绝可恢复</text></a>
-<a href="#section-6"><rect x="290" y="210" width="230" height="112" rx="12" class="future"/><text x="308" y="242" class="name">K2a · 已交付</text><text x="308" y="270">operation lease 汇聚</text><text x="308" y="297" class="status">native → binding → Python</text></a>
-<a href="#section-6"><rect x="560" y="210" width="280" height="112" rx="12" class="future"/><text x="578" y="242" class="name">K2b · 共同参数转换</text><text x="578" y="270">generation / source / adapter</text><text x="578" y="297" class="status">统一入口，不另建 executor</text></a>
-<a href="#section-6"><rect x="880" y="210" width="300" height="112" rx="12" class="future"/><text x="898" y="242" class="name">K2c · public Worker eager</text><text x="898" y="270">同一 init/submit + caller 顺序</text><text x="898" y="297" class="status">两 runtime / 两架构完整验收</text></a>
-<text x="595" y="385" class="annotation">K2c 验收之后开始 capture 生产接线</text>
-<a href="#section-6"><rect x="20" y="400" width="230" height="106" rx="12" class="future"/><text x="38" y="432" class="name">S3 · 可并行</text><text x="38" y="459">module / code 保活</text><text x="38" y="487" class="status">C2 验收前必须完成</text></a>
-<a href="#section-7"><rect x="290" y="400" width="230" height="106" rx="12" class="capture"/><text x="308" y="432" class="name">C1 · 设备闭包</text><text x="308" y="459">ABI / async publish / reset</text><text x="308" y="487" class="status">五事件链与失败隔离</text></a>
-<a href="#section-7"><rect x="560" y="400" width="280" height="106" rx="12" class="capture"/><text x="578" y="432" class="name">C2 · 图资源所有权</text><text x="578" y="459">source / bank / event / code</text><text x="578" y="487" class="status">依赖 C1 + S3</text></a>
-<a href="#section-8"><rect x="880" y="400" width="300" height="106" rx="12" class="capture"/><text x="898" y="432" class="name">C3 · 双 runtime replay</text><text x="898" y="459">TMR reset / HBG restore</text><text x="898" y="487" class="status">共同 owner 后可并行实现</text></a>
-<text x="158" y="575" class="annotation">S3 提供模块/代码寿命；不阻止 K2 / C1 开始</text>
-<a href="#section-6"><rect x="20" y="598" width="820" height="110" rx="12" class="external"/><text x="42" y="632" class="name">U1b / U2b / U3 / U4 · 原参数与资源路线</text><text x="42" y="662">Buffer/import、Program IO、Remote/transport、统一关闭各归原阶段</text><text x="42" y="691" class="status">不整体重写 façade，不要求完整 Remote 先于 kernel eager</text></a>
-<a href="#section-8"><rect x="880" y="598" width="300" height="110" rx="12" class="capture"/><text x="898" y="632" class="name">C4 · 完整交付门</text><text x="898" y="662">换参 / 多图 / DFX / 故障</text><text x="898" y="691" class="status">容量、关闭与实际收益</text></a>
-<text x="22" y="748" class="annotation">同一执行器；每次 eager 准备/提交一次；没有 PreparedCall/cache 或 kernel 后缀 API 副本</text>
-</svg></div><figcaption>这是原路线的细分与职责归属。节点可点击；细分 PR 范围与审查映射见 kernel-eager-open-work.md。</figcaption></figure>
-<p>S1、S2 已完成；Pipeline A 的批准首步已交付，可开始 K1 接入。<strong>K1 消费当前已验收的共同机制；不宣告 A 的全部后端已完成。借用 Device tensor 的寿命和故障处理由 K1/K2 补齐，C1 仍以 kernel eager 验收为前提。</strong> 文档、协议审计和定向探针可以提前做，生产接线按图中的依赖推进。S3 不阻止 K2/C1 开始，C2 的图/代码/module 保活验收依赖 S3；U2b/Remote 各按真实复制与网络消费者交付，不阻塞 K2。</p>
+<a href="#section-1"><rect x="30" y="20" width="1340" height="100" rx="12" class="external"/><text x="48" y="52" class="name">已交付共同基础：Pipeline A 批准范围 + S1/S2 + native/public eager 接线</text><text x="48" y="82">同一 Worker / Buffer / Tensor / TaskArgs / executor；逐 run 完成与退休；借用 context 和 caller 顺序</text><text x="48" y="108" class="status">#2638 module owner；descriptor / timing / result marker / swimlane / PMU 同流发布增量已合入</text></a>
+<a href="#section-6"><rect x="30" y="185" width="220" height="110" rx="12" class="now"/><text x="48" y="217" class="name">K2 · 完整 eager 资格</text><text x="48" y="247">共同接线已交付</text><text x="48" y="273" class="status">实际框架/故障/DFX 待验收</text></a>
+<a href="#section-7"><rect x="310" y="185" width="220" height="110" rx="12" class="capture"/><text x="328" y="217" class="name">C1 · 设备闭包</text><text x="328" y="247">async / reset / fault</text><text x="328" y="273" class="status">已交付增量；完整合同待验收</text></a>
+<a href="#section-7"><rect x="590" y="185" width="220" height="110" rx="12" class="capture"/><text x="608" y="217" class="name">C2 · 图 owner</text><text x="608" y="247">bank / event / source</text><text x="608" y="273" class="status">长期引用接入共同 owner</text></a>
+<a href="#section-8"><rect x="870" y="185" width="220" height="110" rx="12" class="capture"/><text x="888" y="217" class="name">C3 · 双 runtime</text><text x="888" y="247">TMR reset / HBG restore</text><text x="888" y="273" class="status">按 runtime / 平台分别验收</text></a>
+<a href="#section-8"><rect x="1150" y="185" width="220" height="110" rx="12" class="capture"/><text x="1168" y="217" class="name">C4 · runtime 验收</text><text x="1168" y="247">多图/DFX/故障/容量</text><text x="1168" y="273" class="status">与 I3 共同形成 capture 交付</text></a>
+<a href="#section-3"><rect x="590" y="345" width="220" height="110" rx="12" class="external"/><text x="608" y="377" class="name">S3 · native 已交付</text><text x="608" y="407">module / code 保活</text><text x="608" y="433" class="status">C2 仍须接入图长期引用</text></a>
+<text x="157" y="410" class="annotation">eager：实际消费者资格回填 K2</text>
+<text x="345" y="481" class="annotation">capture：消费已验收 C1–C3；最终还须 C4</text>
+<text x="31" y="530" class="name">四仓消费者：每种模式逐层签收；契约、数据与请求测试准备可现在并行</text>
+<a href="#cross-repo-delivery"><rect x="30" y="550" width="410" height="120" rx="12" class="now"/><text x="48" y="582" class="name">I1 · PyPTO 产物与框架适配</text><text x="48" y="612">compile/load → callable → 共同入口</text><text x="48" y="638" class="status">审旧 integration 的迁移/重叠；固定 ABI/target</text></a>
+<a href="#cross-repo-delivery"><rect x="500" y="550" width="410" height="120" rx="12" class="future"/><text x="518" y="582" class="name">I2 · pypto-lib 真实用例</text><text x="518" y="612">算子链/模型；KV / MTP 显式 INOUT</text><text x="518" y="638" class="status">逐次结果、changing-content、长序列参考</text></a>
+<a href="#cross-repo-delivery"><rect x="970" y="550" width="400" height="120" rx="12" class="future"/><text x="988" y="582" class="name">I3 · serving 请求交付</text><text x="988" y="612">warmup / bucket / 请求 / close</text><text x="988" y="638" class="status">四仓固定组合；eager/capture 分开验收</text></a>
+<text x="31" y="728" class="annotation">当前下一步：双 runtime 候选与共同 executor 对齐审查 + I1 源码映射；候选 OPEN PR 不算已交付</text>
+<a href="#cross-repo-delivery"><rect x="30" y="800" width="410" height="115" rx="12" class="external"/><text x="48" y="832" class="name">并行输入 · A + 现有业务路径</text><text x="48" y="862">沿用 Program / 模型 / serving</text><text x="48" y="888" class="status">不等待 I1 kernel adapter 或 C1–C4</text></a>
+<a href="#cross-repo-delivery"><rect x="500" y="800" width="870" height="115" rx="12" class="now"/><text x="518" y="832" class="name">V1 · HBG × 普通 Async 系统验收（#2658）</text><text x="518" y="862">持续准入 / clone / DEVICE 反馈；真实输入与长序列正确性；同条件性能比较</text><text x="518" y="888" class="status">与 kernel eager/capture 分开记账；共用数据/驱动不代表可互相替代验收</text></a>
+<a href="#section-6"><rect x="30" y="965" width="1340" height="110" rx="12" class="external"/><text x="48" y="997" class="name">U1–U4 · 原参数与资源路线按真实消费者需要接入</text><text x="48" y="1027">Buffer/import → Program IO / Remote transport → 统一关闭</text><text x="48" y="1053" class="status">每次 eager fresh prepare/submit；无 PreparedCall/cache；无 kernel 后缀 API 副本</text></a>
+</svg></div><figcaption>节点可点击。总状态与退出条件见 §3；跨仓范围见 §8。运行时和消费者各自验收，V1 为普通 Async 的独立并行工作。</figcaption></figure>
+<p>S1/S2 与 K1/K2 的共同 eager 生产接线已交付；K2 的实际框架/失败/DFX 完整资格仍待闭合。<strong>C1 已有异步与逐调用 DFX 增量，不等于整个捕获闭包通过；生产 capture 接线须消费对应 eager 合同。</strong> S3 native module owner 已交付，C2 接入图长期引用后再验收图寿命。I1 的 eager 资格回填 K2，capture 资格消费 C2/C3；I2/I3 按模式逐层消费。U2b/Remote 不整体阻塞 K2，V1 不以 kernel capture 作为前置。</p>
 <p>不为 kernel 接入再要求 A 完成更深 mailbox、所有性能优化或 DFX 连续会话。A 可沿用诊断 run 的双向独占保护；最终 kernel/capture 的 DFX 能力仍须在 C4 完成交付，不能由这条过渡规则豁免。</p></section>
 <section id="section-3"><h2>3. 总交付表</h2><div class="table-scroll"><table>
 <thead>
@@ -163,14 +173,14 @@ host admission → 自己的 export level / pool 检查；record queue 所有权
 <td><strong>K2 · caller 顺序与框架接入</strong></td>
 <td>Native 和框架可用的 kernel eager</td>
 <td>K1</td>
-<td><strong>正在交付</strong>：#2567 native caller 链已合入；#2572/#2578 已接 caller lane 与借用初始化；#2580 → K2a/b/c 闭合共同拒绝、环境代际与公开入口。完整验收未完成；具体范围见 <a href="kernel-eager-open-work.md">融合后的细分步骤</a>；重启核查保留原基线</td>
+<td><strong>生产接线已交付，完整资格待验收</strong>：#2567/#2572/#2578、#2580–#2599 与后续语义修复接通共同 caller/环境/public Worker。I1 补实际框架调用；#2605 短序列通过但 128-token 输出不一致，不能据此关闭 K2。见 <a href="kernel-eager-open-work.md">剩余范围</a></td>
 <td>caller 前序 → 双流执行 → caller 后序；TQ=0/1、保活、跨流及失败路径通过</td>
 </tr>
 <tr>
 <td><strong>C1 · 可捕获设备闭包</strong></td>
 <td>异步发布、独立握手复位、两侧完成、device 错误门</td>
 <td>K2 + S2</td>
-<td><strong>共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker 与 #2649 本次 swimlane level 已交付</strong>；独立握手 ABI、图闭包及完整设备错误门仍待验收</td>
+<td><strong>共同异步 descriptor/scheduler、#2640 timing reset、#2645 result marker、#2649 本次 swimlane level 与 #2653 逐调用 PMU/device accounting 复位已交付</strong>；独立握手 ABI、图闭包及完整设备错误门仍待验收</td>
 <td>真实 executor 中提前发布不破坏前驱；无同步 metadata memcpy；失败不误放行</td>
 </tr>
 <tr>
@@ -188,17 +198,45 @@ host admission → 自己的 export level / pool 检查；record queue 所有权
 <td>TMR 每次 reset/orchestrate；HBG 每次 restore；逐次独立结果正确</td>
 </tr>
 <tr>
-<td><strong>C4 · 完整产品验收</strong></td>
+<td><strong>C4 · runtime 完整验收</strong></td>
 <td>换参、多图、DFX、超时/故障、关闭与容量完整行为</td>
 <td>C3</td>
 <td><strong>未完成；是必交付阶段</strong></td>
 <td>下文验收矩阵全通过，不能只以单图普通模式宣布完成</td>
 </tr>
+<tr>
+<td><strong>I1 · PyPTO 产物与框架适配</strong></td>
+<td>真实 compile/load → callable → 共同 Worker/native bridge；eager/capture 分别接线</td>
+<td>eager 消费 K1/K2 合同；capture 消费 C1–C3；契约映射可先做</td>
+<td><strong>待源码审查和验收</strong>：PyPTO #2975 已合入；#3001/#3084 仍属旧 integration 候选；simpler #2493/#2583 须迁移/去重，#2605 eager 数值缺口仍在</td>
+<td>产物/target/构建组合固定；caller 顺序、参数与句柄寿命、错误和关闭走同一 executor；实际框架矩阵通过</td>
+</tr>
+<tr>
+<td><strong>I2 · pypto-lib 真实用例</strong></td>
+<td>真实算子链/模型及显式 KV、权重、MTP 状态；每模式独立正确性</td>
+<td>对应模式 I1 + runtime 已验收能力；数据/参考可先准备</td>
+<td><strong>待验收</strong>：已接收仓库基线和业务任务，未完成真实调用链源码审计；无据此宣布新实现已交付</td>
+<td>changing-content、alias/INOUT、状态跨调用与长序列参考一致；capture 无中途 host 续发</td>
+</tr>
+<tr>
+<td><strong>I3 · serving 请求交付</strong></td>
+<td>实际请求入口、warmup/bucket、eager/capture 选择、关闭与可安装四仓组合</td>
+<td>对应模式 I2；capture 最终还须 C4</td>
+<td><strong>待验收</strong>：serving #274 是配置候选，不能当作端到端能力；现有 #2605 不是完整业务资格</td>
+<td>固定四仓 SHA/依赖、平台/模式和真实请求结果；连续请求、取消/失败/close、正确性/吞吐/长尾均有证据</td>
+</tr>
+<tr>
+<td><strong>V1 · 普通 Async 系统验收</strong></td>
+<td>HBG × 普通 Async 的四仓真实业务组合，复用现有 Program 路径</td>
+<td>已交付 A + 现有模型/serving 路径；不等待 kernel capture</td>
+<td><strong>待验收；对应 <a href="https://github.com/hw-native-sys/simpler/issues/2658">#2658</a></strong>，不新建重复父任务</td>
+<td>连续自动准入/clone/DEVICE 反馈正确；补齐输入/参考与长序列差异；同有效工作量、资源和数值质量下比较性能</td>
+</tr>
 </tbody>
 </table></div>
 <p>除已链接的条目，其余阶段是本设计定义的待交付工作，<strong>没有据此创建或修改远端 Issue</strong>。<a href="https://github.com/hw-native-sys/simpler/issues/2270">#2270</a> 已关闭，<a href="https://github.com/hw-native-sys/simpler/pull/2285">#2285</a> 已关闭且未合入，不继续用其旧 reuse 验收代表 S2。</p></section>
 <section id="section-4"><h2>4. A：我们接收什么，不重复实现什么</h2><p>Pipeline A 的<a href="references/pipeline-a/run-pipeline-track-a.html#roadmap">路线入口</a>是其自身阶段和分工的依据。这里只定义后续 kernel 的接收门槛。</p>
-<p>Pipeline A 的 manager 目录已交接并计划移除；来源冻结在本目录的 <code>references/pipeline-a/</code>，后续状态由本路线与<a href="kernel-mode-cross-repo-handoff.md">四仓接管说明</a>维护。主线已交接至 <a href="https://github.com/hw-native-sys/simpler/issues/2429">#2429</a>，manager 保留跟踪与独立分析。其<a href="references/pipeline-a/review/mainline-independent-next-step.md">下一步建议</a>要求先闭合同域串行执行归属、A→device tensor→B→C 和提交/完成/退休边界。K1 接入应复用这套合同，不因 program/kernel 各有私有 stream 就推定跨入口有序；与接手方协调实现归属，避免平行 runner 或重复开发。Qwen 基线是业务证据，不替代设备链与寿命验收。</p>
+<p>Pipeline A 的 manager 目录已交接并计划移除；来源冻结在本目录的 <code>references/pipeline-a/</code>，后续状态由本路线与<a href="kernel-mode-cross-repo-handoff.md">四仓接管说明</a>维护。主线曾交接至 <a href="https://github.com/hw-native-sys/simpler/issues/2429">#2429</a>；旧 manager 的跟踪/独立分析现作为冻结来源，后续由本路线维护。其历史<a href="references/pipeline-a/review/mainline-independent-next-step.md">下一步建议</a>要求先闭合同域串行执行归属、A→device tensor→B→C 和提交/完成/退休边界。K1 接入应复用这套合同，不因 program/kernel 各有私有 stream 就推定跨入口有序；与接手方协调实现归属，避免平行 runner 或重复开发。Qwen 基线是业务证据，不替代设备链与寿命验收。</p>
 <ul>
 <li><strong>执行</strong>：native 三道门和 L3 两道门都已接通。两个真实 LAUNCHED，不是一个执行加一个 prepared。</li>
 <li><strong>顺序</strong>：保留父 run 的全部 dispatch 顺序，同 callable 的 host 构图串行；host get/set 的就绪和冲突合同不因 device FIFO 而消失。</li>
@@ -433,7 +471,45 @@ caller：    wait AicpuDone → SerialTail
 </tr>
 </tbody>
 </table></div>
-<p>默认两个 bank 的提前发布窗口只有 <strong>B−1 = 1</strong>；加大 host 在途数不会增加该窗口。图事件先采用每图独占的明确预算 <code>1 + 6 × 节点数</code>（五个执行链事件 + 每节点 Ready + 每图 Root），再加 eager/adapter 的同时存活事件；本路线不以未经完整验收的跨图 event 共享作为正确性基础。</p></section>
+<p>默认两个 bank 的提前发布窗口只有 <strong>B−1 = 1</strong>；加大 host 在途数不会增加该窗口。图事件先采用每图独占的明确预算 <code>1 + 6 × 节点数</code>（五个执行链事件 + 每节点 Ready + 每图 Root），再加 eager/adapter 的同时存活事件；本路线不以未经完整验收的跨图 event 共享作为正确性基础。</p>
+<p><a id="cross-repo-delivery"></a></p>
+<h3>I1–I3：四仓消费者是完整交付的一部分</h3>
+<p><strong>运行时完成与业务可用分别签收。</strong> C4 负责 runtime 完整语义；对外声明某平台某模式可用，还必须有该模式 I1 → I2 → I3 的真实证据。eager 可先闭合自己的消费者，不等待 capture；capture 最终必须同时通过对应 C1–C4 和 I1–I3。TMR/HBG、A2/A3/A5 分别列结果，不能由一个组合外推另一组合。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>必做工作与边界</th>
+<th>验收留下什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1 · PyPTO 适配</td>
+<td>找到真实产物 schema/target、load/register、参数转换和调用文件；沿用一个 Worker/Buffer/Tensor/TaskArgs/共同 executor。核实 #3001/#3084 重叠、#2493 DFX ABI 与 #2583 prefetch 的实际依赖；它们不自动成为所有路径前置。不得用 dedicated launch 或能力查询候选覆盖既定原则</td>
+<td>各仓 commit 与构建依赖、源码符号到调用链的映射、真实 adapter 的 eager/capture 分开测试。覆盖 generation、caller stream、capture 拒绝、partial/unknown failure 保留和 close；I1 eager 结果回填 K2 框架资格</td>
+</tr>
+<tr>
+<td>I2 · pypto-lib</td>
+<td>选择真实链式算子/模型，记录 HOST 控制值、DEVICE 输入/输出、alias 与显式持久 INOUT；覆盖权重/KV/MTP。HBG eager 每次 fresh host 准备，capture 每次 device restore，禁止一次 kernel 内回 host 决策续发</td>
+<td>可重复输入/参考、长短序列逐次对比、changing-content 和状态延续结果；capture 中间临时 host 容器退出后仍正确，多次 replay 不增加 host orchestration 次数</td>
+</tr>
+<tr>
+<td>I3 · serving</td>
+<td>把实际请求/调度入口接到已验收 I2；核实模式选择、warmup、bucket/cache 身份、shape 变化和资源保活。#274 配置与 #2605 driver 只是候选/局部证据，不是请求交付</td>
+<td>可安装/复现的四仓固定组合、平台/模式支持表、连续请求及取消/错误/关闭测试；正确性与性能分开报告，记录真实请求数、序列长度、输入来源、资源和质量条件</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>现在能并行做：</strong> I1 的源码/契约映射、I2 的真实输入与数值参考、I3 的请求测试和版本组合清单。实际发起对应 capture 前必须先具备 runtime 的可捕获闭包与图 owner；这些准备工作不授权绕过生产前置。现有 PR 原作者仅是联系人，本路线不替他们承诺上述新增工作。</p>
+<h3>V1：HBG × 普通 Async 系统验收，与 capture 分开推进</h3>
+<p>对应 <a href="https://github.com/hw-native-sys/simpler/issues/2658">#2658</a>，消费已交付 Pipeline A 和现有 Program/模型/服务路径，<strong>不等待 I1 kernel adapter 或 C1–C4</strong>。沿用现有 Qwen/driver 和自动资源准入，不恢复多套公开 depth 旋钮，也不另造 kernel 执行器。</p>
+<ol>
+<li>固定四仓版本、真实输入权限与参考来源；长序列数值差异先分类并解决，不能只报短序列通过。</li>
+<li>验证连续 refill、clone、DEVICE 反馈和跨调用状态；记录提交/执行/完成/退休边界与输出，不能用 prepared-successor 数量充当实际 LAUNCHED。</li>
+<li>同有效工作量、输入/序列、数值质量与资源条件比较同步/普通 Async；按真实 host/DMA/device 区间解释吞吐与长尾。性能目标仍是待验收目标。</li>
+</ol>
+<p>V1 与 I2/I3 可共用数据、请求驱动和证据，但结果必须注明资源模式/执行方式/平台；普通 Async 通过不覆盖 kernel eager 或 replay，反之亦然。</p></section>
 <section id="section-9"><h2>9. 已有工作怎样计入进度</h2><div class="table-scroll"><table>
 <thead>
 <tr>
@@ -501,7 +577,7 @@ caller：    wait AicpuDone → SerialTail
 <li>路线从能力出发，现有 Issue/PR 仅作映射；没有匹配项时再立对应范围，不能为已有 PR 恢复已撤销的设计。</li>
 <li>本 Markdown 是路线内容源，HTML 与它同次更新；协议解释留在设计正文，历史论证和撤回结论留在实验/审阅记录。</li>
 </ul>
-<p><strong>最近的交付顺序：S1/S2 与 A 受限首步已交付 → K1 主线接入 → K2 caller 顺序验收 → C1 → C2 → C3（TMR/HBG）→ C4。</strong></p>
+<p><strong>最近的交付顺序：共同 eager 接线已交付 → 双 runtime 候选审查和 I1 入口映射 → 闭合 K2 完整资格与 C1/C2 → C3（TMR/HBG）→ C4；消费者按模式接通 I1 → I2 → I3。V1（#2658 普通 Async）独立并行。</strong></p>
 <h3>2026-09-29 合入与构建阻塞更新</h3>
 <h1>2482 已合入 main <code>fcbf4f1d</code>，源登记/自动接入的已验证 head 仍为 <code>a938898b</code>，不把历史测试移挂到新主线。#2475 已关闭并由它替代。下一项仍是 U1b 的 ChipWorker 公共参数入口收口；跨 Worker/Remote grant 和外部 RTS context attach 尚未交付。</h1>
 <p>推进时发现 main <code>92a14e4e7</code>（#2483）无法构建 A5：boundary-wait discharge 错误分支仍调用单参数 <code>emit_device_dep_gen_graph</code>。先提交独立 <a href="https://github.com/hw-native-sys/simpler/pull/2484">#2484</a> <code>82af70f5</code>，补本次 epoch 与 false 完成判定。完整 editable/runtime 构建和三个 A5 DepGen C++ 单测目标通过；本机为 A2/A3，没有 A5 板测。此 PR 只修构建，未交付新的 TaskArgs 接口；参数入口测试草稿留在本地，尚未通过验证。</p>

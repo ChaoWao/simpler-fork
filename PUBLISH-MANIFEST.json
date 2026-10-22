@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "209a256d7cc35ac577bd63897400565e1f6b1a8d767780ad613e01446a27c6dc",
-      "published_sha256": "209a256d7cc35ac577bd63897400565e1f6b1a8d767780ad613e01446a27c6dc",
-      "bytes": 61966
+      "source_sha256": "aad8e027bd21cbd544620c6798af49f8749b9b7da917ae4d986c65db87cd1ad0",
+      "published_sha256": "aad8e027bd21cbd544620c6798af49f8749b9b7da917ae4d986c65db87cd1ad0",
+      "bytes": 68938
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -78,23 +78,23 @@
     {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
-      "source_sha256": "29736e472eb662182f0141b74a9012838752b06bfa18bc5e91c5744f6d0205c0",
-      "published_sha256": "29736e472eb662182f0141b74a9012838752b06bfa18bc5e91c5744f6d0205c0",
-      "bytes": 51170
+      "source_sha256": "c9d5274998a1b413b0301b04a0b6802bc4cd731a8587de7b7310153c5c0b38f9",
+      "published_sha256": "c9d5274998a1b413b0301b04a0b6802bc4cd731a8587de7b7310153c5c0b38f9",
+      "bytes": 51530
     },
     {
       "path": "kernel-mode-cross-repo-handoff.html",
       "source_collection": "kernel-design",
-      "source_sha256": "4d2dc046cbcd093706fe5384877f1d19d1e94e5c5f92c603ac5171e1cacdf8d3",
-      "published_sha256": "4d2dc046cbcd093706fe5384877f1d19d1e94e5c5f92c603ac5171e1cacdf8d3",
-      "bytes": 14563
+      "source_sha256": "b25282cbcfefc325b0fc22f0f1c657f0f192fde47f62d92a8dc2d4d70846006e",
+      "published_sha256": "b25282cbcfefc325b0fc22f0f1c657f0f192fde47f62d92a8dc2d4d70846006e",
+      "bytes": 13810
     },
     {
       "path": "kernel-mode-cross-repo-handoff.md",
       "source_collection": "kernel-design",
-      "source_sha256": "1b80aff64ab91b90cb8acab4db75386ea8ed374099fe8b0a94d0a46b5e65df02",
-      "published_sha256": "1b80aff64ab91b90cb8acab4db75386ea8ed374099fe8b0a94d0a46b5e65df02",
-      "bytes": 10090
+      "source_sha256": "036b81446f4dab7e248cb2fb4caae536a4f5f766855f22f062b72948ec858b8f",
+      "published_sha256": "036b81446f4dab7e248cb2fb4caae536a4f5f766855f22f062b72948ec858b8f",
+      "bytes": 9317
     },
     {
       "path": "kernel-mode-cross-repo-prompt.html",
@@ -127,9 +127,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "b38150c3efef8aa852e5727660c4b045d725593ae7d36fdd083b1c1dede2ca42",
-      "published_sha256": "10b53190424b891b0553b8bd5cfe75fb9eeb8d10d85fabf8c4bd06d6495b5466",
-      "bytes": 78554
+      "source_sha256": "2661f35d1b8080f82e6fa1abafb60d2c2fd4deb89c3497c0507c0ae2add80165",
+      "published_sha256": "2d0e2d5f20c1eb1fa1a10743eeb296ee1d6a8737ea12181cf3ac25f9da99f509",
+      "bytes": 87010
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -1547,5 +1547,6 @@
     }
   ],
   "latest_merged_pr": 2653,
-  "cross_repo_handoff_date": "2026-10-21"
+  "cross_repo_handoff_date": "2026-10-21",
+  "cross_repo_roadmap_integration_date": "2026-10-21"
 }

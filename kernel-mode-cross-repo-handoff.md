@@ -54,30 +54,17 @@
 
 作者字段只指出已有工作联系人，不代表他们承诺了新的任务。#2658、#2255、#2202 读取时均 OPEN 且没有 assignee；这里不替他人认领、不新建重复 Issue。
 
-## 3. 接下来按什么顺序处理
+## 3. 工作如何纳入统一 ROADMAP
 
-```text
-已合入 Pipeline A / common eager / S3 / descriptor-DFX 基础
-  ├─ TMR：#2624 eager 强化 → #2625 native capture
-  └─ HBG：#2626 common resources → #2646 graph modules → #2647 production
-                   ↓
-  同一公开入口与生命周期审查 → PyPTO adapter → pypto-lib → serving
-                   ↓
-  C1/C2/C3/C4 的多图、换参、DFX、故障、容量与完整产品验收
+**实施顺序、状态和退出条件统一由 [ROADMAP §2–3](ROADMAP.md#2-依赖关系) 与 [§8 跨仓交付](ROADMAP.md#cross-repo-delivery)维护；本页只保存接管来源与候选归属，不另维护第二份路线。** [HTML 依赖图](kernel-mode-roadmap.html#section-2)同次更新。
 
-#2658：HBG × 普通 Async 的真实业务组合验收，独立记账
-#2493 / #2583 与 PyPTO #3001 / #3084：旧栈迁移/去重，不自动成为所有路径前置
-```
-
-箭头是逻辑依赖，尚未在本次交接中核对所有新 head 的真实祖先关系。先看实际 diff 和 main 增量，再决定组合/改写，不能整条复制作者分支。
-
-| 工作包 | 现在可做的具体工作 | 接收门槛 / 边界 |
+| 原交接工作包 | ROADMAP 归属 | 本次接管保留的事实 / 尚需核查 |
 | --- | --- | --- |
-| A：双 runtime 候选审查（本会话下一步） | 读取 #2624/#2625 与 #2626/#2646/#2647；核对 shared owner、注册、参数快照、stream、完成、close、graph 引用及 stacked diff | 给出能否进入既有共同执行路径的明确结论；TMR/HBG 分别评审，A5 HBG 不从 A3 通过外推 |
-| B：四仓调用/产物映射 | 逐项找出真实 compile/load → ChipCallable → public Worker/native bridge → RunHandle/graph 的文件和测试；记录缺口 | 当前只有任务/PR 线索，未完成 adapter 源码审计；不发明 Python 函数或 CLI 参数 |
-| C：旧 integration 迁移 | 审 #2493 DFX 与 #2583 prefetch 的 ABI、缓存和组合依赖；核实 PyPTO #3084 对 #3001 的包含/重叠 | 原交接与 PR body 报告了重叠，尚非本次逐 commit 验证；不按旧顺序机械合两份 feature |
-| D：真实库与服务验收 | 确定真实链式算子/模型、KV/MTP 状态、changing-content、请求关闭与错误保留合同；消费者准备可与 runtime 审查并行 | runtime 原语、adapter、库用例、请求级结果逐层成立，才可声明端到端支持 |
-| E：普通 Async 系统验收 | 按 #2658 复用现有 Qwen/driver、自动资源准入与 clone/DEVICE 反馈证据 | 输入权限缺口、长序列数值差异和性能归因仍独立处理；不以 kernel 进度代替完成 |
+| A · 双 runtime 候选审查 | K2 / C1–C3；当前下一步 | TMR #2624/#2625、共同 #2626 与 HBG #2646/#2647 已有候选；尚未核对完整 diff/真实祖先关系，不按作者分支机械堆叠 |
+| B · 四仓调用/产物映射 | I1 · PyPTO 产物与框架适配 | 从真实 compile/load 到 callable、public Worker/native bridge、RunHandle/graph 的源码映射待做；不发明调用接口 |
+| C · 旧 integration 迁移 | I1 的依赖审查 | #2493 DFX、#2583 prefetch、PyPTO #3001/#3084 的 ABI、缓存与重叠需审；旧 integration target 不自动成为主线依赖 |
+| D · 真实库与服务验收 | I2 · pypto-lib → I3 · serving，按 eager/capture 分别验收 | runtime 原语通过后仍要真实状态、数值与请求证据；消费者的数据/测试准备可先并行 |
+| E · 普通 Async 系统验收 | V1 · #2658，与 capture 分开记账 | 复用现有 Qwen/driver、自动准入与 clone/DEVICE 证据；输入权限、长序列差异和性能归因仍待闭合 |
 
 四仓之间必须签收：产物 schema/target、整套构建 ABI、注册与 context generation、caller stream 顺序、输入输出/alias、graph 与 buffer 最后使用、partial/unknown failure 保留、平台支持与证据身份。完整交接清单保留在[原提示词 §3](kernel-mode-cross-repo-prompt.md#3-跨仓必须共同签收的契约)。
 
@@ -95,4 +82,4 @@
 
 这次接管完成后，继续在本目录维护规范、路线与证据；旧目录不是后续依赖，也没有由本次操作删除。重要更新按 [PUBLISHING](PUBLISHING.md) 增量备份到 fork 的 `design/kernel-runtime`，不进入产品代码 PR。
 
-下一次执行从工作包 A 开始：先完成候选与既定共同执行设计的对齐审查，再从确定缺口选择完整功能 PR。跨仓实现和消费者验收按已确认 owner 协作，不把这份交接说明视为代发消息、认领任务或合入 PR 的授权。
+下一次执行按 ROADMAP 的双 runtime 候选审查与 I1 映射开始：先完成候选与既定共同执行设计的对齐审查，再从确定缺口选择完整功能 PR。跨仓实现和消费者验收按已确认 owner 协作，不把这份交接说明视为代发消息、认领任务或合入 PR 的授权。
