@@ -22,9 +22,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "0826ea2b518c03e76e5343403a5597c622f9d73f8cda54c05fe6cf1d37682234",
-      "published_sha256": "0826ea2b518c03e76e5343403a5597c622f9d73f8cda54c05fe6cf1d37682234",
-      "bytes": 76455
+      "source_sha256": "6a9ac796923a6d4faa7d50c94886917de91ed6ee6e9244285f1710462a61c14a",
+      "published_sha256": "6a9ac796923a6d4faa7d50c94886917de91ed6ee6e9244285f1710462a61c14a",
+      "bytes": 7420
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -76,6 +76,13 @@
       "bytes": 16784
     },
     {
+      "path": "history/roadmap-20261022.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "a90cb970243fef8e2a965f633ecba900b21de0a26fcce1d453ad593f20435772",
+      "published_sha256": "a90cb970243fef8e2a965f633ecba900b21de0a26fcce1d453ad593f20435772",
+      "bytes": 76944
+    },
+    {
       "path": "kernel-eager-open-work.md",
       "source_collection": "kernel-design",
       "source_sha256": "e081b4d00866b2b72ddcc386f0896d594211b7aaff0f2cc00dd34969ec09b2ec",
@@ -85,16 +92,16 @@
     {
       "path": "kernel-mode-cross-repo-handoff.html",
       "source_collection": "kernel-design",
-      "source_sha256": "b25282cbcfefc325b0fc22f0f1c657f0f192fde47f62d92a8dc2d4d70846006e",
-      "published_sha256": "b25282cbcfefc325b0fc22f0f1c657f0f192fde47f62d92a8dc2d4d70846006e",
-      "bytes": 13810
+      "source_sha256": "43b76efdcf931135a291504132ab4311287735734fdb35450770f7e8027cc6f9",
+      "published_sha256": "43b76efdcf931135a291504132ab4311287735734fdb35450770f7e8027cc6f9",
+      "bytes": 13819
     },
     {
       "path": "kernel-mode-cross-repo-handoff.md",
       "source_collection": "kernel-design",
-      "source_sha256": "036b81446f4dab7e248cb2fb4caae536a4f5f766855f22f062b72948ec858b8f",
-      "published_sha256": "036b81446f4dab7e248cb2fb4caae536a4f5f766855f22f062b72948ec858b8f",
-      "bytes": 9317
+      "source_sha256": "9e199bee4bcfae75381636e76916048adb5de1e5d82627617bad9413673066d9",
+      "published_sha256": "9e199bee4bcfae75381636e76916048adb5de1e5d82627617bad9413673066d9",
+      "bytes": 9326
     },
     {
       "path": "kernel-mode-cross-repo-prompt.html",
@@ -127,9 +134,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "dc936e85f587172d4d519d6291e669a62784e613c82941352537a96bd8480d46",
-      "published_sha256": "27024ed91d0eebd77bffd9f55943fce522cbf780002a8e0fc4f783e47c5ec9c8",
-      "bytes": 95734
+      "source_sha256": "749060e42414ae13a9c8c7155324e65977b9fe26ebb6e4a8aca06bc116f1cd89",
+      "published_sha256": "03853ab3b918179294db7428ad3f01956383e40086d49082a449424c5c4a6c0e",
+      "bytes": 16521
     },
     {
       "path": "kernel-mode-tmr-flow.md",

@@ -56,7 +56,7 @@
 
 ## 3. 工作如何纳入统一 ROADMAP
 
-**实施顺序、状态和退出条件统一由 [ROADMAP §2–3](ROADMAP.md#2-依赖关系) 与 [§8 跨仓交付](ROADMAP.md#cross-repo-delivery)维护；本页只保存接管来源与候选归属，不另维护第二份路线。** [HTML 依赖图](kernel-mode-roadmap.html#section-2)同次更新。
+**实施顺序、状态和退出条件统一由 [ROADMAP §2–3](ROADMAP.md#2-依赖关系) 与 [§4 并行与跨仓交付](ROADMAP.md#cross-repo-delivery)维护；本页只保存接管来源与候选归属，不另维护第二份路线。** [HTML 依赖图](kernel-mode-roadmap.html#section-2)同次更新。
 
 | 原交接工作包 | ROADMAP 归属 | 本次接管保留的事实 / 尚需核查 |
 | --- | --- | --- |
