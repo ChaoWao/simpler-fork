@@ -252,11 +252,13 @@ public:
         DumpUnregisterCallback unregister_cb = nullptr
     );
 
-    // Bind the single-run artifact configuration and reset its shard/counter
-    // window. The prefix is read when the writer starts on the first buffer.
+    // Bind the single-run artifact configuration and reset only its host
+    // shard/counter window. Device transport cursors remain monotonic.
+    // The prefix is read when the writer starts on the first buffer. Ordinary
+    // recovery and arena credits require this exact initialized device epoch.
     // Device selection is published separately in the invocation descriptor;
     // retained runs use run_begin() and preserve their monotonic counters.
-    void begin_run(const std::string &output_prefix, DumpArgsLevel dump_args_level);
+    void begin_run(const std::string &output_prefix, DumpArgsLevel dump_args_level, uint64_t run_epoch);
 
     void start(const profiling_common::ThreadFactory &thread_factory);
 
@@ -276,12 +278,19 @@ public:
     int export_dump_files();
 
     /**
-     * After stop():
+     * A completed execution or joined producer supplies the stop proof.
+     * Without it, host readers retire before export and producer-held buffers
+     * stay on the device. Closes only the ordinary single-run artifact window.
+     */
+    int close_ordinary_run(bool producer_stop_proved);
+
+    /**
+     * After producer stop and host transport quiescence:
      *   - Recover records from any non-empty DumpBufferState::current_buf_ptr
      *     left behind by abnormal exit before device-side flush ran.
-     *   - Accumulate device-side dropped_record_count into
+     *   - Snapshot device-side run_dropped_record_count into
      *     total_dropped_record_count_ for the final anomaly report.
-     * Must be called after stop().
+     * Joining host threads alone does not prove the device producer stopped.
      */
     void reconcile_counters();
 
@@ -603,6 +612,7 @@ private:
     // thread builds run_dir_ = output_prefix_ / "args_dump" lazily on the
     // first on_buffer_collected.
     std::string output_prefix_;
+    uint64_t run_epoch_{0};
 
     // Per-thread arena pointers (device + host shadow)
     struct ArenaInfo {
@@ -623,6 +633,13 @@ private:
 
     // Stats
     std::atomic<uint32_t> total_dropped_record_count_{0};
+    bool dropped_records_complete_{false};
+    bool ordinary_drain_loss_{false};
+    struct RecoveredCurrentBuffer {
+        uint64_t dev_buffer_ptr{0};
+        uint32_t buffer_seq{0};
+    };
+    std::vector<RecoveredCurrentBuffer> recovered_current_buffers_;
     std::atomic<uint32_t> total_truncated_count_{0};
     std::array<std::atomic<uint64_t>, PLATFORM_MAX_AICPU_THREADS> written_payload_counts_{};
 

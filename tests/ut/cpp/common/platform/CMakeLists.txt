@@ -525,6 +525,13 @@ platform_case(test_args_dump_run_identity.cpp PER_ARCH PER_RUNTIME
         ${SIMPLER_COMMON_PLATFORM_DIR}/shared/aicpu/device_run_result_base_aicpu.cpp
         ${SIMPLER_SRC}/@arch@/platform/sim/host/profiling_copy.cpp)
 
+platform_case(test_args_dump_read_failure.cpp PER_ARCH PER_RUNTIME
+    SOURCES
+        ${SIMPLER_COMMON_PLATFORM_DIR}/shared/host/args_dump_collector.cpp
+        ${SIMPLER_COMMON_PLATFORM_DIR}/shared/host/args_dump_retained_runs.cpp
+        ${SIMPLER_COMMON_PLATFORM_DIR}/shared/aicpu/args_dump_aicpu.cpp
+        ${SIMPLER_COMMON_PLATFORM_DIR}/shared/aicpu/device_run_result_base_aicpu.cpp)
+
 # Per-run terminal evidence: the ArgsDump producer's own accounting, and the
 # credit pool and bank array every collector's banks are reserved from. Both
 # axes for the same reason as the cases above — the terminal is dimensioned by
@@ -642,6 +649,44 @@ hbg_case(test_run_terminal_stop_settlement.cpp
 tmr_case(test_run_terminal_stop_settlement.cpp
     SOURCES
         ${CAPACITY_REFUSAL_SOURCES}
+        ${SIMPLER_SRC}/@arch@/runtime/tensormap_and_ringbuffer/runtime/shared/runtime.cpp
+    INCLUDES ${CAPACITY_REFUSAL_INCLUDES}
+    DEFINES  SIMPLER_RUNTIME_NAME="tensormap_and_ringbuffer"
+    LINK     ${CMAKE_DL_LIBS})
+
+# Ordinary close uses the real runner boundary and the real AICPU producer.
+hbg_case(test_args_dump_ordinary_close.cpp
+    SOURCES
+        ${CAPACITY_REFUSAL_SOURCES}
+        ${HBG_COMMON_SHARED_DIR}/runtime.cpp
+        ${SIMPLER_COMMON_PLATFORM_DIR}/shared/aicpu/args_dump_aicpu.cpp
+    INCLUDES ${CAPACITY_REFUSAL_INCLUDES}
+    DEFINES  SIMPLER_RUNTIME_NAME="host_build_graph"
+    LINK     ${CMAKE_DL_LIBS})
+
+tmr_case(test_args_dump_ordinary_close.cpp
+    SOURCES
+        ${CAPACITY_REFUSAL_SOURCES}
+        ${SIMPLER_SRC}/@arch@/runtime/tensormap_and_ringbuffer/runtime/shared/runtime.cpp
+    INCLUDES ${CAPACITY_REFUSAL_INCLUDES}
+    DEFINES  SIMPLER_RUNTIME_NAME="tensormap_and_ringbuffer"
+    LINK     ${CMAKE_DL_LIBS})
+
+# Both architectures use detached shadows to observe forbidden terminal reads.
+set(SCOPE_STATS_ORDINARY_CLOSE_SOURCES ${CAPACITY_REFUSAL_SOURCES})
+list(FILTER SCOPE_STATS_ORDINARY_CLOSE_SOURCES EXCLUDE REGEX "/sim/host/profiling_copy\\.cpp$")
+
+hbg_case(test_scope_stats_ordinary_close.cpp
+    SOURCES
+        ${SCOPE_STATS_ORDINARY_CLOSE_SOURCES}
+        ${HBG_COMMON_SHARED_DIR}/runtime.cpp
+    INCLUDES ${CAPACITY_REFUSAL_INCLUDES}
+    DEFINES  SIMPLER_RUNTIME_NAME="host_build_graph"
+    LINK     ${CMAKE_DL_LIBS})
+
+tmr_case(test_scope_stats_ordinary_close.cpp
+    SOURCES
+        ${SCOPE_STATS_ORDINARY_CLOSE_SOURCES}
         ${SIMPLER_SRC}/@arch@/runtime/tensormap_and_ringbuffer/runtime/shared/runtime.cpp
     INCLUDES ${CAPACITY_REFUSAL_INCLUDES}
     DEFINES  SIMPLER_RUNTIME_NAME="tensormap_and_ringbuffer"

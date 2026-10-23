@@ -1191,7 +1191,7 @@ int SimDeviceRunnerBase::start_shared_collectors_for_run(
                 return PTO_RUNTIME_ERR_INTERNAL;
             }
         } else {
-            dump_collector_.begin_run(dfx.output_prefix, dfx.dump_args_level);
+            dump_collector_.begin_run(dfx.output_prefix, dfx.dump_args_level, run_epoch);
             dump_collector_.start(thread_factory);
         }
     }
@@ -1493,10 +1493,7 @@ int SimDeviceRunnerBase::close_args_dump_run_boundary(
     const DfxRunConfig &dfx, uint64_t run_epoch, bool device_execution_complete, bool device_producers_stopped
 ) {
     if (!dump_collector_.retains_runs()) {
-        dump_collector_.quiesce();
-        dump_collector_.reconcile_counters();
-        dump_collector_.export_dump_files();
-        return 0;
+        return dump_collector_.close_ordinary_run(device_execution_complete || device_producers_stopped);
     }
     // A retained run keeps only the run boundary's device-side reads — this
     // run's terminal lane state and, for a lane whose handover its receipt
@@ -1518,9 +1515,9 @@ void SimDeviceRunnerBase::close_scope_stats_run_boundary(
     const DfxRunConfig &dfx, uint64_t run_epoch, bool device_execution_complete, bool device_producers_stopped
 ) {
     if (!scope_stats_collector_.retains_runs()) {
-        scope_stats_collector_.quiesce();
-        scope_stats_collector_.reconcile_counters();
-        scope_stats_collector_.write_jsonl(dfx.output_prefix);
+        scope_stats_collector_.close_ordinary_run(
+            dfx.output_prefix, device_execution_complete || device_producers_stopped
+        );
         return;
     }
     // A retained run keeps the boundary's ownership steps — the receive drain
