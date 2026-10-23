@@ -27,6 +27,7 @@ struct Control {
     bool fail_stream_id{false};
     bool capture_active{false};
     bool *capture_refuse_after_core{nullptr};
+    size_t capture_record_allocation_failures{0};
     bool capture_loader_throws{false};
     size_t capture_core_calls{0};
     size_t capture_cpu_calls{0};

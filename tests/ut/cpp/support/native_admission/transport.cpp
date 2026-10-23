@@ -115,8 +115,20 @@ int aclrtDestroyEvent(aclrtEvent p) {
     return 0;
 }
 int aclrtRecordEvent(aclrtEvent, aclrtStream) {
-    const auto &c = native_admission_transport::control();
-    if (c.capture_refuse_after_core != nullptr && c.capture_core_calls != 0) *c.capture_refuse_after_core = true;
+    auto &c = native_admission_transport::control();
+    if (c.capture_refuse_after_core != nullptr && c.capture_core_calls != 0) {
+        *c.capture_refuse_after_core = true;
+        // The volatile allocator target preserves the faulting call under
+        // optimization. Only bad_alloc observed at this site satisfies the witness.
+        void *(*volatile allocate)(std::size_t) = ::operator new;
+        try {
+            void *storage = allocate(1);
+            ::operator delete(storage);
+        } catch (const std::bad_alloc &) {
+            ++c.capture_record_allocation_failures;
+            throw;
+        }
+    }
     return 0;
 }
 int aclrtResetEvent(aclrtEvent, aclrtStream) { return 0; }

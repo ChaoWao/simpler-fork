@@ -199,6 +199,7 @@ TEST_F(NativeAdmissionTest, CaptureRecordExceptionsRetainHiddenStreamOwnershipAn
         control().capture_refuse_after_core = allocation_throws ? &refuse_next_host_allocation : nullptr;
         control().capture_loader_throws = !allocation_throws;
         control().capture_core_calls = control().capture_cpu_calls = 0;
+        control().capture_record_allocation_failures = 0;
         int caller = 0;
         int rc = 0;
         bool escaped = false;
@@ -214,6 +215,7 @@ TEST_F(NativeAdmissionTest, CaptureRecordExceptionsRetainHiddenStreamOwnershipAn
         EXPECT_EQ(rc, PTO_RUNTIME_ERR_INTERNAL);
         EXPECT_EQ(control().capture_core_calls, 1u);
         EXPECT_EQ(control().capture_cpu_calls, allocation_throws ? 0u : 1u);
+        EXPECT_EQ(control().capture_record_allocation_failures, allocation_throws ? 1u : 0u);
         EXPECT_TRUE(owner.enqueue_attempted);
         EXPECT_FALSE(owner.recorded);
         EXPECT_FALSE(runner.kernel_execution_state().accepts_dispatch());
