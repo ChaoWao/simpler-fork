@@ -85,6 +85,9 @@ sequenceDiagram
 
             alt Read/parse/binding rejected
                 Note over O,C: Do not initialize graph destinations or open dispatch; complete required failure coordination
+                O->>O: Preserve the boot owner's restore error through participant teardown
+                O->>S: Poison the registered slot before publishing completion
+                Note over S,C: A queued successor cannot restore or dispatch, even with a valid packet
             else Binding accepted
                 O-->>E: integration: prepare_graph_execution(binding)
                 E->>E: validate_images(): graph/task/Definition semantics
@@ -120,6 +123,26 @@ sequenceDiagram
     end
     O-->>App: Result/status through the enclosing API
 ```
+
+## Failed device restoration
+
+`restore_kernel_graph()` preserves the boot owner's result independently of
+whether it claimed an execution attempt. Framing, callable, packet and image
+validation can fail before the slot leaves `Idle`; that absence of an attempt
+is not evidence of a successful invocation. The cleanup participant can also
+have a zero local return while the boot owner failed.
+
+After the participants shut down, `retire_kernel_graph()` consumes that saved
+result and poisons the registered slot before the invocation completes. A later
+entry cannot restore a valid packet over the failure. Successful restoration
+and retirement still return the slot to `Idle` for the next replay. This is a
+controlled restore-failure gate; a hung device still requires the caller's
+bounded completion monitoring and retained resources.
+
+Host argument or capacity refusal before enqueue does not enter this device
+path and remains retryable. Ordinary native runs do not consume the saved
+kernel restore result. This restore snapshot does not replace the executor's
+existing accumulation of other participants' execution and shutdown errors.
 
 ## File responsibilities
 

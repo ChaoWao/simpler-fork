@@ -32,6 +32,7 @@ struct alignas(64) RegisteredCallable {
 };
 RegisteredCallable callables[MAX_REGISTERED_CALLABLE_IDS];
 std::atomic<uint64_t> restore_attempt{0};
+std::atomic<int> restore_status{0};
 
 bool valid(const simpler::kernel::HbgCallableBinding &r) {
     auto *registry = hbg::current_graph_slot_registry();
@@ -73,10 +74,9 @@ extern "C" __attribute__((visibility("default"))) int simpler_aicpu_l1_hbg_revok
     return 0;
 }
 
-int hbg::restore_kernel_graph(Runtime *runtime) noexcept {
-    const auto args = get_platform_entry_args(platform_aicpu_affinity_thread_idx());
-    if (args.source != static_cast<uint32_t>(EntryArgsSource::HbgKernelInvocation)) return 0;
-    restore_attempt.store(0, std::memory_order_relaxed);
+namespace hbg {
+namespace {
+int restore_kernel_graph_impl(Runtime *runtime, const PlatformEntryArgs &args) noexcept {
     auto *registry = current_graph_slot_registry();
     if (registry == nullptr || args.args_base == nullptr || args.offset != LAUNCH_ENVELOPE_HEADER_BYTES ||
         args.graph_offset != LAUNCH_ENVELOPE_HEADER_BYTES ||
@@ -133,8 +133,8 @@ int hbg::restore_kernel_graph(Runtime *runtime) noexcept {
     const auto status = prepare_graph_execution(binding, result);
     cache_invalidate_range(&registry->execution, sizeof(registry->execution));
     const uint64_t attempt_after = __atomic_load_n(&registry->execution.attempt, __ATOMIC_ACQUIRE);
-    // Only an admitted preparation can own a quarantined attempt. A rejection
-    // before the Idle -> Preparing claim leaves retirement with nothing to do.
+    // An early rejection owns no execution attempt. Its failure still reaches
+    // terminal retirement through the separate invocation status.
     restore_attempt.store(attempt_after != attempt_before ? attempt_after : 0, std::memory_order_release);
     if (status != GraphExecutionStatus::Ok) {
         LOG_ERROR(
@@ -154,16 +154,32 @@ int hbg::restore_kernel_graph(Runtime *runtime) noexcept {
     cache_flush_range(&runtime->dev, Runtime::device_image_bytes());
     return 0;
 }
+}  // namespace
+}  // namespace hbg
+
+int hbg::restore_kernel_graph(Runtime *runtime) noexcept {
+    const auto args = get_platform_entry_args(platform_aicpu_affinity_thread_idx());
+    if (args.source != static_cast<uint32_t>(EntryArgsSource::HbgKernelInvocation)) return 0;
+    restore_attempt.store(0, std::memory_order_relaxed);
+    const int status = restore_kernel_graph_impl(runtime, args);
+    // The cleanup participant may have a successful local return even when
+    // the boot owner rejected restoration before claiming an execution slot.
+    restore_status.store(status, std::memory_order_release);
+    return status;
+}
 
 int hbg::retire_kernel_graph(Runtime *, int execution_status) noexcept {
     const auto args = get_platform_entry_args(platform_aicpu_affinity_thread_idx());
     if (args.source != static_cast<uint32_t>(EntryArgsSource::HbgKernelInvocation)) return 0;
     auto *registry = current_graph_slot_registry();
     const uint64_t attempt = restore_attempt.load(std::memory_order_acquire);
-    if (registry == nullptr || attempt == 0) return execution_status;
-    const GraphExecutionCompletion completion{
-        execution_status == 0 ? GraphExecutionRetirement::Completed : GraphExecutionRetirement::FatalFailure,
-        execution_status, 0
-    };
+    const int restore_error = restore_status.load(std::memory_order_acquire);
+    const int status = restore_error != 0 ? restore_error : execution_status;
+    if (status != 0) {
+        if (registry != nullptr) (void)poison_graph_execution_slot(registry);
+        return status;
+    }
+    if (registry == nullptr || attempt == 0) return status;
+    const GraphExecutionCompletion completion{GraphExecutionRetirement::Completed};
     return retire_graph_execution(registry, attempt, completion) == GraphExecutionStatus::Ok ? 0 : -1;
 }

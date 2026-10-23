@@ -2736,6 +2736,9 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     EXPECT_EQ(reader.section, reinterpret_cast<const std::byte *>(registration.destinations[2].address));
     EXPECT_GT(reader.bytes, 0U);
     ASSERT_EQ(hbg::retire_kernel_graph(&runtime, 0), 0);
+    // A successful invocation can restore again without any Host rebuild.
+    ASSERT_EQ(hbg::restore_kernel_graph(&runtime), 0);
+    ASSERT_EQ(hbg::retire_kernel_graph(&runtime, 0), 0);
     ASSERT_EQ(simpler_aicpu_l1_hbg_revoke_callable(&live), 0);
     EXPECT_NE(hbg::restore_kernel_graph(&runtime), 0);
     ASSERT_EQ(simpler_aicpu_l1_hbg_register_callable(&live), 0);
@@ -2818,10 +2821,27 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Ok
     );
-    EXPECT_EQ(
-        hbg::retire_graph_execution(registry, prepared.generation, {hbg::GraphExecutionRetirement::FatalFailure, -1}),
-        hbg::GraphExecutionStatus::Poisoned
+    ASSERT_EQ(
+        hbg::retire_graph_execution(registry, prepared.generation, {hbg::GraphExecutionRetirement::Completed}),
+        hbg::GraphExecutionStatus::Ok
     );
+    // The submitted entry fails before claiming a new execution attempt. Its
+    // cleanup owner can be a different participant with a successful local rc.
+    auto rejected_view = launch_view;
+    rejected_view.graph_bytes = 0;
+    set_platform_entry_args(0, rejected_view);
+    ASSERT_NE(hbg::restore_kernel_graph(&runtime), 0);
+    EXPECT_NE(hbg::retire_kernel_graph(&runtime, 0), 0);
+    EXPECT_EQ(registry->execution.attempt, prepared.generation);
+
+    // A queued successor with the original valid packet cannot restore or
+    // dispatch after the failed entry's completion. It cannot clear the fault.
+    set_platform_entry_args(0, launch_view);
+    const auto live_runtime = prepared.runtime;
+    live_runtime->total_cycles = 987;
+    EXPECT_NE(hbg::restore_kernel_graph(&runtime), 0);
+    EXPECT_EQ(live_runtime->total_cycles, 987U);
+    EXPECT_EQ(registry->execution.attempt, prepared.generation);
     EXPECT_EQ(
         prepare_packet_for_test(first.storage.data(), first.bytes, 0, 123, trusted, prepared),
         hbg::GraphExecutionStatus::Poisoned

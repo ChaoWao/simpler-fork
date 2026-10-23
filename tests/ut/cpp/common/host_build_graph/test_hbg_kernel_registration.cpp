@@ -17,6 +17,7 @@
 #include "aicpu/platform_entry_args.h"
 #include "callable_protocol.h"
 #include "host_build_graph/kernel_callable_registration.h"
+#include "host_build_graph/kernel_graph_execution.h"
 #include "host_build_graph/kernel_graph_execution_entry.h"
 #include "host_build_graph/kernel_graph_tensor_validation.h"
 #include "host_build_graph/device/graph_image_source.h"
@@ -61,6 +62,37 @@ protected:
         set_platform_entry_args(0, {});
     }
 };
+
+class HbgFatalRetirementTest : public HbgKernelRegistrationTest,
+                               public ::testing::WithParamInterface<hbg::GraphExecutionCompletion> {};
+
+TEST_P(HbgFatalRetirementTest, AdmittedReadyExecutionPoisonsBeforeFurtherAdmission) {
+    auto &execution = registry->execution;
+    execution.attempt = 1;
+    execution.committed_generation = 1;
+    execution.runtime_address = registry->registration.destinations[1].address;
+    execution.phase = static_cast<uint32_t>(hbg::GraphExecutionSlotPhase::Ready);
+    execution.status = static_cast<uint32_t>(hbg::GraphExecutionStatus::Ok);
+    hbg::GraphSlotRegistration current{};
+    ASSERT_EQ(hbg::acquire_graph_execution_slot(registry, 0, 123, current), hbg::GraphSlotStatus::Ok);
+    ASSERT_EQ(registry->phase, static_cast<uint32_t>(hbg::GraphSlotRegistrationPhase::Ready));
+    ASSERT_EQ(execution.phase, static_cast<uint32_t>(hbg::GraphExecutionSlotPhase::Ready));
+    hbg::GraphExecutionPreparation admitted;
+    ASSERT_EQ(hbg::acquire_graph_execution(registry, 1, admitted), hbg::GraphExecutionStatus::Ok);
+
+    EXPECT_EQ(hbg::retire_graph_execution(registry, 1, GetParam()), hbg::GraphExecutionStatus::Poisoned);
+    EXPECT_EQ(registry->phase, static_cast<uint32_t>(hbg::GraphSlotRegistrationPhase::Poisoned));
+    EXPECT_EQ(hbg::acquire_graph_execution_slot(registry, 0, 123, current), hbg::GraphSlotStatus::Poisoned);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    FatalOrFailedCompletion, HbgFatalRetirementTest,
+    ::testing::Values(
+        hbg::GraphExecutionCompletion{hbg::GraphExecutionRetirement::FatalFailure},
+        hbg::GraphExecutionCompletion{hbg::GraphExecutionRetirement::Completed, -71, 0},
+        hbg::GraphExecutionCompletion{hbg::GraphExecutionRetirement::Completed, 0, -72}
+    )
+);
 
 TEST_F(HbgKernelRegistrationTest, RejectsNullExternalDeviceBacking) {
     uint32_t shape[] = {16};
@@ -173,6 +205,22 @@ TEST_F(HbgKernelRegistrationTest, RestoredDefinitionsRequireTheKernelEntryRoute)
     args.graph_source = static_cast<uint32_t>(GraphSectionSource::RestoredSlot);
     set_platform_entry_args(0, args);
     EXPECT_EQ(graph_image_view_for_reader(runtime).section, storage.data());
+}
+
+TEST_F(HbgKernelRegistrationTest, RejectedDeviceEntryPoisonsSlotBeforeSuccessorAdmission) {
+    PlatformEntryArgs args{};
+    args.source = static_cast<uint32_t>(EntryArgsSource::HbgKernelInvocation);
+    set_platform_entry_args(0, args);
+
+    // This is an executing device entry, not a Host launch preflight refusal.
+    const int status = hbg::restore_kernel_graph(nullptr);
+    ASSERT_NE(status, 0);
+    // A different cleanup participant can have succeeded locally.
+    EXPECT_NE(hbg::retire_kernel_graph(nullptr, 0), 0);
+    EXPECT_EQ(registry->phase, static_cast<uint32_t>(hbg::GraphSlotRegistrationPhase::Poisoned));
+    hbg::GraphSlotRegistration next{};
+    EXPECT_EQ(hbg::acquire_graph_execution_slot(registry, 0, 123, next), hbg::GraphSlotStatus::Poisoned);
+    EXPECT_NE(hbg::restore_kernel_graph(nullptr), 0);
 }
 
 TEST_F(HbgKernelRegistrationTest, OrdinaryRunDoesNotRestoreAndMalformedKernelRunIsRejected) {

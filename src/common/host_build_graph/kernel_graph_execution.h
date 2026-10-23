@@ -72,7 +72,11 @@ GraphExecutionStatus prepare_graph_execution(
 // Called after all participants have skipped dispatch on failure, shut down,
 // passed completion gates and deinitialized, and all AICore/readers are quiescent.
 // Only a known controlled fault with no runtime/teardown error permits retry.
-// Native errors require FatalFailure and Host context poisoning; no reset/free.
+// FatalFailure or a nonzero runtime/teardown status poisons this execution slot;
+// the enclosing owner retains responsibility for Host context poisoning and
+// resource lifetime. The kernel entry directly poisons a failed restoration,
+// including failures without an admitted attempt, and delegates only successful
+// retirement here. Neither failure path authorizes reset/free.
 // The owner serializes this with preparation, registration, poisoning and close.
 GraphExecutionStatus retire_graph_execution(
     GraphSlotRegistry *registry, uint64_t attempt, const GraphExecutionCompletion &completion

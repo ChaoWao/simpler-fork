@@ -15,7 +15,11 @@
 class Runtime;
 namespace hbg {
 // The boot owner calls restore after handshakes and retires after the last
-// scheduler participant has shut down. Ordinary program runs are no-ops.
+// scheduler participant has shut down. The restore result survives the boot
+// participant, so retirement rejects even when its own participant succeeded.
+// A failed restore poisons the registered slot before completion,
+// including a validation failure that never claimed an execution attempt.
+// Ordinary program runs and Host launch preflight refusals are unaffected.
 int restore_kernel_graph(Runtime *runtime) noexcept;
 int retire_kernel_graph(Runtime *runtime, int execution_status) noexcept;
 }  // namespace hbg
