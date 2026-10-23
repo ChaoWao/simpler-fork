@@ -25,7 +25,7 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 ## 快照边界
 
 - #2671、#2677、#2684 已合入；#2684 merge 为 `62565feb3`，其资格仍归最终 head `5a1c5c089` 与代码等价 head `77aba9a8a`，不把历史测试挂到新 main。普通 ScopeStats 证明门、host-owned unknown 导出、restart epoch 拒绝与 HTML 消费的验证、Claude 评审及 exact-head CI 见[原报告](reviews/scope-stats-proof-close/REPORT.md)与[意见处置](reviews/scope-stats-proof-close/review-disposition.md)。
-- [当前 Manager / Contributor 协议](manager-contributor-protocol.md)落实用户的明确要求：主 agent 只分析、派发、协调和验收；代码、测试、实验、文档、集成与发布均委派执行。TMR/HBG 两名 contributors 各自负责完整 capture 贡献，当前为已批准的 TMR 测试修复及 HBG 缺陷定界，尚未签收 capture 阶段。过去主执行加测试 / plot / CI 辅助只算任务内协作，不冒充多条开发线；历史 [Hub 讨论稿](references/pipeline-a/multi-agent-work-principles.md)不授权安装或启动任务。
+- [当前 Manager / Contributor 协议](manager-contributor-protocol.md)落实用户的明确要求：主 agent 只分析、派发、协调和验收；代码、测试、实验、文档、集成与发布均委派执行。TMR/HBG 两名 contributors 各自负责完整 capture 贡献，当前为已批准并启动的 TMR 注入 / Partial 修复及 HBG restore 错误 / 后继拒绝回归，尚未签收 capture 阶段。过去主执行加测试 / plot / CI 辅助只算任务内协作，不冒充多条开发线；历史 [Hub 讨论稿](references/pipeline-a/multi-agent-work-principles.md)不授权安装或启动任务。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 
 - 历史路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；#2660的代码和测试另固定 main `3b5836465`。完整API层次审查保留页内基线；当前候选验证见上条，不把历史只读核对或旧测量移挂到当前head。

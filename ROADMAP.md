@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 普通 args-dump 错误关闭 | [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 已合入 | 已交付停机证明、host-only 导出与未知丢失统计；[证据与边界](reviews/args-dump-stop-proof/REPORT.md) |
 | ScopeStats 错误关闭 | [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 已合入 `62565feb3` | 已交付证明门、host-owned 导出与未知统计展示；[原 head 资格与证据](reviews/scope-stats-proof-close/REPORT.md) |
-| TMR / HBG capture | TMR 测试修复范围已签收；HBG 本地栈集成与缺陷定界中；两条均未完成本轮验收 | 两名 contributor 各自负责完整 capture 交付；TMR 修复注入/Partial 证据，HBG 提交缺陷和精确范围；共同接口先定 owner |
+| TMR / HBG capture | TMR、HBG 两条实现 / 回归均已启动；HBG 回归已先红并修复中；两条均未验收 | 两名 contributor 各自负责完整 capture 交付；TMR 修复注入/Partial 证据，HBG 验证 restore 错误到后继拒绝；共同接口先定 owner |
 | I1 真实框架接线 | 入口映射已完成，实际队列接线未签收 | 对齐 PyPTO #3100 的初始化 owner，接真实 queue callback → Worker.submit；[映射](reviews/kernel-i1-entry-mapping/REPORT.md) |
 
 **当前调度：** TMR、HBG 两名 worker 各自推进完整增量；I1 保留接口协调。Manager 只分析、派发与验收，代码、测试、实验、文档和集成发布全部委派；[执行协议](manager-contributor-protocol.md)。

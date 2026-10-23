@@ -21,9 +21,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "0b648b9537609989f381e2b493c52f946bdbcdee3f210d0f1886ebb3cda88690",
-      "published_sha256": "0b648b9537609989f381e2b493c52f946bdbcdee3f210d0f1886ebb3cda88690",
-      "bytes": 7711
+      "source_sha256": "bc60ce06c23d24a0729776f926bf122d5e1549268b6047b0832c00ffa2604b62",
+      "published_sha256": "bc60ce06c23d24a0729776f926bf122d5e1549268b6047b0832c00ffa2604b62",
+      "bytes": 7714
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -133,9 +133,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "be0c6009746168f666a490b247aa31aa137aac465fed48d5a4f918232709aafc",
-      "published_sha256": "4d7b76935b957493557a099f536b7bfb780e2f2aa9bbf67068b825036c5fb50d",
-      "bytes": 16856
+      "source_sha256": "7131d0085d84cd83aeae4110989b6f0771a4ae5fe4c1e34a1b623510636a5ae8",
+      "published_sha256": "09df51a4d83abcf04f7c0286ba44977173fa786d9bbf668d1f8c27d736c8c2b9",
+      "bytes": 16859
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -154,9 +154,9 @@
     {
       "path": "manager-contributor-protocol.md",
       "source_collection": "kernel-design",
-      "source_sha256": "401f0c442cf051c0eee6ef8ed5b584db6fb4d3dea9bc00cccdf726f72bf0227d",
-      "published_sha256": "401f0c442cf051c0eee6ef8ed5b584db6fb4d3dea9bc00cccdf726f72bf0227d",
-      "bytes": 5893
+      "source_sha256": "d85ef8244fe10d900347f37f1823fcd57ee6c3242cce2ee2052870c3c429144e",
+      "published_sha256": "d85ef8244fe10d900347f37f1823fcd57ee6c3242cce2ee2052870c3c429144e",
+      "bytes": 6724
     },
     {
       "path": "probes/README.md",
@@ -1666,9 +1666,9 @@
     {
       "path": "reviews/scope-stats-proof-close/REPORT.md",
       "source_collection": "kernel-design",
-      "source_sha256": "196631319d3f4a82ee7b64a3501f69ebac70cd30a4be44dd49953bcc1d606dc3",
-      "published_sha256": "196631319d3f4a82ee7b64a3501f69ebac70cd30a4be44dd49953bcc1d606dc3",
-      "bytes": 6512
+      "source_sha256": "0373f0cc15727383c7626fa95e078b9d7295563a9947bccb5575e68f5a258d06",
+      "published_sha256": "0373f0cc15727383c7626fa95e078b9d7295563a9947bccb5575e68f5a258d06",
+      "bytes": 6615
     },
     {
       "path": "reviews/scope-stats-proof-close/claude-final-doc-recheck-5a1c5c089.md",

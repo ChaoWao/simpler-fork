@@ -43,7 +43,7 @@ manager 回执：接受、退回修复或依赖等待；理由与后续 owner：
 
 manager 接到通知后读取产物和证据，明确接受、退回或等待依赖；“收到”和 agent 自报完成不等于验收。交接的 commit 不再继续写，后续修复另报新 head。通知按任务与产物 SHA 去重，恢复会话先核对实际 GitHub / worktree 状态。
 
-由委派的集成执行者完成集成、完整验证和真实 Claude 评审；意见由相应 owner 修复。head 改变后重新判断需要重跑的验证和评审，不能把旧 head 的成功移到新代码上。主 agent 收齐功能证据、意见处置与最终 exact-head CI 后签收，发布执行者提交有完整行为的代码 PR，交用户审核；不自动合入。
+由委派的集成 / 发布执行者完成集成、验证，并可创建或更新代码 PR，以运行真实 Claude 评审和 CI；意见由相应 owner 修复。head 改变后重新判断需要重跑的验证和评审，不能把旧 head 的成功移到新代码上。主 agent 收齐功能证据、意见处置与最终 exact-head CI 后签收；发布执行者再将 PR 标为 ready 并交用户审核。上述修改和发布均不由主 agent 执行，不自动合入。
 
 一项完整行为可以由多个 contributors 协作，默认仍是一笔有意义的 PR；不能按 agent 人数机械拆成不完整 PR。独立功能可分别成 PR，父路线只有在各项及端到端验收通过后才完成。
 
@@ -53,8 +53,10 @@ manager 接到通知后读取产物和证据，明确接受、退回或等待依
 | --- | --- |
 | ScopeStats 普通错误关闭 | #2684 已合入 `62565feb3`；保留原 qualification head 与[证据](reviews/scope-stats-proof-close/REPORT.md)，不重新声称修复其他 DFX 或 AIV |
 | TMR capture | `/root/tmr_capture_delivery` 负责 #2625 完整交付的正确性贡献；已批准 `test_native_admission.cpp` 与 `tests/ut/cpp/support/native_admission/transport.{h,cpp}`，修正依赖 SSO 的分配失败注入，证明实际注入边界及 Partial / poison / 保留 / retry 行为。先交本地 candidate，折入已有完整 capture PR；独立 A5 超时仍诊断中，无 A5 silicon 完成主张 |
-| HBG capture | `/root/hbg_capture_delivery` 负责 #2646/#2647 完整交付的正确性贡献；当前本地栈集成与具体缺陷 / 文件范围提案尚待签收。独立证明 restore、所有权与关闭，不由 TMR 结果代替 |
+| HBG capture | `/root/hbg_capture_delivery` 负责 #2646/#2647 完整交付的正确性贡献；已批准 HBG 私有 device entry / aggregation、两组回归与 packet 文档，验证真实 restore 错误 → retirement 汇总 → 已排队后继拒绝，并保留正常 replay / native / host-clean-refusal retry 对照。真实 device-entry 拒绝后的后继 gate 回归已先红，HBG 私有修复进行中；尚未验收，无 RTS / 硬件资格主张 |
 | 共同 C1/C2 接口 | 尚未划给任一实现者；发现交叉时由 manager 决定唯一 owner 和消费依赖，禁止两边各做一套 |
 | 集成 / 发布 | 是独立委派职责；代码交接后才准入，不由主 agent 执行 |
+
+HBG 精确写入范围为 `src/common/host_build_graph/device/kernel_graph_execution_entry.cpp`、`src/common/host_build_graph/kernel_graph_execution_entry.h`、`tests/ut/cpp/common/host_build_graph/test_hbg_kernel_registration.cpp`、`tests/ut/cpp/common/host_build_graph/test_hbg_bind_ledger.cpp`、`docs/design/hbg-kernel-packet-sequence.md`；仅当反向对照证明必要时可改 HBG 私有 `src/common/host_build_graph/device/kernel_graph_execution.cpp`。通用 owner / binder / launch ABI 不在范围内。
 
 本表是当前派工边界，不是 capture 阶段完成记录；详细实现状态随各任务交接更新到 ROADMAP 对应行，不在此追加工作流水。

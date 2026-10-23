@@ -1,6 +1,6 @@
 # 普通 ScopeStats：按停机证明关闭
 
-PR [#2684](https://github.com/hw-native-sys/simpler/pull/2684)，最终候选 `5a1c5c0898691776ed307f0e560cd62609f50060`，基线 `71077b04a5e4dcd5dcae55a0fa262b3d59c93f4d`。消费已合入 #2677 的 host stop 协议。完整代码验证与 Claude 复审在 `77aba9a8a` 完成；最终 head 只同步 A5 测试说明中的一个词，实现、测试体和构建输入不变。**actual Claude 最终 approve；exact-head CI 全部通过。PR 非 draft，待用户审核，尚未合入。**
+PR [#2684](https://github.com/hw-native-sys/simpler/pull/2684)，最终候选 `5a1c5c0898691776ed307f0e560cd62609f50060`，基线 `71077b04a5e4dcd5dcae55a0fa262b3d59c93f4d`。消费已合入 #2677 的 host stop 协议。完整代码验证与 Claude 复审在 `77aba9a8a` 完成；最终 head 只同步 A5 测试说明中的一个词，实现、测试体和构建输入不变。**actual Claude 最终 approve；exact-head CI 全部通过。PR 已于 2026-10-23 04:34:53 UTC 合入，merge `62565feb3b14553ed736aab1eb008c5785bcf330`；以下验证保持原 head 归属，不移挂到 merge。**
 
 ## 交付行为与边界
 
