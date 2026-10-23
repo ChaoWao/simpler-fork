@@ -41,7 +41,9 @@ worktree / branch / commit SHA / 已停止写入：
 manager 回执：接受、退回修复或依赖等待；理由与后续 owner：
 ```
 
-manager 接到通知后读取产物和证据，明确接受、退回或等待依赖；“收到”和 agent 自报完成不等于验收。交接的 commit 不再继续写，后续修复另报新 head。通知按任务与产物 SHA 去重，恢复会话先核对实际 GitHub / worktree 状态。
+manager 必须保持主动验收循环：**收到结果 → 读取精确产物和证据 → 接受 / 退回 → 派下一 owner 或发布动作，或记录具体外部 blocker**。派发不等于完成；“收到”和自报完成不等于验收。仍有已授权、未受阻的协调工作时，主 agent 不能结束当前工作。子 agent 通知不保证在主 agent final 后自动启动新 turn。
+
+交接 commit 停止写入，修复另报新 head。按任务与产物 SHA 去重；恢复先读实际 GitHub / worktree 状态。发布或 tracker 更新若返回未知结果，先读远端 SHA / 正文确认是否已生效，再决定重试，不能盲目重复 push、建 PR 或覆盖更新；未知仍未解除时保留回执和下一读取动作。
 
 由委派的集成 / 发布执行者完成集成、验证，并可创建或更新代码 PR，以运行真实 Claude 评审和 CI；意见由相应 owner 修复。head 改变后重新判断需要重跑的验证和评审，不能把旧 head 的成功移到新代码上。主 agent 收齐功能证据、意见处置与最终 exact-head CI 后签收；发布执行者再将 PR 标为 ready 并交用户审核。上述修改和发布均不由主 agent 执行，不自动合入。
 
@@ -51,12 +53,10 @@ manager 接到通知后读取产物和证据，明确接受、退回或等待依
 
 | 交付线 | 当前状态与下一门 |
 | --- | --- |
-| ScopeStats 普通错误关闭 | #2684 已合入 `62565feb3`；保留原 qualification head 与[证据](reviews/scope-stats-proof-close/REPORT.md)，不重新声称修复其他 DFX 或 AIV |
-| TMR capture | `/root/tmr_capture_delivery` 负责 #2625 完整交付的正确性贡献；已批准 `test_native_admission.cpp` 与 `tests/ut/cpp/support/native_admission/transport.{h,cpp}`，修正依赖 SSO 的分配失败注入，证明实际注入边界及 Partial / poison / 保留 / retry 行为。先交本地 candidate，折入已有完整 capture PR；独立 A5 超时仍诊断中，无 A5 silicon 完成主张 |
-| HBG capture | `/root/hbg_capture_delivery` 负责 #2646/#2647 完整交付的正确性贡献；已批准 HBG 私有 device entry / aggregation、两组回归与 packet 文档，验证真实 restore 错误 → retirement 汇总 → 已排队后继拒绝，并保留正常 replay / native / host-clean-refusal retry 对照。真实 device-entry 拒绝后的后继 gate 回归已先红，HBG 私有修复进行中；尚未验收，无 RTS / 硬件资格主张 |
-| 共同 C1/C2 接口 | 尚未划给任一实现者；发现交叉时由 manager 决定唯一 owner 和消费依赖，禁止两边各做一套 |
-| 集成 / 发布 | 是独立委派职责；代码交接后才准入，不由主 agent 执行 |
+| ScopeStats 普通错误关闭 | #2684 已合入 `62565feb3`；原 head 的 CI / 资格仍归[原报告](reviews/scope-stats-proof-close/REPORT.md)，不转移到下列 fork 修复 |
+| TMR / HBG / Common 正确性贡献 | 实现 owner 交冻结源，独立 validator 实际 Claude 评审并退回修复，manager 接受，发布 contributor 将三项修复推到自己的 fork；[精确贡献/比较/资格](reviews/capture-correctness-contributions/REPORT.md) |
+| 原 feature 接入 | #2625/#2626/#2646/#2647 原 owner 保持分支责任；尚未采纳本轮修复，不因 fork 发布宣称 feature ready。A5 fatal replay 超时、HBG exact-head CI / RTS / 硬件及整体 C4 仍待证明 |
+| 共同接口与后续任务 | 任务启动前再定唯一 writer 和精确文件范围；不能因发现缺口自动占用他人的代码。I1 实际队列接线仍待协调，不制造并行完成的主张 |
+| 集成 / 发布与文档 | 独立委派，root 不执行。产品分支、tracker body 和设计备份分别留精确远端回执；结果未知先读取，再幂等续做 |
 
-HBG 精确写入范围为 `src/common/host_build_graph/device/kernel_graph_execution_entry.cpp`、`src/common/host_build_graph/kernel_graph_execution_entry.h`、`tests/ut/cpp/common/host_build_graph/test_hbg_kernel_registration.cpp`、`tests/ut/cpp/common/host_build_graph/test_hbg_bind_ledger.cpp`、`docs/design/hbg-kernel-packet-sequence.md`；仅当反向对照证明必要时可改 HBG 私有 `src/common/host_build_graph/device/kernel_graph_execution.cpp`。通用 owner / binder / launch ABI 不在范围内。
-
-本表是当前派工边界，不是 capture 阶段完成记录；详细实现状态随各任务交接更新到 ROADMAP 对应行，不在此追加工作流水。
+本表记录当前边界；测试数字、修复轮次与各 head 的结果只进 scoped report，不在协议或 ROADMAP 追加流水。运行时阶段只有各自实际验收通过才完成。

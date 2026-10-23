@@ -1,6 +1,6 @@
 # Simpler 运行时设计资料
 
-2026-10-22 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
+2026-10-23 的设计与进度快照。此分支 `design/kernel-runtime` 专门保存规划资料，不进入产品代码 PR，也不代表设计已全部实现。
 
 ## 从这里开始
 
@@ -25,13 +25,14 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 ## 快照边界
 
 - #2671、#2677、#2684 已合入；#2684 merge 为 `62565feb3`，其资格仍归最终 head `5a1c5c089` 与代码等价 head `77aba9a8a`，不把历史测试挂到新 main。普通 ScopeStats 证明门、host-owned unknown 导出、restart epoch 拒绝与 HTML 消费的验证、Claude 评审及 exact-head CI 见[原报告](reviews/scope-stats-proof-close/REPORT.md)与[意见处置](reviews/scope-stats-proof-close/review-disposition.md)。
-- [当前 Manager / Contributor 协议](manager-contributor-protocol.md)落实用户的明确要求：主 agent 只分析、派发、协调和验收；代码、测试、实验、文档、集成与发布均委派执行。TMR/HBG 两名 contributors 各自负责完整 capture 贡献，当前为已批准并启动的 TMR 注入 / Partial 修复及 HBG restore 错误 / 后继拒绝回归，尚未签收 capture 阶段。过去主执行加测试 / plot / CI 辅助只算任务内协作，不冒充多条开发线；历史 [Hub 讨论稿](references/pipeline-a/multi-agent-work-principles.md)不授权安装或启动任务。
+- [当前 Manager / Contributor 协议](manager-contributor-protocol.md)落实用户的明确要求：主 agent 只分析、派发、协调和验收；代码、测试、实验、文档、集成与发布均委派执行。接到交付后必须读取证据、接受/退回并派下一动作，不能以派发代替完成；未知发布结果先读远端再幂等重试，不承诺 final 后通知会自动开启下一轮。
+- TMR `28a9de54a`、HBG `7d1dae515`、Common `dbfbaf877` 三项正确性贡献已实际 Claude 审阅、独立 CPU 验证并发布到自己的 fork；[精确父提交、比较、证据和下一 owner](reviews/capture-correctness-contributions/REPORT.md)。原 #2625/#2626/#2647 未更新，A5 fatal replay 及完整 capture 未签收，原 #2647 head80a 当前无 checks；这些贡献没有单独开微型 PR。历史 [Hub 讨论稿](references/pipeline-a/multi-agent-work-principles.md)不授权安装或启动任务。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 
 - 历史路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；#2660的代码和测试另固定 main `3b5836465`。完整API层次审查保留页内基线；当前候选验证见上条，不把历史只读核对或旧测量移挂到当前head。
 - #2638/#2640/#2645/#2643/#2588 已合入，历史测量保留原 head。[#2649](https://github.com/hw-native-sys/simpler/pull/2649) 已合入 `0cf537df1`；审阅 head `e768fab28`（功能验证树 `8f89cc639`；最终差异仅旧注释修正）：Runtime descriptor 携带 swimlane level；保留 #2588 的 HostApi 调用快照、PMU 布局与诊断准入。rebase 后 C++ 378、Python 3501、两架构各 6 个 RTS 桩探针、A3 9 个实板 case、A5 3 个 DFX sim 通过；无本地 A5 silicon 主张。inline 已修正并 resolve，最终 head CI 19 success / 1 预期 skip。macOS A5 首轮 600 秒总 session 超时；只重跑后通过，代码与预算未改，详见证据记录。见 [本笔边界](kernel-eager-open-work.md#c1-swimlane-invocation)。历史 [#2642](https://github.com/hw-native-sys/simpler/issues/2642) 仍待根因诊断，不能据旧日志豁免新 CI。
 - [#2653](https://github.com/hw-native-sys/simpler/pull/2653) 已合入 `7503761a6`；最终 head `dcdb55ef2` 的 CI 19 success / 1 deploy skipped，包括 DFX-off 构建。历史功能验证仍归 `08d239293`；首次 AIV 仍未分类，证据未因 CI 全绿撤回。详见[本笔合同与证据](kernel-eager-open-work.md#c1-pmu-invocation)。
-- TMR eager #2624 已合入 `fdcbdcc95`；未合入候选为 TMR capture #2625、shared resources #2626、HBG #2646/#2647（后三项 draft）。框架 #2605 的 128-token 输出仍不一致。候选代码和主线资格分别记账。
+- TMR eager #2624 已合入 `fdcbdcc95`；未合入候选为 TMR capture #2625、shared resources #2626、HBG #2646/#2647（#2646/#2647 仍 draft；#2626 non-draft）。框架 #2605 的 128-token 输出仍不一致。候选代码和主线资格分别记账。
 - `SOURCE_BASELINE.md` / `source-baseline.json` 是 **2026-09-18 的历史核查**；共同执行、TMR 与参数设计中的源码事实亦保留各自基线。最新交付进度以 ROADMAP / kernel-eager-open-work 为准，不能把旧事实表当当前缺陷清单。
 - 历史报告保留原 commit、测量和限制，不能因上传日期更新就当作当前 head 的验收。
 - 原 Pipeline A manager 目录计划移除。137 份文字来源已保存于本地参考快照，公开副本排除 manager 会话流水及调度控制材料；完整 12,193 文件归档及原始日志仅本地保存。`references/pipeline-a/` 为冻结证据，后续实施顺序、状态和验收统一在 ROADMAP 维护；[四仓接管说明](kernel-mode-cross-repo-handoff.md)保存来源与候选快照。

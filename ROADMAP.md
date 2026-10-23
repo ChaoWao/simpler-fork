@@ -2,7 +2,7 @@
 
 **路线：共同执行基础 → Kernel eager → Capture / Replay → 真实业务交付。** TMR、HBG 都必须完成；eager 可以先交付，不等待 capture。
 
-状态快照：2026-10-22，当前主线 `62565feb3`（含 #2684 已合入）；历史测量保留各自 head。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
+状态快照：2026-10-23 UTC，当前主线 `62565feb3`（含 #2684 已合入）；历史测量保留各自 head。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
 
 ## 1. 现在做什么
 
@@ -10,10 +10,10 @@
 | --- | --- | --- |
 | 普通 args-dump 错误关闭 | [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 已合入 | 已交付停机证明、host-only 导出与未知丢失统计；[证据与边界](reviews/args-dump-stop-proof/REPORT.md) |
 | ScopeStats 错误关闭 | [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 已合入 `62565feb3` | 已交付证明门、host-owned 导出与未知统计展示；[原 head 资格与证据](reviews/scope-stats-proof-close/REPORT.md) |
-| TMR / HBG capture | TMR、HBG 两条实现 / 回归均已启动；HBG 回归已先红并修复中；两条均未验收 | 两名 contributor 各自负责完整 capture 交付；TMR 修复注入/Partial 证据，HBG 验证 restore 错误到后继拒绝；共同接口先定 owner |
+| TMR / HBG / Common capture | 三项正确性贡献已审阅并发布到 fork；原 #2625/#2626/#2647 未更新，完整 capture 未验收 | 原 owner 接入各自精确父提交上的修复后重新取目标 CI/RTS/硬件证据；A5 fatal replay 阻塞未关闭；[贡献与资格边界](reviews/capture-correctness-contributions/REPORT.md) |
 | I1 真实框架接线 | 入口映射已完成，实际队列接线未签收 | 对齐 PyPTO #3100 的初始化 owner，接真实 queue callback → Worker.submit；[映射](reviews/kernel-i1-entry-mapping/REPORT.md) |
 
-**当前调度：** TMR、HBG 两名 worker 各自推进完整增量；I1 保留接口协调。Manager 只分析、派发与验收，代码、测试、实验、文档和集成发布全部委派；[执行协议](manager-contributor-protocol.md)。
+**当前调度：** TMR、HBG、Common 修复均经独立评审与 manager 签收、委派发布；下一门是原 owner 接入与 feature 资格，I1 保留接口协调。Manager 只分析、派发与验收，执行全部委派；收到结果后须完成“读证据 → 接受/退回 → 派下一动作”的[闭环](manager-contributor-protocol.md)。
 
 ## 2. 依赖关系
 
@@ -39,8 +39,8 @@ K2 的框架资格由 I1 eager 回填；capture 消费者须先具备对应 runt
 | K1 · 借用环境与参数 | 共同 native/public 接线已交付 | 不接管 caller 设备，不隐式搬运 DEVICE tensor；两 runtime 复用同一 executor |
 | K2 · caller 顺序与 eager 资格 | 接线已交付，整体验收未完成 | 真实框架的前序写 → 双侧执行 → 后序读；TQ=0/1、跨流、寿命、失败和 Program 回归 |
 | C1 · 可捕获设备闭包 | 部分完成 | 异步 descriptor 与逐调用 DFX 已有增量；独立握手/复位、完整错误门和真实 executor 闭包仍待验收 |
-| C2 · 图资源所有权 | 候选待验收 | 图保留 code、source、bank、event 和 tensor 使用引用；捕获/销毁/部分入队失败无早退役 |
-| C3 · 双 runtime replay | 未签收 | TMR 每次 reset/orchestrate；HBG 每次 restore pristine image；重复运行不回 host 编排，逐次结果正确 |
+| C2 · 图资源所有权 | 候选及空 region 修复贡献待接入验收 | 图保留 code、source、bank、event 和 tensor 使用引用；捕获/销毁/部分入队失败无早退役 |
+| C3 · 双 runtime replay | 未签收；两 runtime 正确性贡献已发布 | TMR 每次 reset/orchestrate；HBG 每次 restore pristine image；重复运行不回 host 编排，逐次结果正确 |
 | C4 · runtime 完整验收 | 未完成，必交付 | 换参、多图、DFX、超时/故障、容量、关闭和实测收益全部有证据 |
 | I1 · PyPTO / 框架适配 | 已映射，接线与资格待完成 | 真实产物 → callable → Worker/native；eager/capture 分别验证，不另造执行器 |
 | I2 · pypto-lib 用例 | 待验收 | 真实输入/参考，长短序列、alias/INOUT、KV/权重/MTP 跨调用状态正确 |
@@ -71,7 +71,7 @@ K2 的框架资格由 I1 eager 回填；capture 消费者须先具备对应 runt
 | 要看什么 | 入口 |
 | --- | --- |
 | 规范与调用协议 | [设计原则](runtime-design-principles.md) · [共同执行](kernel-mode-prepare-submit-design.md) · [TMR 时序](kernel-mode-tmr-flow.md) · [Manager / contributor 协议](manager-contributor-protocol.md) |
-| eager 范围与逐笔交付 | [剩余工作及历史证据](kernel-eager-open-work.md) · [API 层次](current-api-layers.html) |
+| eager 范围与逐笔交付 | [剩余工作及历史证据](kernel-eager-open-work.md) · [三项 capture 贡献](reviews/capture-correctness-contributions/REPORT.md) · [API 层次](current-api-layers.html) |
 | 参数 / Buffer / Remote | [参数设计](argument-domain-policy.md) · [跨 endpoint 合同](endpoint-access-contract.md) |
 | 四仓接管与候选来源 | [交接说明](kernel-mode-cross-repo-handoff.md) · [跨仓任务](kernel-mode-cross-repo-prompt.md) |
 | 独立未解故障 | [AIV 现场规划](aiv-evidence-plan.md)；既有故障不因后续 CI 通过而视为修复 |

@@ -1,5 +1,5 @@
 {
-  "snapshot_date": "2026-10-22",
+  "snapshot_date": "2026-10-23",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
   "latest_roadmap_source_baseline": "62565feb3b14553ed736aab1eb008c5785bcf330",
@@ -21,9 +21,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "bc60ce06c23d24a0729776f926bf122d5e1549268b6047b0832c00ffa2604b62",
-      "published_sha256": "bc60ce06c23d24a0729776f926bf122d5e1549268b6047b0832c00ffa2604b62",
-      "bytes": 7714
+      "source_sha256": "188f39e8ec475520256b2f92e2b7759ea8cae227929451ba91e964f9a7acc20a",
+      "published_sha256": "188f39e8ec475520256b2f92e2b7759ea8cae227929451ba91e964f9a7acc20a",
+      "bytes": 8041
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -133,9 +133,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "7131d0085d84cd83aeae4110989b6f0771a4ae5fe4c1e34a1b623510636a5ae8",
-      "published_sha256": "09df51a4d83abcf04f7c0286ba44977173fa786d9bbf668d1f8c27d736c8c2b9",
-      "bytes": 16859
+      "source_sha256": "b12c522fa7e62d4266355f29362381632bd02e7a7cd4ccfe5968028969ce1fba",
+      "published_sha256": "5b3f1a12c4e591cda3639b69b92185a1d7799da4df86949b259df756a13064a1",
+      "bytes": 17208
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -154,9 +154,9 @@
     {
       "path": "manager-contributor-protocol.md",
       "source_collection": "kernel-design",
-      "source_sha256": "d85ef8244fe10d900347f37f1823fcd57ee6c3242cce2ee2052870c3c429144e",
-      "published_sha256": "d85ef8244fe10d900347f37f1823fcd57ee6c3242cce2ee2052870c3c429144e",
-      "bytes": 6724
+      "source_sha256": "9c15cb4bfb381ef38fe182e75385cc7a46d8ebaffcc9bc4b1f9465f52d383145",
+      "published_sha256": "9c15cb4bfb381ef38fe182e75385cc7a46d8ebaffcc9bc4b1f9465f52d383145",
+      "bytes": 6466
     },
     {
       "path": "probes/README.md",
@@ -1335,6 +1335,55 @@
       "bytes": 1148
     },
     {
+      "path": "reviews/capture-correctness-contributions/REPORT.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "d636bbfd79cc7f9ece2193b4faad8533b4286028a75e7271f70f2cc5faa913fe",
+      "published_sha256": "d636bbfd79cc7f9ece2193b4faad8533b4286028a75e7271f70f2cc5faa913fe",
+      "bytes": 8339
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/common-final-review.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "409996f01a063d154d0f5dbff7d5583f4e7536b8f4d5f622862f86479f7059b2",
+      "published_sha256": "409996f01a063d154d0f5dbff7d5583f4e7536b8f4d5f622862f86479f7059b2",
+      "bytes": 4151
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/common-independent-qualification.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "4e49779b747ad9dd74e4ab9d4660cc2bef016a027cfdde0ff62b0e46f3afe7ca",
+      "published_sha256": "1f43c3901e4397319ca924af81e297e9974755c3ee88d1296941d88b7f46eea5",
+      "bytes": 3586
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/hbg-final-review.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "1603a524dc3a25654209452a77467b7ffc6282c2b2ae2f06f638631ed8089838",
+      "published_sha256": "89a8ea5f89bd4e710bd3ef0d92fdc345480e81fd9420f23983c367368ce76037",
+      "bytes": 9649
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/hbg-independent-qualification.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "a22353e8f1463c1a917d678ded376d9a8019bc5d96285e14df409a6b9191052c",
+      "published_sha256": "0a6ccb4a298e0a237c12dc0abcb3f790f19a61ccaa2f3c5ab6ba8a58893ac395",
+      "bytes": 3211
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/tmr-final-review.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "c787b38a95e799de06f4c1fb578d7b417e278ef0fb5e65423ae39f749ec0d8a8",
+      "published_sha256": "c787b38a95e799de06f4c1fb578d7b417e278ef0fb5e65423ae39f749ec0d8a8",
+      "bytes": 9470
+    },
+    {
+      "path": "reviews/capture-correctness-contributions/tmr-independent-qualification.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "382ed72ed1f6aa8b0b403675dde1a63f4287ed5ff6a9aa4cc9aa3abf1d6e716e",
+      "published_sha256": "7009919f22ec68c85d1f2c1a9c7dce98222bc4e30f7b10e966ce5a3eb99662eb",
+      "bytes": 4580
+    },
+    {
       "path": "reviews/chip-borrowed-context/REPORT.md",
       "source_collection": "kernel-design",
       "source_sha256": "d67383903298a7c11825bc410e8e84de3e7f9f6e922f626da478ba532b12a995",
@@ -1746,5 +1795,36 @@
   "root_role": "manager_only",
   "latest_validation_code_head": "77aba9a8a1ed8898436432a0b97316d4904a6767",
   "latest_validation_code_equivalent_to_final": true,
-  "latest_review_status": "approved"
+  "latest_review_status": "approved",
+  "reviewed_contributions": [
+    {
+      "runtime": "TMR",
+      "commit": "28a9de54af839e1bc5319641379948a9ba608724",
+      "parent": "71f5b4fc6b8ac6ac2419086539ccf0c9af6efb57",
+      "branch": "fix/tmr-capture-allocation-fault-site",
+      "status": "reviewed_contribution_published",
+      "original_pr_updated": false,
+      "qualification": "independent_cpu_debug_release169passed_3skipped_each"
+    },
+    {
+      "runtime": "HBG",
+      "commit": "7d1dae515b4e7f3471313e15eb303d46f51e87d7",
+      "parent": "84b4653bbf935658b8aa71307f53f1c4e8719641",
+      "branch": "fix/hbg-capture-restore-failure-gate",
+      "status": "reviewed_contribution_published",
+      "original_pr_updated": false,
+      "qualification": "independent_cpu_release139passed_9skipped_plus_neighbors"
+    },
+    {
+      "runtime": "common-C2",
+      "commit": "dbfbaf87757818d37550bd95c763d0bccd23c4ac",
+      "parent": "f701832b091290d3db9f20eabe678700a4e7a043",
+      "branch": "fix/kernel-resource-empty-region-reuse",
+      "status": "reviewed_contribution_published",
+      "original_pr_updated": false,
+      "qualification": "independent_cpu_normal_release68passed_0skipped_each"
+    }
+  ],
+  "current_contribution_report": "reviews/capture-correctness-contributions/REPORT.md",
+  "mainline_validation_and_contribution_proof_are_separate": true
 }

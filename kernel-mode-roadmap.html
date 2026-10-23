@@ -6,7 +6,7 @@
 </style></head>
 <body><a class="skip" href="#section-1">跳到当前工作</a><nav aria-label="路线导航"><b>Kernel mode<br>路线看板</b><div class="toc"><a href="#section-1">1. 现在做什么</a><a href="#section-2">2. 依赖关系</a><a href="#section-3">3. 阶段看板</a><a href="#section-4">4. 并行边界与验收</a><a href="#section-5">5. 详细设计与证据</a></div><div class="other"><a href="runtime-design-principles.md">设计原则</a><a href="ROADMAP.md">Markdown 内容源</a><a href="kernel-mode-unified-design.html">架构与调用流程</a><a href="current-api-layers.html">API 层次</a></div></nav>
 <main><header><button class="print" type="button" onclick="window.print()">打印 / 保存 PDF</button><h1>Kernel mode 路线与当前工作</h1><p><strong>路线：共同执行基础 → Kernel eager → Capture / Replay → 真实业务交付。</strong> TMR、HBG 都必须完成；eager 可以先交付，不等待 capture。</p>
-<p>状态快照：2026-10-22，当前主线 <code>62565feb3</code>（含 #2684 已合入）；历史测量保留各自 head。总跟踪 <a href="https://github.com/hw-native-sys/simpler/issues/2666">#2666</a>；设计判断以<a href="runtime-design-principles.md">运行时原则</a>为准。</p></header>
+<p>状态快照：2026-10-23 UTC，当前主线 <code>62565feb3</code>（含 #2684 已合入）；历史测量保留各自 head。总跟踪 <a href="https://github.com/hw-native-sys/simpler/issues/2666">#2666</a>；设计判断以<a href="runtime-design-principles.md">运行时原则</a>为准。</p></header>
 <section id="section-1"><span id="c1-args-dump-accounting"></span><span id="c1-args-dump-current"></span><h2>1. 现在做什么</h2><div class="table-scroll"><table>
 <thead>
 <tr>
@@ -27,9 +27,9 @@
 <td>已交付证明门、host-owned 导出与未知统计展示；<a href="reviews/scope-stats-proof-close/REPORT.md">原 head 资格与证据</a></td>
 </tr>
 <tr>
-<td>TMR / HBG capture</td>
-<td>TMR、HBG 两条实现 / 回归均已启动；HBG 回归已先红并修复中；两条均未验收</td>
-<td>两名 contributor 各自负责完整 capture 交付；TMR 修复注入/Partial 证据，HBG 验证 restore 错误到后继拒绝；共同接口先定 owner</td>
+<td>TMR / HBG / Common capture</td>
+<td>三项正确性贡献已审阅并发布到 fork；原 #2625/#2626/#2647 未更新，完整 capture 未验收</td>
+<td>原 owner 接入各自精确父提交上的修复后重新取目标 CI/RTS/硬件证据；A5 fatal replay 阻塞未关闭；<a href="reviews/capture-correctness-contributions/REPORT.md">贡献与资格边界</a></td>
 </tr>
 <tr>
 <td>I1 真实框架接线</td>
@@ -38,7 +38,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>当前调度：</strong> TMR、HBG 两名 worker 各自推进完整增量；I1 保留接口协调。Manager 只分析、派发与验收，代码、测试、实验、文档和集成发布全部委派；<a href="manager-contributor-protocol.md">执行协议</a>。</p></section><section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
+<p><strong>当前调度：</strong> TMR、HBG、Common 修复均经独立评审与 manager 签收、委派发布；下一门是原 owner 接入与 feature 资格，I1 保留接口协调。Manager 只分析、派发与验收，执行全部委派；收到结果后须完成“读证据 → 接受/退回 → 派下一动作”的<a href="manager-contributor-protocol.md">闭环</a>。</p></section><section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 350" role="img" aria-labelledby="dependency-title dependency-desc">
 <title id="dependency-title">共同基础、eager、capture 与业务验收的依赖</title>
 <desc id="dependency-desc">A和S1/S2接入K1/K2，随后C1、C2、TMR/HBG的C3、C4。S3为C2提供模块保活。I1到I3按eager和capture分别验收；V1普通Async不等待kernel或capture。</desc>
@@ -101,12 +101,12 @@
 </tr>
 <tr>
 <td>C2 · 图资源所有权</td>
-<td>候选待验收</td>
+<td>候选及空 region 修复贡献待接入验收</td>
 <td>图保留 code、source、bank、event 和 tensor 使用引用；捕获/销毁/部分入队失败无早退役</td>
 </tr>
 <tr>
 <td>C3 · 双 runtime replay</td>
-<td>未签收</td>
+<td>未签收；两 runtime 正确性贡献已发布</td>
 <td>TMR 每次 reset/orchestrate；HBG 每次 restore pristine image；重复运行不回 host 编排，逐次结果正确</td>
 </tr>
 <tr>
@@ -186,7 +186,7 @@
 </tr>
 <tr>
 <td>eager 范围与逐笔交付</td>
-<td><a href="kernel-eager-open-work.md">剩余工作及历史证据</a> · <a href="current-api-layers.html">API 层次</a></td>
+<td><a href="kernel-eager-open-work.md">剩余工作及历史证据</a> · <a href="reviews/capture-correctness-contributions/REPORT.md">三项 capture 贡献</a> · <a href="current-api-layers.html">API 层次</a></td>
 </tr>
 <tr>
 <td>参数 / Buffer / Remote</td>
