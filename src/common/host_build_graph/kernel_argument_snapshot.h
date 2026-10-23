@@ -24,6 +24,8 @@ inline uint64_t hash_argument_value(uint64_t hash, const T &value) noexcept {
 
 // Hash the semantic argument snapshot baked into an HBG graph. Padding and
 // unused dimensions are deliberately excluded from the identity.
+// Callers treat zero as failure, although valid inputs can also hash to zero;
+// this non-cryptographic fingerprint is not proof of argument equality.
 inline uint64_t kernel_argument_snapshot_hash(const ChipStorageTaskArgs &args) noexcept {
     if (args.tensor_count_ < 0 || args.tensor_count_ > CHIP_MAX_TENSOR_ARGS || args.scalar_count_ < 0 ||
         args.scalar_count_ > CHIP_MAX_SCALAR_ARGS)

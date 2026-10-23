@@ -2061,6 +2061,9 @@ public:
     void set_output_prefix(const char *prefix) { output_prefix_ = (prefix != nullptr) ? prefix : ""; }
     const std::string &output_prefix() const { return output_prefix_; }
 
+private:
+    struct HbgKernelLaunchHelpers;
+
 protected:
     virtual LaunchTransactionResult launch_execution_impl(PreparedExecution &prepared, LaunchPermit permit) = 0;
 
@@ -2859,7 +2862,7 @@ protected:
         // hbg path (host already dlopen'd the orch SO)
         void *host_dlopen_handle{nullptr};
         void *host_orch_func_ptr{nullptr};
-        std::shared_ptr<hbg::KernelCallableLaunchState> hbg_kernel;
+        std::shared_ptr<hbg::KernelCallableLaunchState> hbg_launch_state;
     };
     std::unordered_map<int32_t, CallableState> callables_;
     // Held by every registration/unregistration entry point and by
@@ -2949,7 +2952,7 @@ protected:
     ExecutionModeLatch execution_mode_latch_;
     bool program_initialized_{false};
     KernelExecutionState kernel_exec_state_;
-    std::shared_ptr<hbg::KernelContextLaunchState> hbg_kernel_;
+    std::shared_ptr<hbg::KernelContextLaunchState> hbg_launch_context_;
     uint64_t next_hbg_callable_generation_{1};
     PersistentKernelArgs persistent_args_;
     Runtime kernel_runtime_;
