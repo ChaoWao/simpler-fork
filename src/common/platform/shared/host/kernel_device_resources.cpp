@@ -77,7 +77,8 @@ int KernelDeviceResources::prepare(const KernelResourceLayout &layout, const Ker
         std::vector<KernelResourceView> next_views(layout.regions.size());
         for (size_t i = 0; i < layout.regions.size(); ++i) {
             const auto &region = layout.regions[i];
-            if (region.arena_kind != layout_.regions[i].arena_kind || region.offset != layout_.regions[i].offset)
+            if (region.arena_kind != layout_.regions[i].arena_kind ||
+                (region.bytes != 0 && region.offset != layout_.regions[i].offset))
                 return PTO_RUNTIME_ERR_INVALID_STATE;
             if (region.bytes > layout_.regions[i].bytes) return PTO_RUNTIME_ERR_PREPARED_INCOMPATIBLE;
             if (region.bytes == 0) continue;

@@ -784,6 +784,131 @@ TEST(KernelExecutionStateResources, RepeatedPrepareFollowsRequestedRegionSizes) 
     EXPECT_EQ(memory.releases, 1);
 }
 
+TEST(KernelExecutionStateResources, NonzeroOffsetRegionCanClearAndRestoreOriginalCapacity) {
+    FakeContextOps handles;
+    FakeResourceOps memory;
+    KernelExecutionState state;
+    ASSERT_EQ(state.initialize(3, handles.table(), 19), 0);
+    auto layout = resource_layout();
+    layout.contract.resources[0].bytes_per_copy = 8192;
+    layout.regions.push_back({PTO_PIPELINE_GM_HEAP, 4096, 4096});
+    ASSERT_EQ(state.prepare_resources(layout, memory.table()), 0);
+    ASSERT_EQ(state.freeze_resources(), 0);
+    ASSERT_EQ(state.mark_ready_enqueued(), 0);
+    const auto original_layout = layout;
+    const uint64_t full[] = {4096, 4096};
+    KernelResourceBinding original;
+    ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, original), 0);
+    const auto address = original.regions[1].address;
+    ASSERT_EQ(address, original.regions[0].address + 4096);
+
+    layout.regions[1].bytes = 2048;
+    ASSERT_EQ(state.prepare_resources(layout, memory.table()), 0);
+    const uint64_t half[] = {4096, 2048};
+    KernelResourceBinding smaller;
+    ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, half, 2, smaller), 0);
+    EXPECT_EQ(smaller.regions[1].address, address);
+    EXPECT_EQ(smaller.regions[1].capacity, 2048U);
+
+    layout.regions[1] = {PTO_PIPELINE_GM_HEAP, 0, 0};
+    const uint64_t empty[] = {4096, 0};
+    KernelResourceBinding cleared;
+    for (int i = 0; i < 2; ++i) {
+        SCOPED_TRACE(i);
+        ASSERT_EQ(state.prepare_resources(layout, memory.table()), 0);
+        ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, empty, 2, cleared), 0);
+        EXPECT_EQ(cleared.regions[0].address, original.regions[0].address);
+        EXPECT_EQ(cleared.regions[0].capacity, 4096U);
+        EXPECT_EQ(cleared.regions[1].address, 0U);
+        EXPECT_EQ(cleared.regions[1].capacity, 0U);
+        EXPECT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, smaller), PTO_RUNTIME_ERR_PREPARED_INCOMPATIBLE);
+        EXPECT_EQ(smaller.regions[1].address, address);
+        EXPECT_EQ(smaller.regions[1].capacity, 2048U);
+    }
+
+    ASSERT_EQ(state.prepare_resources(original_layout, memory.table()), 0);
+    KernelResourceBinding restored;
+    ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, restored), 0);
+    EXPECT_EQ(restored.regions[1].address, address);
+    EXPECT_EQ(restored.regions[1].capacity, 4096U);
+    EXPECT_EQ(original.regions[1].address, address);
+    EXPECT_EQ(original.regions[1].capacity, 4096U);
+    EXPECT_EQ(cleared.regions[1].address, 0U);
+    EXPECT_EQ(cleared.regions[1].capacity, 0U);
+    EXPECT_EQ(memory.allocations, 1);
+    EXPECT_EQ(memory.releases, 0);
+    ASSERT_EQ(state.close(), 0);
+    EXPECT_EQ(memory.releases, 1);
+}
+
+TEST(KernelExecutionStateResources, RejectedRegionReuseLeavesEveryPublishedViewUnchanged) {
+    FakeContextOps handles;
+    FakeResourceOps memory;
+    KernelExecutionState state;
+    ASSERT_EQ(state.initialize(3, handles.table(), 19), 0);
+    auto original = resource_layout();
+    original.contract.resources[0].bytes_per_copy = 32768;
+    original.contract.resource_count = 4;
+    original.contract.resources[3] = {PTO_PIPELINE_GM_SM, PTO_PIPELINE_DEVICE_SCRATCH, 32768};
+    original.regions = {{PTO_PIPELINE_GM_HEAP, 4096, 4096}, {PTO_PIPELINE_GM_HEAP, 12288, 4096}};
+    ASSERT_EQ(state.prepare_resources(original, memory.table()), 0);
+    ASSERT_EQ(state.freeze_resources(), 0);
+    ASSERT_EQ(state.mark_ready_enqueued(), 0);
+    const uint64_t full[] = {4096, 4096};
+    KernelResourceBinding before;
+    ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, before), 0);
+
+    for (int refusal = 0; refusal < 5; ++refusal) {
+        SCOPED_TRACE(refusal);
+        auto rejected = original;
+        // No region update is published unless the complete request is valid.
+        rejected.regions[0] = {PTO_PIPELINE_GM_HEAP, 0, 0};
+        int expected = PTO_RUNTIME_ERR_INVALID_STATE;
+        switch (refusal) {
+        case 0:
+            rejected.regions[1].offset = 8192;
+            break;
+        case 1:
+            rejected.regions[1].arena_kind = PTO_PIPELINE_GM_SM;
+            break;
+        case 2:
+            rejected.regions[1].bytes = 4097;
+            expected = PTO_RUNTIME_ERR_PREPARED_INCOMPATIBLE;
+            break;
+        case 3:
+            rejected.regions[1].bytes = 0;
+            expected = PTO_RUNTIME_ERR_INTERNAL;
+            break;
+        default:
+            rejected.regions[0].arena_kind = PTO_PIPELINE_GM_SM;
+            break;
+        }
+        EXPECT_EQ(state.prepare_resources(rejected, memory.table()), expected);
+        KernelResourceBinding after;
+        ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, after), 0);
+        for (size_t i = 0; i < before.regions.size(); ++i) {
+            EXPECT_EQ(after.regions[i].address, before.regions[i].address);
+            EXPECT_EQ(after.regions[i].capacity, before.regions[i].capacity);
+        }
+        EXPECT_TRUE(state.accepts_launch());
+        EXPECT_EQ(memory.allocations, 2);
+        EXPECT_EQ(memory.releases, 0);
+    }
+
+    auto cleared = original;
+    cleared.regions[0] = {PTO_PIPELINE_GM_HEAP, 0, 0};
+    ASSERT_EQ(state.prepare_resources(cleared, memory.table()), 0);
+    ASSERT_EQ(state.prepare_resources(original, memory.table()), 0);
+    KernelResourceBinding restored;
+    ASSERT_EQ(state.bind_resources_for_launch(3, 19, 41, full, 2, restored), 0);
+    EXPECT_EQ(restored.regions[0].address, before.regions[0].address);
+    EXPECT_EQ(restored.regions[1].address, before.regions[1].address);
+    EXPECT_EQ(memory.allocations, 2);
+    EXPECT_EQ(memory.releases, 0);
+    ASSERT_EQ(state.close(), 0);
+    EXPECT_EQ(memory.releases, 2);
+}
+
 TEST(KernelExecutionStateResources, LaunchReadinessRequiresReadyAndFrozenResources) {
     FakeContextOps handles;
     FakeResourceOps memory;

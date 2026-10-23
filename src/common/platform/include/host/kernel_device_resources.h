@@ -40,8 +40,9 @@ struct KernelResourceOps {
 
 // Runtime-defined region ordering is fixed for a context. Offsets describe
 // destinations inside the contract's arenas, not addresses in a launch packet.
-// Repeated preparation preserves arena kinds and offsets. An empty region has
-// zero offset and binds to the view {0, 0}.
+// Repeated preparation preserves arena kinds and the original nonempty offsets.
+// An empty request has zero offset and binds to {0, 0}; clearing does not discard
+// the original offset or capacity used when the region becomes nonempty again.
 struct KernelResourceRegion {
     uint32_t arena_kind;
     uint64_t offset;
@@ -73,10 +74,13 @@ public:
     KernelDeviceResources &operator=(const KernelDeviceResources &) = delete;
 
     // First call allocates every arena resource and builds the region views.
-    // Repeated calls require the same schema, arena kinds and offsets, and may
-    // only shrink or clear a region; the allocation capacity stays frozen.
+    // Repeated calls preserve the schema, arena kinds and original allocation.
+    // A region may shrink, clear or restore within its first prepared capacity;
+    // nonempty requests retain the original offset.
+    // Refusal of a repeated request leaves all views intact.
     int prepare(const KernelResourceLayout &layout, const KernelResourceOps &ops);
-    // Freezes the prepared capacity; later prepare() calls cannot grow it.
+    // Enables binding of prepared views; the first successful prepare() already
+    // fixed the original capacity.
     int freeze();
     // Copies the frozen views into out.regions. The snapshot owns its storage;
     // use the addresses only while these resources remain prepared.
