@@ -24,8 +24,8 @@ HTML 已生成，可下载后用浏览器打开。GitHub 的文件页显示 HTML
 
 ## 快照边界
 
-- #2671、#2677 已合入；普通 args-dump 的 stop-proof、host-only 导出、未知 loss 和 held retry 去重已交付，历史测量保留[原报告](reviews/args-dump-stop-proof/REPORT.md)。当前 [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 最终 head `5a1c5c089`，基线 `71077b04a`：普通 ScopeStats 的证明门、host-owned unknown 导出、restart epoch 拒绝与真实 HTML 消费共同闭合。完整验证归代码相同的 `77aba9a8a`：C++394/394、Python3549/192、A3sim65/A5sim61及两 runtime L2、A3 task-submit public4/scene/154sweep及两L2组，20份源码/运行时hash前后一致。最终只差A5测试说明一个词，actual Claude 完整复审及最终文档复核均 **approve**，全部 Must/Should 关闭。**最终 exact-head CI 18 个 checks 成功、1 个预期 deploy 跳过，另有 CodeRabbit status success（[run39889814912](https://github.com/hw-native-sys/simpler/actions/runs/39889814912)，attempt1，17/17 CI jobs success）**；PR非draft，待用户审核、未合入。见[报告](reviews/scope-stats-proof-close/REPORT.md)和[意见处置](reviews/scope-stats-proof-close/review-disposition.md)。
-- 并行产出按完整功能验收集成，未按 agent 机械拆 PR。Boundary producer tests、plot 和主执行共同完成 #2684；[I1 静态映射](reviews/kernel-i1-entry-mapping/REPORT.md)保留 #3100 owner 和真实 queue 接线缺口。普通错误关闭、框架接线、capture 与既有 AIV 仍分别记账，不据本笔完成后者。
+- #2671、#2677、#2684 已合入；#2684 merge 为 `62565feb3`，其资格仍归最终 head `5a1c5c089` 与代码等价 head `77aba9a8a`，不把历史测试挂到新 main。普通 ScopeStats 证明门、host-owned unknown 导出、restart epoch 拒绝与 HTML 消费的验证、Claude 评审及 exact-head CI 见[原报告](reviews/scope-stats-proof-close/REPORT.md)与[意见处置](reviews/scope-stats-proof-close/review-disposition.md)。
+- [当前 Manager / Contributor 协议](manager-contributor-protocol.md)落实用户的明确要求：主 agent 只分析、派发、协调和验收；代码、测试、实验、文档、集成与发布均委派执行。TMR/HBG 两名 contributors 各自负责完整 capture 贡献，当前为已批准的 TMR 测试修复及 HBG 缺陷定界，尚未签收 capture 阶段。过去主执行加测试 / plot / CI 辅助只算任务内协作，不冒充多条开发线；历史 [Hub 讨论稿](references/pipeline-a/multi-agent-work-principles.md)不授权安装或启动任务。
 - Kernel的远端跟踪为[#2666](https://github.com/hw-native-sys/simpler/issues/2666)，仓库重点工作总览为[#2670](https://github.com/hw-native-sys/simpler/issues/2670)。普通恢复的stop-proof、manifest未知loss表达及既有AIV分别记账。
 
 - 历史路线记录固定 main `7503761a6c01a6d07ccd8d9c82b8060da843d1af`，含 #2653；#2660的代码和测试另固定 main `3b5836465`。完整API层次审查保留页内基线；当前候选验证见上条，不把历史只读核对或旧测量移挂到当前head。

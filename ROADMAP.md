@@ -2,18 +2,18 @@
 
 **路线：共同执行基础 → Kernel eager → Capture / Replay → 真实业务交付。** TMR、HBG 都必须完成；eager 可以先交付，不等待 capture。
 
-状态快照：2026-10-22，本轮基线 `71077b04a`（含 #2677 已合入）；当前验证见本笔报告，历史测量保留各自 head。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
+状态快照：2026-10-22，当前主线 `62565feb3`（含 #2684 已合入）；历史测量保留各自 head。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
 
 ## 1. 现在做什么
 
 | 工作 | 当前状态 | 下一动作 |
 | --- | --- | --- |
 | 普通 args-dump 错误关闭 | [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 已合入 | 已交付停机证明、host-only 导出与未知丢失统计；[证据与边界](reviews/args-dump-stop-proof/REPORT.md) |
-| ScopeStats 错误关闭 | [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 完整验证、Claude 最终复核、CI 均通过，待用户审核 | 用户审核停机证明、host-owned 导出与未知统计展示；[本笔证据](reviews/scope-stats-proof-close/REPORT.md) |
-| 双 runtime capture | 有候选，尚未通过阶段验收 | 继续审 TMR #2625、共同资源 #2626、HBG #2646/#2647，按当前 head 处理所有权、异常和关闭缺口 |
+| ScopeStats 错误关闭 | [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 已合入 `62565feb3` | 已交付证明门、host-owned 导出与未知统计展示；[原 head 资格与证据](reviews/scope-stats-proof-close/REPORT.md) |
+| TMR / HBG capture | TMR 测试修复范围已签收；HBG 本地栈集成与缺陷定界中；两条均未完成本轮验收 | 两名 contributor 各自负责完整 capture 交付；TMR 修复注入/Partial 证据，HBG 提交缺陷和精确范围；共同接口先定 owner |
 | I1 真实框架接线 | 入口映射已完成，实际队列接线未签收 | 对齐 PyPTO #3100 的初始化 owner，接真实 queue callback → Worker.submit；[映射](reviews/kernel-i1-entry-mapping/REPORT.md) |
 
-**最近顺序：** ScopeStats 用户审核；capture 候选审查与 I1 接口协调可同时进行。候选 PR 的存在不算阶段完成。
+**当前调度：** TMR、HBG 两名 worker 各自推进完整增量；I1 保留接口协调。Manager 只分析、派发与验收，代码、测试、实验、文档和集成发布全部委派；[执行协议](manager-contributor-protocol.md)。
 
 ## 2. 依赖关系
 
@@ -53,7 +53,7 @@ K2 的框架资格由 I1 eager 回填；capture 消费者须先具备对应 runt
 
 | 可并行工作 | 前置与边界 |
 | --- | --- |
-| 普通 DFX 修复 / capture 候选审查 / I1 契约协调 | 按文件与接口划分 owner；共用 collector/owner 的改动先协调，不重复实现 |
+| 完整行为开发 / 验证 / 集成发布 | 每个 worktree 一个写者，任务列精确文件范围；共享接口先协调。主 agent 不兼任实现者；测试、plot、CI 辅助不能冒充多条开发线 |
 | TMR replay / HBG replay | 消费共同 C1/C2；两条分别验收，不能从 TMR 通过推定 HBG 通过 |
 | I2 数据和参考 / I3 请求驱动与版本清单 | 现在可准备；实际运行消费对应模式 I1 和 runtime 能力 |
 | V1 普通 Async 系统验收 | 消费 A 与现有 Program 路径，不等待 I1 kernel adapter 或 C1–C4 |
@@ -70,7 +70,7 @@ K2 的框架资格由 I1 eager 回填；capture 消费者须先具备对应 runt
 
 | 要看什么 | 入口 |
 | --- | --- |
-| 规范与调用协议 | [设计原则](runtime-design-principles.md) · [共同执行](kernel-mode-prepare-submit-design.md) · [TMR 时序](kernel-mode-tmr-flow.md) |
+| 规范与调用协议 | [设计原则](runtime-design-principles.md) · [共同执行](kernel-mode-prepare-submit-design.md) · [TMR 时序](kernel-mode-tmr-flow.md) · [Manager / contributor 协议](manager-contributor-protocol.md) |
 | eager 范围与逐笔交付 | [剩余工作及历史证据](kernel-eager-open-work.md) · [API 层次](current-api-layers.html) |
 | 参数 / Buffer / Remote | [参数设计](argument-domain-policy.md) · [跨 endpoint 合同](endpoint-access-contract.md) |
 | 四仓接管与候选来源 | [交接说明](kernel-mode-cross-repo-handoff.md) · [跨仓任务](kernel-mode-cross-repo-prompt.md) |

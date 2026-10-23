@@ -2,8 +2,7 @@
   "snapshot_date": "2026-10-22",
   "branch": "design/kernel-runtime",
   "scope": "design documents, prebuilt HTML and text-only evidence summaries",
-  "latest_roadmap_source_baseline": "71077b04a5e4dcd5dcae55a0fa262b3d59c93f4d",
-  "pending_pr": 2684,
+  "latest_roadmap_source_baseline": "62565feb3b14553ed736aab1eb008c5785bcf330",
   "files": [
     {
       "path": "CONTEXT.md",
@@ -22,9 +21,9 @@
     {
       "path": "ROADMAP.md",
       "source_collection": "kernel-design",
-      "source_sha256": "4382e78b96a4d6417dac3ff8b715593d5800e5cc5a712c4d21c7d5fffead4a19",
-      "published_sha256": "4382e78b96a4d6417dac3ff8b715593d5800e5cc5a712c4d21c7d5fffead4a19",
-      "bytes": 7453
+      "source_sha256": "0b648b9537609989f381e2b493c52f946bdbcdee3f210d0f1886ebb3cda88690",
+      "published_sha256": "0b648b9537609989f381e2b493c52f946bdbcdee3f210d0f1886ebb3cda88690",
+      "bytes": 7711
     },
     {
       "path": "SOURCE_BASELINE.md",
@@ -134,9 +133,9 @@
     {
       "path": "kernel-mode-roadmap.html",
       "source_collection": "kernel-design",
-      "source_sha256": "c8689005ea5c3e8e9180aede4c9fe6d0dc1e3ff2f0068865b8cccb027e1b5c6f",
-      "published_sha256": "483d8375b81eed864065804e90cfc40af1e02b99eb76dc505464c642b3c732e5",
-      "bytes": 16565
+      "source_sha256": "be0c6009746168f666a490b247aa31aa137aac465fed48d5a4f918232709aafc",
+      "published_sha256": "4d7b76935b957493557a099f536b7bfb780e2f2aa9bbf67068b825036c5fb50d",
+      "bytes": 16856
     },
     {
       "path": "kernel-mode-tmr-flow.md",
@@ -151,6 +150,13 @@
       "source_sha256": "38a7e4a644b23c7464f1ccf1237abf3d704dac441e9a3a180110a5add9052c2c",
       "published_sha256": "57c9e8397c22cb05980c6d28524888922f53e6589902f8cf3caed2b74d2acd35",
       "bytes": 58183
+    },
+    {
+      "path": "manager-contributor-protocol.md",
+      "source_collection": "kernel-design",
+      "source_sha256": "401f0c442cf051c0eee6ef8ed5b584db6fb4d3dea9bc00cccdf726f72bf0227d",
+      "published_sha256": "401f0c442cf051c0eee6ef8ed5b584db6fb4d3dea9bc00cccdf726f72bf0227d",
+      "bytes": 5893
     },
     {
       "path": "probes/README.md",
@@ -1728,16 +1734,17 @@
       "bytes": 10657
     }
   ],
-  "latest_merged_pr": 2677,
+  "latest_merged_pr": 2684,
   "cross_repo_handoff_date": "2026-10-21",
   "cross_repo_roadmap_integration_date": "2026-10-21",
   "latest_validation_head": "5a1c5c0898691776ed307f0e560cd62609f50060",
-  "pending_pr_head": "5a1c5c0898691776ed307f0e560cd62609f50060",
   "latest_validation_ci_run": 39889814912,
   "latest_validation_ci_attempt": 1,
   "latest_validation_status": "passed",
-  "pending_validation_status": "review_approved_all_checks_passed",
-  "pending_code_validation_head": "77aba9a8a1ed8898436432a0b97316d4904a6767",
-  "pending_code_equivalent_to_final": true,
-  "pending_review_status": "approved"
+  "latest_merged_sha": "62565feb3b14553ed736aab1eb008c5785bcf330",
+  "manager_execution_protocol": "manager-contributor-protocol.md",
+  "root_role": "manager_only",
+  "latest_validation_code_head": "77aba9a8a1ed8898436432a0b97316d4904a6767",
+  "latest_validation_code_equivalent_to_final": true,
+  "latest_review_status": "approved"
 }
