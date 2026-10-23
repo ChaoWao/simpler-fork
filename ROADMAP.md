@@ -2,18 +2,18 @@
 
 **路线：共同执行基础 → Kernel eager → Capture / Replay → 真实业务交付。** TMR、HBG 都必须完成；eager 可以先交付，不等待 capture。
 
-状态快照：2026-10-22，主线核对基线 `fa6528f4e`（#2671）。本次只整理文档，未重跑产品测试。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
+状态快照：2026-10-22，本轮基线 `71077b04a`（含 #2677 已合入）；当前验证见本笔报告，历史测量保留各自 head。总跟踪 [#2666](https://github.com/hw-native-sys/simpler/issues/2666)；设计判断以[运行时原则](runtime-design-principles.md)为准。
 
 ## 1. 现在做什么
 
 | 工作 | 当前状态 | 下一动作 |
 | --- | --- | --- |
-| 普通 args-dump 错误关闭 | [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 待用户审核；Claude approve，最终检查 19 成功 / 1 预期跳过 | 审核合入；[证据与边界](reviews/args-dump-stop-proof/REPORT.md) |
-| ScopeStats 错误关闭 | 已完成范围调查，尚未实现；依赖 #2677 的共同 stop 合同 | 一笔交付停机证明、保留 host-owned 样本和未知统计的正确展示；[范围](reviews/scope-stats-proof-audit/REPORT.md) |
+| 普通 args-dump 错误关闭 | [#2677](https://github.com/hw-native-sys/simpler/pull/2677) 已合入 | 已交付停机证明、host-only 导出与未知丢失统计；[证据与边界](reviews/args-dump-stop-proof/REPORT.md) |
+| ScopeStats 错误关闭 | [#2684](https://github.com/hw-native-sys/simpler/pull/2684) 完整验证、Claude 最终复核、CI 均通过，待用户审核 | 用户审核停机证明、host-owned 导出与未知统计展示；[本笔证据](reviews/scope-stats-proof-close/REPORT.md) |
 | 双 runtime capture | 有候选，尚未通过阶段验收 | 继续审 TMR #2625、共同资源 #2626、HBG #2646/#2647，按当前 head 处理所有权、异常和关闭缺口 |
 | I1 真实框架接线 | 入口映射已完成，实际队列接线未签收 | 对齐 PyPTO #3100 的初始化 owner，接真实 queue callback → Worker.submit；[映射](reviews/kernel-i1-entry-mapping/REPORT.md) |
 
-**最近顺序：** #2677 审核 → ScopeStats 完整修复；capture 候选审查与 I1 接口协调可同时进行。候选 PR 的存在不算阶段完成。
+**最近顺序：** ScopeStats 用户审核；capture 候选审查与 I1 接口协调可同时进行。候选 PR 的存在不算阶段完成。
 
 ## 2. 依赖关系
 

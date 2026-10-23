@@ -6,7 +6,7 @@
 </style></head>
 <body><a class="skip" href="#section-1">跳到当前工作</a><nav aria-label="路线导航"><b>Kernel mode<br>路线看板</b><div class="toc"><a href="#section-1">1. 现在做什么</a><a href="#section-2">2. 依赖关系</a><a href="#section-3">3. 阶段看板</a><a href="#section-4">4. 并行边界与验收</a><a href="#section-5">5. 详细设计与证据</a></div><div class="other"><a href="runtime-design-principles.md">设计原则</a><a href="ROADMAP.md">Markdown 内容源</a><a href="kernel-mode-unified-design.html">架构与调用流程</a><a href="current-api-layers.html">API 层次</a></div></nav>
 <main><header><button class="print" type="button" onclick="window.print()">打印 / 保存 PDF</button><h1>Kernel mode 路线与当前工作</h1><p><strong>路线：共同执行基础 → Kernel eager → Capture / Replay → 真实业务交付。</strong> TMR、HBG 都必须完成；eager 可以先交付，不等待 capture。</p>
-<p>状态快照：2026-10-22，主线核对基线 <code>fa6528f4e</code>（#2671）。本次只整理文档，未重跑产品测试。总跟踪 <a href="https://github.com/hw-native-sys/simpler/issues/2666">#2666</a>；设计判断以<a href="runtime-design-principles.md">运行时原则</a>为准。</p></header>
+<p>状态快照：2026-10-22，本轮基线 <code>71077b04a</code>（含 #2677 已合入）；当前验证见本笔报告，历史测量保留各自 head。总跟踪 <a href="https://github.com/hw-native-sys/simpler/issues/2666">#2666</a>；设计判断以<a href="runtime-design-principles.md">运行时原则</a>为准。</p></header>
 <section id="section-1"><span id="c1-args-dump-accounting"></span><span id="c1-args-dump-current"></span><h2>1. 现在做什么</h2><div class="table-scroll"><table>
 <thead>
 <tr>
@@ -18,13 +18,13 @@
 <tbody>
 <tr>
 <td>普通 args-dump 错误关闭</td>
-<td><a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 待用户审核；Claude approve，最终检查 19 成功 / 1 预期跳过</td>
-<td>审核合入；<a href="reviews/args-dump-stop-proof/REPORT.md">证据与边界</a></td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2677">#2677</a> 已合入</td>
+<td>已交付停机证明、host-only 导出与未知丢失统计；<a href="reviews/args-dump-stop-proof/REPORT.md">证据与边界</a></td>
 </tr>
 <tr>
 <td>ScopeStats 错误关闭</td>
-<td>已完成范围调查，尚未实现；依赖 #2677 的共同 stop 合同</td>
-<td>一笔交付停机证明、保留 host-owned 样本和未知统计的正确展示；<a href="reviews/scope-stats-proof-audit/REPORT.md">范围</a></td>
+<td><a href="https://github.com/hw-native-sys/simpler/pull/2684">#2684</a> 完整验证、Claude 最终复核、CI 均通过，待用户审核</td>
+<td>用户审核停机证明、host-owned 导出与未知统计展示；<a href="reviews/scope-stats-proof-close/REPORT.md">本笔证据</a></td>
 </tr>
 <tr>
 <td>双 runtime capture</td>
@@ -38,7 +38,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>最近顺序：</strong> #2677 审核 → ScopeStats 完整修复；capture 候选审查与 I1 接口协调可同时进行。候选 PR 的存在不算阶段完成。</p></section><section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
+<p><strong>最近顺序：</strong> ScopeStats 用户审核；capture 候选审查与 I1 接口协调可同时进行。候选 PR 的存在不算阶段完成。</p></section><section id="section-2"><h2>2. 依赖关系</h2><figure class="dependency"><div class="diagram-scroll">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 350" role="img" aria-labelledby="dependency-title dependency-desc">
 <title id="dependency-title">共同基础、eager、capture 与业务验收的依赖</title>
 <desc id="dependency-desc">A和S1/S2接入K1/K2，随后C1、C2、TMR/HBG的C3、C4。S3为C2提供模块保活。I1到I3按eager和capture分别验收；V1普通Async不等待kernel或capture。</desc>

@@ -397,8 +397,6 @@ PR [#2620](https://github.com/hw-native-sys/simpler/pull/2620) 已合入 main `f
 
 ## 2026-10-22 并行增量
 
-- #2671 已合入。普通错误恢复的停机证明修复为 [#2677](https://github.com/hw-native-sys/simpler/pull/2677)，真实runner/producer四组合回归先红后绿；最终154c77的Claude独立审阅approve、CI19success/1deploy skip，已具备用户审核条件，尚未合入。
-- manifest未知loss子项已形成独立验证成果；Claude指出未知close导出0必须同时说明统计未知，故现与stop-proof一起集入#2677，重新验证后统一交付，不另造一笔依赖修复PR。
-- [I1静态入口映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实PyPTO shared artifact/CallFrame已在main、#3100已拥有初始化/注册/pending/close。真实framework queue callback→共同Worker.submit仍缺接线，须与owner协调；不等待capture，也不重复初始化实现。当前无framework上板新证据。
-
-- 下一完整普通DFX错误关闭范围已核对：[ScopeStats静态调查](reviews/scope-stats-proof-audit/REPORT.md)，需要stop proof、host-only partial导出和consumer unknown语义一同闭合，消费最终#2677。仅静态证据，尚未实现；不借此扩写当前args-dump PR。
+- #2671、#2677 均已合入；普通 args-dump 的 proof-aware close、host loss 与重试去重已交付，历史测量留在[原报告](reviews/args-dump-stop-proof/REPORT.md)。
+- [I1 静态入口映射](reviews/kernel-i1-entry-mapping/REPORT.md)核实 PyPTO shared artifact/CallFrame 已在 main，#3100 拥有初始化/注册/pending/close；真实 queue callback→共同 Worker.submit 仍待与 owner 接线。静态映射不代表框架/上板资格。
+- ScopeStats 的完整普通错误关闭已实现为 [#2684](https://github.com/hw-native-sys/simpler/pull/2684)，消费 #2677：证明门、host-only unknown 导出、重启 epoch 拒绝及 HTML 消费共同闭合。当前完整资格与 actual Claude 代码复审通过；最终一词 docstring 同步已独立复核 approve；exact-head CI 全绿，待用户审核、尚未合入。见[本笔报告](reviews/scope-stats-proof-close/REPORT.md)。不据此宣布 C1/C2 或 AIV 根因已完成。
