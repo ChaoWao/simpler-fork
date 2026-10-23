@@ -12,12 +12,14 @@
  * Where one run's entry arguments reach the AICPU, and the vocabulary both ends
  * of that choice speak.
  *
- * Two routes exist. The descriptor route publishes the values inside the run's
+ * The descriptor route publishes the values inside the run's
  * `Runtime` descriptor, which the host copies with one `rtMemcpy`. The launch
  * route appends them to the AICPU launch arguments, which RTS copies as part of
  * the launch it is already making. The same `EntryArgsSource` value is written
  * into both the descriptor and the launch header, so the device can reject a
  * pair that does not agree rather than decode whichever it happens to read.
+ * Borrowed TMR eager calls use a framed kernel invocation on the launch route;
+ * its registered occupancy and run binding are checked before consumption.
  *
  * HBG kernel packets carry independently registered identity and restore into
  * fixed context storage. Their Definition view uses RestoredSlot only after
@@ -32,10 +34,11 @@
 #include <cstddef>
 #include <cstdint>
 
-/** Which route carries this run's entry-argument values. */
+/** The carrier and format of this run's entry-argument values. */
 enum class EntryArgsSource : uint32_t {
     Descriptor = 0,           // inside the published Runtime descriptor
     LaunchEnvelope = 1,       // appended to the AICPU launch arguments, copied by RTS
+    KernelInvocation = 2,     // validated kernel packet in the RTS launch package
     HbgKernelInvocation = 4,  // graph packet checked against a registered fixed HBG slot
 };
 
