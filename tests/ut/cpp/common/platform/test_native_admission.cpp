@@ -782,3 +782,36 @@ TEST_F(NativeAdmissionTest, AWaitingPlanCannotReleaseBorrowsWhileItsNativeEpochS
 }
 
 }  // namespace native_admission_test
+
+namespace native_admission_test {
+TEST_F(NativeAdmissionTest, StreamIdentityFailureNamesRoleAndSlot) {
+    class DiagnosticRunner : public Runner {
+    public:
+        void observe(PreparedExecution &prepared, RunCompletionFence::StreamRole role) {
+            EXPECT_EQ(arm_run_fence(prepared), 0);
+            EXPECT_EQ(record_run_boundary(prepared, role), 0);
+            retire_run_fence(prepared);
+        }
+    };
+    for (const auto role : {RunCompletionFence::StreamRole::Aicpu, RunCompletionFence::StreamRole::Aicore}) {
+        DiagnosticRunner runner;
+        Attempt candidate(runner, 5, 10);
+        ASSERT_EQ(candidate.prepare(), 0);
+        auto *state = static_cast<NativeRunContext<DeviceRunnerBase> *>(candidate.storage);
+        int cpu = 0, core = 0;
+        auto &prepared = *state->prepared_execution;
+        prepared.streams = {&cpu, &core};
+        control().fail_stream_id = true;
+        ::testing::internal::CaptureStderr();
+        runner.observe(prepared, role);
+        const auto warning = ::testing::internal::GetCapturedStderr();
+        EXPECT_NE(
+            warning.find(
+                role == RunCompletionFence::StreamRole::Aicpu ? "AICPU stream of slot 5" : "AICore stream of slot 5"
+            ),
+            std::string::npos
+        ) << warning;
+        control().fail_stream_id = false;
+    }
+}
+}  // namespace native_admission_test

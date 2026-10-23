@@ -3667,13 +3667,19 @@ int DeviceRunnerBase::arm_run_fence(const PreparedExecution &prepared) {
     return rc;
 }
 
-void DeviceRunnerBase::note_run_stream_identity(rtStream_t stream) {
+bool DeviceRunnerBase::try_note_run_stream_identity(rtStream_t stream) {
     int32_t stream_id = -1;
     if (aclrtStreamGetId(static_cast<aclrtStream>(stream), &stream_id) == ACL_SUCCESS) {
         run_stream_ids_.note(stream_id);
-    } else {
+        return true;
+    }
+    run_stream_ids_.note_unidentified_stream();
+    return false;
+}
+
+void DeviceRunnerBase::note_run_stream_identity(rtStream_t stream) {
+    if (!try_note_run_stream_identity(stream)) {
         LOG_WARN("execution stream identity is unavailable; later unmatched fault notices have undecided attribution");
-        run_stream_ids_.note_unidentified_stream();
     }
 }
 
@@ -3681,7 +3687,13 @@ int DeviceRunnerBase::record_run_boundary(const PreparedExecution &prepared, Run
     const rtStream_t stream =
         role == RunCompletionFence::StreamRole::Aicpu ? prepared.streams.aicpu : prepared.streams.aicore;
     RunCompletionFence &fence = run_fence(prepared.pipeline_slot);
-    note_run_stream_identity(stream);
+    if (!try_note_run_stream_identity(stream)) {
+        LOG_WARN(
+            "aclrtStreamGetId failed for the %s stream of slot %u; the fault channel's stream history is "
+            "incomplete from here, so an unmatched notice reads as undecided rather than as another runner's",
+            stream_role_name(role), prepared.pipeline_slot
+        );
+    }
     // The submission is a fact the instant the device queue accepted it, and it
     // has to be recorded before anything that can still fail — otherwise a
     // failing record below would leave the run looking unsubmitted.

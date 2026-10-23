@@ -2338,6 +2338,7 @@ protected:
     int queue_run_entry(PreparedExecution &prepared, LaunchProgressSink &sink);
     int queue_caller_exit(const PreparedExecution &prepared);
     RunStreams borrowed_run_streams() const;
+    bool try_note_run_stream_identity(rtStream_t stream);
 
     /**
      * Record one stream's completion boundary, immediately after that stream's
