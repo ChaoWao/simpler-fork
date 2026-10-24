@@ -8,9 +8,6 @@
 # -----------------------------------------------------------------------------------------------------------
 """Live framework-queue consumer of the ordinary public Worker."""
 
-import hashlib
-import importlib.metadata
-import importlib.util
 import json
 import os
 import subprocess
@@ -22,36 +19,6 @@ import pytest
 _ROOT = Path(__file__).resolve().parents[4]
 _EXAMPLE = _ROOT / "examples/workers/l2/framework_eager/main.py"
 pytestmark = [pytest.mark.requires_hardware, pytest.mark.platforms(["a2a3"]), pytest.mark.test_environment("torch_npu")]
-
-
-@pytest.fixture(scope="module")
-def framework_module(tmp_path_factory):
-    dependencies = {}
-    for module, distribution in (("torch", "torch"), ("torch_npu", "torch-npu")):
-        spec = importlib.util.find_spec(module)
-        if spec is None:
-            pytest.fail(f"selected framework consumer requires matching torch and torch_npu; missing {module}")
-        dependencies[module] = {"version": importlib.metadata.version(distribution), "path": spec.origin}
-    print("FRAMEWORK_DEPENDENCIES " + json.dumps(dependencies, sort_keys=True), flush=True)
-    directory = tmp_path_factory.mktemp("framework-eager-module")
-    result = subprocess.run(
-        [sys.executable, str(_EXAMPLE), "--compile-only", "--build-dir", str(directory)],
-        capture_output=True,
-        text=True,
-        timeout=180,
-        check=False,
-        env={**os.environ, "TORCH_DEVICE_BACKEND_AUTOLOAD": "0", "MAX_JOBS": "2"},
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    modules = [
-        line.removeprefix("FRAMEWORK_QUEUE_MODULE ")
-        for line in result.stdout.splitlines()
-        if line.startswith("FRAMEWORK_QUEUE_MODULE ")
-    ]
-    assert len(modules) == 1, result.stdout + result.stderr
-    print(result.stdout, end="", flush=True)
-    print("FRAMEWORK_QUEUE_MODULE_SHA256 " + hashlib.sha256(Path(modules[0]).read_bytes()).hexdigest(), flush=True)
-    return directory
 
 
 @pytest.mark.parametrize("runtime", ["tensormap_and_ringbuffer", "host_build_graph"])

@@ -56,7 +56,7 @@ def import_without_framework(name, *args, **kwargs):
 builtins.__import__ = import_without_framework
 
 original = runpy.run_path({str(_ST)!r})
-framework_module = original["framework_module"]
+framework_module = runpy.run_path({str(_ST.with_name("conftest.py"))!r})["framework_module"]
 test_framework_queue_orders_public_worker = original["test_framework_queue_orders_public_worker"]
 pytestmark = original["pytestmark"]
 
@@ -87,6 +87,7 @@ def cpu_transport():
         util=SimpleNamespace(find_spec=find_spec),
         metadata=SimpleNamespace(version=lambda name: "CPU-contract")))
     patch.setitem(namespace, "subprocess", SimpleNamespace(run=run))
+    patch.setitem(test_framework_queue_orders_public_worker.__globals__, "subprocess", SimpleNamespace(run=run))
     yield
     patch.undo()
 """
@@ -256,3 +257,69 @@ def test_framework_workflow_propagates_manual_selection(tmp_path, mode):
         commands = [json.loads(line) for line in log.read_text().splitlines()]
         command = next(args for args in commands if args[:2] == ["-m", "pytest"])
         assert command[command.index("--manual") + 1] == mode
+
+
+@pytest.mark.parametrize("selection", ["shared", "missing", "empty"])
+def test_framework_bridge_fixture_is_shared_and_lazy_across_modules(tmp_path, selection):
+    (tmp_path / "pytest.ini").write_text("[pytest]\n")
+    fixture = _ST.with_name("conftest.py")
+    (tmp_path / "conftest.py").write_text(
+        f"""
+import runpy
+from pathlib import Path
+from types import SimpleNamespace
+import pytest
+
+framework_module = runpy.run_path({str(fixture)!r})["framework_module"]
+
+@pytest.fixture(scope="session", autouse=True)
+def cpu_compile_transport():
+    patch = pytest.MonkeyPatch()
+    namespace = framework_module.__wrapped__.__globals__
+    def find_spec(name):
+        return None if {selection!r} == "missing" else SimpleNamespace(origin="CPU-contract")
+    def compile_bridge(command, **kwargs):
+        assert "--compile-only" in command
+        counter = Path({str(tmp_path / "compiles")!r})
+        counter.write_text(counter.read_text() + "compile\\n" if counter.exists() else "compile\\n")
+        directory = Path(command[command.index("--build-dir") + 1])
+        module = directory / "CPU-contract.so"
+        module.write_bytes(b"CPU fixture transport")
+        return SimpleNamespace(returncode=0, stdout="FRAMEWORK_QUEUE_MODULE " + str(module), stderr="")
+    patch.setitem(namespace, "importlib", SimpleNamespace(
+        util=SimpleNamespace(find_spec=find_spec), metadata=SimpleNamespace(version=lambda name: "CPU-contract")))
+    patch.setitem(namespace, "subprocess", SimpleNamespace(run=compile_bridge))
+    yield
+    patch.undo()
+"""
+    )
+    for name in ("first", "second"):
+        (tmp_path / f"test_{name}.py").write_text(
+            "def test_uses_shared_bridge(framework_module):\n"
+            "    assert (framework_module / 'CPU-contract.so').is_file()\n"
+        )
+    command = [sys.executable, "-m", "pytest", "-q", "--confcutdir=.", "--junitxml=results.xml"]
+    if selection == "empty":
+        command.extend(["-k", "no_matching_consumer"])
+    result = subprocess.run(
+        command,
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        env={**os.environ, "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"},
+    )
+    cases = ET.parse(tmp_path / "results.xml").getroot().findall(".//testcase")
+    counter = tmp_path / "compiles"
+    if selection == "shared":
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert len(cases) == 2
+        assert counter.read_text() == "compile\n"
+    elif selection == "missing":
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert len(cases) == 2 and all(case.find("error") is not None for case in cases)
+        assert not counter.exists()
+    else:
+        assert result.returncode == 5, result.stdout + result.stderr
+        assert not cases and not counter.exists()

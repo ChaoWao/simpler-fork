@@ -4,6 +4,14 @@ This bounded A3 reference consumer puts `Worker.submit` in torch_npu's actual
 host emission queue. Torch operations produce two DEVICE inputs; the ordinary
 public Worker launches one add kernel; a Torch tensor addition consumes its
 output on the same framework stream. TMR and HBG use the same consumer.
+Additional consumers exercise caller-stream switching and aliased INOUT views
+through that same public Worker and host queue bridge.
+
+| Consumer | Executable assertions |
+| -------- | --------------------- |
+| `main.py` | Same-stream producers → Worker → successor; retained caller frames, observable callback error and close ordering |
+| `cross_stream.py` | Separate producer and consumer streams, caller A → B → A on one Worker, explicit framework event dependencies |
+| `alias_inout.py` | One Buffer backing full and partially overlapping strided views, INPUT plus INOUT, repeated updates and unchanged guards |
 
 The C++ extension uses torch_npu's existing `OpCommand::RunOpApi`. It provides
 no separate executor or public Torch integration API. PyPTO's process adapter
@@ -33,7 +41,11 @@ TQ=1 requires callback execution on a different thread; TQ=0 requires the caller
 thread. Golden values are checked only after every framework successor has
 been enqueued and the final framework stream completion boundary returns.
 
-The system test covers both runtimes and both policies. Its
+The system tests cover both runtimes and both policies. A session-scoped
+fixture builds the optional bridge artifact once. The cross-stream and alias
+CLIs load the unique existing artifact, building only when it is absent; the
+original same-stream CLI still checks its incremental build cache. All use
+the original `build_bridge` / `_load_bridge` helpers. The
 `test_environment("torch_npu")` marker selects an isolated framework venv in the
 dedicated `st-framework-eager-a2a3` PR and Daily job. The default environment
 automatically deselects these tests; no directory exclusion is needed.
@@ -83,8 +95,28 @@ not reach or qualify the native context/capture validators.
 The assertions also cover an observable queued Python exception,
 and use of the caller's framework stream after Worker close. The framework
 consumer must keep unsubmitted callbacks alive and finish them before close;
-Worker cannot see a callback that has not called it yet. Cross-stream switching,
-alias/INOUT, full framework process shutdown and capture are remaining gates.
+Worker cannot see a callback that has not called it yet.
+
+`cross_stream.py` creates producer, caller A, caller B and consumer streams.
+Each producer records readiness; the selected caller waits before submission,
+and the consumer waits for that caller's completion event before reading.
+Three calls use A → B → A while retaining every event, frame and stream through
+retirement. All raw stream handles are resolved before this chain. Only the
+final consumer boundary is explicitly drained; native backpressure may wait.
+The assertions check actual submission handles and golden values, not overlap
+or a deterministic numerical failure for every omitted dependency edge.
+
+`alias_inout.py` uses one Torch allocation wrapped by one Buffer. Its distinct
+64 × 64 Tensor views have row stride 96 and nonzero byte offsets. Each mode
+performs successive INPUT + INOUT updates on that same backing: either full
+alias or partial overlap by eight floats. The single-tile kernel loads both
+views before any store, so the reference uses each step's pre-update snapshot.
+A framework successor checks the entire backing, including unchanged guard
+regions, after each update. Initial host-to-device preparation precedes all
+update chains; no host decision or device copy-back occurs between updates.
+
+These are bounded reference cases. Full framework process shutdown, arbitrary
+strides or cross-tile overlap, A5 and capture remain separate qualification.
 
 This is a reference consumer of the existing eager contract, not acceptance of
 PyPTO production dispatch, vLLM/model numerics, A5 or capture/replay.
