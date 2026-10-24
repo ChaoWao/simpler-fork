@@ -89,6 +89,16 @@ the operator. Caller synchronization can establish device results; `RunHandle.wa
 still performs runtime retirement. Capture is rejected before run/source state is
 published. Borrowed close does not reset the caller device or destroy its stream.
 
+Frameworks with a separate host emission queue must place the submission in
+that queue's callback; passing a stream integer alone does not order a Python
+call against framework work still waiting for host emission. The optional
+[A3 framework eager reference](../../../examples/workers/l2/framework_eager/README.md)
+uses the same public Worker for TMR and HBG, preserves frame/storage owners and
+uses the final framework completion boundary before runtime retirement. It
+demonstrates ordering, not overlapping execution: native admission, predecessor
+retirement and capacity backpressure can still wait. It
+requires matching torch/torch_npu/CANN and does not enable capture submission.
+
 ### Memory
 
 | Method | Notes |
@@ -167,7 +177,10 @@ callable is a **Python orchestration function** `f(orch, args, cfg)`, where
 | `submit_next_level(callable_handle, args, config=None, *, worker: int) -> TaskHandle` | Hands a callable to one exact NEXT_LEVEL child and returns an opaque handle for explicit task dependencies |
 | `submit_next_level_group(callable_handle, args_list, config=None, *, workers: list[int]) -> TaskHandle` | Submits one group DAG node and returns its opaque handle |
 | `submit_sub(callable_handle, args=None)` | Schedules a registered host-side Python callable |
-| `allocate_domain(*, name, workers, window_size, buffers=())` | Context manager returning a handle indexed by domain-local rank |
+| `allocate_domain(*, name, members, window_size, buffers=(), retain_after_run=False)` | L3/L4 creation returning `CommDomainHandle`; legacy L3 `workers=` and chip-id indexing remain supported |
+| `get_or_allocate_domain(*, name, members, window_size, buffers=(), retain_after_run=False)` | Reuse the same live handle after full configuration validation, or create it |
+| `get_domain(name)` / `release_domain(handle)` | Creator-local lookup / deferred owning release |
+| `copy_to_domain(handle, rank, data, ...)` / `copy_from_domain(handle, rank, nbytes, ...)` | Synchronous bounded staging before task submission; L3 requires declared slices |
 | `alloc_child_tensor(worker_id, shapes, dtype) -> Buffer` | Delegates allocation to the owning Worker; target chip memory is named by the returned handle |
 
 ## Callables and task args

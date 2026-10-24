@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include "common/support/native_run_execution_peer.h"
@@ -182,12 +184,19 @@ public:
         device_run_result_dev_ptrs_[0] = nullptr;
     }
     using DeviceRunnerBase::slot_persistent_args;
-    void prepare_level(Runtime &runtime, int level) {
+    void prepare_diagnostics(Runtime &runtime, int level, int pmu_event_type, int dump_level = 0) {
         max_block_dim_ = 1;
         CallConfig config;
         config.aicpu_thread_num = 2;
         config.enable_chip_swimlane = level;
+        config.enable_pmu = pmu_event_type;
+        config.enable_dump_args = dump_level;
         assert(prepare_launch_shape(runtime, config) == 0);
+        PreparedExecution execution(NativeRunIdentity{}, runtime, config, 0);
+        assert(
+            runtime.dev.pmu_event_type ==
+            (execution.dfx.pmu_enabled ? static_cast<uint32_t>(execution.dfx.pmu_event_type) : 0)
+        );
     }
     bool timing_armed() const { return device_timing_armed_[0]; }
     void consume_timing() { device_timing_armed_[0] = false; }
@@ -342,18 +351,36 @@ static void check_metadata_publication(int fault, bool drain_fails = false) {
     assert(release_slot_persistent_args(slot, allocator) == 0);
 }
 static void check_level_publication(bool entry_route) {
+    unsetenv("SIMPLER_PMU_EVENT_TYPE");
     next_stream = next_event = submits = copies = 0;
     fail_at = 0;
     ProbeRunner runner;
     runner.initialize();
     Runtime runtime;
     auto &slot = runner.slot_persistent_args(0);
-    for (int level : {4, 1, 0, 3, 2}) {
-        runner.prepare_level(runtime, level);
+    for (const auto [level, pmu, dump_level] :
+         {std::tuple{4, 0, 0},
+          {1, 0, 0},
+          {0, 0, 0},
+          {3, 0, 0},
+          {2, 0, 0},
+          {2, 2, 0},
+          {2, 4, 0},
+          {2, 0, 0},
+          {2, 8, 0},
+          {0, 0, 3},
+          {0, 0, 1},
+          {0, 0, 0},
+          {0, 0, 2},
+          {0, 0, 3}}) {
+        runner.prepare_diagnostics(runtime, level, pmu, dump_level);
+        assert(runtime.dev.dump_args_level == static_cast<uint32_t>(dump_level));
         assert(runtime.dev.chip_swimlane_level == static_cast<uint32_t>(level));
         KernelArgsHelper helper;
         assert(helper.prepare_runtime_args(runtime, runner.allocator(), slot) == 0);
         runtime.dev.chip_swimlane_level = 99;
+        runtime.dev.pmu_event_type = 99;
+        runtime.dev.dump_args_level = 99;
         LaunchProgressSink sink;
         assert(helper.publish_runtime_args(entry_route, caller, sink) == 0);
         assert(sink.submitted());
@@ -361,7 +388,24 @@ static void check_level_publication(bool entry_route) {
         const auto *device = reinterpret_cast<const std::byte *>(slot.runtime_args);
         std::memcpy(&published, device + offsetof(DeviceRuntimeLaunchDesc, chip_swimlane_level), sizeof(published));
         assert(published == static_cast<uint32_t>(level));
+        std::memcpy(&published, device + offsetof(DeviceRuntimeLaunchDesc, pmu_event_type), sizeof(published));
+        assert(published == static_cast<uint32_t>(pmu));
+        std::memcpy(&published, device + offsetof(DeviceRuntimeLaunchDesc, dump_args_level), sizeof(published));
+        assert(published == static_cast<uint32_t>(dump_level));
     }
+    assert(setenv("SIMPLER_PMU_EVENT_TYPE", "4", 1) == 0);
+    runner.prepare_diagnostics(runtime, 0, 2);
+    assert(runtime.dev.pmu_event_type == 4);
+    KernelArgsHelper overridden;
+    assert(overridden.prepare_runtime_args(runtime, runner.allocator(), slot) == 0);
+    assert(setenv("SIMPLER_PMU_EVENT_TYPE", "1", 1) == 0);
+    LaunchProgressSink sink;
+    assert(overridden.publish_runtime_args(entry_route, caller, sink) == 0);
+    uint32_t published;
+    const auto *device = reinterpret_cast<const std::byte *>(slot.runtime_args);
+    std::memcpy(&published, device + offsetof(DeviceRuntimeLaunchDesc, pmu_event_type), sizeof(published));
+    assert(published == 4);
+    unsetenv("SIMPLER_PMU_EVENT_TYPE");
     assert(release_slot_persistent_args(slot, runner.allocator()) == 0);
     runner.finish();
 }

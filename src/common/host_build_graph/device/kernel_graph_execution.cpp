@@ -137,13 +137,17 @@ bool validate_images(
     const auto pristine = read_value<RuntimeContext>(packet.payload + h.runtime_offset - copied_begin);
     // Queue capacities are authored per graph, while reservation offsets depend
     // only on the common physical layout. The device initializes these queues.
-    const auto valid_capacity = [](uint64_t count) {
-        return count >= 2 && count <= READY_QUEUE_CAPACITY_LIMIT && (count & (count - 1)) == 0;
+    const auto valid_capacity = [](uint64_t count, uint64_t limit) {
+        return count >= 2 && count <= limit && (count & (count - 1)) == 0;
     };
     const auto &capacities = pristine.prebuilt_layout.sched.capacities;
     for (int i = 0; i < NUM_RESOURCE_SHAPES; ++i)
-        if (!valid_capacity(capacities.ready[i]) || !valid_capacity(capacities.ready_sync[i])) return false;
-    if (!valid_capacity(capacities.dummy) || !valid_capacity(capacities.graph_prepare)) return false;
+        if (!valid_capacity(capacities.ready[i], READY_QUEUE_CAPACITY_LIMIT) ||
+            !valid_capacity(capacities.ready_sync[i], READY_QUEUE_CAPACITY_LIMIT))
+            return false;
+    if (!valid_capacity(capacities.dummy, READY_QUEUE_CAPACITY_LIMIT) ||
+        !valid_capacity(capacities.graph_prepare, GRAPH_PREPARE_QUEUE_CAPACITY_LIMIT))
+        return false;
     layout.sched.capacities = capacities;
     if (!same_layout(pristine.prebuilt_layout, layout) || pristine.mode != MODE_EXECUTE ||
         pristine.sm_handle != nullptr || pristine.scheduler != nullptr || pristine.aicore_mailbox != nullptr ||

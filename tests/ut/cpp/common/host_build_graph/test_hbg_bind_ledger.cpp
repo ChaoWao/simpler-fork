@@ -932,7 +932,7 @@ TEST_F(HbgBindLedgerTest, TheDeviceImageCarriesNoHostOnlyBytes) {
     // prefix — so the exclusions below cover every byte that can cross, not
     // just the ones a steady-state run re-sends.
     std::vector<uint8_t> image(image_bytes);
-    std::memcpy(image.data(), &runtime, image_bytes);
+    std::memcpy(image.data(), &runtime.dev, image_bytes);
 
     auto contains = [&image](const void *needle, size_t bytes) {
         const auto *first = static_cast<const uint8_t *>(needle);
@@ -2587,7 +2587,10 @@ TEST_F(HbgBindLedgerTest, LaunchStagingLeavesOnlyTheLargeImageOnThePrepareCopyPa
     EXPECT_EQ(fake_.copy_count, copies);
 }
 
-TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPublication) {
+class HbgGraphPrepareCapacityTest : public HbgBindLedgerTest,
+                                    public ::testing::WithParamInterface<uint64_t> {};
+
+TEST_P(HbgGraphPrepareCapacityTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPublication) {
     Runtime runtime;
     init_runtime(runtime);
     RuntimeContext context{};
@@ -2599,6 +2602,12 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     ChipTaskArgs args;
     const int status = hbg::build_graph(&runtime, &api_, access, &context, sm_bytes, capacity, &eps_, args, build);
     ASSERT_GT(status, 0);
+    if (GetParam() != 0) {
+        // Queue capacity may exceed the live population of this invocation.
+        auto populations = build.ready_queue_populations;
+        populations.graph_prepare = GetParam();
+        ASSERT_TRUE(populations.derive_capacities(&build.ready_queue_capacities));
+    }
     EXPECT_TRUE(build.build_complete);
     EXPECT_EQ(build.total_tasks, status);
     EXPECT_GT(build.heap_bytes, 0U);
@@ -2648,7 +2657,8 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
             return 0;
         }
     };
-    ASSERT_EQ(execution_context.initialize(0, handles, 7), 0);
+    const uint64_t context_generation = GetParam() + 7;
+    ASSERT_EQ(execution_context.initialize(0, handles, context_generation), 0);
     RAIIScopeGuard execution_close([&execution_context] {
         EXPECT_EQ(execution_context.close(), 0);
     });
@@ -2665,13 +2675,15 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     ASSERT_EQ(capacity_plan.prepare(execution_context, allocations), 0);
     hbg::GraphSlotRegistration registration{};
     EXPECT_EQ(
-        capacity_plan.make_registration(execution_context, 0, 7, 123, registration), PTO_RUNTIME_ERR_INVALID_STATE
+        capacity_plan.make_registration(execution_context, 0, context_generation, 123, registration),
+        PTO_RUNTIME_ERR_INVALID_STATE
     );
     ASSERT_EQ(execution_context.freeze_resources(), 0);
     EXPECT_EQ(
-        capacity_plan.make_registration(execution_context, 0, 8, 123, registration), PTO_RUNTIME_ERR_INVALID_STATE
+        capacity_plan.make_registration(execution_context, 0, context_generation + 1, 123, registration),
+        PTO_RUNTIME_ERR_INVALID_STATE
     );
-    ASSERT_EQ(capacity_plan.make_registration(execution_context, 0, 7, 123, registration), 0);
+    ASSERT_EQ(capacity_plan.make_registration(execution_context, 0, context_generation, 123, registration), 0);
     ASSERT_TRUE(hbg::is_valid_graph_slot_registration(registration));
     hbg::GraphInvocationIdentity identity{0, 0, 0, 19, 11, 12, 13};
     hbg::GraphLaunchTemplate snapshot;
@@ -2710,8 +2722,39 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
     });
     const simpler::kernel::PreparedInvocationView trusted{identity.callable_id, 0, 0, identity.generation};
     hbg::GraphExecutionPreparation prepared;
+    const auto valid_capacities = build.ready_queue_capacities;
+    const auto reject_capacity = [&](ReadyQueueCapacities invalid_capacities) {
+        build.ready_queue_capacities = invalid_capacities;
+        hbg::GraphLaunchTemplate invalid_snapshot;
+        ASSERT_EQ(hbg::make_graph_launch_template(build, context, registration, identity, invalid_snapshot), 0);
+        const uint64_t attempt = registry->execution.attempt;
+        EXPECT_EQ(
+            prepare_packet_for_test(
+                invalid_snapshot.data(), invalid_snapshot.size(), 0, 123, trusted, prepared, {},
+                hbg::GraphPacketAddress::RelativeLaunch
+            ),
+            hbg::GraphExecutionStatus::InvalidImage
+        );
+        EXPECT_EQ(registry->execution.attempt, attempt);
+    };
+    for (uint64_t invalid :
+         {uint64_t{0}, uint64_t{3}, GRAPH_PREPARE_QUEUE_CAPACITY_LIMIT + 1, 2 * GRAPH_PREPARE_QUEUE_CAPACITY_LIMIT}) {
+        auto capacities = valid_capacities;
+        capacities.graph_prepare = invalid;
+        reject_capacity(capacities);
+    }
+    auto oversized = valid_capacities;
+    oversized.ready[0] = 2 * READY_QUEUE_CAPACITY_LIMIT;
+    reject_capacity(oversized);
+    oversized = valid_capacities;
+    oversized.ready_sync[0] = 2 * READY_QUEUE_CAPACITY_LIMIT;
+    reject_capacity(oversized);
+    oversized = valid_capacities;
+    oversized.dummy = 2 * READY_QUEUE_CAPACITY_LIMIT;
+    reject_capacity(oversized);
+    build.ready_queue_capacities = valid_capacities;
     simpler::kernel::HbgCallableBinding live{
-        reinterpret_cast<uint64_t>(&runtime), 7, identity.generation, identity.callable_id, 0, 0, 0
+        reinterpret_cast<uint64_t>(&runtime), context_generation, identity.generation, identity.callable_id, 0, 0, 0
     };
     ASSERT_EQ(simpler_aicpu_l1_hbg_register_callable(&live), 0);
     RAIIScopeGuard callable_revoke([&live] {
@@ -2839,6 +2882,11 @@ TEST_F(HbgBindLedgerTest, CompletedGraphBuildMeasuresWithoutDeviceAllocationOrPu
         PTO_RUNTIME_ERR_INVALID_STATE
     );
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    GraphPreparePopulation, HbgGraphPrepareCapacityTest,
+    ::testing::Values(uint64_t{0}, uint64_t{16384}, uint64_t{16385}, uint64_t{32768})
+);
 
 TEST_F(HbgBindLedgerTest, TemplateClearsStaleDefinitionIdentityFromRetainedMirror) {
     Runtime runtime;
