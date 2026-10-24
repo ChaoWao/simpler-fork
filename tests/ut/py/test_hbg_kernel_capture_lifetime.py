@@ -6,7 +6,11 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-"""HBG graph owners outlive construction and replay new values at fixed addresses.
+"""HBG graph owners outlive construction and snapshot changed caller inputs.
+
+ChipCallable/holder construction scope ends before replay. The caller image and
+Args stay alive with a legal alternate entry/scalar; replay keeps the accepted
+entry/scalar. Unchanged code bytes are not a complete deep-copy falsification.
 
 CPU cases exercise the same numerical/transcript validators as the two hardware
 cases. They do not qualify RTS execution, device capture or native DSO lifetime.
@@ -19,7 +23,6 @@ import gc
 import hashlib
 import json
 import os
-import struct
 import subprocess
 import sys
 import weakref
@@ -33,6 +36,7 @@ _ROOT = Path(__file__).resolve().parents[3]
 _PREFIX = "HBG_CAPTURE_LIFETIME "
 _COUNT = 128 * 128
 _SCALAR = 1.25
+_REPLACEMENT_SCALAR = 7.75
 _POISON = -999.0
 # Unknown capture/drain outcomes retain every owner until the child exits.
 _UNPROVEN = []
@@ -40,9 +44,11 @@ _PHASES = (
     "COMPILED",
     "REGISTER_BEGIN",
     "REGISTERED",
+    "CALLER_IMAGE_REPLACED",
     "CAPTURE_BEGIN",
     "HOST_ORCH",
     "CAPTURED",
+    "CALLER_ARGS_REWRITTEN",
     "CONSTRUCTION_GONE",
     "LIVE_GUARDS",
     "REPLAYS_COMPLETED",
@@ -91,6 +97,7 @@ def _validate_transcript(stdout, profile, source, test_sha):
     assert summary["native_source"] == source
     assert summary["test_sha"] == test_sha
     assert summary["rounds"] == 3 and summary["count"] == _COUNT
+    assert summary["caller_image_replaced"] and summary["caller_args_rewritten"]
     assert summary["input_address"] and summary["output_address"]
     assert summary["input_address"] != summary["output_address"]
     for field in ("runtime_sha", "aicpu_sha", "aicore_sha", "dispatcher_sha", "host_so_sha", "aiv_sha"):
@@ -99,8 +106,6 @@ def _validate_transcript(stdout, profile, source, test_sha):
 
 
 def _compile_callable(directory):
-    from simpler.task_interface import ArgDirection, ChipCallable, CoreCallable  # noqa: PLC0415
-
     from simpler_setup.elf_parser import extract_text_section  # noqa: PLC0415
     from simpler_setup.kernel_compiler import KernelCompiler  # noqa: PLC0415
     from simpler_setup.pto_isa import ensure_pto_isa_root  # noqa: PLC0415
@@ -134,15 +139,46 @@ def _compile_callable(directory):
         build_dir=str(directory),
     )
     text = extract_text_section(incore)
-    signature = [ArgDirection.IN, ArgDirection.OUT, ArgDirection.SCALAR]
-    chip = ChipCallable.build(
-        signature=signature,
-        func_name="lifetime_orchestration",
-        binary=orchestration,
-        children=[(0, CoreCallable.build(signature=signature, binary=text))],
-    )
+    original, alternate = _callable_images(orchestration, text)
     assert not marker.exists(), "canonical compilation unexpectedly loaded/unloaded the Host SO"
-    return chip, {"host_so_sha": _sha(orchestration), "aiv_sha": _sha(text)}
+    return original, alternate, {"host_so_sha": _sha(orchestration), "aiv_sha": _sha(text)}
+
+
+def _image_bytes(chip):
+    return ctypes.string_at(chip.buffer_ptr(), chip.buffer_size())
+
+
+def _callable_images(orchestration, text):
+    from simpler.task_interface import ArgDirection, ChipCallable, CoreCallable  # noqa: PLC0415
+
+    signature = [ArgDirection.IN, ArgDirection.OUT, ArgDirection.SCALAR]
+    children = [(0, CoreCallable.build(signature=signature, binary=text))]
+    images = [
+        ChipCallable.build(signature=signature, func_name=name, binary=orchestration, children=children)
+        for name in ("lifetime_orchestration", "kernel_eager_orchestration")
+    ]
+    original, alternate = images
+    assert original.buffer_size() == alternate.buffer_size()
+    assert original.binary_size == alternate.binary_size == len(orchestration)
+    assert original.child_offset(0) == alternate.child_offset(0)
+    assert _image_bytes(original.child(0)) == _image_bytes(alternate.child(0))
+    assert [original.sig(i) for i in range(3)] == [alternate.sig(i) for i in range(3)] == signature
+    return original, alternate
+
+
+def _set_args(args, addresses, scalar):
+    from simpler.task_interface import ChipTensor, DataType  # noqa: PLC0415
+
+    pointer = args.__ptr__()
+    args.clear()
+    for address in addresses:
+        args.add_tensor(ChipTensor.make(address.value, (_COUNT,), DataType.FLOAT32, child_memory=True))
+    args.add_scalar(ctypes.c_float(scalar))
+    assert args.scalar(0) == int.from_bytes(bytes(ctypes.c_float(scalar)), "little")
+    assert args.__ptr__() == pointer
+    assert args.tensor_count() == 2 and args.scalar_count() == 1
+    assert [args.tensor(i).data for i in range(2)] == [address.value for address in addresses]
+    assert all(args.tensor(i).shapes == (_COUNT,) and args.tensor(i).dtype == DataType.FLOAT32 for i in range(2))
 
 
 def _configure(lib):
@@ -180,32 +216,37 @@ def _configure(lib):
 
 
 class _Construction:
-    """Only the lexical capture scope owns the caller's chip image and Args."""
+    """Owns temporary ChipCallable wrappers; mutable registration/Args owners are separate."""
 
     def __init__(self, chip, args):
         self.chip, self.args = chip, args
 
 
 def _capture(lib, probe, owners, directory):
-    from simpler.task_interface import ChipStorageTaskArgs, ChipTensor, DataType  # noqa: PLC0415
+    from simpler.task_interface import ChipStorageTaskArgs  # noqa: PLC0415
 
-    chip, hashes = _compile_callable(directory)
+    chip, alternate, hashes = _compile_callable(directory)
     owners["module_marker"] = directory / "native-unloaded"
     _mark("COMPILED")
     args = ChipStorageTaskArgs()
-    for address in owners["device"]:
-        args.add_tensor(ChipTensor.make(address.value, (_COUNT,), DataType.FLOAT32, child_memory=True))
-    args.add_scalar(int.from_bytes(struct.pack("<f", _SCALAR), "little"))
+    _set_args(args, owners["device"], _SCALAR)
+    image = owners["caller_image"] = bytearray(_image_bytes(chip))
+    view = owners["caller_image_view"] = (ctypes.c_ubyte * len(image)).from_buffer(image)
+    # ChipCallable's existing wire storage alignment is 16 bytes.
+    assert ctypes.addressof(view) % 16 == 0
     construction = _Construction(chip, args)
     owners["construction"] = construction  # Retained on any unproven return.
     reference = weakref.ref(construction)
     cid = owners["cid"] = ctypes.c_int32(-1)
     _mark("REGISTER_BEGIN")
-    assert (
-        lib.simpler_register_callable_v2(owners["ctx"], chip.buffer_ptr(), chip.buffer_size(), ctypes.byref(cid)) == 0
-    )
+    assert lib.simpler_register_callable_v2(owners["ctx"], view, len(image), ctypes.byref(cid)) == 0
     assert not owners["module_marker"].exists()
     _mark("REGISTERED")
+    replacement = _image_bytes(alternate)
+    assert len(image) == len(replacement) and bytes(image) != replacement
+    image[:] = replacement
+    assert bytes(view) == replacement
+    _mark("CALLER_IMAGE_REPLACED")
     token = owners["token"] = ctypes.c_uint64()
     model = owners["model"] = ctypes.c_void_p()
     assert lib.simpler_kernel_mode_retain_graph(owners["ctx"], ctypes.byref(token)) == 0
@@ -216,9 +257,12 @@ def _capture(lib, probe, owners, directory):
     assert lib.aclmdlRICaptureEnd(owners["stream"], ctypes.byref(model)) == 0
     assert model.value
     _mark("CAPTURED")
-    args.clear()
+    _set_args(args, owners["device"], _REPLACEMENT_SCALAR)
+    owners["rewritten_args"] = args
+    _mark("CALLER_ARGS_REWRITTEN")
     del owners["construction"]
-    # No ChipCallable/Args/bytes escapes, and no scene compiler cache owns them.
+    # ChipCallable wrappers leave scope. Changed image/Args stay live so stale
+    # aliases observe valid alternate values instead of freed-memory residues.
     return reference, hashes
 
 
@@ -337,6 +381,8 @@ def _run(device, profile, directory):
         test_sha=_sha(Path(__file__).read_bytes()),
         rounds=3,
         count=_COUNT,
+        caller_image_replaced=True,
+        caller_args_rewritten=True,
         input_address=source.value,
         output_address=destination.value,
         runtime_sha=runtime_sha,
@@ -374,9 +420,48 @@ def test_hbg_capture_lifetime(request, hot_path_probe, tmp_path, profile):  # no
 def test_replay_output_validator_rejects_stale_poison_and_single_element_errors():
     outputs = [[float(i % 127 + offset) + _SCALAR for i in range(131)] for offset in (0, 257, 514)]
     _validate_outputs(outputs, 131)
-    for bad_middle in (outputs[0], [_POISON] * 131, [*outputs[1][:-1], outputs[1][-1] + 1]):
+    for bad_middle in (
+        outputs[0],
+        [_POISON] * 131,
+        [*outputs[1][:-1], outputs[1][-1] + 1],
+        [value + _REPLACEMENT_SCALAR - _SCALAR for value in outputs[1]],
+    ):
         with pytest.raises(AssertionError, match="replay 1"):
             _validate_outputs([outputs[0], bad_middle, outputs[2]], 131)
+
+
+def test_legal_caller_image_replacement_changes_entry_without_changing_child():
+    from simpler.task_interface import ChipCallable  # noqa: PLC0415
+
+    # Structural CPU fixtures are never loaded, registered or executed.
+    original, alternate = _callable_images(b"host image fixture", b"aiv image fixture")
+    image = bytearray(_image_bytes(original))
+    view = (ctypes.c_ubyte * len(image)).from_buffer(image)
+    pointer = ctypes.addressof(view)
+    assert ChipCallable.from_bytes(bytes(view)).func_name == "lifetime_orchestration"
+    image[:] = _image_bytes(alternate)
+    assert ctypes.addressof(view) == pointer
+    actual = ChipCallable.from_bytes(bytes(view))
+    assert actual.func_name == "kernel_eager_orchestration"
+    assert _image_bytes(actual.child(0)) == _image_bytes(original.child(0))
+    assert actual.buffer_size() == original.buffer_size()
+
+
+def test_args_rewrite_keeps_descriptor_storage_and_changes_only_scalar():
+    from simpler.task_interface import ChipStorageTaskArgs  # noqa: PLC0415
+
+    # These descriptor-only addresses are never submitted or dereferenced.
+    addresses = [ctypes.c_void_p(0x100000), ctypes.c_void_p(0x200000)]
+    args = ChipStorageTaskArgs()
+    _set_args(args, addresses, _SCALAR)
+    pointer = args.__ptr__()
+    before = ctypes.string_at(pointer, args.sizeof())
+    _set_args(args, addresses, _REPLACEMENT_SCALAR)
+    after = ctypes.string_at(pointer, args.sizeof())
+    assert args.__ptr__() == pointer and before != after
+    assert args.scalar(0) == int.from_bytes(bytes(ctypes.c_float(_REPLACEMENT_SCALAR)), "little")
+    _set_args(args, addresses, _SCALAR)
+    assert ctypes.string_at(pointer, args.sizeof()) == before
 
 
 def _valid_transcript():
@@ -398,6 +483,8 @@ def _valid_transcript():
         native_source="b" * 40,
         rounds=3,
         count=_COUNT,
+        caller_image_replaced=True,
+        caller_args_rewritten=True,
         input_address=100,
         output_address=200,
     )
@@ -412,6 +499,8 @@ def test_lifetime_transcript_requires_native_host_call_and_module_release_order(
         [*lines[:5], _PREFIX + "HOST_ORCH", *lines[5:]],
         [line for line in lines if line != _PREFIX + "HOST_ORCH"],
         [line for line in lines if line != _PREFIX + "CONSTRUCTION_GONE"],
+        [line for line in lines if line != _PREFIX + "CALLER_IMAGE_REPLACED"],
+        [line for line in lines if line != _PREFIX + "CALLER_ARGS_REWRITTEN"],
         [*lines[:7], _PREFIX + "DSO_UNLOADED", *lines[7:]],
         [line for line in lines if line != _PREFIX + "DSO_UNLOADED"],
     ]
