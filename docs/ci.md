@@ -319,8 +319,11 @@ this compatibility. Setup prints Python, host architecture, CANN manifest,
 distribution versions and module locations; backend imports happen inside the
 exclusive device task with automatic backend loading disabled beforehand.
 
-One `task-submit` allocation of one device runs TMR/HBG × `TASK_QUEUE_ENABLE=0/1`
-serially, three calls per case. The client wait is bounded at 15 minutes,
+One `task-submit` allocation of one device runs the selected consumers serially
+for TMR/HBG × `TASK_QUEUE_ENABLE=0/1`. Same-stream and cross-stream consumers
+perform three calls; the alias consumer performs three updates for each of
+its full-alias and partial-overlap modes. A session-scoped fixture compiles the
+shared host bridge once. The client wait is bounded at 15 minutes,
 including queueing; the execution watchdog is also 15 minutes. Individual
 subprocess timeouts do not reserve additional aggregate execution time.
 The final pytest collection freezes a nonempty source/environment/nodeid plan
@@ -337,8 +340,9 @@ JUnit aggregation. Logs contain the
 source/native build identities, runtime and framework module hashes, compiled
 bridge identity and consumer results; `framework-eager-a2a3-*` artifacts retain
 JUnit and per-case logs even on failure. This qualifies the reference
-consumer's eager ordering and lifetime assertions, not overlap, PyPTO dispatch,
-A5, cross-stream switching or capture/replay.
+consumers' same-stream and cross-stream eager ordering, caller-owned lifetimes,
+and bounded aliased INOUT assertions. It does not establish overlap, arbitrary
+strides/cross-tile aliasing, PyPTO dispatch, A5 or capture/replay.
 
 ### CPU emergency lane (`ci-self-cpu.yml`) and the `/run-cpu` button
 
