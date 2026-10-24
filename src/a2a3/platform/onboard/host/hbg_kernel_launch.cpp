@@ -325,6 +325,7 @@ struct DeviceRunnerBase::HbgKernelLaunchHelpers {
         DeviceRunnerBase &runner, int32_t id, const ChipStorageTaskArgs &args, const CallableState &registered_callable,
         uint64_t argument_hash, HbgGraphBuildWorkspace &workspace, HbgGraphPacket &output
     ) {
+        if (!workspace.build.has_value() || workspace.runtime == nullptr) return PTO_RUNTIME_ERR_INTERNAL;
         const auto &state = *registered_callable.hbg_launch_state;
         // The packet carries the callable generation, code identity and argument snapshot.
         const hbg::GraphInvocationIdentity identity{
@@ -351,6 +352,7 @@ struct DeviceRunnerBase::HbgKernelLaunchHelpers {
     // Encoding has validated packet size; only the resulting bytes are submitted.
     static int
     pack_hbg_launch_payload(hbg::KernelCallableLaunchState &state, HbgGraphPacket &encoded, HbgLaunchPayload &payload) {
+        if (!encoded.packet.has_value()) return PTO_RUNTIME_ERR_INTERNAL;
         auto &packet = *encoded.packet;
         // The launch envelope selects packet validation and fixed-slot restoration on AICPU.
         auto &launch = payload.bytes.emplace(LAUNCH_ENVELOPE_HEADER_BYTES + packet.bytes, 0);
@@ -471,6 +473,7 @@ int DeviceRunnerBase::launch_hbg_kernel_callable(
     rc = Launch::pack_hbg_launch_payload(callable_state, preparation.packet, preparation.payload);
     if (rc != 0) return rc;
 
+    if (!preparation.payload.bytes.has_value()) return PTO_RUNTIME_ERR_INTERNAL;
     auto &launch = *preparation.payload.bytes;
     Launch::Submission submission{this, hbg_launch_context_.get(), &callable_state, caller, &launch};
     auto gate = Launch::make_hbg_launch_gate(submission);
@@ -514,6 +517,8 @@ int DeviceRunnerBase::revoke_hbg_kernel_callable(int32_t id) {
 int DeviceRunnerBase::close_hbg_kernel_runtime() {
     if (hbg_launch_context_ == nullptr) return 0;
     if (!hbg_launch_context_->graph_leases.empty()) return PTO_RUNTIME_ERR_INVALID_STATE;
+    const int closing_rc = kernel_exec_state_.begin_close();
+    if (closing_rc != 0) return closing_rc;
     hbg_launch_context_->closing = true;
     if (hbg_launch_context_->uncertain) {
         const int rc = drain_owned_streams(kernel_exec_state_, timeout_config_.stream_sync_timeout_ms);

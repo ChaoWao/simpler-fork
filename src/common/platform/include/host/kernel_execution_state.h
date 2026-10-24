@@ -191,6 +191,9 @@ public:
     // context that never prepared resources may launch without a binding.
     bool accepts_launch() const;
     void poison(int runtime_error);
+    // Stops admission without releasing handles needed by runtime-specific cleanup.
+    // Idempotent in Closing/Closed; close() completes resource release.
+    int begin_close();
     // Releases resources, then streams/events. A failed release stays Closing
     // for an explicit retry; the destructor performs no runtime calls.
     int close();

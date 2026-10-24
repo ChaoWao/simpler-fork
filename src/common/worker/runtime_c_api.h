@@ -1004,7 +1004,8 @@ int simpler_register_callable(DeviceContextHandle ctx, int32_t callable_id, cons
  * concurrent auto-ID and explicit-ID registration cannot claim the same slot.
  * Registration is refused with PTO_RUNTIME_ERR_INTERNAL while a native run is
  * prepared or executing on the context. finalize_device takes the same lock;
- * runs, initialization and destroy do not, and callers still order those.
+ * kernel-mode native preparation holds it only until its reservation is acquired,
+ * before invoking orchestration. Callers still order runs, initialization and destroy.
  *
  * Explicit-ID registration rejects an already registered ID with
  * INVALID_ARGUMENT; auto-ID never returns an occupied slot. IDs may be reused

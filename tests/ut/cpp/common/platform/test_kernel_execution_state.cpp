@@ -111,6 +111,34 @@ struct FakeContextOps {
 constexpr size_t kStreamCount = static_cast<size_t>(KernelStreamKind::Count);
 constexpr size_t kEventCount = static_cast<size_t>(KernelEventKind::Count);
 
+TEST(KernelExecutionState, BeginCloseStopsAdmissionButPreservesCleanupHandles) {
+    FakeContextOps fake;
+    KernelExecutionState state;
+    ASSERT_EQ(state.initialize(3, fake.table()), 0);
+    ASSERT_EQ(state.mark_ready_enqueued(), 0);
+    fake.current_device = 4;
+    EXPECT_EQ(state.begin_close(), PTO_RUNTIME_ERR_INVALID_STATE);
+    EXPECT_TRUE(state.accepts_dispatch());
+    fake.current_device = 3;
+    ASSERT_EQ(state.begin_close(), 0);
+    EXPECT_EQ(state.begin_close(), 0);
+    EXPECT_EQ(state.phase(), KernelContextPhase::Closing);
+    EXPECT_FALSE(state.accepts_dispatch());
+    EXPECT_FALSE(state.accepts_launch());
+    EXPECT_EQ(state.mark_ready_enqueued(), PTO_RUNTIME_ERR_INVALID_STATE);
+    EXPECT_TRUE(state.has_live_resources());
+    EXPECT_EQ(fake.events_destroyed, 0);
+    EXPECT_EQ(fake.streams_destroyed, 0);
+    EXPECT_EQ(state.last_runtime_error(), 0);
+    fake.destroy_failures_remaining = 1;
+    EXPECT_EQ(state.close(), -43);
+    EXPECT_EQ(state.begin_close(), 0);
+    EXPECT_EQ(state.close(), 0);
+    EXPECT_FALSE(state.has_live_resources());
+    EXPECT_EQ(state.begin_close(), 0);
+    EXPECT_EQ(state.phase(), KernelContextPhase::Closed);
+}
+
 TEST(KernelExecutionState, NoBorrowedIdentityNeedsNoCallerContext) {
     KernelExecutionState state;
     EXPECT_EQ(state.validate_current_context(), 0);

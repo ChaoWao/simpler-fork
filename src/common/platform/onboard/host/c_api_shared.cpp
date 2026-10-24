@@ -1776,6 +1776,9 @@ int simpler_prepare_run(
             return PTO_RUNTIME_ERR_INTERNAL;
         }
         state->runner_reserved = true;
+        // The reservation excludes registration, teardown and dedicated launch.
+        // Release the admission lock before orchestration can call back into the C API.
+        if (kernel_lock.owns_lock()) kernel_lock.unlock();
         // A retry owns the same slot but receives a fresh attempt identity.
         // Adopt before attach/reclaim/provision/bind can fail; exact-epoch
         // cleanup then settles the saved plan even if bind is never reached.
