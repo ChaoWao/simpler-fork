@@ -40,7 +40,7 @@ ENVIRONMENTS = {
     "torch_npu": TestEnvironment(
         "direct",
         ".github/actions/setup-framework-eager/constraints.txt",
-        "9.0.0",
+        "9.2.0-beta.2",
         (("torch", "torch"), ("torch_npu", "torch_npu")),
     ),
 }
