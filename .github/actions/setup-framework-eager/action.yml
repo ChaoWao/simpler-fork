@@ -9,6 +9,18 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Require a cold isolated experimental build
+      shell: bash
+      run: |
+        test ! -e build/cache
+        test ! -e build/lib
+        test ! -e .venv-framework
+        mkdir -p outputs/framework-eager-ci
+        git rev-parse HEAD > outputs/framework-eager-ci/source.txt
+        if [ -r /usr/local/Ascend/driver/version.info ]; then
+          cat /usr/local/Ascend/driver/version.info > outputs/framework-eager-ci/driver-version.txt
+        fi
+
     - name: Select the installed framework toolchain
       id: toolchain
       shell: bash
@@ -47,3 +59,29 @@ runs:
                    for package in record["packages"].values()), record
         print("TEST_ENVIRONMENT_PACKAGES " + json.dumps(record), flush=True)
         PYEOF
+
+    - name: Record experimental build roots and enable observational pytest probe
+      shell: bash
+      env:
+        CANN_ENV: ${{ steps.toolchain.outputs.cann_env }}
+      run: |
+        source "$CANN_ENV"
+        .venv-framework/bin/python - <<'PYEOF'
+        import hashlib,json,os,shutil
+        from pathlib import Path
+        out=Path('outputs/framework-eager-ci/compile-evidence');out.mkdir()
+        record={'cann_home':os.environ['ASCEND_HOME_PATH'],'files':{}}
+        for pattern in ('build/**/CMakeCache.txt','build/**/compile_commands.json','build/lib/**/*'):
+            for source in Path('.').glob(pattern):
+                if source.is_file():
+                    record['files'][str(source)]={'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
+                    if source.name in ('CMakeCache.txt','compile_commands.json'):
+                        shutil.copyfile(source,out/(str(len(record['files']))+'-'+source.name))
+        for name in ('ccec','hcc','bisheng','ld.lld'):
+            path=shutil.which(name)
+            if path and Path(path).is_file():
+                record[name]={'path':path,'realpath':str(Path(path).resolve()),'sha256':hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+        (out/'identity.json').write_text(json.dumps(record,indent=2)+'\n')
+        PYEOF
+        echo "PYTHONPATH=$GITHUB_WORKSPACE/.github/actions/setup-framework-eager:${PYTHONPATH:-}" >> "$GITHUB_ENV"
+        echo "PYTEST_ADDOPTS=-p experiment_probe ${PYTEST_ADDOPTS:-}" >> "$GITHUB_ENV"
