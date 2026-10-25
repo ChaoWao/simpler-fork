@@ -38,6 +38,11 @@ and xdist are rejected; default sweeps keep their existing execution strategy.
 Collect-only and compile warm-up select environments without importing or
 checking optional dependencies and do not emit execution plans.
 
+The ScopeStats consumer uses the same declared environment and shared bridge.
+It checks off/on/on/off selection, per-call exports and nested scope attribution
+on TMR. HBG is explicitly metadata only; neither path treats allocation
+frontiers as live usage or claims performance.
+
 The framework eager corpus shares one session-scoped optional bridge fixture.
 Its same-stream, cross-stream, alias/INOUT, callback-failure recovery and
 per-call-value and persistent-DEVICE-state modules are discovered by their
