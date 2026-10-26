@@ -45,6 +45,14 @@ It checks off/on/on/off selection, per-call exports and nested scope attribution
 on TMR. HBG is explicitly metadata only; neither path treats allocation
 frontiers as live usage or claims performance.
 
+The diagnostic-selection consumer uses that environment and bridge to check
+per-call PMU and chip-swimlane snapshots and exports. Its off/on/on/off sequence
+mutates the original selectors and prefixes after submission, checks the original
+output destinations and rejects records for off calls or poison destinations.
+The CPU checker contracts exercise export validation; actual collector behavior
+requires the framework hardware cases. Diagnostic collection may wait, and this
+consumer does not qualify other DFX collectors or capture/replay.
+
 The framework eager corpus shares one session-scoped optional bridge fixture.
 Its same-stream, cross-stream, alias/INOUT, callback-failure recovery and
 per-call-value and persistent-DEVICE-state modules are discovered by their

@@ -15,6 +15,7 @@ DEVICE-controlled updates to caller-owned storage.
 | `cross_stream.py` | Separate producer and consumer streams, caller A → B → A on one Worker, explicit framework event dependencies |
 | `alias_inout.py` | One Buffer backing full and partially overlapping strided views, INPUT plus INOUT, repeated updates and unchanged guards |
 | `scope_statistics.py` | Per-call ScopeStats selection with two nested task scopes; TMR records and allocation frontiers, HBG metadata only |
+| `diagnostic_selection.py` | Per-call PMU and chip-swimlane snapshots, original export destinations and enabled-run attribution |
 | `failure_recovery.py` | A Python callback fails after submit acceptance; later requests complete and init-thread Worker close retires all accepted runs |
 | `value_arguments.py` | Per-call FLOAT32, INT8, UINT64 and FLOAT64 values; HBG HOST/NONE controls and TMR clean HOST refusal followed by valid DEVICE calls |
 | `persistent_state.py` | Twelve DEVICE-controlled weighted cache updates, unchanged guards and weights, zero acceptance and revisited rows |
@@ -135,6 +136,17 @@ it has no device scope producer. These checks establish diagnostic attribution;
 they do not measure live allocations, overlap or performance. Retirement and
 export occur after the final framework completion boundary. Unknown outcomes
 retain the caller and runtime owners.
+
+`diagnostic_selection.py` queues four calls on one Worker: diagnostics off,
+swimlane level 1 / PMU event 2, level 3 / event 4, then off again. Each actual
+submit is followed by changes to the original CallConfig selectors and output
+prefix. After the final framework boundary, handle retirement exports the
+submitted selections to their original destinations. The checks require
+correct successors, distinct enabled-run epochs and matching PMU/swimlane
+attribution; off calls and the mutated poison destination produce no records.
+This covers PMU and chip swimlane only, not ScopeStats, args dump or dependency
+graph export. Native admission and diagnostic collection may wait; this is
+ordering and attribution evidence, not overlap or throughput.
 
 `alias_inout.py` uses one Torch allocation wrapped by one Buffer. Its distinct
 64 × 64 Tensor views have row stride 96 and nonzero byte offsets. Each mode

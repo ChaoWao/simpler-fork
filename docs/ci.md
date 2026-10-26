@@ -337,6 +337,13 @@ and independent output prefixes. TMR checks nested scope records and allocation
 frontiers; HBG checks metadata only. Those cases enter the same collection plan
 without a workflow case list.
 
+The diagnostic-selection consumer queues four calls on one Worker: diagnostics
+off, swimlane level 1 / PMU event 2, level 3 / event 4, then off again. It changes
+the original CallConfig selectors and output prefixes after each accepted submit,
+then checks the submitted selections, original export destinations and per-run
+attribution. PMU and swimlane collection can wait; this does not qualify other
+DFX collectors or claim overlapping execution.
+
 One `task-submit` allocation of one device runs the selected consumers serially
 for TMR/HBG × `TASK_QUEUE_ENABLE=0/1`. Same-stream and cross-stream consumers
 perform three calls; the alias consumer performs three updates for each of
