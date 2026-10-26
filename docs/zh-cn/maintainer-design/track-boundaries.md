@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-26。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -41,7 +41,9 @@
 > **拆分条件（写死，避免下次又「这次也不拆」）**：`§0` 连续两轮无实质修改，
 > 或本文超过 450 行 —— 满足任一条即拆，并在同一次改动里更新那 14 处锚点。
 
-## 0. 三条实施线：职责与交接契约
+## 0. 三条合同线与四方向的交付归属
+
+[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的方向一公共基础、方向二通信/backend、方向三 L2 常驻、方向四 L4 多机部署承载完整交付。RA/DS/EX 保留为本地合同与验收索引；完整场景 issue 不按所修改的模块拆开。#2621/#2657 的资源、执行和后端适配仍随方向二交付，方向三/四同理；只有独立有用且可独立验收的基础工作才单列方向一。具体树与动作见 [范围分析](review/track-2716.md)。
 
 > **本节是操作面：分线的结论。** §1–§3 是推导过程，历经三次更正，保留是因为
 > 它们记着每次更正的成因；**要用分线的人只需要读本节**。
@@ -53,7 +55,7 @@
 
 **通信路线（用户 2026-10-13 选择）**：mpirun 负责启动；通信沿用原生 CANN ACL Runtime + PTO。
 DS-6 定部署/发现与跨-L3 控制接口；DS-1 的 session owner 位于 MPI group/runtime，不要求常驻 daemon。
-DS-5 承接各原生 backend 的能力验收；SHMEM 仅为实现参考，不增加库适配任务。HCOMM/HCCL 不另立必选建域路线。
+DS-5 承接各原生 backend 的能力验收；SHMEM 仅为实现参考，不增加库适配任务。HCOMM/HCCL 不另立所有场景的必选建域路线；具体 backend（如 #2657 fetch）的 Hcomm/URMA setup 按能力需求评估，不能一概排除。
 RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 backend 生效。
 实现证据集中在 [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口)，状态仍只记 work-items。
 
@@ -63,9 +65,7 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
  | **分布式会话与通信域** | `DS-` | session/lease · 成员与 rank · 建域事务 · 远端回收 · 通信 profile · 规模扩展 | **capability 判定本身**（`RA`，它是唯一权威，`DS` 只消费）· 常驻循环（`EX`） |
  | **执行与常驻运行** | `EX-` | admission · 异步准备 · control 响应 · completion/finalize · STOP/drain | 资源身份与访问权（`RA`）· 跨节点事务（`DS`） |
 
-⚠️ **本重组明确排除 kernel 模式与 HBG 硬件需求。** runtime/调度器、DFX、Qwen 跨仓、CI
-**不进这三条线** —— 它们仍按 [`README.md`](README.md) §1.1 占行，但不受本节的交接契约管辖。
-理由：它们的归属在别的仓或别的团队，硬塞进来会让「一个工作项一个归属」失去意义。
+通用 kernel/eager-capture、HBG 硬件规划、DFX、跨仓模型与 CI 工程保留既定归属；但 **L3+ 必需的 L2 通信初始化、资源访问、通信 kernel、后端队列和 completion 在 #2716 范围内**。以完整目标判定范围，不因文件位于 L2 runtime 就排除，也不吞并通用调度器轨。
 
 ### 0.2 四处必须写死的交接契约
 
@@ -87,7 +87,7 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
  | - | ---- |
  | 同步原语（publish/observe/wait，由 counter `notify/test/wait` 提升为 Buffer-backed Attachment 通用 API）＋ 首个有界 SPSC 示例 | **`RA-11`**，只此一份工作项与验收清单 |
  | queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
- | 常驻循环本身的契约（`orch_fn` while 循环 · STOP · drain） | **`EX-2`** |
+ | 单 L2 Run 多轮 work/completion、停止准入与 drain；L3 进程复用、重复 run 单独计证 | **`EX-2`** |
 
 **公共职责约束**：RA-11 提供受管理区间及必要的访问/可见性保证，SPSC 是受 CI 看护的上层示例；应用选择信号含义、握手与 queue 算法。runtime 自己的调度队列、取消与 drain 不转交应用。公开 queue 工厂不能仅凭复用价值进入核心接口；验收应证明仓库外能只用公开基础接口实现不同 queue，见 [L3+ 设计](l3plus-design.md)。
 
@@ -116,13 +116,13 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 
 **资源边界补充**：RA-7 拆的是 L3 hierarchical HeapRing；RA-16 管 device context 的 ExecScratch/HostStaging；RA-15 管用户 Buffer 的 logical close。三者的容量和最后使用者证明不能互相代替。EX-7 扩大 admission 时消费 RA-16 的资源约束，但本地 L3 #2464 不是 #2466 的硬前置。accepted/prepare/enqueue/执行容量分别核算；旧版本、graph 引用与释放失败块的计费，以及部分提交的最后使用者证明，见 [共同契约 §3–§5](worker-memory-model/access-retirement-contract.md)。
 
-**#2594 域接口交接**：主归属 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。#2120 与 #2594 共用域 owner 合同；#2598 的三种清理结果仅为 DS-1 观测，不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
+**#2594 域接口交接**：完整业务目标归方向二；本地合同主索引 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。#2120 与 #2594 共用域 owner 合同；#2598 的三种清理结果仅为 DS-1 观测，不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
 
 **U4 交接门**：U1a → U1b → U2a → U2b；U1b → U3；U2b 与 U3 的 network→H2D 合并验收 → U4。工作项是聚合归属，U1b/U2a 不能被聚合依赖误读成循环；本表中的 RA-15 同时依赖 RA-13 与 DS-3。契约 D 的裁决不因 #2440/#2452 的 workspace ledger 存在而自动解决。
 
 ### 0.3 判据：一个工作项一个归属
 
-> **一个工作项恰好属于一条实施线。它可以被任意多个交付里程碑引用，
+> **一个本地合同工作项恰好属于一条线；完整业务交付不按合同线拆分。它可以被任意多个交付里程碑引用，
 > 但状态只在 [`work-items.md`](work-items.md) 维护一份。**
 > 别处只许写 ID ＋ 一句话，不许复述状态。
 

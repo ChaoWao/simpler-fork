@@ -1,6 +1,8 @@
 # L3+：设计原则、职责与代码地图
 
-> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-26。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+>
+> **交付组织补充（2026-10-26）**：[#2716 四方向](review/track-2716.md) 是完整目标视图，RA/DS/EX 是横切合同视图。场景需要的资源/调度/backend 改动随场景交付；只把独立可验收的公共基础另列。L2 单 Run 常驻与 L3 进程复用分开；必要的通信 kernel 和后端队列属于 runtime，应用 queue 协议仍在上层。#2720 完整 Region 方案待分析，#2635 仅为候选。下方源码地图保留 10 月 21 日基线；新 main 交付与当前验收缺口见工作项。
 >
 > 源码基线：main `fdcbdcc9502195f7837030cf3c130f75f83d3719`，2026-10-21（America/Los_Angeles）。本文按该 SHA 的实现梳理设计；“目标约束”不冒充全部落地。源码与现有测试已阅读，本次不构建、不重跑硬件或 CI。实施状态仍只在 [work-items.md](work-items.md)，全目标核验日期仍为 2026-10-18。
 
@@ -175,4 +177,4 @@ main 的 `allocate_domain(members=...)` 已统一 L3/L4 公共入口；`get_or_a
 
 路径缩写 `test_worker/` 位于 `tests/ut/py/`，native 测试位于 `tests/ut/cpp/common/hierarchical/`。测试数量或守卫全绿不能代替这些合同的语义审查。
 
-实施仍按三线分工：RA 管资源与访问、DS 管会话与通信域、EX 管执行与常驻运行。本文不新增编号、里程碑或第二份状态表；相关入口见 [分线契约](track-boundaries.md)、[用户面](worker-memory-model/user-surface.md)、[总路线图 §2.6](feature_roadmap.md#26-runtime-基础能力参考-adapter-与用户自定义的边界)。
+完整目标按 #2716 四方向交付；本地合同仍由 RA 管资源与访问、DS 管会话与通信域、EX 管执行与常驻运行。本文不新增编号、里程碑或第二份状态表；相关入口见 [分线契约](track-boundaries.md)、[用户面](worker-memory-model/user-surface.md)、[总路线图 §2.6](feature_roadmap.md#26-runtime-基础能力参考-adapter-与用户自定义的边界)。

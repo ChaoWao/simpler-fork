@@ -1,173 +1,185 @@
 {
-  "published": "2026-10-21",
+  "published": "2026-10-26",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
   "architecture_baseline": "fdcbdcc9502195f7837030cf3c130f75f83d3719",
+  "track2716_baseline": "daf2f8418907592b5b881792bd9a2a0a5ea8f19d",
   "source_root": ".docs",
   "scope": "curated design snapshot; source status baselines remain explicit",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
       "source_sha256": "b20bb5616b40d2a5a056f528e75b742ab095e851461fdf6edd196dda004f7697",
-      "published_sha256": "9eee82ffce62ce415741d4dc01825de23fc7f1b835aa067c67860bcfa554b597"
+      "published_sha256": "71ee023bfc0ba425442e3c36b6c32f43fbb7ce617bc38aa13b8f8198622987cb"
     },
     {
       "path": "cpu-npu-shared-memory/domain-member-vs-attachment.md",
       "source_sha256": "e3df07370a6e30eeb21ac7696986a80022834e7e5a3b395c5a38dcc956a0eb75",
-      "published_sha256": "648d7a7520e502fd2612cbb056562a62445468587f714b1d740205249db36067"
+      "published_sha256": "70c29be9ab8e3f0a0a08cb880a2818a30eba137ae473ba86653bce6b5da7efbf"
     },
     {
       "path": "cpu-npu-shared-memory/domain-membership.md",
       "source_sha256": "dc565702d9b43fb3a3383a3bfc2ea2661c024659022abf4718d2520291a7f07e",
-      "published_sha256": "6bd816bb5e9c715089824b60630f136fc6fdd51bcd3ffd63e0f01a313d627d58"
+      "published_sha256": "e5ddc0ce2b5ffe016683b40814789f4525de0e01e369058a3a5fbdbbba1b9b49"
     },
     {
       "path": "cpu-npu-shared-memory/hardware-constraints.md",
       "source_sha256": "6c3db9f958bc35819c343bff27192953a46fdf3672a98aa3a86b3baf6be0261e",
-      "published_sha256": "e0b1fed091d5a718cc99f1a33b9c742f453bd28fb8ed0e771f42687fe8b5fc52"
+      "published_sha256": "88cdac0c9a5703f9d727593f9db4c10487c1cd696033d5c6a315337a6037a1d6"
     },
     {
       "path": "cpu-npu-shared-memory/w2-w5-inversion.md",
       "source_sha256": "77ad86a86b21d152283cd74aca221b2335296a003b69131fa53e8c05d7652185",
-      "published_sha256": "7949579ba77115c54cc0572a7e196b0c9c597299125765e8dc46d5a333f56dab"
+      "published_sha256": "61778e52e359d4821ffe98574abf5550bdb897ea7d23ed79d2f06ca6799960f0"
     },
     {
       "path": "cpu-npu-shared-memory/work-breakdown.md",
       "source_sha256": "217966fc61be0a68fb4a01f39b9330ef9aa1cb6e9cec0f720be5c15c9c0c6842",
-      "published_sha256": "20b823565aa4363f0320a42cecc5e23986bb467d12f4c17d169c24d2fb5c4306"
+      "published_sha256": "4f42891f9cffd0938f3a4dd27b08abb1bd26461d0d50cb9c359e15169821ed73"
     },
     {
       "path": "feature_roadmap.md",
-      "source_sha256": "95f397d14e4c8a57ff2709311ac36b50eff05df6a2878b9d122ba0bbbb2e1b4a",
-      "published_sha256": "8ced32d2a9f6f84905399c070eb9454fe0110c5ea5ca5d3724702c9f53eeeb2d"
+      "source_sha256": "9cec0a5b2517f5d2f6bc4e320df2339122036a7a986c522c7195122cfe5656f8",
+      "published_sha256": "6f1bc5378d1f75588f2d36eec8e9f8f9ed2a13b499caf0d66e97fd3963c58f8d"
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "48113f84a2094eba115faaccbfa1920fd705ba99c9bcee5751a858e0e78c81de",
-      "published_sha256": "0caabd254ffcd4de89d1b421c5850aef83bcf02af55745bf489927a3479e9d82"
+      "source_sha256": "e7d45dab0bac48f359780c4d033dca5eb6823757d9c22b1be51ab7f7d53b973b",
+      "published_sha256": "ae39bac381371a162437e43ccda261ac5fd31b0991eae0711284ead7ca580e75"
     },
     {
       "path": "l3l4.md",
-      "source_sha256": "59e62115ed5e41d998465817f965172d402387d15a244b166dbbb786adf20d2f",
-      "published_sha256": "92d1e8d180777204a1c805989593417c49d81777d87c67b2f981fece52d8b990"
+      "source_sha256": "ef6c373763df64d2d412c72c5467f811c298628f30eb59ebc5c4e67bdfcb9190",
+      "published_sha256": "be0c2f4be74c135b393403384bdbd8942499f7c8831c96072c97c03aa073b550"
     },
     {
       "path": "l3l4/cluster-comm.md",
       "source_sha256": "7683142881bfb8f4328dd8c322e4f05b225da5a8bfee452f9d448d42bb386fd2",
-      "published_sha256": "f3b9f62a0bac8b5471d2854b8f66499e20a8c3a6c664851bdda269b120e40944"
+      "published_sha256": "155d8cd910beca73a4ae89eb6d4d7bd304249c22ce01269600f18c63e441dbaf"
     },
     {
       "path": "l3l4/inventory.md",
       "source_sha256": "7ab185a2f546bbcee68775389313e561b66ceabd8603e2ab12c7b14fe785f998",
-      "published_sha256": "ce3ffa1746267060729d63fc13ed89783e611303c6373c197a0799c03a0b0cb0"
+      "published_sha256": "02cfd8924b4e791a9baaaae3a407351086ef858a398eee2b1f4b3c3c2bb16482"
     },
     {
       "path": "l3l4/lazy-init.md",
       "source_sha256": "bf6ee3a113079aa72d4ae85ba0ea5e1eb089a6cc0bffe71d8d3bbbec12ce8128",
-      "published_sha256": "71b53c8d4865f530d3876a35d2abf37f7096db9c01af052f190a399173e675e8"
+      "published_sha256": "6199c02db39815d2cb5d703fee4b26dcdd5a9efdde5841c978fc15177f869026"
     },
     {
       "path": "l3l4/memory-kinds.md",
       "source_sha256": "045da3998e223deff1da773c13f41cb1d78d6d2d98e76d1292732be8814b8f65",
-      "published_sha256": "b6f01dc2fa9eec716413dcc93cc054cf79153e6173543bd88a5e32ff95921fbd"
+      "published_sha256": "cbc89400c1697fd9ebeedfff64e39d8dc53221081795e82f323ce296325d789c"
     },
     {
       "path": "l3l4/remote-startup.md",
       "source_sha256": "612c836320ae8419abd915d836154d936184e125e57207f4e8926d5438b7e89e",
-      "published_sha256": "4a78c57a00ef0c4e985d5b0f321a8dcfb69b76ebeb14d00b49298985634341bb"
+      "published_sha256": "1f00dc65dd73c9ce55e701d57f4962a1ffe8e63b40db475cc5b4d5483e42069b"
     },
     {
       "path": "l3l4/scheduling.md",
       "source_sha256": "d5ed34f4bf8725298d0dca8979f1be6b62297e62d519c5f15967aeb1c20dfcb6",
-      "published_sha256": "6776b33e95698462fb36bff183760edcf0508741386d29f252d02c6ce8485d9c"
+      "published_sha256": "a81267b2877802fc8c4114513fb10a4f6944ba308dc9cbfa0ba0efea40b7cb29"
     },
     {
       "path": "logical-physical-separation.md",
       "source_sha256": "77fad20b289abf424e9bbb81d133eede786951c277f644677b200ed728f40a40",
-      "published_sha256": "db887c2db549a79094b99f0f50bb3c3ec07c6d9963c774efa1b2edceacbc0211"
+      "published_sha256": "45a17ed1aecb28dd117997dc4726945d2b5c2edc3323b2bfc9e958c6174773bd"
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "a8a74932a7a8573c73ad9f645b2568437634251ec4121d3f9f2c3cd1da0b259c",
-      "published_sha256": "bb3abb0fa0ad378e379748ee1335b210e7fc26603674c239fefcbf2709d720ca"
+      "source_sha256": "249237d047a4334a26ede311c31fd72879c2c03a7d5b161b8ac793ed297edb18",
+      "published_sha256": "c1a4339d4954bc546cac84efc8d2655d990126809ab925cc02e0962774e99ef8"
     },
     {
       "path": "track-boundaries.md",
-      "source_sha256": "8a0eabc6ded8c48bbc01059061b3b043ab4f143be4b9e35ba5451e95e3891e42",
-      "published_sha256": "598a4418506eb9963f85e64ae8cf6d316280efb3c90f700fcef83937d634bea0"
+      "source_sha256": "4b1f82270384a51dc7c11322fef4982f8babccf53f792e99614915cdcad4cd73",
+      "published_sha256": "8016b7b18ac333ee79fc86692eb8c99879c9a2abfce84a760b05b100272e0558"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "20b6e58308fe5c6d8fee2ebdcc2dd02380224709b2a28c55585ded401ddba496",
-      "published_sha256": "395de05951881b7c0558e81698cc44344849213f46b0ce08c7e7a217a94fe1f5"
+      "source_sha256": "7177f054a1c09a2ed79dc25f0982b293f8c6040341d81d9475fc9ff571a95fed",
+      "published_sha256": "2d305572e2194a66cfcc182ea0b97ca146c916391c1d568934d4530e0ad96b5a"
     },
     {
       "path": "worker-memory-model.md",
       "source_sha256": "68307af021cd9bce72a2f1b46ce55e8da302c0960b454e0c6a63b1a18d7cd613",
-      "published_sha256": "be36a9f84908aa2e024342503ca82be97d26ae9608410ba9aa84b46f442659a0"
+      "published_sha256": "3a63fcbe692f88d0e302017932da9b0655dc4b963382735bb7ccdc9f10b767c9"
     },
     {
       "path": "worker-memory-model/access-retirement-contract.md",
       "source_sha256": "bd55a439a7ff9185da6f84d635e3f0c3adf9b24b0b123b29eea7e02df17305e4",
-      "published_sha256": "cf2e4bb418a21c4dcdfe45cf6e3f3e694646b8a331489620c61470e3a6aa8209"
+      "published_sha256": "48ac1e1cbcbbf714541143b0153eda09dcaec057a624bed062d5d8228e5556f9"
     },
     {
       "path": "worker-memory-model/backend-matrix.md",
       "source_sha256": "fd3f2b662f322f96406fec7c73cf54e81facdf25d704dd152658ab6588972002",
-      "published_sha256": "3f8718143fc0291733f72473813c0ac60459fdd3a9149fe6c21d41acd6beda19"
+      "published_sha256": "9ea1f8ae095e8efee5419c6af067c1663d607ee9c31b49dd57fd7d19c1de5af2"
     },
     {
       "path": "worker-memory-model/bufferhandle-abi.md",
       "source_sha256": "71d4d386907bd9a2411a9c586b3b1c08ae9b4908057d2d2f957d58616202727d",
-      "published_sha256": "c92d977f65d45406b104a0471b9e6df9df5070793b8f401bd1f714c434e20408"
+      "published_sha256": "601ecbe447b14d5b569f5676adda5c988ef7b3282a27b6eb8be7c2eb47e69198"
     },
     {
       "path": "worker-memory-model/graph-execution-contract.md",
       "source_sha256": "3fc6caab344b5bef5cf756d3ebb7d7608073bafc7257b6bff68f4acfdac1c340",
-      "published_sha256": "efd6db0c1d8e2bfb8bffc0ed737d009a823750c38256e623a1c9f833e9d87b38"
+      "published_sha256": "eb2369ed9278b9fd1387b5b9641f9501055f16bbfeae653c5f6daa49d73d6d98"
     },
     {
       "path": "worker-memory-model/p1b-corrected-design.md",
       "source_sha256": "4696cce4055469b4de4e10a6bb49e49c61a4a47523341cfdf3c779a7875f9ee8",
-      "published_sha256": "0db42c08e0ea25214561e2972544254be60b2735069619ffed67b71f33099067"
+      "published_sha256": "98b91b19e712d32c65f51f7df4315447c2c8e5b6a870865c93c014ad35e96acf"
     },
     {
       "path": "worker-memory-model/p1b-review-findings.md",
       "source_sha256": "d3892b8ec3da9fb9052e53de0ce59cc9cd7d0d0b816f605a0844489433155763",
-      "published_sha256": "5cb2f4f4e6a97f6d1ec9fe27e1585dede84f68d97ca5d0e9b81924b2705fdcc6"
+      "published_sha256": "1ee5bc1321fd346638d7f5e63240100a8e96ecba4e6f5bfab688192d30875b7f"
     },
     {
       "path": "worker-memory-model/user-surface.md",
       "source_sha256": "9df070f5f967717da8775d3cba13658234d9b1bb850bf3778e5ba0bb65d85974",
-      "published_sha256": "3f4723f45a61852eeebb183429bfce8c6c2b9f0d984875f857f80289cbe5e960"
+      "published_sha256": "f1b81a92ca43184d7c433443645c7d9b29444f71473c998fd9b96e2c6251719b"
     },
     {
       "path": "review/2026-09-28-cross-plan-lessons.md",
       "source_sha256": "3119c847d0d99995e7cb1ecca0ab4d0fdbfde86daf316eddab60fae7331878c2",
-      "published_sha256": "451c6258d1a99ba8a69c7f90e0533c8eea96cf23a25d7440c0c6c5373cca3d22"
+      "published_sha256": "b29c188b4d37f95558ad5cdbd0f7b71c58940f471aa5eafa3dd35bd738d91e95"
     },
     {
       "path": "review/pr-2096.md",
       "source_sha256": "32cd2e34d64793cbe2c893525997a643fc223fbc7463dd92e37537b035b19f12",
-      "published_sha256": "9980452e874451b465c011881ff9eb8b30def4e46170c9ec1dbed127fa36ad65"
+      "published_sha256": "cc4a006c375fb3544029601ab98b6f23b04d192c8543b1d925c471ae6d263c46"
     },
     {
       "path": "w2-p1b-endpoint-convergence.md",
       "source_sha256": "fcd6a00da512eba7d6d077531e006cd0299d09ba7405243fc8eb2a86328c9cd0",
-      "published_sha256": "c1fce446b667a4279a1a61de79cac5a8b9bb81f312807b105d8ade5c37d242f0"
+      "published_sha256": "033244c5ec6d982462126b112d95085953f01bebf4fefa517893e951b8b31787"
     },
     {
       "path": "review/pr-2635.md",
       "source_sha256": "b828408ce644dea67519ff89f1042c53e5c8ca38116b3677c597987ae18859c8",
-      "published_sha256": "6f081d554fe31c128d79a18293c0810ac604484419583ea4eb20f3b62b57808b"
+      "published_sha256": "450e37ef475e5afaf1789e884c11ea7f1a40d8dd7c4a40b969adcbb3bd15617f"
     },
     {
       "path": "l3plus-design.md",
-      "source_sha256": "066349d19a4dbead2f944ec64805676da65597724791ccdd60d1474511e64a00",
-      "published_sha256": "dc62eed5c96cc26b110b4fb226bbfe79c4533378021c8120c700ea26c7781c77"
+      "source_sha256": "662aa9077740876e6729ec51325f3594b33e8fce5a3aef5233285b6ee0a22483",
+      "published_sha256": "4d6fccde9e0c2bd084200720d116bb87f4662ebd3d70161a71dc1871473a31d0"
+    },
+    {
+      "path": "review/track-2716.md",
+      "source_sha256": "28a3d5693bb272729effa493a7cbe49c6c9945121797209633286c54c0c7cc64",
+      "published_sha256": "4f357a8bbfbdb5ebed55e292af65a144076742e88d6e8e61da0a12a8c9403291"
+    },
+    {
+      "path": "goal-sources.json",
+      "source_sha256": "bf623e0d58bf35c93a8db08a2c765b4c61e79536706e05823be50c996581149a",
+      "published_sha256": "e79c0d36cc653efe54da895a0a5b0509c0e1061843b8bff132206203c1f66316"
     }
   ],
   "omitted_local_references": [
+    ".",
     "../../hw-native-sys/docs-kernel-mode/argument-design-evidence.md",
     "../../hw-native-sys/docs-kernel-mode/argument-domain-policy.md",
     "../../hw-native-sys/docs-kernel-mode/argument-mapping-contract.md",

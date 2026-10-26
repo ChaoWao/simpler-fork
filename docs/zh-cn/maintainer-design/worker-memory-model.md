@@ -1,6 +1,6 @@
 # simpler Worker 内存模型（目标设计）
 
-> **发布快照：2026-10-21。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-10-26。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
 > 本文规定内存模型契约，实施状态只见 [work-items.md](work-items.md)。
 > 核验基线：`upstream/main@937c57efc`。Buffer/Tensor wire 与 canonical identity 已在 main，

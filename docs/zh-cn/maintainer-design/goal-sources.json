@@ -1,0 +1,955 @@
+{
+  "baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
+  "local_sources": [
+    {
+      "name": "P1/P2 stages",
+      "paths": [
+        "feature_roadmap.md"
+      ],
+      "pattern": "\\b(P[12]-[A-F])\\b",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "W resource capability",
+      "paths": [
+        "cpu-npu-shared-memory/work-breakdown.md"
+      ],
+      "pattern": "\\b(W(?:[0-8]|1lite))\\b",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "L3/L4 scenarios",
+      "paths": [
+        "l3l4.md"
+      ],
+      "pattern": "\\*\\*(ABDE（本地参考：`?:\\.[1-5]`）?|C\\.[1-3])\\*\\*",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "Audit AR/AF",
+      "paths": [
+        "review/2026-08-11-code-vs-design-audit.md"
+      ],
+      "pattern": "\\b((?:AR|AF)\\d+)\\b",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "P1 gates",
+      "paths": [
+        "tasks/task-p1a-close-merge-gates.md"
+      ],
+      "pattern": "\\b(G[1-6])\\b",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "ST characterization",
+      "paths": [
+        "tasks/task-scenetest-singleton-alias.md"
+      ],
+      "pattern": "^### (ST-\\d+)",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "Graph boundary requirements",
+      "paths": [
+        "worker-memory-model/graph-execution-contract.md"
+      ],
+      "pattern": "^### (R\\d+)",
+      "prefix": "GE-",
+      "group": 1
+    },
+    {
+      "name": "DFX T1-T9",
+      "paths": [
+        "others-ref/worker-async-pipeline/trace-v1.md",
+        "dfx/c2a-hierarchical-trace.md"
+      ],
+      "pattern": "^### (T\\d+)",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "Qwen Q1-Q4",
+      "paths": [
+        "others-ref/worker-async-pipeline/qwen-integration.md"
+      ],
+      "pattern": "^### (Q\\d+)",
+      "prefix": "",
+      "group": 1
+    },
+    {
+      "name": "Pipeline delivered / planned chapters",
+      "paths": [
+        "others-ref/worker-async-pipeline/implementation-record.md",
+        "others-ref/worker-async-pipeline/implementation-plan.md"
+      ],
+      "pattern": "\\b((?:A0b?|A1|B[1-6][abc]?|D1|E[12]|H[12]|N1|W1[abc]))\\b",
+      "prefix": "PIPE-",
+      "group": 1
+    },
+    {
+      "name": "Kernel principles",
+      "paths": [
+        "docs-kernel-mode/kernel-mode-plan.html"
+      ],
+      "pattern": "<div class=\"p-id\">(\\d+)</div>",
+      "prefix": "KERNEL-Principle-",
+      "group": 1
+    },
+    {
+      "name": "Pipeline board extension",
+      "paths": [
+        "README.md"
+      ],
+      "pattern": "(?<![A-Za-z0-9])((?:W1d|E1′|C2a))(?![A-Za-z0-9])",
+      "prefix": "PIPE-",
+      "group": 1
+    },
+    {
+      "name": "P1 ABI extra gates",
+      "paths": [
+        "tasks/task-p1a-close-merge-gates.md"
+      ],
+      "pattern": "^\\| (A[12]) \\|",
+      "prefix": "P1A-",
+      "group": 1
+    },
+    {
+      "name": "Historical pipeline W aliases",
+      "paths": [
+        "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md"
+      ],
+      "pattern": "^\\| (W[1-4]) \\|",
+      "prefix": "PIPE-v1-",
+      "group": 1
+    },
+    {
+      "name": "Trace/log source requirements",
+      "paths": [
+        "others-ref/host-trace-log-design/trace-and-log-requirements.md"
+      ],
+      "pattern": "^\\| ([FCNGTD]\\d+[a-z]?) \\|",
+      "prefix": "LOG-",
+      "group": 1
+    },
+    {
+      "name": "Kernel memory proposals",
+      "paths": [
+        "docs-kernel-mode/kernel-mode-memory.html"
+      ],
+      "pattern": "<span class=\"deck-id\">(D\\d+)</span>",
+      "prefix": "KERNEL-Memory-",
+      "group": 1
+    },
+    {
+      "name": "Candidate PR plan",
+      "paths": [
+        "simpler-pr-list.html"
+      ],
+      "pattern": "P\\('([^']+)'",
+      "prefix": "SPL-",
+      "group": 1
+    }
+  ],
+  "external_sources": {
+    "2460": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2460",
+      "updatedAt": "2026-09-28T02:49:51Z",
+      "body_sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
+      "ids": [
+        "U1a",
+        "U1b",
+        "U2a",
+        "U2b",
+        "U3",
+        "U4"
+      ]
+    },
+    "2429": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+      "updatedAt": "2026-10-18T07:24:24Z",
+      "body_sha256": "c272c6ebbbc94dce43ef1479ac6e9a573d75513635ab46a30ec4f83542b45d90",
+      "ids": [
+        "VLLM-1",
+        "VLLM-2",
+        "VLLM-3",
+        "VLLM-4",
+        "VLLM-5",
+        "VLLM-6",
+        "VLLM-7",
+        "VLLM-8",
+        "VLLM-9",
+        "PR-S3-1",
+        "TrackA-P6"
+      ]
+    },
+    "2450": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2450",
+      "updatedAt": "2026-10-13T13:00:06Z",
+      "body_sha256": "196447309114dbd4aeb20b5308c02577eec4aaba73f1e692010836037af0293d",
+      "ids": [
+        "KV-R1",
+        "KV-R2",
+        "KV-R3",
+        "KV-R4",
+        "KV-R5"
+      ]
+    },
+    "2316": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2316",
+      "updatedAt": "2026-09-21T01:04:35Z",
+      "body_sha256": "1363133e1088f176836aed1ed80c3c673ed0f3382bb0533baa965180dbdbac2c",
+      "ids": [
+        "TrackA-P1",
+        "TrackA-P2",
+        "TrackA-P3",
+        "TrackA-P4",
+        "TrackA-P5"
+      ]
+    },
+    "2429-step3": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-5862270515",
+      "updatedAt": "2026-09-28T02:36:04Z",
+      "body_sha256": "f74554b81b5ea2c1ef68a6a515e18483750f158eae94c158808671cb344a67c4",
+      "ids": [
+        "VLLM-S3-1",
+        "VLLM-S3-2",
+        "VLLM-S3-3",
+        "VLLM-S3-4",
+        "VLLM-S3-5",
+        "VLLM-S3-6",
+        "VLLM-S3-7"
+      ]
+    },
+    "2425": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2425",
+      "updatedAt": "2026-10-13T12:23:59Z",
+      "body_sha256": "9de305a340f613dab5128ae5c8b33fed540c7f91ababa2c935a9400cc04d7cb0",
+      "ids": [
+        "EE-QA-1",
+        "EE-QA-2",
+        "EE-QA-3",
+        "EE-QA-4",
+        "EE-QA-5"
+      ]
+    },
+    "pr2466": {
+      "url": "https://github.com/hw-native-sys/simpler/pull/2466",
+      "head": "baec33001cdd8d537670fed3c6918889a8414e7f",
+      "updatedAt": "2026-09-29T06:09:07Z",
+      "body_sha256": "76b7022839f45f6fbba582d6ea0b73f12ed69d7739f26f25790ab0cd07d61253",
+      "ids": [
+        "CAP-R1",
+        "CAP-R2",
+        "CAP-R3"
+      ],
+      "merge": "fb76a54d58569a65934cc6ebade0c129a639a681",
+      "extraction": "Three acceptance obligations preserved from earlier review; main TestThreeRunCapacity + late-disposition/default-scope contracts verified at scan baseline."
+    },
+    "1792": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/1792",
+      "updatedAt": "2026-09-03T07:27:05Z",
+      "body_sha256": "f48d50e6e8acd7d6c315a579d8b19d4955cbb329fe2d422b4aedbb683644f4c0",
+      "ids": [
+        "LOG-I1",
+        "LOG-I2",
+        "LOG-I3",
+        "LOG-I4",
+        "LOG-I5",
+        "LOG-I6",
+        "LOG-I7"
+      ]
+    },
+    "2496": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2496",
+      "updatedAt": "2026-10-08T01:50:08Z",
+      "body_sha256": "36baae0d0d1a464fe5b14ac1318506d5cfaf774189dac049b55e2e6d6ce1781b",
+      "ids": [
+        "A5SVM-A1",
+        "A5SVM-A2",
+        "A5SVM-A3",
+        "A5SVM-A4",
+        "A5SVM-A5",
+        "A5SVM-A6"
+      ],
+      "extraction": "acceptance checklist order"
+    },
+    "2497": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2497",
+      "updatedAt": "2026-10-08T02:17:24Z",
+      "body_sha256": "fdee7dc54897a0397dabe375713feef118a309a67a3a49635982b58f959319b8",
+      "ids": [
+        "XPSVM-A1",
+        "XPSVM-A2",
+        "XPSVM-A3",
+        "XPSVM-A4",
+        "XPSVM-A5",
+        "XPSVM-A6",
+        "XPSVM-A7",
+        "XPSVM-A8"
+      ],
+      "extraction": "acceptance checklist order"
+    },
+    "2498": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2498",
+      "updatedAt": "2026-10-08T02:31:12Z",
+      "body_sha256": "198cb83f25941c1a7557ed4213edc24a635efe78b05b3860d3f2cfb00f1a8684",
+      "ids": [
+        "SIMT-A1",
+        "SIMT-A2",
+        "SIMT-A3",
+        "SIMT-A4",
+        "SIMT-A5"
+      ],
+      "extraction": "acceptance checklist order"
+    },
+    "2492": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2492",
+      "updatedAt": "2026-10-10T01:48:58Z",
+      "body_sha256": "dcfda1b4e9bc5028dc9a573a96e978dadeb35338354009ce596333d3b50c5e3f",
+      "ids": [
+        "A2RET-R1",
+        "A2RET-R2",
+        "A2RET-R3",
+        "A2RET-R4"
+      ],
+      "extraction": "Proposed Fix numbered items 1–4"
+    },
+    "2594": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2594",
+      "updatedAt": "2026-10-16T07:12:53Z",
+      "body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71",
+      "ids": [
+        "DOMAIN-A1",
+        "DOMAIN-A2",
+        "DOMAIN-A3",
+        "DOMAIN-A4",
+        "DOMAIN-A5",
+        "DOMAIN-A6",
+        "DOMAIN-A7"
+      ],
+      "extraction": "验收清单顺序；编号不表示已完成"
+    },
+    "2429-final": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862",
+      "updatedAt": "2026-10-15T07:31:13Z",
+      "body_sha256": "e120116412733c500a0a0ffc313d1d7e6cc0a969d27829edfedfc84e5b348a54",
+      "ids": [
+        "VLLM-S3F-S1",
+        "VLLM-S3F-S2",
+        "VLLM-S3F-S3",
+        "VLLM-S3F-S4",
+        "VLLM-S3F-S5",
+        "VLLM-S3F-A1",
+        "VLLM-S3F-A2",
+        "VLLM-S3F-A3",
+        "VLLM-S3F-A4",
+        "VLLM-S3F-A5",
+        "VLLM-S3F-A6"
+      ],
+      "extraction": "Implementation Stages 五项与 Acceptance and Scope 六项"
+    },
+    "pr2598": {
+      "url": "https://github.com/hw-native-sys/simpler/pull/2598",
+      "head": "697771e293059940763a09ebbdf46d845e20903f",
+      "body_sha256": "c38efc5b115c90831d2d55e6280f482a168289a738703afd5dd0b744c4b33f0d",
+      "ids": [
+        "SESSION-R1",
+        "SESSION-R2",
+        "SESSION-R3"
+      ],
+      "extraction": "command/read acknowledgement、process exit、resource release 三种独立观测结果"
+    },
+    "track2716-2716": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2716",
+      "updated_at": "2026-10-26T08:31:53Z",
+      "body_sha256": "fdcf91c904ebeec74b8a2e7e25a4556deb3d3baf2bea548aebe9e84c22e483d6",
+      "ids": [
+        "T2716-SCOPE",
+        "T2716-A1",
+        "T2716-A2",
+        "T2716-A3",
+        "T2716-A4",
+        "T2716-A5",
+        "T2716-A6"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": null,
+      "checkboxes": [
+        "四个方向形成明确职责、共同契约和核心子任务，已有工作完成归并与责任确认。",
+        "Host／单卡／多卡任务、异步提交、重复 Run 和资源访问完成约定范围的功能及迁移验收。",
+        "多卡通信贯通通信域与真实 L2 后端，声明支持的组合具有正确性、完成和释放证据。",
+        "L2 常驻完成多轮工作、停止、排空与异常收尾验收。",
+        "本地／远端 L4→L3→L2 完成连续下发、结果返回、关闭与故障回收验收。",
+        "提供可复现入口、支持矩阵及相关性能结果；遗留事项明确后续负责人和接续入口。"
+      ]
+    },
+    "track2716-2721": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+      "updated_at": "2026-10-26T08:28:18Z",
+      "body_sha256": "8d0ee542ca30097670dfb16fe4188f51e3e6103afcac129b4023da4388881efb",
+      "ids": [
+        "T2721-SCOPE",
+        "T2721-A1",
+        "T2721-A2",
+        "T2721-A3",
+        "T2721-A4"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2716,
+      "checkboxes": [
+        "公共执行与资源契约职责清晰，并有真实消费者及可独立验收的交付边界。",
+        "已纳入范围的身份、访问、参数绑定和生命周期修改完成迁移，非法或不支持的访问明确拒绝。",
+        "接纳、完成、逻辑关闭和物理释放分别确认，已接纳使用获得必要保留。",
+        "公共接口变更明确对已有消费者的影响，提供适用范围、回归与迁移证据。"
+      ]
+    },
+    "track2716-2722": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2722",
+      "updated_at": "2026-10-26T08:28:31Z",
+      "body_sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81",
+      "ids": [
+        "T2722-SCOPE",
+        "T2722-A1",
+        "T2722-A2",
+        "T2722-A3",
+        "T2722-A4"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2716,
+      "checkboxes": [
+        "声明平台、runtime、拓扑、后端和版本的支持组合，未支持的组合明确拒绝。",
+        "通信域创建、访问、初始化、执行、完成、复用与释放具有端到端证据。",
+        "区分请求发起完成与数据传输完成，消费者在约定可见性成立后推进，资源释放覆盖真实最后使用。",
+        "覆盖必要的多并发、重复使用、异常与部分初始化清理；每项扩展分别给出验收证据。"
+      ]
+    },
+    "track2716-2723": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2723",
+      "updated_at": "2026-10-26T08:28:41Z",
+      "body_sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d",
+      "ids": [
+        "T2723-SCOPE",
+        "T2723-A1",
+        "T2723-A2",
+        "T2723-A3",
+        "T2723-A4"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2716,
+      "checkboxes": [
+        "同一次 L2 Run 内完成多轮工作投递、执行与结果确认，有证据区分常驻与重复 Run。",
+        "投递与完成对应关系、缓冲区复用及访问生命周期明确，持续运行保持进展。",
+        "停止接纳、排空、正常退出与异常收尾形成闭环，不提前释放仍在使用的资源。",
+        "明确支持的平台、runtime 和交互拓扑，提供可复现入口与证据。"
+      ]
+    },
+    "track2716-2724": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2724",
+      "updated_at": "2026-10-26T08:28:54Z",
+      "body_sha256": "aca9476666dc35bfc685412764dfdd0d4a2f0d60e95436fc2b3f83d624da1ee5",
+      "ids": [
+        "T2724-SCOPE",
+        "T2724-A1",
+        "T2724-A2",
+        "T2724-A3",
+        "T2724-A4",
+        "T2724-A5"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2716,
+      "checkboxes": [
+        "声明支持的本地／远端层级、部署与传输组合，覆盖连续下发及正确结果返回。",
+        "任务、会话和资源身份明确，关闭与故障状态可靠返回，过期或无效请求按约定拒绝。",
+        "关闭命令确认、进程退出观察、资源释放结果分别表达；未知结果如实保留。",
+        "正常退出及约定的超时、崩溃、通信失败与异常回收有可复现证据。",
+        "路径删除前完成相应功能迁移和性能核对，文档及示例与实际支持范围一致。"
+      ]
+    },
+    "track2716-2460": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2460",
+      "updated_at": "2026-10-22T08:13:46Z",
+      "body_sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
+      "ids": [
+        "T2460-SCOPE",
+        "T2460-A1",
+        "T2460-A2",
+        "T2460-A3",
+        "T2460-A4",
+        "T2460-A5",
+        "T2460-A6",
+        "T2460-A7",
+        "T2460-A8",
+        "T2460-A9"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2721,
+      "checkboxes": [
+        "U1a: per-invocation request contract and #2454 disposition completed.",
+        "U1b: one public Buffer/Tensor path, with internal resolution and safe accepted-use retention.",
+        "U2a: explicit HOST consumption and all affected existing use cases migrated together.",
+        "U2b: HBG/TMR local IO uses the shared lifetime/completion contract.",
+        "U3: paired Remote migration, identity/grant/range preservation and real transport acceptance.",
+        "Combined network→H2D delayed/failure paths validated.",
+        "U4: common logical-close contract and correct allocator-specific physical release.",
+        "Mapping requests explicitly rejected until implemented; mapping identity/lifetime contract remains intact.",
+        "Public examples, reference docs, wire producers and consumers agree; no implicit alternate public Tensor model remains."
+      ]
+    },
+    "track2716-1931": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/1931",
+      "updated_at": "2026-10-22T08:14:52Z",
+      "body_sha256": "ab801829ff299dc50a91b2409573b56273a8ae7c0d539b00a3c3d2498dbd3478",
+      "ids": [
+        "T1931-SCOPE"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2721,
+      "checkboxes": []
+    },
+    "track2716-2720": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2720",
+      "updated_at": "2026-10-26T08:31:58Z",
+      "body_sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40",
+      "ids": [
+        "T2720-SCOPE",
+        "T2720-A1",
+        "T2720-A2",
+        "T2720-A3",
+        "T2720-A4"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2721,
+      "checkboxes": [
+        "梳理实际需求与主线能力，明确支持场景、公共机制与应用协议的职责边界。",
+        "审阅 PR #2635 及已有设计讨论，确认其覆盖范围、待解决问题和必要调整。",
+        "补充并确认完整方案、与现有消费者的衔接及验收要求。",
+        "结合确认后的方案推进 PR #2635 或必要的后续修改，完成实现、迁移和验收，并回填结论。"
+      ]
+    },
+    "track2716-2594": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2594",
+      "updated_at": "2026-10-22T08:13:43Z",
+      "body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71",
+      "ids": [
+        "T2594-SCOPE",
+        "T2594-A1",
+        "T2594-A2",
+        "T2594-A3",
+        "T2594-A4",
+        "T2594-A5",
+        "T2594-A6",
+        "T2594-A7"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2722,
+      "checkboxes": [
+        "L3/L4 使用相同建域、访问、复用和退出代码，仅成员构造和任务路由不同。",
+        "同名同配置返回同一拥有者 handle，保持数据和 identity，后端分配次数不增加。",
+        "成员顺序、窗口请求、buffer 字段或生命周期配置冲突在设备副作用前报错。",
+        "查找缺失、重复分配、创建失败回滚、并发请求、查找/释放竞争和同名重建有测试覆盖。",
+        "L4 获取的 Buffer/Tensor 能经本地或远端 L3 在正确 chip 解析；错误目标和过期引用失败。",
+        "覆盖跨两个 run 复用、第二个 run 中释放、异常退出、借用 handle 和 Worker 关闭。",
+        "保留现有后端测试，并在支持的仿真/硬件组合上验证端到端行为。"
+      ]
+    },
+    "track2716-824": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/824",
+      "updated_at": "2026-07-20T01:16:19Z",
+      "body_sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc",
+      "ids": [
+        "T824-SCOPE"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2722,
+      "checkboxes": []
+    },
+    "track2716-2621": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2621",
+      "updated_at": "2026-10-22T08:13:23Z",
+      "body_sha256": "28e14db4b9dbe03deda6dfbb5580482fdf90ba90eca3997bc7997967ead6e4dc",
+      "ids": [
+        "T2621-SCOPE",
+        "T2621-A1",
+        "T2621-A2",
+        "T2621-A3",
+        "T2621-A4",
+        "T2621-A5"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2722,
+      "checkboxes": [
+        "Existing L3-created chip ownership and allocation identity are preserved; unsupported platform/profile combinations are rejected.",
+        "Compute -> cross-machine transfer -> receiving compute verifies payload bytes, nonzero offsets and guards; invalid owner/stale/out-of-range uses fail before transfer.",
+        "Non-conflicting computation and transfer make independently observable progress. Host-call overlap is distinguished from device/DMA overlap, and no throughput claim is made without measurement.",
+        "In-flight free/close, partial initialization and uncertain completion/cleanup do not release memory still accessible to a backend; successful retirement leaves no extension resources outstanding.",
+        "With the extension disabled, the ordinary execution path loads no third-party engine and starts no extension threads."
+      ]
+    },
+    "track2716-2657": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+      "updated_at": "2026-10-26T07:14:36Z",
+      "body_sha256": "97d421a108cc5b94a68973cfb50a49c419d446c10dc00f90d11620709d61f1a1",
+      "ids": [
+        "T2657-SCOPE",
+        "T2657-A1",
+        "T2657-A2",
+        "T2657-A3",
+        "T2657-A4",
+        "T2657-A5",
+        "T2657-A6",
+        "T2657-A7",
+        "T2657-R1",
+        "T2657-R2",
+        "T2657-R3",
+        "T2657-R4",
+        "T2657-R5"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2722,
+      "checkboxes": [
+        "A small standalone case reads deterministic local and remote host-table rows correctly, including repeated and boundary IDs, with invalid ranges rejected or handled according to a documented contract.",
+        "Device table storage does not scale with the full offloaded payload, and steady-state execution avoids whole-table H2D transfers and per-call registration.",
+        "Delayed transfers cannot expose output early; output reuse/free/close respects in-flight accesses, and failures reach dependent work.",
+        "Concurrent requests and multiple runs do not reuse request/output state prematurely.",
+        "A device trace demonstrates useful computation progressing while fetch is outstanding; host-call asynchrony alone is insufficient evidence.",
+        "BF16 correctness is established first, then the MXFP8 payload/device-scale path is validated against a reference.",
+        "Supported hardware/runtime variants and explicit unsupported behavior are documented. A simulator can validate ordering but does not qualify URMA hardware support."
+      ]
+    },
+    "track2716-2708": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2708",
+      "updated_at": "2026-10-26T08:32:03Z",
+      "body_sha256": "8021695ca66fbe7201f0bce871b45d47956798c1deebba6433264d3b481316a6",
+      "ids": [
+        "T2708-SCOPE"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2722,
+      "checkboxes": []
+    },
+    "track2716-2673": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2673",
+      "updated_at": "2026-10-25T12:34:26Z",
+      "body_sha256": "746116aff3f07d8995c5e5e36ec3dbe2a526e7d3c981ad845a06d2dab989a730",
+      "ids": [
+        "T2673-SCOPE",
+        "T2673-R1",
+        "T2673-R2",
+        "T2673-R3"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2708,
+      "checkboxes": []
+    },
+    "track2716-2674": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2674",
+      "updated_at": "2026-10-25T12:34:29Z",
+      "body_sha256": "3fb596a5d69d5b96dde9fb679d370c675aaba5c04587deab400876ba9f4197e2",
+      "ids": [
+        "T2674-SCOPE",
+        "T2674-R1",
+        "T2674-R2"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2708,
+      "checkboxes": []
+    },
+    "track2716-2659": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2659",
+      "updated_at": "2026-10-26T08:32:08Z",
+      "body_sha256": "48696921d7b98b2fd57a53f20fe14759059b9ecd6491935e170470e273d4dad2",
+      "ids": [
+        "T2659-SCOPE",
+        "T2659-A1",
+        "T2659-A2",
+        "T2659-A3",
+        "T2659-A4",
+        "T2659-A5",
+        "T2659-A6",
+        "T2659-A7",
+        "T2659-A8",
+        "T2659-A9",
+        "T2659-A10",
+        "T2659-A11",
+        "T2659-A12"
+      ],
+      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "parent": 2724,
+      "checkboxes": [
+        "每个 rank 的关闭确认、释放结果和作业/进程退出观察彼此独立；无法观测的状态为 UNKNOWN，并注明观察范围，不能把 launcher 的退出码当成每个 rank 的退出码。",
+        "supervisor 能在明确期限内结束关闭尝试，给出已完成、失败和未确认事项；MPI world 异常退出后仍能取得外部已保存的账本。",
+        "失败注入有可复现的检查与结果；不能仅用任务 golden 通过或 MPI 作业退出来证明清理正确。",
+        "Direct 覆盖原 Group 的用户场景，有可审阅的功能和性能证据后再删除 Group。",
+        "由多个独立 PR 完成，每个子 PR 范围清晰，最终汇总交付链接。",
+        "**关闭与资源所有权契约。** 明确 supervisor/L4/L3 的职责、正常关闭顺序、可重试债务、Abort 路径；分别定义“收到命令”“进程退出”“资源释放结果”，以及缺失/超时/未知的语义。",
+        "**Direct 逐 rank 清理报告。** 为每个 L3 提供结构化的命令确认和释放结果；报告包含作业/session、worker/rank 身份、版本和大小边界，并约束重复、过期和不完整记录。普通清理异常应能先记录，不因无法区分的总退出码而丢失详情；致命通信错误仍允许及时终止作业。",
+        "**supervisor 账本与独立关闭期限。** 在 MPI world 外保存已收到的报告；明确进入关闭阶段的通知方式、截止时间、TERM/KILL 升级及等待规则。即使 L4 卡住或被 Abort，已保存的报告仍可读取；报告通道自身失败也不能无限阻塞关闭。",
+        "**异常回收与残留确认。** 明确 launcher 退出后的检查范围，核对相关进程及可追踪的共享资源；覆盖远端执行机制和恢复失败的报告方式。保留无法完成的回收债务，不将“mpirun 已退出”写成“所有资源已清理”。",
+        "**故障验证。** 分别覆盖正常关闭、L3 清理抛错、L3 在清理中卡住、L4 崩溃、执行 rank 崩溃、MPI Abort、心跳/通信超时、报告缺失/重复/过期、supervisor 收到 TERM/HUP，以及关闭期间日志/报告输出失败。补充真实多机场景，并明确 MPICH/Open MPI 各自验证的范围。",
+        "**功能迁移与性能基线。** 将 Group 现有用户场景迁移到 Direct，验证定向/整组提交、远端内存控制、Global CommDomain 等现有语义及相关示例；用相同拓扑和负载测量定向小任务与批量任务的延迟/吞吐，避免为了监督清理而让每条任务额外经 supervisor 转发。",
+        "**删除 Group 路径。** 以上能力和迁移验收完成后，删除 Group 专属实现、API、mailbox 协议、示例及对应测试/CI 配置；同步文档，说明原有调用方式如何迁移。该项单独交付，不与所有清理改动挤进一个 PR。"
+      ]
+    }
+  },
+  "explicit_sources": {
+    "P3 delivery": [
+      "P3①",
+      "P3②",
+      "P3③",
+      "P3④",
+      "P3⑤",
+      "P3⑥"
+    ],
+    "P0 milestones": [
+      "P0.1",
+      "P0.2",
+      "P0.3"
+    ],
+    "P0 followup": [
+      "P0.2-f1",
+      "P0.2-f2",
+      "P0.2-f3",
+      "P0.2-f4",
+      "P0.2-f5",
+      "P0.2-f6",
+      "P0.2-f7"
+    ],
+    "P0.2 batches": [
+      "P0.2-a",
+      "P0.2-b1",
+      "P0.2-b2",
+      "P0.2-c",
+      "P0.2-d"
+    ],
+    "P0.2 teardown subunits": [
+      "P0.2-D0",
+      "P0.2-D1",
+      "P0.2-D2",
+      "P0.2-D3"
+    ],
+    "P0.3 acceptance": [
+      "P0.3-R1",
+      "P0.3-R2",
+      "P0.3-R3",
+      "P0.3-R4"
+    ],
+    "Qwen integration aliases": [
+      "C2b",
+      "V1"
+    ],
+    "Kernel stack": [
+      "KERNEL-H1",
+      "KERNEL-H2",
+      "KERNEL-H3",
+      "KERNEL-K2",
+      "KERNEL-K3",
+      "KERNEL-K4",
+      "KERNEL-K5",
+      "KERNEL-K7",
+      "KERNEL-2a",
+      "KERNEL-2B",
+      "KERNEL-10a",
+      "KERNEL-Binder"
+    ],
+    "Explicit exclusions": [
+      "PIPE-C1",
+      "RequestSession"
+    ],
+    "Candidate local aliases": [
+      "SPL-C4",
+      "SPL-C5",
+      "SPL-C6",
+      "SPL-C7",
+      "SPL-C8",
+      "SPL-C9",
+      "SPL-C10",
+      "SPL-C11",
+      "SPL-C12",
+      "SPL-C13",
+      "SPL-C14",
+      "SPL-M2",
+      "SPL-E1",
+      "SPL-E2"
+    ]
+  },
+  "scan_date": "2026-10-07",
+  "document_owners": {
+    "P0.2/c-design.md": "P0 已交付证据；EX-6 终态回收",
+    "P0.2/done-followup.md": "P0 已交付证据；EX-6 终态回收",
+    "P0.2/done.md": "P0 已交付证据；EX-6 终态回收",
+    "README.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "cpu-npu-shared-memory.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "cpu-npu-shared-memory/domain-member-vs-attachment.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "cpu-npu-shared-memory/domain-membership.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "cpu-npu-shared-memory/hardware-constraints.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "cpu-npu-shared-memory/w2-w5-inversion.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "cpu-npu-shared-memory/work-breakdown.md": "RA-2…RA-12；DS-8/DS-9/DS-10；EX-2",
+    "deleted-closed-branches.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "dfx/c2a-hierarchical-trace.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "dfx/host-swimlane-delivered.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "dfx/host-swimlane.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "dfx/l3-l2-thread-topology.html": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "docs-kernel-mode/kernel-mode-memory.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
+    "docs-kernel-mode/kernel-mode-plan.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
+    "done-P0.1.md": "P0 已交付证据；EX-6 终态回收",
+    "feature_roadmap.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "goal-coverage.md": "目标来源、范围与证据清单；不另维护实现状态",
+    "hbg-requirements.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
+    "l3l4.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "l3l4/cluster-comm.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "l3l4/inventory.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "l3l4/lazy-init.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "l3l4/memory-kinds.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "l3l4/remote-startup.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "l3l4/scheduling.md": "场景验收：RA-13/RA-14、DS-5…DS-11、EX-1…EX-5",
+    "logical-physical-separation.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "maintainer-loop-prompt.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "others-ref/host-trace-log-design/README.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "others-ref/host-trace-log-design/host-trace-span-naming.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "others-ref/host-trace-log-design/log-design.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "others-ref/host-trace-log-design/trace-and-log-requirements.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
+    "others-ref/memory-model.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "others-ref/worker-async-pipeline-landing.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md": "Qwen 集成轨；EX-7 消费程序侧要求",
+    "others-ref/worker-async-pipeline/contracts.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "others-ref/worker-async-pipeline/implementation-plan.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "others-ref/worker-async-pipeline/implementation-record.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "others-ref/worker-async-pipeline/qwen-integration.md": "Qwen 集成轨；EX-7 消费程序侧要求",
+    "others-ref/worker-async-pipeline/trace-v1.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "review/2026-08-11-code-vs-design-audit.md": "AR/AF 审计：work-items 吸收列",
+    "review/2026-09-28-cross-plan-lessons.md": "只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D",
+    "review/p0.2-design.md": "P0 已交付证据；EX-6 终态回收",
+    "review/pr-2474.md": "RA-13/RA-15 的具名历史评审；不单设工作项",
+    "review/pr-2475.md": "RA-13 consumer 的具名历史评审及 P1 处置；API 剩余见工作项",
+    "roadmap.html": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "runtime-v2-hbg.md": "外部 HBG 实现；GE-R1–R6 交接约束保留",
+    "runtime-v2-hbg/graph-execution.md": "外部 HBG 实现；GE-R1–R6 交接约束保留",
+    "tasks/README.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "tasks/g2-design.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "tasks/task-device-addr-guard2.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "tasks/task-p0.2a-admission-fence.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.2b1-fake-chip-harness.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.2b2-eligibility-hook.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.2c-cancellation-journal.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.2cd-teardown-convergence.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.3-daemon-send-isolation.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.3-deadline-hardening.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.3-zero-residual-regression.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p1a-close-merge-gates.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "tasks/task-public-python-tracing-api.md": "DFX 已交付证据",
+    "tasks/task-scenetest-singleton-alias.md": "ST-1 → RA-13；ST-2 → RA-6",
+    "track-boundaries.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "w2-p1b-endpoint-convergence.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "work-items.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
+    "worker-memory-model.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/access-retirement-contract.md": "无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 RA-3/RA-13/RA-15/RA-16、DS-3/DS-4、EX-7；kernel/DFX 实现仍范围外",
+    "worker-memory-model/backend-matrix.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/bufferhandle-abi.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/graph-execution-contract.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/p1b-corrected-design.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/p1b-review-findings.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "worker-memory-model/user-surface.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
+    "review/pr-2096.md": "RA-11 的具名评审与 main 集成门；实施状态见工作项",
+    "simpler-pr-list.html": "候选排期投影；SPL 编号按 work-items §6/§7 映射，源码证据与状态仅取工作项；本地 C/M/E 编号不得自成实施线",
+    "review/pr-2635.md": "RA-11 公共 Region/SPSC 与失败身份评审；RA-14 surface 交接，实施状态见工作项",
+    "l3plus-design.md": "RA/DS/EX 设计原则与具名源码地图；约束复用现有工作项，不新增实现目标",
+    "review/track-2716.md": "2716 四方向范围、具名证据与维护动作；业务状态在 GitHub，本地合同状态见 work-items"
+  },
+  "pr_scope": {
+    "baseRefName": "main",
+    "issues": "unchanged",
+    "missing_base": "cannot_conclude"
+  },
+  "track2716_scan": {
+    "date": "2026-10-26",
+    "baseline": "daf2f8418907592b5b881792bd9a2a0a5ea8f19d",
+    "nodes": [
+      2716,
+      2721,
+      2722,
+      2723,
+      2724,
+      2460,
+      1931,
+      2720,
+      2594,
+      824,
+      2621,
+      2657,
+      2708,
+      2673,
+      2674,
+      2659
+    ],
+    "edges": [
+      [
+        2716,
+        2721
+      ],
+      [
+        2716,
+        2722
+      ],
+      [
+        2716,
+        2723
+      ],
+      [
+        2716,
+        2724
+      ],
+      [
+        2721,
+        2460
+      ],
+      [
+        2721,
+        1931
+      ],
+      [
+        2721,
+        2720
+      ],
+      [
+        2722,
+        2594
+      ],
+      [
+        2722,
+        824
+      ],
+      [
+        2722,
+        2621
+      ],
+      [
+        2722,
+        2657
+      ],
+      [
+        2722,
+        2708
+      ],
+      [
+        2708,
+        2673
+      ],
+      [
+        2708,
+        2674
+      ],
+      [
+        2724,
+        2659
+      ]
+    ],
+    "scope": "recursive native child tree and explicit main-target delivery PRs; not a full-goal source refresh"
+  }
+}
