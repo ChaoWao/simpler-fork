@@ -308,12 +308,25 @@ discovered and included by Daily without another workflow edit.
 The dedicated environment uses `--system-site-packages` and installs local,
 pinned wheels for CPU Torch 2.7.1 and torch_npu 2.7.1.post4. The pins constrain
 subsequent test/SDK installation too. The profile selects an already installed
-CANN 9.0.0 toolkit by its actual manifest, preferring an active exact match.
-The selected `set_env.sh` is used for installation, compilation and inside the
-exclusive task; the system default symlink is not changed. If no matching
-installation exists, setup fails with the inspected toolkit inventory. Its
-active manifest must still say 9.0.0, matching the [Ascend compatibility table](https://github.com/Ascend/pytorch/blob/master/COMPATIBILITY.en.md).
-Unknown or different versions, missing dependencies, and failed imports are
+toolkit by its actual manifest. Selector and preflight share a minimum CANN
+version line of 9.0, comparing numeric major/minor values without an architecture
+allowlist. Separated release/build labels are opaque: 9.0.RC1, 9.1.T500,
+9.2.0-beta.2, 9.10 and 10.0 meet the minimum. Missing or malformed versions and
+version lines below 9.0 are rejected. This is an admission policy, not a claim
+that all admitted releases and hardware combinations have been tested.
+
+CANN 9.0.0 on x86_64 has framework CI coverage. CANN 9.2.0-beta.2 passed the
+[ARM64 A3 framework experiment](https://github.com/hw-native-sys/simpler/actions/runs/40190729557/job/121165491940)
+with these unchanged Torch pins. Those execution results remain the measured
+compatibility evidence; other admitted combinations need their own validation.
+
+An already active toolkit meeting the minimum is preferred. Otherwise setup scans its
+existing roots in deterministic order, without using directory names as version
+claims. The selected `set_env.sh` is used for installation, compilation and inside
+the exclusive task; the system default symlink is not changed. If no installation meeting the minimum
+exists, setup fails with the inspected toolkit inventory and required
+minimum version line. Preflight checks the actual active manifest against
+the same rule. Unknown versions, missing dependencies, and failed imports are
 errors rather than skipped qualification. Runner labels alone do not establish
 this compatibility. Setup prints Python, host architecture, CANN manifest,
 distribution versions and module locations; backend imports happen inside the

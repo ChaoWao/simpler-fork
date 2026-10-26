@@ -30,8 +30,10 @@ collect without their optional backend; import it in fixtures or consumers.
 
 The `torch_npu` profile requires `--junitxml`: a single pytest invocation writes
 its final collection to the adjacent `.plan.json` file, executes it, then checks
-its actual JUnit against that plan. Source, environment and canonical nodeids
-must match, and every selected case must pass exactly once. Empty collection,
+its actual JUnit against that plan. The plan retains the actual preflight
+identity, including CANN manifest version and host architecture. Source,
+environment and canonical nodeids must match, and every selected case must pass
+exactly once. Empty collection,
 missing/foreign/duplicate cases and any skip/error/failure are errors. This
 strict mode supports direct execution only. SceneTestCase, resource dispatch
 and xdist are rejected; default sweeps keep their existing execution strategy.
@@ -56,10 +58,18 @@ individual user waits. Native timeout/context refusals and retryable close debt
 are covered separately by CPU lifecycle contracts.
 
 The registry and verifier live in `simpler_setup/test_environments.py`. Package
-pins have one source in the profile's constraints file. Adding a test to an
-existing environment requires no workflow edit. A new environment requires an
-explicit registry entry and reviewed installation/runner strategy; profiles do
-not install arbitrary dependencies or infer new CI runners.
+pins have one source in the profile's constraints file. Selector and preflight
+share a minimum CANN version line of 9.0, without an architecture allowlist.
+They compare the numeric major/minor prefix of the actual install manifest;
+separated CANN release/build labels do not change admission. For example,
+9.0.RC1, 9.1.T500, 9.2.0-beta.2 and 10.0 are accepted; missing, malformed or
+lower version lines are rejected. Admission does not mean every combination
+has been tested. Framework execution evidence covers 9.0.0 on x86_64 and
+9.2.0-beta.2 on A3 ARM64 with the pinned Torch pair. See
+[the CI environment contract](ci.md) for the experiment link.
+Adding a test to an existing environment requires no workflow edit. A new
+environment requires an explicit registry entry and reviewed installation/runner
+strategy; profiles do not install arbitrary dependencies or infer new CI runners.
 
 ### Assertion principle: no wall-clock proxies
 
