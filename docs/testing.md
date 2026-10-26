@@ -65,6 +65,12 @@ handles are drained before workspace ownership can be released, without
 individual user waits. Native timeout/context refusals and retryable close debt
 are covered separately by CPU lifecycle contracts.
 
+The pre-admission consumer checks stale Buffer registration and a distinct
+caller-created RTS context in real queue callbacks. Each refusal is followed
+by healthy work on the same Worker. The wrong-context callback restores the
+caller context before its healthy submit, and a third healthy request follows.
+The allocation stays alive throughout; no invalid device access is issued.
+
 The argument-capture consumer is discovered in the same environment. It
 checks OFF/FULL/HYBRID/OFF snapshots and exact two-task argument payloads,
 including a runtime-owned intermediate. A real Worker materialization CPU

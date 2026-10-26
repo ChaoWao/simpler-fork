@@ -365,6 +365,14 @@ per-call export ownership as well as Torch outputs and guards; they enter the
 same dynamic plan without a workflow case list. The client wait is bounded at 15 minutes,
 including queueing; the execution watchdog is also 15 minutes. Individual
 subprocess timeouts do not reserve additional aggregate execution time.
+
+Pre-admission recovery consumers check stale Buffer registration and wrong
+caller context refusals. Each refusal is followed by healthy work on the same
+Worker; the wrong-context callback restores the caller context before its
+healthy submit, and a third healthy request follows. Final stream reuse is
+also checked. These are pre-admission checks, not native partial launch or
+device-fault recovery.
+
 The final pytest collection freezes a nonempty source/environment/nodeid plan
 next to the JUnit file. Every case carries its original nodeid and plan/source
 identity into JUnit. One shared verifier requires exactly that selected set to

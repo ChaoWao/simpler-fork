@@ -17,6 +17,7 @@ DEVICE-controlled updates to caller-owned storage.
 | `scope_statistics.py` | Per-call ScopeStats selection with two nested task scopes; TMR records and allocation frontiers, HBG metadata only |
 | `diagnostic_selection.py` | Per-call PMU and chip-swimlane snapshots, original export destinations and enabled-run attribution |
 | `failure_recovery.py` | A Python callback fails after submit acceptance; later requests complete and init-thread Worker close retires all accepted runs |
+| `preflight_recovery.py` | Stale Buffer registration and wrong caller context are refused before acceptance; the same Worker then completes three healthy requests |
 | `value_arguments.py` | Per-call FLOAT32, INT8, UINT64 and FLOAT64 values; HBG HOST/NONE controls and TMR clean HOST refusal followed by valid DEVICE calls |
 | `persistent_state.py` | Twelve DEVICE-controlled weighted cache updates, unchanged guards and weights, zero acceptance and revisited rows |
 | `argument_capture.py` | Per-call OFF/FULL/HYBRID/OFF ArgsDump snapshots, exact task-time payloads and a runtime-owned intermediate |
@@ -167,6 +168,19 @@ caller stream. This covers ordinary Python callback failure and successful
 close after completion, not failed native drain, device faults or close while
 an unpublished framework callback is pending. An unproved failure retains the
 caller and runtime owners.
+
+`preflight_recovery.py` exercises two refusals inside the actual framework
+callback: an argument Tensor whose Buffer registration has closed, then a submit
+from a distinct caller-created RTS context. The backing allocations remain alive;
+the checks use the existing provenance liveness and `ExecutionContextRefused`
+contracts rather than an invalid device address or kernel fault. Each refusal
+is followed by healthy work on the same Worker. The wrong-context callback
+restores its original context before its healthy submit; a third
+healthy request follows.
+After the final framework boundary it checks independent golden results, retires
+runs, closes the Worker and Buffers, reuses the Torch stream, and destroys only
+the alternate caller-owned context. Unproved completion retains these owners.
+This covers pre-admission refusal recovery, not native partial-launch recovery.
 
 `value_arguments.py` submits fresh FLOAT32, INT8, UINT64 and FLOAT64 values for
 each call, then clears the TaskArgs and changes the scalar wrappers. High bits,
