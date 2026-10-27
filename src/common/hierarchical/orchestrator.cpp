@@ -330,8 +330,10 @@ void Orchestrator::activate_fifo_head() {
             run.reset();
             return;
         }
+        if (test_hook_) test_hook_(OrchestratorTestPoint::RUN_ACTIVATION_LEASE_ACQUIRED);
         active_run_id_ = run->id;
         run->phase.store(RunPhase::EXECUTING, std::memory_order_release);
+        if (test_hook_) test_hook_(OrchestratorTestPoint::RUN_ACTIVATION_PUBLISHED);
         refresh_leases_locked();
         refresh_early_launch_locked();
     }
@@ -351,6 +353,7 @@ void Orchestrator::close_run_submission(RunId run_id) {
         }
         building_run_id_ = INVALID_RUN_ID;
     }
+    if (test_hook_) test_hook_(OrchestratorTestPoint::RUN_CLOSE_BUILDER_RELEASED);
     {
         std::lock_guard<std::mutex> lk(run->completion_mu);
         if (run->submission_closed) {
@@ -358,7 +361,11 @@ void Orchestrator::close_run_submission(RunId run_id) {
         }
         run->submission_closed = true;
         if (run->phase.load(std::memory_order_acquire) == RunPhase::BUILDING) {
-            run->phase.store(RunPhase::PREPARED, std::memory_order_release);
+            if (test_hook_) test_hook_(OrchestratorTestPoint::RUN_CLOSE_PHASE_OBSERVED);
+            // Activation uses runs_mu_, so completion_mu alone cannot protect
+            // this transition from overwriting a concurrent EXECUTING state.
+            RunPhase expected = RunPhase::BUILDING;
+            run->phase.compare_exchange_strong(expected, RunPhase::PREPARED, std::memory_order_acq_rel);
         }
     }
     run->completion_cv.notify_all();

@@ -1635,3 +1635,70 @@ TEST_F(OrchestratorFixture, FailedPreparedConstructionReturnsAdmissionWithoutDis
     orch.release_run(failed);
     orch.release_run(replacement_id);
 }
+
+// Arrange the phase publication after the lease lock has been released, while
+// close still holds completion_mu and has already observed BUILDING.
+static void check_close_activation_race(OrchestratorFixture &f, bool with_task) {
+    auto first = f.orch.submit_next_level(f.C(80), f.single_tensor_args(0x8000, TensorArgType::OUTPUT), f.cfg, 0);
+    f.orch.close_run_submission(f.run_id);
+    auto second = f.orch.begin_run();
+    TaskSlot second_slot = INVALID_SLOT;
+    if (with_task) {
+        second_slot =
+            f.orch.submit_next_level(f.C(81), f.single_tensor_args(0x8100, TensorArgType::OUTPUT), f.cfg, 0).task_slot;
+    }
+    std::promise<void> entered, leased, observed, activated;
+    auto entered_future = entered.get_future();
+    auto leased_future = leased.get_future();
+    auto observed_future = observed.get_future();
+    auto activated_future = activated.get_future();
+    std::atomic<bool> timed_out{false};
+    auto wait = [&](std::future<void> &future) {
+        if (future.wait_for(std::chrono::seconds(5)) != std::future_status::ready) timed_out.store(true);
+    };
+    f.orch.set_test_hook([&](OrchestratorTestPoint point) {
+        switch (point) {
+        case OrchestratorTestPoint::RUN_CLOSE_BUILDER_RELEASED:
+            entered.set_value();
+            wait(leased_future);
+            break;
+        case OrchestratorTestPoint::RUN_ACTIVATION_LEASE_ACQUIRED:
+            leased.set_value();
+            wait(observed_future);
+            break;
+        case OrchestratorTestPoint::RUN_CLOSE_PHASE_OBSERVED:
+            observed.set_value();
+            wait(activated_future);
+            break;
+        case OrchestratorTestPoint::RUN_ACTIVATION_PUBLISHED:
+            activated.set_value();
+            break;
+        default:
+            break;
+        }
+    });
+    auto close = std::async(std::launch::async, [&] {
+        f.orch.close_run_submission(second);
+    });
+    wait(entered_future);
+    f.S(first.task_slot).state.store(TaskState::COMPLETED, std::memory_order_release);
+    EXPECT_TRUE(f.orch.on_consumed(first.task_slot));
+    close.get();
+    f.orch.set_test_hook({});
+    EXPECT_FALSE(timed_out.load());
+    EXPECT_TRUE(f.orch.run_done(f.run_id));
+    if (with_task) {
+        EXPECT_FALSE(f.orch.run_done(second));
+        f.S(second_slot).state.store(TaskState::COMPLETED, std::memory_order_release);
+        EXPECT_TRUE(f.orch.on_consumed(second_slot));
+    }
+    EXPECT_TRUE(f.orch.wait_run_for(second, 0.01));
+}
+
+TEST_F(OrchestratorFixture, ClosingEmptySuccessorCannotOverwriteActivation) {
+    check_close_activation_race(*this, false);
+}
+
+TEST_F(OrchestratorFixture, ClosingSuccessorPreservesActivationAndTaskFence) {
+    check_close_activation_race(*this, true);
+}

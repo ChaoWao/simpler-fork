@@ -67,7 +67,7 @@ class WorkerManager;
 
 using SubmitResult = TaskHandle;
 
-// Deterministic seams for exception-safety unit tests. Production workers
+// Deterministic seams for exception-safety and concurrency tests. Production workers
 // leave the callback unset.
 enum class OrchestratorTestPoint : int32_t {
     SCOPE_REGISTERED = 0,
@@ -80,6 +80,10 @@ enum class OrchestratorTestPoint : int32_t {
     SUBMIT_OUTPUT_KEY_PREPARED = 7,
     BEGIN_RUN_MAP_PUBLISHED = 8,
     BEGIN_RUN_FIFO_PUBLISHED = 9,
+    RUN_CLOSE_BUILDER_RELEASED = 10,
+    RUN_CLOSE_PHASE_OBSERVED = 11,
+    RUN_ACTIVATION_LEASE_ACQUIRED = 12,
+    RUN_ACTIVATION_PUBLISHED = 13,
 };
 
 // ---------------------------------------------------------------------------
