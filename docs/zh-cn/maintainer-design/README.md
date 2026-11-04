@@ -1,46 +1,44 @@
 # simpler 核心设计快照
 
-发布日期：2026-10-26。定点分析入口：[L3+ #2716 四方向、完整子树与下一动作](review/track-2716.md)，代码基线 main `daf2f8418907592b5b881792bd9a2a0a5ea8f19d`。
+发布日期：2026-11-04。当前 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；[L3+ 范围、证据与维护动作](review/track-2716.md)。
 
-## 阅读顺序
+## 阅读入口
 
- | 目的 | 入口 |
+ | 目的 | 文档 |
  | ---- | ---- |
- | 理解四方向范围和当前交付 | [#2716 范围分析](review/track-2716.md) |
- | 理解设计原则与代码关系 | [L3+ 设计](l3plus-design.md) |
- | 理解完整目标与横切合同 | [分线契约](track-boundaries.md) |
- | 查看本地合同、验收与具名证据 | [工作项](work-items.md) · [看板](roadmap.html) |
- | 核对来源编号与正文指纹 | [来源清单](goal-sources.json) · [覆盖口径](goal-coverage.md) |
- | 理解内存与资源退休 | [内存模型](worker-memory-model.md) · [用户面](worker-memory-model/user-surface.md) · [退休契约](worker-memory-model/access-retirement-contract.md) |
- | 查看场景和里程碑 | [L3/L4 场景](l3l4.md) · [总路线图](feature_roadmap.md) |
+ | 完整目标与当前证据 | [#2716 范围分析](review/track-2716.md) |
+ | 本地合同与验收状态 | [工作项](work-items.md) · [看板](roadmap.html) |
+ | 设计原则与边界 | [L3+ 设计](l3plus-design.md) · [分线契约](track-boundaries.md) |
+ | 目标来源与覆盖 | [来源清单](goal-sources.json) · [覆盖口径](goal-coverage.md) |
+ | 内存与资源退休 | [内存模型](worker-memory-model.md) · [用户面](worker-memory-model/user-surface.md) · [退休契约](worker-memory-model/access-retirement-contract.md) |
+ | 场景与里程碑 | [L3/L4](l3l4.md) · [总路线图](feature_roadmap.md) |
 
 ## 快照范围
 
-- 主 checkout 的 `.docs` 是唯一维护真源，保持 gitignored；此目录是可分享的导出快照。
-- #2716 本轮范围为 16 个原生节点、15 条父子边；93 个新增来源索引均有合同或验收承接。只纳入目标 main 的 PR，相关引用不自动扩大为后代或硬依赖。
-- 当前 main 定点基线为 `daf2f8418907592b5b881792bd9a2a0a5ea8f19d`；源码证据、PR 状态和作者验证汇报分别记录，本轮未运行产品测试或硬件。
-- L3+ 代码地图保留 2026-10-21 的 `fdcbdcc9502195f7837030cf3c130f75f83d3719`；全目标扫描仍为 2026-10-18 的 `937c57efc71ad01a01c3a72072df075d2a5dd24f`。这些日期不随备份日期自动前移。
-- 本地 11 条文档守卫通过；129 条非空 main 合入区间及 127 个 open PR/issue 登记受检。34 个本地合同工作项、457 个来源编号、80 个文档载体有归属，不代表全部目标完成。
-- 分支起点为 `11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b`，与本轮源码基线和历史硬件证据分别保留。
-- 未收入的本地调查/工具链接标为本地参考；来源与导出哈希见 [清单](SOURCE-MANIFEST.json)。HTML 下载后可交互查看。
+- 主 checkout 的 `.docs` 是唯一维护真源，保持 gitignored；本目录仅是导出快照。
+- 当前 #2716 原生树 30 节点 / 29 边；正文、逐条 checkbox 和决定评论共 199 个索引。根正文更新时间不能代替原生关系查询。
+- 只采用目标 main 的 PR；本轮 59 条新合入。覆盖区间共 188 条合入；61 个开放 PR、107 个开放 issue 均已登记。
+- 本地 11 条文档守卫通过；34 个合同工作项、568 个来源编号、80 个文档载体有归属，网页在桌面与手机宽度实看。编号完整不等于功能全部实现。
+- 来源编号复核与当前具名代码/CI 核对日期为 2026-11-04；历史全量源码审计仍是 2026-10-18 的 `937c57efc71ad01a01c3a72072df075d2a5dd24f`，L3+ 旧代码地图仍是 2026-10-21 的 `fdcbdcc9502195f7837030cf3c130f75f83d3719`。没有把备份日期冒充所有平台重新验收。
+- 本轮没有运行产品或硬件测试。CI 子用例证据使用日志中的实际 checkout SHA，与 PR head、当前 main 分别记录。
+- 分支起点为 `11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b`；未选入材料的链接标为本地参考，文件来源和导出哈希见 [清单](SOURCE-MANIFEST.json)。HTML 下载后可交互查看。
 
-## 当前设计边界
+## 当前设计与交付边界
 
-- #2716 四方向承载完整业务目标：公共基础、通信与后端、单 L2 Run 常驻、多级多机部署。RA/DS/EX 是本地合同视图；场景所需的基础改动随场景交付，仅独立可验收的基础工作另列方向一。
-- 应用定义布局、同步协议、queue 与模型策略；simpler 提供资源、访问、必要可见性/顺序、执行、完成和安全退休。必要的 L2 通信 kernel、后端队列、注册和完成桥接在范围内。
-- #2720 的完整 Region 方案尚待分析，#2635 是候选实现；SPSC 样例不自动成为强制公共 ABI。
-- L3 进程复用、重复 run、一个 L2 Run 多轮 work 分别验收。现有消息队列示例是方向三基座，通用常驻支持和故障退出仍须证明。
-- #2665 提供 Direct MPI 逐 rank 清理观测，#2656 提供 session epoch 与 endpoint 关联；持久化、独立关闭期限、异常回收和 Group 迁移仍按 #2659 验收。普通 TCP/daemon 不预先删除。
-- #2639 统一建域入口已合入；#2668 的 Buffer 消费/跨 run 使用在飞。#2714 本地同步读取不能关闭 #2657 跨 rank 异步 fetch；#2673/#2674 的并发队列与编译能力分别验收。
-- 通用 eager/capture、HBG 硬件规划、DFX 与跨仓模型保留外部归属；不据此排除 L3+ 必需的 L2 通信接入。
+- #2716 四方向承载完整目标：公共基础、通信与后端、单 L2 Run 常驻、多级多机部署。RA/DS/EX 是横切合同索引，必要的资源/执行/backend 改动随完整场景交付。
+- 应用定义数据布局、消息和 queue 协议、模型策略；simpler 提供资源、访问、必要可见性/顺序、执行、完成和安全退休。必要通信 kernel、后端队列、注册和完成桥接在 runtime 范围内。
+- #2639/#2668 已提供统一域 API、Worker ownership、Buffer/Tensor 消费与跨 run 使用登记；#2594 CLOSED，#2120 CLOSED 未合入且被公共 API 替代。#824 的原行为需要对照已有交付核定结项，不能再规划第二套 detach owner。
+- #2779/#2790/#2825 分别交付 URMA 完成协议、workspace 分离与默认编译/使用前验证。#2674 的历史 query/enable 备选不再是当前待办；域资源仍显式申请。RDMA 资格、URMA/RDMA 异常清理、多 AIV、重叠域、batch/flush 分别由当前 issue 承接。
+- 当前 URMA 限 A5 TMR L3 dense-prefix；五个 URMA ST 在具名 CI merge ref 实际通过，ChunkedFetch 因 #2860 跳过。#2854/#2860 间歇故障仍开放；#2858 为诊断。不能将旧成绩或 CI 总绿当作所有目标完成。
+- #2656/#2665/#2741/#2792 已提供 Direct MPI session、逐 rank 报告、独立 health timeout 和 heartbeat drain；#2659 的外部持久账本、关闭期限、故障回收与 Group 迁移仍独立。普通 TCP/daemon 不预先删除。
+- #2829 分离物理完成和结果观察；#2866 仅提供 backlog 计数/采样峰值，pipeline_depth 不封顶所有 caller-held 结果内存。
+- #2720 Region 完整方案仍待分析，#2635 当前 head `05a058f9c8`，旧评审针对 `850a36bd9`，不能直接沿用旧缺陷结论。L3 进程复用、重复 run、单 L2 Run 多轮 work 分别验收。
+- #2657 的 #2730 本地同步 MTE 与 #2731 跨 rank 异步 Host fetch 分开；A3 L2/L3/L4 Host 候选按拓扑和资源合同协调，局部路径不互相证明。
+- #2429 当前归 #2666 的 vLLM 消费者交付，系统组合归 #2658；历史 VLLM/TrackA 编号保留原义，不重复开发已交付普通 Async。
 
-## 证据边界与历史更正
+## 历史证据阅读规则
 
-- #2635 的旧评审针对 `850a36bd9`；当前 OPEN head `0bc9b0f690f3` 不自动继承旧缺陷结论。
-- 历史“跨机数据面未通”“必须独立 daemon”“缺 SHMEM 库接入”“ABORT 失败只写 stderr”“A5 RDMA backend 空白”不能作为当前待办；具名更正保留在原文。
-- #2672 的 64 字节边界校验已进入 main；它不证明通用 cache coherence 或 buffer 内任意信号布局正确。
-- A3 Fabric 与 peer-TLOAD 的历史 CI 证据不能外推为当前 SHA、其他硬件或未执行用例的 PASS。
-- `simpler-pr-list.html` 是历史候选排期，未纳入导出；来源编号仍在覆盖索引内。
+“数据面未通”“必须独立 daemon”“缺 SHMEM 库接入”“ABORT 失败只写 stderr”“A5 RDMA backend 空白”等旧判断均有具名更正，不作为当前待办。旧文按其日期和 SHA 阅读，当前状态与证据见工作项及范围分析。通用 eager/capture、HBG 调度、DFX 与跨仓模型保持原外部归属；这不排除 L3+ 必需的 L2 通信接入。`simpler-pr-list.html` 是历史候选排期，未收入导出，相关编号仍有归属。
 
 ## 全部材料
 
@@ -76,5 +74,5 @@
 - [W2 端点模型 ↔ P1-B `ImportContext`：收敛计划](w2-p1b-endpoint-convergence.md)
 - [PR #2635 评审](review/pr-2635.md)
 - [L3+：设计原则、职责与代码地图](l3plus-design.md)
-- [2716：范围、现有交付与本地合同对照](review/track-2716.md)
+- [2716：范围、代码证据与维护动作](review/track-2716.md)
 - [目标来源与正文指纹](goal-sources.json)

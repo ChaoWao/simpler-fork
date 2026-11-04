@@ -1,66 +1,65 @@
-# #2716：范围、现有交付与本地合同对照
+# #2716：范围、代码证据与维护动作
 
-> **发布快照：2026-10-26。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
 >
-> 定点核验：2026-10-26，main `daf2f8418907592b5b881792bd9a2a0a5ea8f19d`。#2716 正文的源码参考仍为 `340276ecc45ff965d7b71db786ea02b21a1f9fb5`；不能据该旧基线忽略随后合入的 #2665/#2656。完整目标、owner 与业务进度以 GitHub 为准；本地实施/验收证据只在 [工作项](../work-items.md)，本文保存范围判断与下一动作。仅纳入目标 main 的 PR；未发布评论、变更 issue 或运行产品测试。
+> 2026-11-04：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`。只登记目标 main 的 PR；GitHub 保持只读。合同状态只在 [work-items](../work-items.md)，本文是来源、证据与下一动作索引。历史全量代码审计仍为 2026-10-18；本轮没有运行产品或硬件测试。
 
-## 1. 范围：四个能力目标，三套关系
+## 1. 完整范围
 
-[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 管 L3+ 的共同架构和四个完整能力方向。编排树、任务 DAG、资源访问关系继续分开；四方向是交付组织，不是四个代码目录，也不是先做完方向 1 才能启动其余方向。
+ | 方向 | 原生子树 | 合同索引 |
+ | ---- | -------- | -------- |
+ | #2721 公共基础 | #2460、#1931、#2720 | RA 与公共 EX；资源 identity / view / access / lifetime |
+ | #2722 通信与后端 | #2594、#824、#2621、#2657、#2708、#2738、#2739、#2783、#2775、#2787、#2800、#2823、#2824、#2833、#2855、#2854、#2860 | DS 与 RA 退休/EX completion 合同 |
+ | #2723 单 L2 Run 常驻 | 原生子列表为空；阳性对照 #2721 为 3、#2722 为 17 | EX-2；已有消息队列示例不是完整公共方案 |
+ | #2724 多级多机部署 | #2659 | DS-1/DS-6，会话/部署/清理 |
 
- | 方向 | 原生子树（本次完整递归） | 应交付什么 | 与本地 RA/DS/EX 的关系 |
- | ---- | ------------------------ | ---------- | ---------------------- |
- | #2721 公共基础 | #2460、#1931、#2720 | 编排/调度/任务下发的公共合同，资源 identity/view/access/lifetime；可独立验收的公共重构 | RA、EX 的公共合同；不把所有触及 Buffer 的 PR 收进此方向 |
- | #2722 通信与后端 | #2594、#824、#2621、#2657、#2708 → #2673、#2674 | 建域、跨 run 复用、owner-local transfer、Host sparse fetch、真实 L2 backend/通信 kernel/完成与释放 | DS 域/backend 合同，消费 RA 和 EX；完整场景仍在原 issue |
- | #2723 L2 常驻执行 | 本次子列表为空；阳性对照 #2721 有 3 项、#2722 有 5 项 | 单个 L2 Run 内持续接多轮 work；完成关联、复用、背压、停止与异常清理 | EX-2 主索引；需要的 Region/control 改动随场景交付 |
- | #2724 多级多机部署 | #2659 | L4→本地/远端 L3→L2 的提交/结果、进程与会话复用、生命周期、故障清理与迁移 | DS-1/DS-6；需要的资源与控制改动随部署目标交付 |
+递归还包括 #2657 → #2730/#2731、#2708 → #2673/#2674，共 30 个节点、29 条边。节点集合及逐父子集合均核对，关闭子项保留交付证据。根与四方向正文更新时间未变，但原生树已经增长，不能通过 updatedAt 或正文 hash 决定是否跳过递归。
 
-树共 16 个节点、15 条原生边，逐父节点比较了子集合；#2708 的两项保留嵌套，未提升成根 track 子项。方向三没有原生子项只证明尚未拆子项，不证明没有已有代码或没人推进。
+完整场景由原 issue 承载，可分多个 PR；RA/DS/EX 是横切合同索引，不按代码目录重复拆业务 owner。相关引用、原生父子与硬依赖是三种关系。必要的通信 kernel、队列及完成桥接属于 runtime；应用布局、消息协议、queue 算法和模型策略在应用/样例。方向编号不是串行实施顺序。
 
-**任务切分**：一项完整需求一个 issue，可拆多个 PR。#2621 的 owner 初始化/访问/保活/退休、#2657 的 Host 注册/通信 setup/fetch completion/DAG 接入都留在方向二。模块 owner 仍参与评审；不能把代码目录归属当目标归属。只有有独立用途且能独立验收的公共基础才另列方向一。RA/DS/EX 保留为本地合同索引，不再把同一场景分成几套独立进度。
+## 2. 具名主线证据
 
-## 2. 边界与既有设计
+以下均从 main `63ffeb8a8bd9` 读取；源码与 CI 结果分开，不因合入自动关闭父目标。
 
-- **公共资源与应用协议的边界保留**：simpler 管资源、访问、顺序/可见性、完成与安全退休；应用管布局、消息协议、queue 算法与模型策略。必要的通信 kernel、后端队列、注册、资源 pin 和完成桥接仍是 runtime 工作，不能把整条 #2657 或 #2621 说成上层应用需求。
-- **Region 方案未定**：#2720 明确分析需求与完整方案；#2635 是候选实现。资源/应用边界是本地设计准则，不是 GitHub 已批准全部 Region API 的事实。方向三也没有预先接受 SPSC 作为公共 ABI。
-- **三种“常驻”分别验收**：L3 进程跨 L4 任务存活；同一 Worker 多次 run；一个 L2 Run 内多轮 work。一个 L4 任务触发一次 L3 编排，不能为了“常驻”默认改成单 L3 Run 接所有 L4 任务。
-- **通信路线按具体 backend 说明**：现有 ACL/PTO 路线不引入 SHMEM 库依赖；#2657 的 Hcomm/URMA 资源 setup 是候选 fetch backend 的能力，不能因旧材料“不另建 HCOMM/HCCL 必选路线”而将其排除。控制 transport 名称不证明设备数据路径。
-- **Group 迁移有退出条件**：#2659 针对 MPI Group 与 Direct 收敛；普通 TCP/daemon 不预先删除。逐 rank 自报释放、进程退出观察、外部账本持久化和异常回收是不同结果。
-- **外部上下文**：#2670 是父级总览；#2495 及 #2496/#2497/#1425 是外部能力/阻塞上下文；通用 eager/capture #2666、Program/Async #2429、AICPU #2631/#2632、AICore scheduler #2667、DFX #995、跨仓联验 #2658 保留原轨。必要的 L2 通信接入不能被这一排除吞掉。
+ | 对象 | 可复核证据 | 判定边界 |
+ | ---- | ---------- | -------- |
+ | #2594 / #2668，RA-12/13 与 DS-6 | [Worker._comm_domain / _enroll_domain_uses](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py#L10500)：Worker 表持有、精确配置复用、Buffer identity 登记 run；#2668 merge `abd52d666c` | #2594 已 CLOSED；#824 仍 OPEN，应对照原行为结项，不再规划 detach；backend 回收另按 #2787/#2823 |
+ | #2120 | CLOSED 未合入；[关闭说明](https://github.com/hw-native-sys/simpler/pull/2120) 确认公共 API 替代；worker.py 的 detach_persistent_domain 0 命中，retain_after_run 24 次文本命中为对照 | API 不同不是 ownership 未交付；上游消费者迁移描述属于关闭说明，不记成本轮跨仓代码复核 |
+ | #1931 / RA-15 | [child control](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py#L3553)：FREE 仍裸 Q → cw.free；相邻 COPY 经 ImportRegistry.materialize | 父 API 验证不能替代 child frame 身份验证 |
+ | #2779 / #2775 | [URMA request completion](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/runtime/tensormap_and_ringbuffer/runtime/backend/urma/urma_completion_kernel.h)：逐队列独立 BB/CQE 目标与分片请求完成；merge `42803935df` | 不等于 #2673 的稳定发送者/SHARED_POOL、多域与 Host fetch |
+ | #2790 / #2739 | [A5 domain workspace](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp#L1520)：SDMA/URMA/RDMA 分别寻址；merge `9609da8a8b` | #2739 CLOSED；RDMA 真机及跨域资格归 #2824，真实注册/channel 生命周期归 #2787/#2823 |
+ | #2825 / #2674 | [checked context](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/task_interface.py#L1228)、[host domain validation](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp#L1765)；merge `3338ca33fa` | 默认编译 ≠ 初始化成功；当前 A5 TMR L3 dense-prefix 限定。无需补 query/enable_urma，单 rank provider 限制不是硬件永久不可能 |
+ | #2741 / #2792，DS-1 | [MPI progress](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/mpi_direct_runtime.py#L171) 独立 health timeout、shutdown echo 与 heartbeat drain | [supervisor 主等待](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/mpi_direct_supervisor.py#L332) 仍无关闭 deadline；异常终止函数有 timeout wait 作对照。持久化/远端回收/Group 迁移归 #2659 |
+ | #2829 / #2866，EX-7 / RA-16 | [native backlog](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/common/worker/chip_worker.cpp#L2135) 计数 REAPED 且 destruction 非 unknown，包含正在 finalization 持有的 carrier；峰值按读/prepare 采样 | PR 正文曾写排除 finalization-owned，与最终代码不同。执行 credit、可观察结果、资源退休不等价；没有新增 backlog 上限 |
 
-## 3. main 源码证据与判定边界
+## 3. CI：配置、实际执行、缺口分别记录
 
-以下链接固定在本次 main SHA；源码存在与测试定义存在不冒充本次硬件 PASS。
+当前主线 [_st-npu-a5.yml](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/.github/workflows/_st-npu-a5.yml#L117) 扫描 examples/tests/st 的 A5 非 L4 场景；URMA 构建开关已删除，域仍显式选择 engine。测试 [ChunkedFetch](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/tests/st/a5/tensormap_and_ringbuffer/urma_deferred_completion/test_urma_deferred_completion.py#L155) 因 #2860 临时 skip，其他五个 ST 为阳性对照。
 
- | 合同 | 已复核的代码与结论 | 不能推出什么 |
- | ---- | ------------------ | ------------ |
- | RA-4 | #2672 `71077b04a5e4`，[DomainConfig.capture](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/comm_domain.py#L28) 拒绝非 64 字节倍数的 buffer/window 并检查总容量 | 不证明 buffer 内信号布局正确、通用 cache coherence 或自动 padding |
- | RA-15 / #1931 | [child control](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/worker.py#L3603) 的 FREE 仍传裸 Q 到 cw.free；相邻 COPY 使用 descriptor/materialize 为阳性对照 | 父 API 验证不代替 child 对收到的 frame 验证 |
- | RA-12 / #824 | worker.py `detach_persistent_domain` 0 命中，`retain_after_run` 10 行阳性对照；[配置复用](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/worker.py#L10475) 已有 | #2639 的统一接口或 #2668 的在飞修改不等于 #824 全部验收 |
- | EX-2 / #2723 | [Host 示例](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/examples/workers/l3/worker_chip_message_queue/test_worker_chip_message_queue.py#L168) 一次 submit 后多轮 enqueue；[chip 循环](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/examples/workers/l3/worker_chip_message_queue/kernels/orchestration/worker_chip_message_queue_orch.cpp#L266) 处理 DATA/STOP 并 drain | 示例已存在，通用公共常驻方案、故障与支持矩阵仍未被此示例全部证明 |
- | DS-1 / #2659 | #2665 `ce181c8cdacf`，[cleanup ledger](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/mpi_direct_cleanup.py#L85) 保存每 rank 身份、序号和 UNKNOWN；[supervisor](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/mpi_direct_supervisor.py#L280) 在 MPI world 外收集 | ledger 在内存，最终打印；主等待 `proc.wait()` 未设关闭期限。报告不是持久账本、逐进程退出证明或完整恢复 |
- | DS-1 / RA-8 | #2656 `daf2f8418907`，[session view](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/python/simpler/worker.py#L7840) 观察 hub 状态、推进 epoch、拒绝失效 registry；materialization 在提交边界复核 | session epoch 不是设备 lease / remote reclaim 的全部生产闭环 |
- | DS-5 / #2708 | [A5 URMA init](https://github.com/hw-native-sys/simpler/blob/daf2f8418907592b5b881792bd9a2a0a5ea8f19d/src/a5/platform/onboard/host/comm_hccl.cpp#L849) 仍调用 manager Init，未指定新的队列布局；现有 manager 调用为实现阳性对照 | 后端可初始化不证明多 AIV 同 peer 安全或 compiled-capability 公共查询已经交付 |
+实读 [#2825 A5 job 126372009297](https://github.com/hw-native-sys/simpler/actions/runs/41625463411/job/126372009297) 日志：PR head `ad3d41c5ee21`，实际 checkout `6462eb37f2e02fed962c4a1ca9060380354a29e8`（基于 `70499ab1a0ab` 的 merge ref）。普通 GET/PUT、重复 GET/PUT、ChunkedPut 五个 ST 均实际 PASS，URMA demo、SDMA/URMA 同 kernel 与混合 DAG 也有 PASS；ChunkedFetch 明确 SKIPPED。成绩属于该 merge ref，不冒记为当前 main 硬件 PASS。
 
-## 4. 观察与下一动作
+\#2854/#2860 的 PUT/GET S3 停滞仍 OPEN；一次后续 PASS 不证明间歇故障根因已修复。#2858 诊断采集不等于修复；后续 release timeout 不自动解释首次执行卡住。#2824 的 RDMA 测试环境/传输/CI 仍独立，SDMA/URMA 成功不能替代它。
 
-这是本轮维护者动作表，不重建业务状态队列。实施状态见工作项；人员沿用 GitHub 既有 owner，本地只记录角色。
+## 4. 维护者动作表
 
- | 对象 | 本轮证据／范围 | 下一动作与责任角色 | 重新核验触发 |
- | ---- | -------------- | ------------------ | ------------ |
- | #2460、#1931 | U1a–U4 合同继续适用；child FREE 边界仍在 main | 既有资源 owner 按共同 identity/lifetime 交付；维护者按 RA-13/RA-15 验收，不因方向重组重开计划 | 新 main 交付或 issue 验收更新 |
- | #2720 / #2635 | PR OPEN `0bc9b0f690f3`；旧评审只对 `850a36bd9` | Region owner 明确场景、公共机制与应用协议后再核候选；维护者重审当前 head，不能沿用旧竞态结论 | 方案确认或 PR head 更新 |
- | #2594 / #2668、#824 / #2120 | #2639 已合入；#2668 OPEN `d4a77803bf1f`，#2120 OPEN `cd69b1e0ecf9` | 域 owner 合流 retained/use/free 合同；维护者优先按 #2594 七项验收审 #2668，明确 #2120 兼容/重叠 | main 合入或 head 变化 |
- | #2621 | owner-local 第三方参考是 fork patch，未当作 main 交付；native 与第三方可独立验收 | 原 owner 保留完整场景；无须等待原生 A3 RoCE 才交付第三方扩展，生命周期与进度分别举证 | main PR 或具名集成证据 |
- | #2657 / #2714、#2685 | #2714 OPEN `cf384c94a5e9` 仅单设备同步本地读；#2685 OPEN `88736dbcce54` 为 A3 Host 域且依赖 #2668 | fetch owner 分清本地读取基座、跨 rank 传输、issue/completion 与 overlap；维护者不以局部 PR 关闭整条需求 | 对应 PR head、依赖合入、延迟 completion 测试证据 |
- | #2708 → #2673/#2674 | 队列并发与 compiled capability 两个独立目标；#2675 `cd5e26f0d9ac`、#2650 `e22f05a79837` 有完成/寿命重叠 | backend owner 合流 ABI/lifetime 方向，分别验证两子项；不得把 PER_PEER 修复计作 shared-pool 并发 | 设计/PR 关联或具名 ON/OFF 和并发验收 |
- | #2723 | 单 Run 多轮示例已在 main，完整通用方案尚需分析 | 方向 owner 从真实示例提炼 work/completion/stop 合同，不把 L3 mailbox idle 优化替代目标 | 方案、具体交付或组合验收出现 |
- | #2724 → #2659 / #2665、#2656、#2598 | 两项新 main 交付分别提供清理观测与 session identity；#2598 OPEN `7857e73fc5a1` 仍为 Group/TCP 账本 | 原 owner 回填已交付子集并确定持久化/期限/故障闭环下一项；维护者对 #2598 提供收窄/去重判断，不新增并行生命周期 | 新合同/后续 PR；Group 功能和性能迁移证据 |
+ | 对象 | 当前证据 | 下一动作 / 责任角色 | 触发 |
+ | ---- | -------- | ------------------- | ---- |
+ | #2787 / #2835 | PR DRAFT head `e895be4babb9`；main reset_domain_workspaces 仍析构 manager，真实注册/channel 依赖需要完整路径核验 | 通信 owner 明确初始化/正常 release/异常 finalize 的同一账本；维护者优先审真实 manager + 有状态 HCCL 故障覆盖 | 新 head、生命周期合同或测试证据 |
+ | #2854/#2860 / #2858 | 现有分块传输停滞；GET 暂停看护；诊断 PR head `ad8b55668c6b` | backend / CI owner 恢复可定位证据、同 revision 设备对照，再讨论恢复测试；不先宣布 #2835 修复 S3 | 诊断 job、首个未完成请求证据 |
+ | #2673 / #2833 / #2855 | 三个独立目标：AIV 队列映射、重叠子域、batch/flush | 各原 owner 按当前 pin 分别设计；#2833 消费 #2787 的实际生命周期产物，避免环依赖；batch 首版不等多 AIV | 具名设计/PR/硬件结果 |
+ | #2650/#2675 / #2847 | 旧候选仍 OPEN，#2779/#2790/#2825 已合入；#2847 head `799e938449fc` 适配 caller-owned workspace | 维护者与通信 owner 对比当前 main 收窄/去重；不是因旧 PR 仍开而重复实现 ABI/完成协议 | 重新基线或范围决定 |
+ | #824 / #2120 | #2120 CLOSED，统一 ownership 已交付；#824 原始四条行为仍挂 OPEN | 域 owner 对照 #2639/#2668 的范围/测试回填结项；剩余 backend cleanup 分清归属 | 结项核对，无需等待新 detach PR |
+ | #2659 / #2598 / #2791 | #2598 CLOSED；#2656/#2665/#2741/#2792 已在 main；#2659 表仍泛写待核定 | 部署 owner 回填已交付子集，收窄下一项到外部账本/关闭期限；#2791 `096efb9757a5` 按其实际子集核验 | 新交付、关闭期限设计及真实 MPI 故障证据 |
+ | #2730/#2731 / #2714 | #2714 `954dca406466` 为本地同步 MTE；#2731 跨 rank URMA 独立 | Host owner 提供局部支持矩阵；跨 rank 注册、completion、保活与 overlap 不能借用 MTE 成绩 | head / 接口 / 支持矩阵变化 |
+ | #2685/#2796/#2818/#2820 | A3 L4 / L2 / L3 Host 候选并存；#2668 前置已解除 | Host owner 对齐公共 Buffer/map/retirement，按层级分交付并去重 | 当前 main 重基与测试证据 |
+ | #2720 / #2635 | 新 head `05a058f9c85c`；方案仍待分析，旧评审仅针对 `850a36bd9` | Region owner 明确公共机制/应用协议；维护者重审当前 diff，不自动继承旧缺陷或批准 SPSC ABI | 方案和 head |
+ | #2723 | 无原生子项，有单 L2 Run DATA/STOP/drain 示例 | 常驻 owner 提炼完成关联、槽位复用、背压、停止准入与异常退出的完整合同 | 方案或具体交付 |
+ | #2429 / #2666 / #2658 | #2429 已收窄为 vLLM 消费者；#2605 head `591f003be553` | 外部消费者 owner 按五项当前验收推进；普通 Async 不重复开发，系统组合交 #2658，capture 交 #2666 | 数值 / 生命周期 / 集成证据 |
 
-本轮仅核 PR 状态/head/正文范围与上述 main 源码，不将 PR 作者的验证汇报重记成维护者独立 PASS。没有发布本表动作到 GitHub，也没有自动启动后续 review/实现。
+以上是本地观察与建议，未向 GitHub 发评论、修改 issue、关闭旧 PR 或启动实现。没有把 CI 成功自动判为 Ready。
 
-## 5. 完整性口径
+## 5. 目标覆盖口径
 
-root 的六项验收逐项由四方向联合承担：范围/归属、公共迁移、通信全路径、L2 常驻、L4 部署、复现与性能证据。四方向分别有 4、4、4、5 项 checkbox；#2720 四项分析/交付、#2659 总验收及七个分项都保留。#2460 原 U1a–U4、#2594 原 DOMAIN-A1–A7 不因重组丢失。新来源 ID 及完整 checkbox 原文保存于 goal-sources.json，归属在 work-items §6；它们是覆盖索引，不是新 issue 或强制逐项拆 PR。
+work-items §6 / goal-sources 保存所有原生节点完整范围、逐条 checkbox、具名提案及两条决定评论。#2673 的旧 R3 batch 由 #2855 承接；#2674 历史 R1/R2 API 备选被 10 月 29 日确认方案替代；#2429 历史编号与五项当前标准同时保留，不静默换义。关闭 issue 仍保留目标/验收来源，不能靠从清单删除来制造覆盖率。
 
-16 个 issue 均保留现有单一 assignee；原生 blocking 查询已保存，具体依赖另核 PR 正文，例如 #2685 显式依赖 #2668，而 #2673/#2674 独立交付。16 个正文分别记录更新时间与 SHA256；树集合与提取的非空来源做独立核对。原生父子是范围，显式 blocking 是依赖，正文提到的相关项不是自动 child/blocker。根总览与各方向的“待分析”不阻止已有明确子项推进。
+所有本地编号重新从源文档提取，全部文档载体核对 owner；编号有家、GitHub 有完整业务 owner、代码已实现、硬件已验收分别判断。通用 kernel/eager-capture、HBG 调度、DFX 与跨仓模型仍在既定外部轨，必要 L2 通信接入没有被排除。

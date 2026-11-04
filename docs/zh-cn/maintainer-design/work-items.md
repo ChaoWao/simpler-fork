@@ -1,10 +1,10 @@
 # 工作项登记表 —— 本地合同归属与验收证据
 
-> **发布快照：2026-10-26。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
-> **2026-10-26 / #2716 定点核验**：main `daf2f8418907592b5b881792bd9a2a0a5ea8f19d`；四方向与原生子树的范围、下一动作见 [track 分析](review/track-2716.md)。GitHub issue 承载完整目标与业务进度，本表维护本地合同与验收证据；RA/DS/EX 不另拆一份 issue 交付。下方 10 月 18 日是全目标核验基线，本轮仅刷新文中注明的相关项。
+> **2026-11-04 状态与来源刷新**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；全部本地编号重新推导，外部来源正文/决定性评论和 #2716 原生子树重新获取。新增交付、剩余合同及下一动作按本页和 [范围分析](review/track-2716.md)。下方 10 月 18 日保留为历史全量源码审计；当前具名代码/CI 核对不冒充所有平台的重新验收。
 >
-> **本轮核验（2026-10-18）**：main `937c57efc71ad01a01c3a72072df075d2a5dd24f`；实现与验收证据分开记录，历史双机 CI 样本保留其实际测试 SHA。
+> **历史全量源码核验（2026-10-18）**：main `937c57efc71ad01a01c3a72072df075d2a5dd24f`；实现与验收证据分开记录，历史双机 CI 样本保留其实际测试 SHA。
 >
 > ## 本文是本地合同归属与验收证据的唯一真源；GitHub 是完整目标、实际 owner 与业务进度的真源
 >
@@ -18,7 +18,7 @@
 > **建表日期**：2026-09-07。**核验基线**：`upstream/main@937c57efc71ad01a01c3a72072df075d2a5dd24f`（2026-10-18）。
 >
 >
-> **PR 范围**：只采用目标为 main 的 PR。全量状态、目标来源和代码证据按各自具名基线阅读；#2716 定点更新按 10 月 26 日 main；OPEN 不等于尚未实现，MERGED 不等于整个父目标完成。
+> **PR 范围**：只采用目标为 main 的 PR。全量状态、目标来源和代码证据按各自具名基线阅读；#2716 与本轮具名交付按 11 月 4 日 main；OPEN 不等于尚未实现，MERGED 不等于整个父目标完成。
 
 ## 0. 为什么会有这张表
 
@@ -46,8 +46,8 @@
  | GitHub 方向 | 原生子项（唯一完整交付入口） | 本地合同与验收索引 |
  | ----------- | ---------------------------- | ------------------ |
  | #2721 公共基础 | #2460、#1931、#2720 | RA 公共资源、EX 编排调度/任务下发；不吸收其他场景专用基础改动 |
- | #2722 通信与后端 | #2594、#824、#2621、#2657、#2708 → #2673/#2674 | DS 域/backend 与 RA 访问/寿命、EX completion 交接 |
- | #2723 L2 常驻执行 | 当前直接在方向 issue 分析方案；原生子列表为空，对照 #2721 的 3 项和 #2722 的 5 项 | EX-2 主索引；RA-11 等是消费合同 |
+ | #2722 通信与后端 | 17 个直接子项；#2657 → #2730/#2731，#2708 → #2673/#2674；完整 30 节点树见 §6 与范围分析 | DS 域/backend 与 RA 访问/寿命、EX completion 交接 |
+ | #2723 L2 常驻执行 | 当前直接在方向 issue 分析方案；原生子列表为空，对照 #2721 的 3 项和 #2722 的 17 项 | EX-2 主索引；RA-11 等是消费合同 |
  | #2724 L4 多级多机部署 | #2659 | DS-1/DS-6 会话与部署、DS-4/EX-6 清理交接 |
 
 **归属判据**：一个完整场景目标留在一个 GitHub issue，可分多个 PR；因该场景需要而修改 Buffer、Region、scheduler 或 completion，不据此再拆方向 1。只有具有独立意义且能独立验收的公共基础才单列。方向编号不是执行顺序；阻塞必须指向具体产物。本地聚合行的依赖是其原合同退出条件，不自动成为新场景的硬前置；#2621 第三方 owner-local 扩展不等待 DS-2 全量清点或原生 RoCE。既有 RA/DS/EX 的编号拆分仅保留为合同索引，不代表把 #2621/#2657/#2594 的实施进度再拆给多个 owner。根 track 的四方向验收是上层完整性检查，不新增第五套实现。
@@ -56,38 +56,38 @@
 
  | ID | 工作项 | 吸收的旧编号 | 依赖 | 状态 |
  | -- | ------ | ------------ | ---- | ---- |
- | **RA-1** | device-id 逻辑→driver 翻译 | `AR5` | — | 🔵 **device-id 翻译仍待实现**。本基线 `device_runner.cpp::register_device_memory_to_host` 仍将 `device_id_` 直接传给 `halHostRegister`；`acl_to_hal_device_id` 0 命中、阳性对照 `halHostRegister` 16 处。#2516 的 driver 声明与 #2539 的 A5 VMM logical ID 修复不等于此处转换。 |
+ | **RA-1** | device-id 逻辑→driver 翻译 | `AR5` | — | 🔵 **device-id 翻译仍待实现**。main `63ffeb8a8bd9` 的 `device_runner.cpp::register_device_memory_to_host` 仍将 `device_id_` 直接传给 `halHostRegister`；`acl_to_hal_device_id` 0 命中、阳性对照 `halHostRegister` 16 处。#2516 的 driver 声明与 #2539 的 A5 VMM logical ID 修复不等于此处转换。 |
  | **RA-2** | a5 能否 host-map device 内存 | `W0` | — | ⛔ **A5 direct-map 验收未满足**。#2496 OPEN 继续承接 driver SVM 版本、注册/注销、双向可见性与 consumer 验收。#2501 的 HBG HOST/NONE 是显式 host storage，不是 device GM 的 host mapping；copy-capable 分支仍可推进。 |
  | **RA-3** | 本地 attachment adapter（Host DDR ＋ 本卡 GM） | `P1-C` · `W1lite` · `W1` · `AR6` · `U2a` | RA-1 · 条件 RA-2〔只挡 a5 direct-map 那半；`W1lite` 按 arch 宏选实现，不等驱动结论就能做〕 | 🟡 **U2a 显式 HOST 消费已交付 #2501 `121d807bb`**。HostTensorAccessor 仅登记 HOST/NONE 的合法方向/范围；HBG DEVICE get/set 的隐式 mapping/copy 与 producer wait 已移除，PA/BGEMM/FIFO 等双侧消费者随 PR 迁移。原 `acquire_child_memory_host_view` 在该文件 0 命中，阳性对照 `AddressSpace::HOST` 与 `TensorTransfer::NONE` 各 1 处。U2a 合入不关闭全部本地 adapter：#2497 跨进程 registration 与 HOST_SVM_MAP producer/materializer、RA-1/RA-2 direct-map 仍待验收。 |
  | **RA-4** | arch cache maintenance 抽象 | `W4②` | RA-3 | 🟡 **边界对齐已交付，通用可见性仍有缺口**。10 月 26 日 main `daf2f8418907` 的 #2672 `71077b04a5e4` 在 DomainConfig.capture 拒绝非 64 字节倍数的 nbytes/window_size，并检查总容量；调用方显式 padding，非 runtime 自动补齐。#2273 的边界缺口已被此代码覆盖，不能再说只有窗口越界检查。单 buffer 内信号布局、publish/observe 与跨架构硬件可见性仍须验收；本轮未重跑硬件。⛱ **挡住 `RA-11`**。 |
  | **RA-5** | 显式 Transfer 与授权层 | `P1-D` · `AR7` · `AR8` · `U1a` | RA-3 | 🟡 **显式 TaskArgs-entry Transfer 已合入 #2454 `ec6a33dac`**（定点核验 main `255d78568`）。TaskArgs::transfers_与 add_tensor 为同一 view 保留逐次 request；Remote v4 只接受可表达的 location-default request，U3 仍是后续范围。copy_to/copy_from 保持 identity；统一授权与新分配 identity 的公开契约仍按本项验收，不能仅凭 U1a 合入关闭整个 RA-5。 |
- | **RA-6** | 跨任务依赖谓词 | `P1-E` 前半 · `AR9` · `ST-2` · `KV-R1` · `KV-R2` · `KV-R3` · `KV-R4` · `KV-R5` | RA-3 | 🟡 **canonical footprint 依赖已有，显式 writable alias 仍待交付**。hierarchical `lookup_overlapping`/`tensor_footprint` 仍是依赖基座；main `task_args_wire.h::validate_submit_args` 仍拒绝同任务重叠写。#2450 已 CLOSED/COMPLETED，正文契约 KV-R1–R5 并未因此在 main 实现，继续归本项；#1388 OPEN 的 WAR 是能力扩展。ST-2 按共同 backing/实际 submit 验收，不恢复 raw-VA 假设。 |
- | **RA-7** | arena 拆分 ＋ accounting | `P1-E` 后半 · `AR10` | RA-6 | 🔵 **L3 arena 分离仍待实现**。`Worker.alloc_shared_tensor` 仍调用 `self._orch._o.alloc`，创建 FORK_SHM backing，scope 生命周期仍由 hierarchical HeapRing 管。worker.py 的 SlotArena/SharedBufferArena/BufferSliceArena 均 0 命中；阳性对照 alloc_shared_tensor 2 处、实际 alloc 调用 1 处。#2571/#2596 的 run resources 与 RA-16 workspace 不是此 arena。 ⛱ **挡住 `EX-5`**。 |
- | **RA-8** | endpoint 与 capability view | `W2` · `P3①` | — | 🟡 **共同能力判定与 attachment wire 已有，消费组合仍需验收**。`select_adapter`、`_global_domain_attachment_matrix` 与 GlobalDomainAttachment 校验保留；worker.py 的 local_window_bases 仍为字段/赋值共 2 处，retain_after_run 阳性对照 4 处。#2594 的完整成员身份、rank、域引用须消费同一判定权威；SPL 机型/链路输入归本项，不另建选择器。 |
+ | **RA-6** | 跨任务依赖谓词 | `P1-E` 前半 · `AR9` · `ST-2` · `KV-R1` · `KV-R2` · `KV-R3` · `KV-R4` · `KV-R5` | RA-3 | 🟡 **canonical footprint 依赖已有，显式 writable alias 仍待交付**。hierarchical `lookup_overlapping`/`tensor_footprint` 仍是依赖基座；main `task_args_wire.h::validate_submit_args` 仍拒绝同任务重叠写。#2450 已 CLOSED/COMPLETED，正文契约 KV-R1–R5 并未因此在 main 实现，继续归本项；#1388 OPEN 的 WAR 是能力扩展。ST-2 按共同 backing/实际 submit 验收，不恢复 raw-VA 假设。 #2872 OPEN `39e11ba7aceb` 承接自动 WAR 依赖，#2846 `37cf9128a556` 含精确 device read alias；在飞不算已交付。 |
+ | **RA-7** | arena 拆分 ＋ accounting | `P1-E` 后半 · `AR10` | RA-6 | 🔵 **L3 arena 分离仍待实现**。`Worker.alloc_shared_tensor` 仍调用 `self._orch._o.alloc`，创建 FORK_SHM backing，scope 生命周期仍由 hierarchical HeapRing 管。main `63ffeb8a8bd9` 的 worker.py 中 SlotArena/SharedBufferArena/BufferSliceArena 均 0 命中；阳性对照 alloc_shared_tensor 2 处、实际 alloc 调用 1 处。#2571/#2596 的 run resources 与 RA-16 workspace 不是此 arena。 ⛱ **挡住 `EX-5`**。 |
+ | **RA-8** | endpoint 与 capability view | `W2` · `P3①` | — | 🟡 **共同能力判定与 attachment wire 已有，消费组合仍需验收**。main `63ffeb8a8bd9` 的 `select_adapter`、`_global_domain_attachment_matrix` 与 GlobalDomainAttachment 校验保留；worker.py 的 local_window_bases 为字段/赋值共 2 处，retain_after_run 为 24 次文本命中。域成员身份、rank 和引用消费同一判定权威；Host attachment 与支持范围按 DS-8，SPL 机型/链路输入归本项。 |
  | **RA-9** | ResourceBundle 组合多 backing / adapter | `P3②` 本地半 | RA-8 · RA-5 | 🔵 **组合契约待实现**。需同时表达 Host DDR control、Device GM payload 与 communicator，含组合失败语义。本地部分归本项，跨节点验收归 DS-10；既有 Region backing 不等于完整 ResourceBundle。 |
  | **RA-10** | 向用户暴露 plan / capability / completion | `P3③` | RA-8 | 🔵 **逐路径接口验收要求**。RA-3、RA-5、DS-3 均须向用户呈现实际 plan/capability/completion，显式 policy 不得隐藏 copy 或 identity 变化。它不另立运行机制。 |
- | **RA-11** | 最小同步原语 ＋ 首个有界 SPSC 示例 | `P3④` · `W4①` · `W6` | RA-7 · **RA-4** | 🟡 **部分交付：#2096 已合入 main**（`ae234fad0`，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head `2297a9a4f29a` 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。共享区间与访问/可见性保证属 runtime，数据布局、同步协议和 queue 算法属上层；SPSC 是受 CI 看护的样例，不能自动提升为公共 queue 工厂。常驻执行/停止机制归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。**#2720 是方向 1 的完整需求入口，方案仍待分析；#2635 为候选，未获方案批准。#2635 OPEN**，10 月 26 日 head `0bc9b0f690f3`；[定点评审](review/pr-2635.md) 的 finalize 身份竞态与集成冲突结论仅针对旧 head `850a36bd9`，不据此裁定新 head。公共职责以 [L3+ 设计](l3plus-design.md) 的资源机制/应用协议切分为准。合入不关闭 RA-11/P3④；具名证据见 [评审与合入记录](review/pr-2096.md)。 |
- | **RA-12** | 本地独立 per-worker domain ownership | `P2-D` 本地半 · `W3` · `#824` 本地半 | RA-8 | 🟡 **owner 转移仍在飞 #2120**（OPEN，`cd69b1e0ecf9`）；10 月 26 日 main `daf2f8418907` 的 worker.py 中 `detach_persistent_domain` 0 命中，`retain_after_run` 10 行为阳性对照；#2668 采用创建时 retention，仍在飞。L4 retained release 已能绑定后续正在构建的 run fence，仍不等于所有已接纳使用的 Worker 级 ownership。#2594 的复用、跨 run 和释放规则与本项共用 owner；契约 A/D 仍适用。 |
- | **RA-13** | 四类 worker 内存模型统一成 ABI | `l3l4 B` · `AF5` · `U1b` · `U2b` · `ST-1` | RA-3 · RA-5 | 🟡 **公共参数与 materialization 进一步收敛**。#2589 `a8c682a32` 与 #2595 `8c3b0e174` 分别让 direct L2、fork chip child 使用 native ChipWorker；#2597 `e994e106d` 使三类入口共用 `_materialize_chip_task_args`。#2587 `11eb5d2c9` 把 DEVICE source 登记绑定 native environment identity；#2612/#2614 细化失败后的 source-use 退休。旧 ChipStorage/ChipTensor ABI 兼容及 U2b 统一 IO 账本仍须单独验收；#2594 的域 Buffer/远端描述消费由 #2668 在飞承接（10 月 26 日 head `d4a77803bf1f`），不因引用这些公共合同而另建业务 owner。#2146 OPEN `247689f4e3ba`，公共 tensor.h 仍逐维比较 stride，ST-1 未被这些 PR 顺带关闭。 |
+ | **RA-11** | 最小同步原语 ＋ 首个有界 SPSC 示例 | `P3④` · `W4①` · `W6` | RA-7 · **RA-4** | 🟡 **部分交付：#2096 已合入 main**（`ae234fad0`，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head `2297a9a4f29a` 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。共享区间与访问/可见性保证属 runtime，数据布局、同步协议和 queue 算法属上层；SPSC 是受 CI 看护的样例，不能自动提升为公共 queue 工厂。常驻执行/停止机制归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。**#2720 是方向 1 的完整需求入口，方案仍待分析；#2635 为候选，未获方案批准。#2635 OPEN**，11 月 4 日 head `05a058f9c85c`；[定点评审](review/pr-2635.md) 的 finalize 身份竞态与集成冲突结论仅针对旧 head `850a36bd9`，不据此裁定新 head。公共职责以 [L3+ 设计](l3plus-design.md) 的资源机制/应用协议切分为准。合入不关闭 RA-11/P3④；具名证据见 [评审与合入记录](review/pr-2096.md)。 |
+ | **RA-12** | 本地独立 per-worker domain ownership | `P2-D` 本地半 · `W3` · `#824` 本地半 | RA-8 | 🟡 **Worker 级域 ownership、配置复用与后续 run 使用登记已交付**。main `63ffeb8a8bd9` 含 #2639/#2668（`abd52d666c`）；`_live_domains` / `_live_global_domains` 持有域，创建时 `retain_after_run=True` 保留，`_enroll_domain_uses` 按 touched identity 给缓存 Tensor 登记当前 run；显式 get_domain 与 checked device_context 登记 scalar/context 使用。#2120 已 CLOSED 未合入，关闭说明确认其试验 detach 入口被公共 API 替代；不再规划第二套 owner 转移。#824 仍 OPEN，维护动作是按原四条行为对照已有交付并明确结项范围。公共 ownership 不证明每个 backend 的物理回收；URMA #2787、RDMA #2823 及远端 DS-4 分别验收，契约 A/D 保留。 |
+ | **RA-13** | 四类 worker 内存模型统一成 ABI | `l3l4 B` · `AF5` · `U1b` · `U2b` · `ST-1` | RA-3 · RA-5 | 🟡 **公共参数与 materialization 进一步收敛**。#2589 `a8c682a32` 与 #2595 `8c3b0e174` 分别让 direct L2、fork chip child 使用 native ChipWorker；#2597 `e994e106d` 使三类入口共用 `_materialize_chip_task_args`。#2587 `11eb5d2c9` 把 DEVICE source 登记绑定 native environment identity；#2612/#2614 细化失败后的 source-use 退休。旧 ChipStorage/ChipTensor ABI 兼容及 U2b 统一 IO 账本仍须单独验收；#2594 的域 Buffer/远端描述消费已由 #2668 `abd52d666c` 合入，不因引用这些公共合同而另建业务 owner。#2146 OPEN `247689f4e3ba`，公共 tensor.h 仍逐维比较 stride，ST-1 未被这些 PR 顺带关闭。 |
  | **RA-14** | API 收敛与迁移 | `W8` · `C.2` 的 `malloc` 半 | 就绪 RA-3 · 就绪 RA-5 · 就绪 RA-10 | 🟡 **构造和 chip 消费入口已收敛，兼容退役未完成**。#2479/#2480 提供公共 Tensor(Buffer, shapes=...)；#2501 同批迁移 HOST 控制用户，#2597 共享私有物化转换。#2594 的域 API 改名/兼容归本项，域目标主归属 DS-6、ownership 归 RA-12；全消费者迁移后才移除旧 ABI，不等全部 backend 串行交付。 |
- | **RA-15** | 统一 logical close ＋ 物理释放 | `U4` | RA-12 · RA-13 · DS-3 | ⛔ **U4 完整退出条件未满足，但 consumer 保护在推进**。#2612 `49ae1ef1b` 仅在 verified prepare rollback 后释放 source refs；#2614 `8b466791f` 补未开始 launch 的 cleanup proof。#2615 已合入 `ce493639b45f`，提供 launch 异常后的 execution owner 保留；仍不等于统一退休目标完成。Buffer.close 仍直接执行 host shm.close/unlink，统一 owner/lock/journal、独立 grant、network→H2D 及 graph/replay 联验仍保留。#1931 属方向 1，10 月 26 日 main 的 child `_CTRL_FREE` 仍 unpack Q 后 cw.free(ptr)，相邻 COPY 的 ImportRegistry.materialize 是身份校验阳性对照。#2594/#2621 的最后使用者由方向 2 完整交付，本项提供共同退休合同，不另拆其场景工作。 |
- | **RA-16** | device context workspace ownership 与预算 | `VLLM-4` 的资源半 | — | 🟡 **context 资源与预算已有进一步交付**。#2571 `78365f79c` 按 context grant 配置 run resources 并拆开传输帧/执行记录；#2596 `a2b0ad2ad` 提供四个 onboard program backend 的受限自动增长/trim/retry，#2610 `aa91a9d60` 将现有内部 workspace 管理与可选字节预算接入 borrowed eager。预算只覆盖 retained staging 和三类 pooled arena，caller tensor、代码、DFX、provider 不在其中；不等于整设备 OOM 恢复，也不替代 RA-7/RA-15。 |
+ | **RA-15** | 统一 logical close ＋ 物理释放 | `U4` | RA-12 · RA-13 · DS-3 | ⛔ **U4 完整退出条件未满足，不能再把域使用保护全部列为待开发**。main `63ffeb8a8bd9` 的 #2668 按实际 Buffer identity 登记域使用、逻辑 release 拒绝新使用并保留 fence 债务；#2695 `1f12a44214` 保留不能确认 drain 的 native run。#1931 的 child `_CTRL_FREE` 仍 unpack Q 后 cw.free(ptr)，相邻 COPY 的 ImportRegistry.materialize 是阳性对照。Buffer 通用 owner/lock/journal、独立 grant、network→H2D 与 graph/replay 退休仍须共同验收。方向 2 的 #2787/#2823 及候选 #2835 处理 backend 资源依赖和失败 owner，不因正常传输通过而关闭本项。 |
+ | **RA-16** | device context workspace ownership 与预算 | `VLLM-4` 的资源半 | — | 🟡 **context 资源与预算已有进一步交付**。#2571 `78365f79c` 按 context grant 配置 run resources 并拆开传输帧/执行记录；#2596 `a2b0ad2ad` 提供四个 onboard program backend 的受限自动增长/trim/retry，#2610 `aa91a9d60` 将现有内部 workspace 管理与可选字节预算接入 borrowed eager。预算只覆盖 retained staging 和三类 pooled arena，caller tensor、代码、DFX、provider 不在其中；不等于整设备 OOM 恢复，也不替代 RA-7/RA-15。 main `63ffeb8a8bd9` 的 #2829 将执行 credit 与结果 carrier 退休分开，#2866 仅暴露未观察完成结果的当前/采样峰值；不封顶 backlog，也不表示主机内存已全部回收。 |
 
 ## 3. 分布式会话与通信域（`DS`）
 
  | ID | 工作项 | 吸收的旧编号 | 依赖 | 状态 |
  | -- | ------ | ------------ | ---- | ---- |
- | **DS-1** | MPI 会话的 session/epoch registry | `P2-A` | — | 🟡 **Direct MPI 身份与逐 rank 清理观测部分交付**。10 月 26 日 main `daf2f8418907` 已含 #2656 的 MpiSessionView/session_epoch、hub failure/close/cancel 失效与 endpoint planning/materialization 拒绝；#2665 `ce181c8cdacf` 提供外部 receiver、有界逐 rank 报告、身份/sequence 校验与缺失 UNKNOWN。源码正例是 MpiDirectCleanupLedger 与 run_supervisor；主等待仍为无 deadline 的 proc.wait()，最终输出不等于持久账本/恢复闭环。#2659 仍需持久化、独立关闭期限、故障回收及 Group 迁移；#2598 OPEN head `7857e73fc5a1` 的 Group/TCP 观测须与 Direct 交付去重，不能再称所有逐 rank 报告都待开发。业务归属方向 4。 |
+ | **DS-1** | MPI 会话的 session/epoch registry | `P2-A` | — | 🟡 **Direct MPI session 与清理观测已有多项交付，supervisor 闭环仍有明确残留**。main `63ffeb8a8bd9` 含 #2656 session_epoch、#2665 逐 rank 报告、#2741 `8f592545b9` 独立 health timeout，以及 #2792 `4383189c98` 在 shutdown echo 前停止 heartbeat sender、controller drain 精确 echo。health timeout 和消息 drain 不等于外部关闭期限；mpi_direct_supervisor.py 主等待仍为 `proc.wait()`，异常终止中的带 timeout wait 是阳性对照。#2598 CLOSED 未合入；#2659 的正文尚未回填这些交付，持久账本、独立关闭期限、故障/远端残留确认、Group 迁移与删除仍按方向 4 验收。候选 #2791 head `096efb9757a5` 是 startup artifacts / drained completion 子集。 |
  | **DS-2** | device lease ＋ rank inventory ＋ 冻结 global rank | `P2-B` 的清点半 | DS-1 | ⛔ **生产清点/冻结验收未满足**。归属为 endpoint inventory、device lease、global rank 编号；PREPARE/COMMIT/ABORT 的执行归 DS-9。 |
  | **DS-3** | remote transfer / attachment：两条 copy 语义分清 | `P2-C` · `U3` | DS-2 · RA-5 | ⛔ **U3 合并验收未满足**。现有 owner-delegated socket copy 不能算 device-peer/collective。#2460 要求 producer/receiver/version 成对迁移、保留 entry request/direction/grant/identity/range、不得 receiver 默认 H2D 或把 host transport storage 标成 DEVICE；network→H2D 故障时保留中间资源。 |
  | **DS-4** | 远端 domain lease、断连与回收 | `P2-D` 远端半 · `#824` 远端半 | DS-3 · RA-12 · **DS-9** | ⛔ **远端 lease/断连回收退出条件未满足**。与 RA-12 共用域生命周期；DS-9 提供建域事务。依赖表示完整验收，不妨碍本地 owner 转移原型先交付。 |
- | **DS-5** | A3 HCCS/RoCE ＋ A5 UB/URMA profile | `P2-E` · `D.2` 的 backend 半 | DS-4 | 🟡 **已有 A3 Fabric 与 A5 RDMA/URMA 接入，完整 backend 组合仍待验收**。历史数据面证据沿用 #1456/#1623/#1624/#2157 及通信方案 D.4。10 月 26 日 main `daf2f8418907` 的 A5 init_urma_workspace 仍调用 UrmaWorkspaceManager::Init，未显式选择布局；#2708 → #2673 承接并发队列，#2674 的编译能力衔接 DS-11。#2675 OPEN `cd5e26f0d9ac` 与 #2650 OPEN `e22f05a79837` 均触及 URMA 完成/资源寿命，需合流而非重复改造；它们不交付 Host DDR fetch 或多 AIV shared-pool 目标。L3+ 必需的 L2 初始化、通信 kernel、队列和 completion 属方向 2；通用 scheduler 改造仍属外部轨。本轮仅源码/PR 范围核验，不宣称硬件 PASS；具体 profile、非有限值验金及 #2026 仍需独立验收。 |
- | **DS-6** | mpirun 启动与发现 ＋ 跨-L3 域接口 | `A.1` 残留 · `D.4` · `C.2` 的 L4 半 | — | 🟡 **统一建域与 direct MPI 部分交付；完整目标分别归方向 2/4**。main `daf2f8418907` 保留 #2634 `106d60b81295` supervisor/controller/executor 与 #2639 `3b58364657c1` 统一 allocate_domain、DomainConfig 精确复用；#2656/#2665 的会话和清理证据见 DS-1。方向 2 的 #2594 由 #2668 OPEN head `d4a77803bf1f` 继续承接 Buffer/Tensor 消费、跨 run 使用与释放，其声明 Closes 不作为已合入/验收。#824 的长期 owner 目标与 #2120 保持关联，不因相似自动关闭。方向 4 的 #2659 承接清理闭环、Group 迁移/退役；普通 TCP/daemon 不因此列为删除目标。RA-12/RA-13/RA-14/RA-15、DS-3/DS-9 作为共同合同联验，不拆第二份业务 owner。 |
+ | **DS-5** | A3 HCCS/RoCE ＋ A5 UB/URMA profile | `P2-E` · `D.2` 的 backend 半 | DS-4 | 🟡 **URMA 完成协议、多 backend workspace 与 A2/A3 HBG SDMA 已有新交付**。main `63ffeb8a8bd9` 含 #2779 `42803935df` 逐实际队列 BB/CQE 完成目标、#2790 `9609da8a8b` 分离 SDMA/URMA/RDMA workspace、#2828 `349125e005` HBG SDMA；#2775/#2739 CLOSED。原 #2650/#2675 仍 OPEN，须对已合入内容去重。余量分别归 #2787 URMA 生命周期、#2823 RDMA 清理、#2824 RDMA 真机/CI、#2833 重叠子域、#2673 AIV 队列映射、#2855 batch/flush、#2783 handshake 文件及 #2800 bootstrap。#2854/#2860 跟踪现有 PUT/GET 停滞；#2858 只补诊断。A5 CI 具名日志中五个 URMA ST 通过、ChunkedFetch 跳过；详见 [范围证据](review/track-2716.md)。正常传输、并发、多域和异常清理分别计证，不外推全 backend PASS。 |
+ | **DS-6** | mpirun 启动与发现 ＋ 跨-L3 域接口 | `A.1` 残留 · `D.4` · `C.2` 的 L4 半 | — | 🟡 **统一域接口及 Buffer/Tensor 跨 run 消费已合入，部署闭环仍按方向 4 推进**。main `63ffeb8a8bd9` 的 #2639/#2668 已覆盖 #2594 的统一创建、查找、复用、域 Buffer、跨层描述和使用登记；#2594 CLOSED，不能继续列为 #2668 在飞。#2120 CLOSED 未合入；#824 原需求应对照 RA-12 已交付行为结项核对，不新增 detach 路线。方向 4 的 #2659 仍承接 supervisor 清理与 Group 迁移；普通 TCP/daemon 不预先删除。RA-12/13/14/15、DS-3/9 是共同合同，完整业务目标不重复拆 owner。 |
  | **DS-7** | 移除或重构 64-rank device ABI 上限 | `P3⑤` | DS-2 | 🔵 **独立规模扩展包**。device rank ABI 的 64 上限需要独立兼容与容量验收；不阻止小规模异构域先行。 |
- | **DS-8** | host 参与域的语义（非对等成员） | `D.3` | RA-8 · 条件 RA-2〔仅 A5 direct-map 分支；copy-capable host attachment 走 `OWNER_DELEGATED_COPY`，不需要它〕 | ⛔ **host attachment 的组合验收仍未满足，已有具体在飞路径**。10 月 26 日 #2685 OPEN `88736dbcce54` 为 A3 L4 全局域增加 Host DRAM，依赖 #2668；#2714 OPEN `cf384c94a5e9` 为 direct L2 提供单 A5 同步本地 Host DDR 读取。二者是方向 2 的候选交付，不互相证明对方平台/拓扑，更不关闭 #2657 的跨 rank 异步 fetch。Host 不占 NPU rank；CPU 远端访问与 device 可访问是不同能力。仅 A5 direct-map 分支受 RA-2 条件限制；copy-capable attachment 不等待全部驱动能力。 |
+ | **DS-8** | host 参与域的语义（非对等成员） | `D.3` | RA-8 · 条件 RA-2〔仅 A5 direct-map 分支；copy-capable host attachment 走 `OWNER_DELEGATED_COPY`，不需要它〕 | ⛔ **Host attachment 全组合验收未满足，已有按平台与拓扑拆开的候选**。#2685 head `33b774442ee9` 的 A3 L4 Host DRAM 前置 #2668 已合入；#2818 `fc08af9222cf` 是 direct L2 A3 Host buffer，#2820 `cbdfb94f0590` 是 L3 A3 Host attachment，#2796 `285ff1bd74d1` 为相关组合候选，需协调去重。#2657 已拆 #2730（#2714 `954dca406466`：单 A5 同步本地 MTE）与 #2731（跨 rank 异步 URMA / L3→L2）。本地映射不证明跨 rank fetch 或计算重叠；Host 不占 NPU rank。单 rank URMA provider 尚有限制，但不是硬件永久不可能。copy-capable 路径不等待 RA-2 全部 direct-map 能力。 |
  | **DS-9** | 成员事务执行（唯一设计归属） | `W5` · `P2-B` 的事务半 | DS-1 · DS-2 | 🟡 **PREPARE/IMPORT/COMMIT/ABORT 事务已有，生产闭环未完成**。_allocate_global_domain 的普通/MPI ABORT 失败都调用_record_unreclaimable；SPL-1.6 的“只写 stderr 后继续”已被源码反证。epoch/lease、冻结成员、全员 READY、失败资源可追踪仍需与 DS-1/DS-2 联验，不重复设计现有事务。 ⛱ **挡住 `DS-4` `DS-10`**。 |
  | **DS-10** | 跨节点异构域的组合与验收 | `D.5` 残留 · `P3②` 跨节点半 | DS-4 · RA-9 · **DS-9** | 🟡 **跨机基本栈已交付**（#1456/#1623/#1624）。异构 ResourceBundle 的跨节点组合仍须 session、成员事务、授权及失败回收共同验收；与 RA-9 各负责一半。 |
- | **DS-11** | 同步与异步模型（SDMA / URMA gate） | `D.2` 的 opt-in 半 | — | 🟡 **backend 完成与能力按路径限定，#2708 子项独立验收**。#2674 要求读取已编译 runtime 的 URMA 支持或显式要求后拒绝，不从运行时环境变量猜编译能力；支持编译也不等于 workspace 初始化成功。#2673 与 #2674 不互为前置；#2650/#2675 的 completion/workspace 合流消费此合同。请求已发出、DMA 完成与可安全复用必须分开；#2657 的 Host 注册、issue/data completion/DAG 接入完整归方向 2。已有 #2115 simulator SDMA 不是 URMA 真机证明，#2026 默认策略仍单列。 |
+ | **DS-11** | 同步与异步模型（SDMA / URMA gate） | `D.2` 的 opt-in 半 | — | 🟡 **URMA 默认编译、显式域资源和使用前验证已交付**。main `63ffeb8a8bd9` 的 #2825 `3338ca33fa` 按 #2674 10 月 29 日确认范围删除 A5 URMA 编译开关，保留 `workspace_engines=("urma",)` 资源申请及 `device_context(..., workspace_engines=...)` 使用检查；初始化失败、空 workspace、非 dense-prefix 组合明确拒绝。#2674 CLOSED，不再要求额外 capability query / enable_urma API。SDMA 默认编译，A2/A3 enable_sdma 与 A5 按域选择仍控制资源；RDMA 仍可选。当前 URMA 限 A5 TMR L3 dense-prefix，HBG、L4 async、任意子集及 single-rank provider 路径不因此完成。#2738 的 A2/A3 上下文统一仍独立，#2855 batch 暂存不等于已提交/已完成。 |
 
 ## 4. 执行与常驻运行（`EX`）
 
@@ -99,7 +99,7 @@
  | **EX-4** | 执行接口与 callable 身份收敛 | `l3l4 C.2` 的 `run`/`orch`/callable 半 · `AF3` | — | 🟡 **公共 callable/执行接口仍需收敛验收**。AF3 的 pre-init live-object 与 digest 快照契约由 #1938（OPEN，`47e60a866df1`）提供可失败的观测；run/orch/callable 统一不得靠改名替代身份验证。 |
  | **EX-5** | 删除 heap-coupled scope reclaim | `l3l4 C.3` 的 heap 结构半 | RA-7 · EX-3 | ⛔ **使用者迁完后才能删除结构**。RA-7 提供 §2.5 第 1–4 步，EX-3 提供第 5 步；本项是第 6 步。L2 TMR device GM heap 不在删除范围。 |
  | **EX-6** | 终态回收 · child freeze · nested-shm 枚举 | `P0.2-f4` · `P0.2-f5` · `P0.2-f6` · `P0.2-f7` | — | ✅ **f4–f7 已交付，当前基线复核**。#1689 `f8106e24e` 已提供 `_teardown_worker_tree`：pre-transport 全集先入 post-success journal，失败保留 transport；remote frees 与 session shutdown 分相；child/shm 有独立重试。`add_once(kind, identity, cleanup)` 的数据表含 region/domain/provenance/remote/buffer，不能只 grep `.add("child")`。`test_cancellation_journal.py::test_both_teardown_paths_retry_each_resource_class` 与 namespace/child 顺序案例在树上（本轮读测试，未重跑）。既有 f5 双锁、f6 survivor 重试、f7 确定名与 namespace sweep 均保留；新增 U4/device-workspace 的寿命目标分别归 RA-15/RA-16，不倒灌为 P0.2 遗留。 |
- | **EX-7** | 连续 run 共享 stream 的顺序契约（Track A） | `TrackA-P1` · `TrackA-P2` · `TrackA-P3` · `TrackA-P4` · `TrackA-P5` · `TrackA-P6` · `VLLM-1` · `VLLM-2` · `VLLM-3` · `VLLM-4` 的 admission 半 | EX-3 | 🟡 **四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付**。#2560 `a89c1170c` 补 A3 TMR；#2571 `78365f79c` 拆分 transport/run lifetime；#2596 `a2b0ad2ad` 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 `0eda81c93` 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 RA-16；#2588 DFX 已合入 `545c05a43469`，#2605 vLLM eager 仍为范围外交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复已合入 `ce493639b45f`。 |
+ | **EX-7** | 连续 run 共享 stream 的顺序契约（Track A） | `TrackA-P1` · `TrackA-P2` · `TrackA-P3` · `TrackA-P4` · `TrackA-P5` · `TrackA-P6` · `VLLM-1` · `VLLM-2` · `VLLM-3` · `VLLM-4` 的 admission 半 | EX-3 | 🟡 **四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付**。#2560 `a89c1170c` 补 A3 TMR；#2571 `78365f79c` 拆分 transport/run lifetime；#2596 `a2b0ad2ad` 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 `0eda81c93` 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 RA-16；#2588 DFX 已合入 `545c05a43469`，#2605 vLLM eager 仍为范围外交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复已合入 `ce493639b45f`。 main `63ffeb8a8bd9` 含 #2829 `313499d61d`：物理完成可归还执行 credit，结果观察、原 stream/carrier 与 Program 输出各有生存期；#2844/#2845 补 finalization 异常/一次激活，#2866 `63ffeb8a8b` 提供 backlog 计数。不能把 pipeline_depth 当全部保留内存上限。#2429 当前收窄为 vLLM 消费者；跨仓组合归 #2658，capture 归 #2666，旧 VLLM/TrackA 编号仍保留原合同归属。 |
 
 ## 5. 已交付，保留为验收证据（不另建工作项）
 
@@ -185,28 +185,45 @@ RA-15/RA-12/DS-4 的联验须覆盖独立 grant、graph/replay 引用及 unmap/f
 
 SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13`/`SPL-C14` → DS-5；`SPL-C6`/`SPL-C9`/`SPL-C10` → RA-8；`SPL-C7` → DS-11；`SPL-M2` → DS-8。公共 backend 能力先证明再排期，不因旧表写“新建”而新增重复 provider。
 
-### #2716 原生子树的完整目标与验收索引（2026-10-26）
+### #2716 原生子树与决定评论的完整目标索引（2026-11-04）
 
-这些是来源索引，不是新建实施工作项。`SCOPE` 覆盖整条 issue，`A` 顺序对应其正文 checkbox，`R` 对应具名提案编号；#2674 两种 API 是备选。现有 U1a–U4、DOMAIN-A1–A7 原合同归属保留。GitHub issue 的完整目标所有权优先于本地横切合同索引。
+来源覆盖不表示实现完成。30 节点 / 29 边按逐父子集合核对；checkbox 逐字保存，历史 R 编号不因评论改向而换义。#2673 batch 转 #2855；#2674 的旧 query/enable 备选不再是待办。
 
  | 来源编号 | 本地合同索引 | 业务归属 |
  | -------- | ------------ | -------- |
- | `T2716-SCOPE` · `T2716-A1` · `T2716-A2` · `T2716-A3` · `T2716-A4` · `T2716-A5` · `T2716-A6` | 四方向共同验收 | #2716 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2721-SCOPE` · `T2721-A1` · `T2721-A2` · `T2721-A3` · `T2721-A4` | RA/EX 公共合同 | #2721 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2722-SCOPE` · `T2722-A1` · `T2722-A2` · `T2722-A3` · `T2722-A4` | DS-5（通信合同索引） | #2722 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2723-SCOPE` · `T2723-A1` · `T2723-A2` · `T2723-A3` · `T2723-A4` | EX-2 | #2723 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2724-SCOPE` · `T2724-A1` · `T2724-A2` · `T2724-A3` · `T2724-A4` · `T2724-A5` | DS-6（部署合同索引） | #2724 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2460-SCOPE` · `T2460-A1` · `T2460-A2` · `T2460-A3` · `T2460-A4` · `T2460-A5` · `T2460-A6` · `T2460-A7` · `T2460-A8` · `T2460-A9` | RA-13（U1a–U4 原归属保留） | #2460 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T1931-SCOPE` | RA-15 | #1931 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2720-SCOPE` · `T2720-A1` · `T2720-A2` · `T2720-A3` · `T2720-A4` | RA-11 | #2720 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2594-SCOPE` · `T2594-A1` · `T2594-A2` · `T2594-A3` · `T2594-A4` · `T2594-A5` · `T2594-A6` · `T2594-A7` | DS-6 | #2594 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T824-SCOPE` | RA-12 | #824 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2621-SCOPE` · `T2621-A1` · `T2621-A2` · `T2621-A3` · `T2621-A4` · `T2621-A5` | DS-3（RA-13/RA-15 联验） | #2621 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2657-SCOPE` · `T2657-A1` · `T2657-A2` · `T2657-A3` · `T2657-A4` · `T2657-A5` · `T2657-A6` · `T2657-A7` · `T2657-R1` · `T2657-R2` · `T2657-R3` · `T2657-R4` · `T2657-R5` | DS-8（DS-5/DS-11/RA-15 联验） | #2657 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2708-SCOPE` | DS-5 | #2708 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2673-SCOPE` · `T2673-R1` · `T2673-R2` · `T2673-R3` | DS-5 | #2673 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2674-SCOPE` · `T2674-R1` · `T2674-R2` | DS-11 | #2674 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
- | `T2659-SCOPE` · `T2659-A1` · `T2659-A2` · `T2659-A3` · `T2659-A4` · `T2659-A5` · `T2659-A6` · `T2659-A7` · `T2659-A8` · `T2659-A9` · `T2659-A10` · `T2659-A11` · `T2659-A12` | DS-1（DS-6 迁移联验） | #2659 完整交付不拆 owner；以来源正文和 [track 分析](review/track-2716.md) 为准 |
+ | `T824-SCOPE` | RA-12 | #824 完整目标，父项 #2722 |
+ | `T1931-SCOPE` | RA-15 | #1931 完整目标，父项 #2721 |
+ | `T2460-SCOPE` · `T2460-A1` · `T2460-A2` · `T2460-A3` · `T2460-A4` · `T2460-A5` · `T2460-A6` · `T2460-A7` · `T2460-A8` · `T2460-A9` | RA-13（U1a–U4 原归属保留） | #2460 完整目标，父项 #2721 |
+ | `T2594-SCOPE` · `T2594-A1` · `T2594-A2` · `T2594-A3` · `T2594-A4` · `T2594-A5` · `T2594-A6` · `T2594-A7` | DS-6 | #2594 完整目标，父项 #2722 |
+ | `T2621-SCOPE` · `T2621-A1` · `T2621-A2` · `T2621-A3` · `T2621-A4` · `T2621-A5` | DS-3 | #2621 完整目标，父项 #2722 |
+ | `T2657-SCOPE` · `T2657-A1` · `T2657-A2` · `T2657-A3` · `T2657-A4` · `T2657-A5` · `T2657-A6` · `T2657-A7` · `T2657-R1` · `T2657-R2` · `T2657-R3` · `T2657-R4` · `T2657-R5` | DS-8 | #2657 完整目标，父项 #2722 |
+ | `T2659-SCOPE` · `T2659-A1` · `T2659-A2` · `T2659-A3` · `T2659-A4` · `T2659-A5` · `T2659-A6` · `T2659-A7` · `T2659-A8` · `T2659-A9` · `T2659-A10` · `T2659-A11` · `T2659-A12` | DS-1 | #2659 完整目标，父项 #2724 |
+ | `T2673-SCOPE` · `T2673-R1` · `T2673-R2` · `T2673-R3` | DS-5 | #2673 完整目标，父项 #2708；R3 batch 已转 #2855，当前并发范围以决定评论为准 |
+ | `T2674-SCOPE` · `T2674-R1` · `T2674-R2` | DS-11 | #2674 完整目标，父项 #2708；R1/R2 历史 API 备选已被默认编译/使用校验方案替代，非剩余工作 |
+ | `T2708-SCOPE` | DS-5 | #2708 完整目标，父项 #2722 |
+ | `T2716-SCOPE` · `T2716-A1` · `T2716-A2` · `T2716-A3` · `T2716-A4` · `T2716-A5` · `T2716-A6` | 四方向共同验收 | #2716 完整目标，父项 总入口 |
+ | `T2720-SCOPE` · `T2720-A1` · `T2720-A2` · `T2720-A3` · `T2720-A4` | RA-11 | #2720 完整目标，父项 #2721 |
+ | `T2721-SCOPE` · `T2721-A1` · `T2721-A2` · `T2721-A3` · `T2721-A4` | RA/EX 公共合同 | #2721 完整目标，父项 #2716 |
+ | `T2722-SCOPE` · `T2722-A1` · `T2722-A2` · `T2722-A3` · `T2722-A4` | DS-5 | #2722 完整目标，父项 #2716 |
+ | `T2723-SCOPE` · `T2723-A1` · `T2723-A2` · `T2723-A3` · `T2723-A4` | EX-2 | #2723 完整目标，父项 #2716 |
+ | `T2724-SCOPE` · `T2724-A1` · `T2724-A2` · `T2724-A3` · `T2724-A4` · `T2724-A5` | DS-6 | #2724 完整目标，父项 #2716 |
+ | `T2730-SCOPE` · `T2730-A1` · `T2730-A2` · `T2730-A3` · `T2730-A4` | DS-8 | #2730 完整目标，父项 #2657 |
+ | `T2731-SCOPE` · `T2731-A1` · `T2731-A2` · `T2731-A3` · `T2731-A4` · `T2731-A5` · `T2731-A6` · `T2731-A7` · `T2731-A8` · `T2731-A9` | DS-8 | #2731 完整目标，父项 #2657 |
+ | `T2738-SCOPE` · `T2738-A1` · `T2738-A2` · `T2738-A3` · `T2738-A4` · `T2738-A5` · `T2738-A6` · `T2738-A7` | DS-11 | #2738 完整目标，父项 #2722 |
+ | `T2739-SCOPE` · `T2739-A1` · `T2739-A2` · `T2739-A3` · `T2739-A4` · `T2739-A5` · `T2739-A6` · `T2739-A7` | DS-5 | #2739 完整目标，父项 #2722 |
+ | `T2775-SCOPE` · `T2775-A1` · `T2775-A2` · `T2775-A3` · `T2775-A4` · `T2775-A5` · `T2775-A6` · `T2775-A7` · `T2775-A8` | DS-11 | #2775 完整目标，父项 #2722 |
+ | `T2783-SCOPE` | DS-5 | #2783 完整目标，父项 #2722 |
+ | `T2787-SCOPE` · `T2787-A1` · `T2787-A2` · `T2787-A3` · `T2787-A4` · `T2787-A5` · `T2787-A6` · `T2787-A7` · `T2787-A8` · `T2787-A9` · `T2787-A10` · `T2787-L1` · `T2787-L2` · `T2787-L3` · `T2787-L4` | RA-15 / DS-5 | #2787 完整目标，父项 #2722 |
+ | `T2800-SCOPE` | DS-5 | #2800 完整目标，父项 #2722 |
+ | `T2823-SCOPE` · `T2823-A1` · `T2823-A2` · `T2823-A3` · `T2823-A4` · `T2823-A5` · `T2823-A6` | RA-15 / DS-5 | #2823 完整目标，父项 #2722 |
+ | `T2824-SCOPE` · `T2824-A1` · `T2824-A2` · `T2824-A3` · `T2824-A4` · `T2824-A5` | DS-5 | #2824 完整目标，父项 #2722 |
+ | `T2833-SCOPE` · `T2833-A1` · `T2833-A2` · `T2833-A3` · `T2833-A4` · `T2833-A5` · `T2833-A6` · `T2833-A7` · `T2833-A8` | DS-5 | #2833 完整目标，父项 #2722 |
+ | `T2854-SCOPE` | DS-5 | #2854 完整目标，父项 #2722 |
+ | `T2855-SCOPE` · `T2855-A1` · `T2855-A2` · `T2855-A3` · `T2855-A4` · `T2855-A5` · `T2855-A6` · `T2855-A7` · `T2855-A8` · `T2855-A9` · `T2855-R1` · `T2855-R2` · `T2855-R3` · `T2855-R4` · `T2855-R5` · `T2855-R6` | DS-11 | #2855 完整目标，父项 #2722 |
+ | `T2860-SCOPE` | DS-5 | #2860 完整目标，父项 #2722 |
+ | `C6599735013-SCOPE` · `C6599735013-A1` · `C6599735013-A2` · `C6599735013-A3` · `C6599735013-A4` · `C6599735013-R1` · `C6599735013-R2` · `C6599735013-R3` | DS-5 | #2673 范围决定；正文历史编号保留溯源 |
+ | `C6492946320-SCOPE` | DS-11 | #2674 范围决定；正文历史编号保留溯源 |
+ | `VLLM-CURRENT-A1` · `VLLM-CURRENT-A2` · `VLLM-CURRENT-A3` · `VLLM-CURRENT-A4` · `VLLM-CURRENT-A5` | 范围外 #2666 → #2429；EX-7 / RA-16 接口联验 | vLLM 完整数值/请求生命周期/产物；系统组合 #2658，非重新开发普通 Async |
 
 ## 7. 不属于这三条线的活
 

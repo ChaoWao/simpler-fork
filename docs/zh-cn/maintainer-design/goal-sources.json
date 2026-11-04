@@ -169,7 +169,9 @@
         "U2b",
         "U3",
         "U4"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-22T08:13:46Z"
     },
     "2429": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2429",
@@ -187,7 +189,11 @@
         "VLLM-9",
         "PR-S3-1",
         "TrackA-P6"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "historical_numbering": true,
+      "current_body_sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee",
+      "scope_note": "原编号继续承接，不将历史规划重算为当前独立实施；当前 #2429 已归 #2666 vLLM 消费者，系统组合归 #2658；#2598 CLOSED 未合入，清理合同归 #2659。"
     },
     "2450": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2450",
@@ -199,7 +205,9 @@
         "KV-R3",
         "KV-R4",
         "KV-R5"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-13T13:00:06Z"
     },
     "2316": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2316",
@@ -211,7 +219,9 @@
         "TrackA-P3",
         "TrackA-P4",
         "TrackA-P5"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-22T00:51:29Z"
     },
     "2429-step3": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-5862270515",
@@ -225,7 +235,9 @@
         "VLLM-S3-5",
         "VLLM-S3-6",
         "VLLM-S3-7"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-09-28T02:36:04Z"
     },
     "2425": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2425",
@@ -237,7 +249,9 @@
         "EE-QA-3",
         "EE-QA-4",
         "EE-QA-5"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-13T12:23:59Z"
     },
     "pr2466": {
       "url": "https://github.com/hw-native-sys/simpler/pull/2466",
@@ -250,7 +264,9 @@
         "CAP-R3"
       ],
       "merge": "fb76a54d58569a65934cc6ebade0c129a639a681",
-      "extraction": "Three acceptance obligations preserved from earlier review; main TestThreeRunCapacity + late-disposition/default-scope contracts verified at scan baseline."
+      "extraction": "Three acceptance obligations preserved from earlier review; main TestThreeRunCapacity + late-disposition/default-scope contracts verified at scan baseline.",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-09-29T06:09:07Z"
     },
     "1792": {
       "url": "https://github.com/hw-native-sys/simpler/issues/1792",
@@ -264,7 +280,9 @@
         "LOG-I5",
         "LOG-I6",
         "LOG-I7"
-      ]
+      ],
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-23T08:32:03Z"
     },
     "2496": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2496",
@@ -278,7 +296,9 @@
         "A5SVM-A5",
         "A5SVM-A6"
       ],
-      "extraction": "acceptance checklist order"
+      "extraction": "acceptance checklist order",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-22T08:15:20Z"
     },
     "2497": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2497",
@@ -294,7 +314,9 @@
         "XPSVM-A7",
         "XPSVM-A8"
       ],
-      "extraction": "acceptance checklist order"
+      "extraction": "acceptance checklist order",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-22T08:20:57Z"
     },
     "2498": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2498",
@@ -307,7 +329,9 @@
         "SIMT-A4",
         "SIMT-A5"
       ],
-      "extraction": "acceptance checklist order"
+      "extraction": "acceptance checklist order",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-23T07:47:31Z"
     },
     "2492": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2492",
@@ -319,7 +343,9 @@
         "A2RET-R3",
         "A2RET-R4"
       ],
-      "extraction": "Proposed Fix numbered items 1–4"
+      "extraction": "Proposed Fix numbered items 1–4",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-10T01:48:58Z"
     },
     "2594": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2594",
@@ -334,7 +360,9 @@
         "DOMAIN-A6",
         "DOMAIN-A7"
       ],
-      "extraction": "验收清单顺序；编号不表示已完成"
+      "extraction": "验收清单顺序；编号不表示已完成",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-28T03:52:53Z"
     },
     "2429-final": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2429#issuecomment-6186920862",
@@ -353,7 +381,9 @@
         "VLLM-S3F-A5",
         "VLLM-S3F-A6"
       ],
-      "extraction": "Implementation Stages 五项与 Acceptance and Scope 六项"
+      "extraction": "Implementation Stages 五项与 Acceptance and Scope 六项",
+      "observed_on": "2026-11-04",
+      "updated_at": "2026-10-15T07:31:13Z"
     },
     "pr2598": {
       "url": "https://github.com/hw-native-sys/simpler/pull/2598",
@@ -364,7 +394,11 @@
         "SESSION-R2",
         "SESSION-R3"
       ],
-      "extraction": "command/read acknowledgement、process exit、resource release 三种独立观测结果"
+      "extraction": "command/read acknowledgement、process exit、resource release 三种独立观测结果",
+      "observed_on": "2026-11-04",
+      "historical_numbering": true,
+      "current_body_sha256": "74fdfeaca875bad042279ceb883a56bf572fda065a5c52e51863968359d592d8",
+      "scope_note": "原编号继续承接，不将历史规划重算为当前独立实施；当前 #2429 已归 #2666 vLLM 消费者，系统组合归 #2658；#2598 CLOSED 未合入，清理合同归 #2659。"
     },
     "track2716-2716": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2716",
@@ -379,7 +413,7 @@
         "T2716-A5",
         "T2716-A6"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": null,
       "checkboxes": [
         "四个方向形成明确职责、共同契约和核心子任务，已有工作完成归并与责任确认。",
@@ -388,7 +422,10 @@
         "L2 常驻完成多轮工作、停止、排空与异常收尾验收。",
         "本地／远端 L4→L3→L2 完成连续下发、结果返回、关闭与故障回收验收。",
         "提供可复现入口、支持矩阵及相关性能结果；遗留事项明确后续负责人和接续入口。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "fdcf91c904ebeec74b8a2e7e25a4556deb3d3baf2bea548aebe9e84c22e483d6"
     },
     "track2716-2721": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2721",
@@ -401,14 +438,17 @@
         "T2721-A3",
         "T2721-A4"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2716,
       "checkboxes": [
         "公共执行与资源契约职责清晰，并有真实消费者及可独立验收的交付边界。",
         "已纳入范围的身份、访问、参数绑定和生命周期修改完成迁移，非法或不支持的访问明确拒绝。",
         "接纳、完成、逻辑关闭和物理释放分别确认，已接纳使用获得必要保留。",
         "公共接口变更明确对已有消费者的影响，提供适用范围、回归与迁移证据。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "8d0ee542ca30097670dfb16fe4188f51e3e6103afcac129b4023da4388881efb"
     },
     "track2716-2722": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2722",
@@ -421,14 +461,17 @@
         "T2722-A3",
         "T2722-A4"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2716,
       "checkboxes": [
         "声明平台、runtime、拓扑、后端和版本的支持组合，未支持的组合明确拒绝。",
         "通信域创建、访问、初始化、执行、完成、复用与释放具有端到端证据。",
         "区分请求发起完成与数据传输完成，消费者在约定可见性成立后推进，资源释放覆盖真实最后使用。",
         "覆盖必要的多并发、重复使用、异常与部分初始化清理；每项扩展分别给出验收证据。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81"
     },
     "track2716-2723": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2723",
@@ -441,14 +484,17 @@
         "T2723-A3",
         "T2723-A4"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2716,
       "checkboxes": [
         "同一次 L2 Run 内完成多轮工作投递、执行与结果确认，有证据区分常驻与重复 Run。",
         "投递与完成对应关系、缓冲区复用及访问生命周期明确，持续运行保持进展。",
         "停止接纳、排空、正常退出与异常收尾形成闭环，不提前释放仍在使用的资源。",
         "明确支持的平台、runtime 和交互拓扑，提供可复现入口与证据。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d"
     },
     "track2716-2724": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2724",
@@ -462,7 +508,7 @@
         "T2724-A4",
         "T2724-A5"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2716,
       "checkboxes": [
         "声明支持的本地／远端层级、部署与传输组合，覆盖连续下发及正确结果返回。",
@@ -470,7 +516,10 @@
         "关闭命令确认、进程退出观察、资源释放结果分别表达；未知结果如实保留。",
         "正常退出及约定的超时、崩溃、通信失败与异常回收有可复现证据。",
         "路径删除前完成相应功能迁移和性能核对，文档及示例与实际支持范围一致。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "aca9476666dc35bfc685412764dfdd0d4a2f0d60e95436fc2b3f83d624da1ee5"
     },
     "track2716-2460": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2460",
@@ -488,7 +537,7 @@
         "T2460-A8",
         "T2460-A9"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2721,
       "checkboxes": [
         "U1a: per-invocation request contract and #2454 disposition completed.",
@@ -500,7 +549,10 @@
         "U4: common logical-close contract and correct allocator-specific physical release.",
         "Mapping requests explicitly rejected until implemented; mapping identity/lifetime contract remains intact.",
         "Public examples, reference docs, wire producers and consumers agree; no implicit alternate public Tensor model remains."
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc"
     },
     "track2716-1931": {
       "url": "https://github.com/hw-native-sys/simpler/issues/1931",
@@ -509,9 +561,12 @@
       "ids": [
         "T1931-SCOPE"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2721,
-      "checkboxes": []
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "ab801829ff299dc50a91b2409573b56273a8ae7c0d539b00a3c3d2498dbd3478"
     },
     "track2716-2720": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2720",
@@ -524,18 +579,21 @@
         "T2720-A3",
         "T2720-A4"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2721,
       "checkboxes": [
         "梳理实际需求与主线能力，明确支持场景、公共机制与应用协议的职责边界。",
         "审阅 PR #2635 及已有设计讨论，确认其覆盖范围、待解决问题和必要调整。",
         "补充并确认完整方案、与现有消费者的衔接及验收要求。",
         "结合确认后的方案推进 PR #2635 或必要的后续修改，完成实现、迁移和验收，并回填结论。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40"
     },
     "track2716-2594": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2594",
-      "updated_at": "2026-10-22T08:13:43Z",
+      "updated_at": "2026-10-28T03:52:53Z",
       "body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71",
       "ids": [
         "T2594-SCOPE",
@@ -547,7 +605,7 @@
         "T2594-A6",
         "T2594-A7"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2722,
       "checkboxes": [
         "L3/L4 使用相同建域、访问、复用和退出代码，仅成员构造和任务路由不同。",
@@ -557,18 +615,24 @@
         "L4 获取的 Buffer/Tensor 能经本地或远端 L3 在正确 chip 解析；错误目标和过期引用失败。",
         "覆盖跨两个 run 复用、第二个 run 中释放、异常退出、借用 handle 和 Worker 关闭。",
         "保留现有后端测试，并在支持的仿真/硬件组合上验证端到端行为。"
-      ]
+      ],
+      "observed_state": "CLOSED",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71"
     },
     "track2716-824": {
       "url": "https://github.com/hw-native-sys/simpler/issues/824",
-      "updated_at": "2026-07-20T01:16:19Z",
+      "updated_at": "2026-11-04T06:57:06Z",
       "body_sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc",
       "ids": [
         "T824-SCOPE"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2722,
-      "checkboxes": []
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc"
     },
     "track2716-2621": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2621",
@@ -582,7 +646,7 @@
         "T2621-A4",
         "T2621-A5"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2722,
       "checkboxes": [
         "Existing L3-created chip ownership and allocation identity are preserved; unsupported platform/profile combinations are rejected.",
@@ -590,12 +654,15 @@
         "Non-conflicting computation and transfer make independently observable progress. Host-call overlap is distinguished from device/DMA overlap, and no throughput claim is made without measurement.",
         "In-flight free/close, partial initialization and uncertain completion/cleanup do not release memory still accessible to a backend; successful retirement leaves no extension resources outstanding.",
         "With the extension disabled, the ordinary execution path loads no third-party engine and starts no extension threads."
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "28e14db4b9dbe03deda6dfbb5580482fdf90ba90eca3997bc7997967ead6e4dc"
     },
     "track2716-2657": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2657",
-      "updated_at": "2026-10-26T07:14:36Z",
-      "body_sha256": "97d421a108cc5b94a68973cfb50a49c419d446c10dc00f90d11620709d61f1a1",
+      "updated_at": "2026-10-26T12:38:33Z",
+      "body_sha256": "e2398c8faa2eefbe00015b33cf2319ecc01068e7f9b763dbe05b62444b8689ca",
       "ids": [
         "T2657-SCOPE",
         "T2657-A1",
@@ -611,7 +678,7 @@
         "T2657-R4",
         "T2657-R5"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2722,
       "checkboxes": [
         "A small standalone case reads deterministic local and remote host-table rows correctly, including repeated and boundary IDs, with invalid ranges rejected or handled according to a documented contract.",
@@ -621,7 +688,10 @@
         "A device trace demonstrates useful computation progressing while fetch is outstanding; host-call asynchrony alone is insufficient evidence.",
         "BF16 correctness is established first, then the MXFP8 payload/device-scale path is validated against a reference.",
         "Supported hardware/runtime variants and explicit unsupported behavior are documented. A simulator can validate ordering but does not qualify URMA hardware support."
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "97d421a108cc5b94a68973cfb50a49c419d446c10dc00f90d11620709d61f1a1"
     },
     "track2716-2708": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2708",
@@ -630,13 +700,16 @@
       "ids": [
         "T2708-SCOPE"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2722,
-      "checkboxes": []
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "8021695ca66fbe7201f0bce871b45d47956798c1deebba6433264d3b481316a6"
     },
     "track2716-2673": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2673",
-      "updated_at": "2026-10-25T12:34:26Z",
+      "updated_at": "2026-11-03T09:14:20Z",
       "body_sha256": "746116aff3f07d8995c5e5e36ec3dbe2a526e7d3c981ad845a06d2dab989a730",
       "ids": [
         "T2673-SCOPE",
@@ -644,22 +717,28 @@
         "T2673-R2",
         "T2673-R3"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2708,
-      "checkboxes": []
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "746116aff3f07d8995c5e5e36ec3dbe2a526e7d3c981ad845a06d2dab989a730"
     },
     "track2716-2674": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2674",
-      "updated_at": "2026-10-25T12:34:29Z",
+      "updated_at": "2026-11-04T05:59:52Z",
       "body_sha256": "3fb596a5d69d5b96dde9fb679d370c675aaba5c04587deab400876ba9f4197e2",
       "ids": [
         "T2674-SCOPE",
         "T2674-R1",
         "T2674-R2"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2708,
-      "checkboxes": []
+      "checkboxes": [],
+      "observed_state": "CLOSED",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "3fb596a5d69d5b96dde9fb679d370c675aaba5c04587deab400876ba9f4197e2"
     },
     "track2716-2659": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2659",
@@ -680,7 +759,7 @@
         "T2659-A11",
         "T2659-A12"
       ],
-      "extraction": "SCOPE 为完整目标；A 按正文 checkbox 顺序；R 按具名 Proposed API 编号（2674 为二选一备选，非累计要求）",
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
       "parent": 2724,
       "checkboxes": [
         "每个 rank 的关闭确认、释放结果和作业/进程退出观察彼此独立；无法观测的状态为 UNKNOWN，并注明观察范围，不能把 launcher 的退出码当成每个 rank 的退出码。",
@@ -695,7 +774,413 @@
         "**故障验证。** 分别覆盖正常关闭、L3 清理抛错、L3 在清理中卡住、L4 崩溃、执行 rank 崩溃、MPI Abort、心跳/通信超时、报告缺失/重复/过期、supervisor 收到 TERM/HUP，以及关闭期间日志/报告输出失败。补充真实多机场景，并明确 MPICH/Open MPI 各自验证的范围。",
         "**功能迁移与性能基线。** 将 Group 现有用户场景迁移到 Direct，验证定向/整组提交、远端内存控制、Global CommDomain 等现有语义及相关示例；用相同拓扑和负载测量定向小任务与批量任务的延迟/吞吐，避免为了监督清理而让每条任务额外经 supervisor 转发。",
         "**删除 Group 路径。** 以上能力和迁移验收完成后，删除 Group 专属实现、API、mailbox 协议、示例及对应测试/CI 配置；同步文档，说明原有调用方式如何迁移。该项单独交付，不与所有清理改动挤进一个 PR。"
-      ]
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "previous_body_sha256": "48696921d7b98b2fd57a53f20fe14759059b9ecd6491935e170470e273d4dad2"
+    },
+    "track2716-2730": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2730",
+      "updated_at": "2026-10-26T12:38:20Z",
+      "body_sha256": "46cc7fd5bb2c909741f9af71c39952ab0126e1e2742d25982a68e90519337f20",
+      "ids": [
+        "T2730-SCOPE",
+        "T2730-A1",
+        "T2730-A2",
+        "T2730-A3",
+        "T2730-A4"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2657,
+      "checkboxes": [
+        "Local single-device gather and dependent consumer produce correct BF16/MXFP8 results, including views and boundary cases.",
+        "No whole-table Device replica or steady-state whole-table H2D; multi-table and multi-run mapping reuse is verified.",
+        "Capability, permissions, interrupted reservation, fork safety, early release, partial initialization and failure cleanup are verified.",
+        "Required regression checks are resolved or explicitly triaged, and #2714 is merged with its supported scope documented."
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2731": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2731",
+      "updated_at": "2026-10-26T12:38:25Z",
+      "body_sha256": "2d65ab1456ebd9ab6fde1eb8c243f20f33bc66829476cace5f6a44caf50a912c",
+      "ids": [
+        "T2731-SCOPE",
+        "T2731-A1",
+        "T2731-A2",
+        "T2731-A3",
+        "T2731-A4",
+        "T2731-A5",
+        "T2731-A6",
+        "T2731-A7",
+        "T2731-A8",
+        "T2731-A9"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2657,
+      "checkboxes": [
+        "A real L3 orchestration dispatches to distinct L2 processes/ranks on the same host; a consuming A5 reads deterministic Host rows exposed by another rank through URMA.",
+        "Hardware evidence identifies ranks/devices, exposing and consuming endpoints, actual data path, supported CANN/driver/PTO versions and registration constraints. Private copies or a direct same-process L2 run cannot substitute.",
+        "BF16, repeated/boundary IDs, invalid ranges, view offsets, multiple tables/runs and the existing MXFP8 payload/Device-scale consumer are verified.",
+        "No whole-table Device replica, steady-state whole-table H2D/IPC copy or per-call registration; persistent resources are reused safely.",
+        "Delayed transfer completion cannot expose output early. A device trace verifies asynchronous progress and useful independent computation; Host-call asynchrony alone is insufficient.",
+        "Parent and child lifetimes cover concurrent readers, early release, one endpoint closing, partial preparation, submission refusal and completion/teardown failures.",
+        "TMR passes independently. HBG is supported only after a reusable adaptation and separate acceptance; otherwise document and reject the unsupported combination.",
+        "PR1 local MTE OFF/ON and existing Device URMA regressions pass, and unsupported cross-rank configurations fail explicitly.",
+        "Runnable L3 example, control/resource contracts, exact supported topology and test evidence are published."
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2738": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2738",
+      "updated_at": "2026-10-27T03:02:42Z",
+      "body_sha256": "8d451a1f0ccb627e80c9e81ab2a77cb253e8fb1a0ec30541226bd207a0607c85",
+      "ids": [
+        "T2738-SCOPE",
+        "T2738-A1",
+        "T2738-A2",
+        "T2738-A3",
+        "T2738-A4",
+        "T2738-A5",
+        "T2738-A6",
+        "T2738-A7"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "说明并保留现有启用开关、构建默认值和失败行为；A2/A3 `enable_sdma=False` 不创建 SDMA streams，分配同步通信域也不得绕过此约束。",
+        "明确 manager 的所有权、上下文中的非拥有地址引用，以及初始化、发布、域释放、Worker finalize 的顺序；不重复创建或重复释放资源。",
+        "给出无通信域的 L2 单卡预取如何使用统一上下文的兼容设计，保留其能力；不得为了取得 workspace 而强迫业务创建 HCCL 通信域。若该约束无法满足，记录取舍后再决定是否迁移。",
+        "核对所有受影响 runtime、静态/动态/派生通信上下文及 kernel 使用者，明确实际支持和验证范围。",
+        "保持 `CommContext` 与 PTO 对应结构的 ABI 约束，明确兼容策略。",
+        "验证单卡预取、跨卡 SDMA、纯同步通信域及资源释放；保留 A2/A3 的 SDMA 故障清理回归，不将其结论直接外推到 A5。",
+        "更新源码注释和文档，修正仍将已迁移 demo 描述为旧 workspace overlay 的陈旧表述。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2739": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2739",
+      "updated_at": "2026-11-02T07:18:21Z",
+      "body_sha256": "b4017de3cea04c5dee93eb2721a9bfec40b94bbf4955ef16dc0d21fdd32afb3b",
+      "ids": [
+        "T2739-SCOPE",
+        "T2739-A1",
+        "T2739-A2",
+        "T2739-A3",
+        "T2739-A4",
+        "T2739-A5",
+        "T2739-A6",
+        "T2739-A7"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "实现 simpler-owned workspace 数组、大小/偏移约束和按后端访问入口。",
+        "解除共享字段造成的构建互斥，验证 workspace 独立寻址、不相互覆盖及无隐式异步初始化。",
+        "A5 SDMA/URMA 在同一 Worker 内完成不同后端任务及具有明确依赖的混合 DAG。",
+        "同一 kernel 的 SDMA/URMA 请求验证各自完成条件和下游依赖。",
+        "覆盖 domain manager 所有权、多 domain 隔离、部分初始化与 peer import/upload 失败回滚；明确 CPU mock 与真实底层生命周期验证的边界。",
+        "现有 6 个 URMA ST、SDMA/URMA 示例和 2 个混合用例纳入 A5 CI，10 个子用例实际通过，无跳过。",
+        "更新 A2/A3、A5、仿真支持范围、生成 kernel 的上下文偏移及同构建更新文档。"
+      ],
+      "observed_state": "CLOSED",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2775": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2775",
+      "updated_at": "2026-10-30T09:01:21Z",
+      "body_sha256": "7f12662957b91db801c66c76dc9ad79b696f6897ffe521d5abed11b1be8c37cc",
+      "ids": [
+        "T2775-SCOPE",
+        "T2775-A1",
+        "T2775-A2",
+        "T2775-A3",
+        "T2775-A4",
+        "T2775-A5",
+        "T2775-A6",
+        "T2775-A7",
+        "T2775-A8"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "M1/M2：workspace 大小取自 manager，提交端及 scheduler 直接使用当前 pin 的 ISA 类型，保证 ABI 和队列布局一致，避免维护重复镜像。",
+        "M3/M4：保留全部相关 jetty 的独立 BB/CQE 目标，全部目标成功完成后才释放输出依赖；保留主线已有的累计完成水位判断能力。",
+        "M5：区分空请求、提交失败、有效事件和回绕零值；不静默成功。明确 ISA 接口的实际支持边界。",
+        "M6：容量不足、注册失败和部分提交具备确定性覆盖；已提交工作可追踪并能安全收尾，不用同步 Wait fallback 掩盖 deferred 注册失败。",
+        "M7：错误 CQE 不推进成功水位；保留 scheduler 的失败终止行为，不释放失败任务的正常输出依赖。",
+        "回归条件：多个未完成请求、独立 BB/CQE、序号/owner 回绕、延迟观察后的 CQ 槽位复用、连续提交及跨 256 MiB 分片；不以这些用例的存在宣称主线对应功能全部缺失或已上板故障。",
+        "在支持范围内明确 AIV/AICPU 的 CQ 回收责任；对同队列交错进行核对/测试，再决定是否需要额外协调或 ISA 支持。",
+        "M8：在 `tests/st/a5/tensormap_and_ringbuffer/urma_deferred_completion` 增加 URMA 回归用例，保留 examples 中的简单示例；在 A5DT 独立 URMA 构建上直接使用 pytest 执行，核对构建配置、ISA pin 和全部预期用例，保留构建日志及 pytest 各 resource child 的实际结果；缺能力、缺用例、skip、零执行不得作为本地验收通过。无需新增专用验收工具。当前不在 CI 执行 URMA 用例；依赖 #2739 完成 SDMA/URMA 共存后再开启 CI 覆盖。RDMA 未设置时使用默认 OFF。"
+      ],
+      "observed_state": "CLOSED",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2783": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2783",
+      "updated_at": "2026-10-30T07:35:51Z",
+      "body_sha256": "a46714c7a981f26afd1d23cad043ac8870de4c01d796f388577fa9537806b1ee",
+      "ids": [
+        "T2783-SCOPE"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2787": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2787",
+      "updated_at": "2026-11-02T08:24:53Z",
+      "body_sha256": "e24fa8786336b545c953e9682e704421f90365ab3fec84289af0e6b7950c944d",
+      "ids": [
+        "T2787-SCOPE",
+        "T2787-A1",
+        "T2787-A2",
+        "T2787-A3",
+        "T2787-A4",
+        "T2787-A5",
+        "T2787-A6",
+        "T2787-A7",
+        "T2787-A8",
+        "T2787-A9",
+        "T2787-A10",
+        "T2787-L1",
+        "T2787-L2",
+        "T2787-L3",
+        "T2787-L4"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "明确 workspace/notify pool、注册内存、channel、device context、local/peer windows、communicator 和 caller-owned stream 的 owner 及依赖关系，覆盖正常和异常路径。",
+        "成功释放有足够的停止/完成与解除注册引用证据：停止新提交、确认执行和相关网络请求结束、解除通信资源引用之后，才 Finalize/free/unmap。网络 drain 依据应与 #2775 的实际 BB/CQE/错误语义一致，不能继续采用旧版单行/单 jetty 假设。",
+        "保留并复用现有 ChipWorker 回收安全检查及 native run 失败收尾；不增加可绕过这些检查的另一条释放路径。",
+        "各部分 Init 失败阶段的已创建资源仍有明确 owner；只有确实无外部引用的资源可以立即清理；已建立注册/channel 的资源遵守相应销毁顺序。",
+        "domain release 的逻辑撤销、等待在途使用、物理回收完成、清理失败均有明确语义。正常物理回收不依赖 Worker 退出；只有必要的不确定资源才能保留，并明确 owner、收尾边界、资源代价和 allocation ID 复用规则。",
+        "同一 Worker 内重复 allocate/release 后，domain 自有资源回到创建前水平，共享资源有独立且稳定的计账；释放 domain A 不影响仍在使用的 domain B 和基础 communicator。",
+        "stop/drain/注销或 HCCL destroy 失败时，返回可观察错误并保留仍需保留的资源及 owner；后续 close/异常析构/对象销毁不会提前 free 或双重释放。复用既有不确定资源保留机制，或给出必要的新策略及资源代价；不默认要求永久 quarantine。",
+        "从 backend 到 ChipWorker/Python 的错误与所有权转移一致；不在 backend 仍需持有资源时无条件忘记唯一 handle。重复 close/release、部分成功后再次收尾的实际支持行为有测试和文档。",
+        "故障注入覆盖 L1–L4 的生产路径和现有回收 guard，验证操作顺序与恰好一次释放；不能仅用源码字符串检查或独立 helper 的测试代替调用链验证。",
+        "A5DT 本地 URMA=ON 验证记录真实源码、ISA pin、构建/加载产物和 pytest 执行结果；明确 normal lifecycle 与故障注入的不同证据范围。保留 SDMA/URMA=OFF 配置的回归覆盖；与 #2739/#2790 协调 URMA=ON CI 接入，避免覆盖或撤销其共存与测试配置。正常传输通过不能替代生命周期失败路径验收。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2800": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2800",
+      "updated_at": "2026-10-31T12:32:48Z",
+      "body_sha256": "624d8c15e937513cdbc39e33d4665c4055ee0d2ddfb410d7ef02c924f6bb136e",
+      "ids": [
+        "T2800-SCOPE"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2823": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2823",
+      "updated_at": "2026-11-02T07:32:02Z",
+      "body_sha256": "bb0331eb75fbc8b58502225c2a068fb5ef52c3dcc2c1d7ba2a10b029cb9141db",
+      "ids": [
+        "T2823-SCOPE",
+        "T2823-A1",
+        "T2823-A2",
+        "T2823-A3",
+        "T2823-A4",
+        "T2823-A5",
+        "T2823-A6"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "使用真实 HNS1825 manager + 有状态 HCOMM/ACL mock，逐阶段注入 channel destroy、notify/symmetric memory unregister、endpoint destroy、device memory free 失败，检查操作顺序、剩余 owner 和引用关系。",
+        "覆盖 endpoint/registration/channel 创建后的部分 Init 失败、内部回滚失败及再次 Init；不以 Init 返回 false 或 workspace size 为 0 推断没有剩余资源。",
+        "覆盖生产 domain rollback/release/comm_destroy 路径的错误向上传播；不能仅测试独立 helper 或替换掉真实 manager。",
+        "按实际 API 契约验证重复收尾/部分成功后的行为，无双重释放、无盲目重试、无失去 owner 的未完成清理。",
+        "正常 allocate/release 循环回收 domain 自有资源，释放一个 domain 不影响其他仍存活 domain；保留既有 run completion/reclamation guards。",
+        "在具备可用 HNS1825/RoCE 配置的 A5 环境验证正常初始化、传输、domain release 和 Worker close，记录源码/pin/产物。#2790 报告的 A5DT 环境缺少可用 RoCE bootstrap 配置，不能把 SDMA/URMA 正常测试计为 RDMA 验收；无需在共享设备上强行制造驱动故障。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2824": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2824",
+      "updated_at": "2026-11-02T07:16:21Z",
+      "body_sha256": "6e19776ba1b903dc69d715f3b4c3175aad2025c14f0ded60130e4890917dcd63",
+      "ids": [
+        "T2824-SCOPE",
+        "T2824-A1",
+        "T2824-A2",
+        "T2824-A3",
+        "T2824-A4",
+        "T2824-A5"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "明确并配置支持 HNS1825/RoCE 的测试环境，记录所需拓扑、设备和 bootstrap 配置方式，不在仓库提交环境凭据。",
+        "在 RDMA=ON 的同一构建中运行已有 demo，两种规模均实际执行并校验读写结果、异步完成和下游依赖。",
+        "验证同一 Worker 的独立 RDMA 与 SDMA/URMA domains，包括明确依赖的混合任务、workspace 隔离及域释放；记录真实并发验证范围和不支持的组合。",
+        "在具备上述环境的 CI 中启用 RDMA 硬件验证，确保目标用例未因开关/环境缺失跳过；使用子用例结果作为验收证据。",
+        "更新文档和验证记录，分别注明共同编译、同域支持、跨域运行与硬件传输的覆盖范围。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2833": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2833",
+      "updated_at": "2026-11-02T12:35:00Z",
+      "body_sha256": "c569257d5c8f2822d945df24c1ec07379ac61ad9f42ddb5cab0002b60ba74753",
+      "ids": [
+        "T2833-SCOPE",
+        "T2833-A1",
+        "T2833-A2",
+        "T2833-A3",
+        "T2833-A4",
+        "T2833-A5",
+        "T2833-A6",
+        "T2833-A7",
+        "T2833-A8"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "ABC 三卡场景分别通过 AB、BC 的实际 URMA TGET/TPUT 和下游消费者校验，证明域内 rank、peer 寻址及数据范围正确。",
+        "验证非前缀成员与合法重排序，至少包含 `[1,2]` 和 `[2,1]`；覆盖 B 在两个域内 rank 不同的情况。",
+        "AB、BC 同时存活，顺序/交替传输各自的数据和信号，验证无串域寻址或注册/channel 资源干扰。是否覆盖真正并发传输单独记录。",
+        "释放 AB 后继续使用 BC，重新创建 AB 后两者仍可用；对称覆盖释放 BC 后继续使用 AB；多轮创建/释放后自有资源回到稳定水平。",
+        "在 #2787 的生命周期契约上，对域初始化/释放失败做确定性测试：错误、部分资源 owner 和其他存活域的状态保持一致。测试真实 manager/注册交互，不能仅凭两个不同 device context 指针或源码字符串断言隔离成立。",
+        "保留既有 domain API、完成协议及 SDMA/多后端行为；本 issue 不扩大到 RDMA 跨域共存或同一 kernel 多后端传输。",
+        "在 A5DT 用隔离 checkout、实际 pin 和 project-local venv，经架构预检及 task-submit 运行至少三卡测试；记录构建/加载产物与 pytest 实际子用例结果。skip、零执行或原示例通过不替代 URMA 多域验收；CPU/mock 与硬件证据分别记录。",
+        "更新文档，区分成员重叠、同时存活与时间并发，明确实际支持范围和验证结果。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2854": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2854",
+      "updated_at": "2026-11-04T10:32:20Z",
+      "body_sha256": "73ca54f4e502c3853626d3f900785c564ff8dc15edfac2242156854666e2d00c",
+      "ids": [
+        "T2854-SCOPE"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2855": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2855",
+      "updated_at": "2026-11-03T12:31:03Z",
+      "body_sha256": "a5f1091015cd53bdfec4c72f2b22c9b13e711ab2b6fbcd0a98150eee4fad5bc6",
+      "ids": [
+        "T2855-SCOPE",
+        "T2855-A1",
+        "T2855-A2",
+        "T2855-A3",
+        "T2855-A4",
+        "T2855-A5",
+        "T2855-A6",
+        "T2855-A7",
+        "T2855-A8",
+        "T2855-A9",
+        "T2855-R1",
+        "T2855-R2",
+        "T2855-R3",
+        "T2855-R4",
+        "T2855-R5",
+        "T2855-R6"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [
+        "单 domain、单 AIV、同 peer 的多次 TPUT，可对对端不同区域正确写入，并由下游消费者验证完整数据及区域边界。",
+        "覆盖 batch=1、多请求批次、非整批尾部、零长度请求、显式结束和阈值提交，已暂存但未发布时不会提前完成依赖。",
+        "覆盖多个物理 flush、实际多 jetty 完成、队列回绕及超过单 WQE 大小的分片；测试报告明确 CPU 构造与硬件执行范围。",
+        "提前返回、容量不足、部分提交/flush/注册失败均有确定性回归；已发布与未发布请求的状态、错误及资源生存期清楚。",
+        "换 peer/操作的边界具备验证，不违反当前 pin 的同 peer batch 约束；不以扩大成跨 peer 合批作为首版前置。",
+        "基于生产提交/完成路径测试，保留立即提交和现有 URMA 用例回归；不只测试独立 mock helper。",
+        "在 A5DT 隔离 checkout 和项目 venv 上，经架构预检及 task-submit 执行真实 URMA 正确性和性能测试；记录实际 main/PR、ISA/CANN、产物、设备、规模及执行结果，skip/零执行不计通过。",
+        "用相同总请求数、总字节数和数据校验比较立即提交与多个 batch 大小，报告每个规模的吞吐/延迟及尾延迟、提交次数的证据来源；记录有收益和退化的区间。源码操作次数不能代替硬件性能证明，当前尚无本方案的已测收益。",
+        "文档说明 API、flush/失败边界、buffer 生存期和支持范围；不宣称一次 doorbell 覆盖所有队列或批量必然降低所有场景延迟。"
+      ],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-2860": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2860",
+      "updated_at": "2026-11-04T08:38:48Z",
+      "body_sha256": "344e6c58b14ad708a2e62b8002e6c757750c5721dde50bc76b4f4f2ac530abf5",
+      "ids": [
+        "T2860-SCOPE"
+      ],
+      "extraction": "SCOPE 覆盖完整正文；A 按 checkbox 顺序；R 为具名提案编号；L 为生命周期问题场景。历史提案的覆盖归属不等于当前待实现，决定性评论另索引。",
+      "parent": 2722,
+      "checkboxes": [],
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04"
+    },
+    "track2716-comment-6599735013": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2673#issuecomment-6599735013",
+      "body_sha256": "d282104fbf0533bff6a024f62b122b2e2a6a190d02ded847ade845f5ecf14824",
+      "ids": [
+        "C6599735013-SCOPE",
+        "C6599735013-A1",
+        "C6599735013-A2",
+        "C6599735013-A3",
+        "C6599735013-A4",
+        "C6599735013-R1",
+        "C6599735013-R2",
+        "C6599735013-R3"
+      ],
+      "checkboxes": [
+        "两个 AIV 使用同一 domain/workspace，同时向同一个远端 peer 的不同区域执行 TPUT，数据及下游消费者正确，队列归属不冲突。",
+        "一个 AIV 在同一 domain 内经共享池访问至少两个 peer，验证目标寻址、数据范围与完成状态；多 peer 不是多个 communication domain。",
+        "覆盖并发任务、任务切换/复用、多个未完成请求、队列回绕及实际多 jetty 完成。对 MIX/subblock 或其他执行模式，明确测试和实际支持范围。",
+        "在 A5DT 对当前实际 main/PR、ISA/CANN 和 runtime 产物做真实 URMA 验收；记录设备、用例及子用例结果，CPU 构造、源码分析或 skip 不替代硬件并发证明。"
+      ],
+      "updated_at": "2026-11-03T09:14:20Z",
+      "observed_on": "2026-11-04",
+      "extraction": "决定评论优先于正文旧提案；SCOPE/checkbox/编号全部覆盖"
+    },
+    "track2716-comment-6492946320": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2674#issuecomment-6492946320",
+      "body_sha256": "4cd9e8fe8c6ec031fe261a8a727861fe6fac9b78557852e7d5e822b4eb6df4b1",
+      "ids": [
+        "C6492946320-SCOPE"
+      ],
+      "checkboxes": [],
+      "updated_at": "2026-10-29T09:26:21Z",
+      "observed_on": "2026-11-04",
+      "extraction": "决定评论优先于正文旧提案；SCOPE/checkbox/编号全部覆盖"
+    },
+    "2429-current": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+      "body_sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee",
+      "updated_at": "2026-10-27T01:44:11Z",
+      "ids": [
+        "VLLM-CURRENT-A1",
+        "VLLM-CURRENT-A2",
+        "VLLM-CURRENT-A3",
+        "VLLM-CURRENT-A4",
+        "VLLM-CURRENT-A5"
+      ],
+      "checkboxes": [
+        "固定形状 vLLM → Simpler decode 接入实现经审查合入；artifact ABI、权重/KV/page 映射、logits、caller context/stream、所有权及 shutdown 合同明确。",
+        "同权重、精度及约定数值语义下，共同前缀 logits/KV 诊断完成；两轮、每轮 16 请求、每请求 128 token 的自由生成 token 完全一致，不放宽已有判据。",
+        "固定 cohort 的持续执行、私有资源和最后消费者退休，以及失败／partial submit／close 的必要分支有可复现证据；与 #2715 协作覆盖真实 Engine 生命周期。",
+        "明确并验收约定的动态请求范围，包括适用的 batch/shape 变化、请求替换、cancellation/failure/close；限制显式记录，不能把固定 cohort 外推成任意动态支持。",
+        "向 #2666、#2715、#2658 提供精确源码／构建／artifact 身份、可执行入口、支持矩阵与证据链接；必要剩余项有明确接续入口。"
+      ],
+      "observed_on": "2026-11-04",
+      "extraction": "当前 vLLM 消费者五项完成标准；旧 VLLM/TrackA 编号保留原合同与历史出处"
     }
   },
   "explicit_sources": {
@@ -868,25 +1353,39 @@
     "missing_base": "cannot_conclude"
   },
   "track2716_scan": {
-    "date": "2026-10-26",
-    "baseline": "daf2f8418907592b5b881792bd9a2a0a5ea8f19d",
+    "date": "2026-11-04",
+    "baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
     "nodes": [
+      824,
+      1931,
+      2460,
+      2594,
+      2621,
+      2657,
+      2659,
+      2673,
+      2674,
+      2708,
       2716,
+      2720,
       2721,
       2722,
       2723,
       2724,
-      2460,
-      1931,
-      2720,
-      2594,
-      824,
-      2621,
-      2657,
-      2708,
-      2673,
-      2674,
-      2659
+      2730,
+      2731,
+      2738,
+      2739,
+      2775,
+      2783,
+      2787,
+      2800,
+      2823,
+      2824,
+      2833,
+      2854,
+      2855,
+      2860
     ],
     "edges": [
       [
@@ -938,18 +1437,76 @@
         2708
       ],
       [
+        2722,
+        2738
+      ],
+      [
+        2722,
+        2739
+      ],
+      [
+        2722,
+        2783
+      ],
+      [
+        2722,
+        2775
+      ],
+      [
+        2722,
+        2787
+      ],
+      [
+        2722,
+        2800
+      ],
+      [
+        2722,
+        2823
+      ],
+      [
+        2722,
+        2824
+      ],
+      [
+        2722,
+        2833
+      ],
+      [
+        2722,
+        2855
+      ],
+      [
+        2722,
+        2854
+      ],
+      [
+        2722,
+        2860
+      ],
+      [
+        2724,
+        2659
+      ],
+      [
+        2657,
+        2730
+      ],
+      [
+        2657,
+        2731
+      ],
+      [
         2708,
         2673
       ],
       [
         2708,
         2674
-      ],
-      [
-        2724,
-        2659
       ]
     ],
-    "scope": "recursive native child tree and explicit main-target delivery PRs; not a full-goal source refresh"
-  }
+    "scope": "recursive native tree, current bodies and scope decisions; main-target PR state/ancestry and focused source/CI evidence"
+  },
+  "numbering_scan_date": "2026-11-04",
+  "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0"
 }
