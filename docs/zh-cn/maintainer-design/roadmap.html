@@ -263,6 +263,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 
 <section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
 <section id="communication-references"><h2>部署与通信 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/ds-handoff.md">11 项历史目标与评论交接</a>；设计问题待负责人确认。</p><div id="communication-reference-list"></div></section>
+<section id="execution-references"><h2>执行与常驻 · GitHub 跟踪入口</h2><p>业务进度在 GitHub；<a href="review/ex-handoff.md">七项目标与历史证据交接</a>。方案问题待负责人确认。</p><div id="execution-reference-list"></div></section>
 <section id="integration-references"><h2>跨仓模型 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/qwen-handoff.md">Q1–Q4 / C2b 验收交接</a>。</p><div id="integration-reference-list"></div></section>
 <h2>轨道与阶段<span class="hint">行 = 轨道，格 = 阶段（宽度不编码任何量）</span></h2>
 <div class="board" id="board"></div>
@@ -311,75 +312,6 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <script type="application/json" id="data">
 {
   "tracks": [
-    {
-      "name": "EX 执行与常驻运行",
-      "stages": [
-        {
-          "id": "EX-1",
-          "nm": "responsive local edge：覆盖面与验收",
-          "p": "flight",
-          "hnote": "🟡 <b>local mailbox/control 与 grant 传输已有，扩展组合验收未完成</b>。#2571 将固定请求帧与按 grant 的 run-state entries 分离；NEXT_LEVEL 构造传 entry.granted_sets，SUB 构造仍使用默认值。旧 task_frame_count 双帧描述已不适用于当前构造。#2116 OPEN <code>6b8d56d4b54f</code> 承接 control extension；nested/remote/sim 的长期任务、取消、health 按组合验收。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "EX-2",
-          "nm": "单 L2 Run 多轮工作 ＋ STOP/drain",
-          "p": "flight",
-          "hnote": "🟡 <b>单 L2 Run 多轮交互已有示例，通用常驻能力未验收</b>。10 月 26 日 main <code>daf2f8418907</code> 的 worker_chip_message_queue 只 submit_next_level 一次，随后多轮 enqueue；chip orchestration 的 for (;;) 处理 DATA/STOP，停止前 finish_pending_inputs 并检查 drained。它是 #2723 的现有基座，不等于完整公共方案：work/completion 关联、槽位寿命与复用、背压/progress、停止准入/drain/异常退出及支持矩阵须共同验收。L3 进程/mailbox 多次接任务、重复 Worker.run 和单 L2 Run 常驻分别计证；AF1 的 idle 阻塞唤醒保留为历史交接，不再代指常驻目标。派发路径不得 sleep/backoff；#2720/#2720 不预先批准 SPSC 公共 ABI。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "residual"
-        },
-        {
-          "id": "EX-3",
-          "nm": "admission · 定向调度 · 零 heap 运行验收",
-          "p": "flight",
-          "hnote": "🟡 <b>定向与 whole-run FIFO 已交付；零 hierarchical heap 的运行验收仍单列</b>。这是 feature_roadmap §2.5 第 5 步，不要求先删除结构。#1137 已 CLOSED 且原属 L2 polling 优化。#2476 <code>dfa63eb81</code> 已合入：retention 测试使用 1024/4096/8192 递增窗口、无在飞 read 基准及诊断；#2470 已 CLOSED。合入测试不等于所有 overlap 或性能目标完成，EX-7 的真实 enqueue/refill 仍按其独立验收。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "EX-4",
-          "nm": "执行接口与 callable 身份收敛",
-          "p": "flight",
-          "hnote": "🟡 <b>公共 callable/执行接口仍需收敛验收</b>。AF3 的 pre-init live-object 与 digest 快照契约由 #1938（OPEN，<code>47e60a866df1</code>）提供可失败的观测；run/orch/callable 统一不得靠改名替代身份验证。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "EX-5",
-          "nm": "scope 回收机制的必要性与迁移",
-          "p": "todo",
-          "hnote": "具体机制按 #2721 设计讨论确认；验收无提前回收与无界滞留，不预设两套 Arena 或删除全部层级 heap。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "EX-6",
-          "nm": "journal 覆盖面 ＋ 有序 commit barrier",
-          "p": "done",
-          "hnote": "✅ <b>f4–f7 已交付，当前基线复核</b>。#1689 <code>f8106e24e</code> 已提供 <code>_teardown_worker_tree</code>：pre-transport 全集先入 post-success journal，失败保留 transport；remote frees 与 session shutdown 分相；child/shm 有独立重试。<code>add_once(kind, identity, cleanup)</code> 的数据表含 region/domain/provenance/remote/buffer，不能只 grep <code>.add(\"child\")</code>。<code>test_cancellation_journal.py::test_both_teardown_paths_retry_each_resource_class</code> 与 namespace/child 顺序案例在树上（本轮读测试，未重跑）。既有 f5 双锁、f6 survivor 重试、f7 确定名与 namespace sweep 均保留；新增 U4/device-workspace 的寿命目标分别归 #2460/#2666，不倒灌为 P0.2 遗留。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "EX-7",
-          "nm": "连续 run 共享 stream 的顺序契约",
-          "p": "flight",
-          "hnote": "🟡 <b>四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付</b>。#2560 <code>a89c1170c</code> 补 A3 TMR；#2571 <code>78365f79c</code> 拆分 transport/run lifetime；#2596 <code>a2b0ad2ad</code> 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 <code>0eda81c93</code> 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 #2666；#2588 DFX 已合入 <code>545c05a43469</code>，#2605 vLLM eager 仍为范围外交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复已合入 <code>ce493639b45f</code>。 main <code>63ffeb8a8bd9</code> 含 #2829 <code>313499d61d</code>：物理完成可归还执行 credit，结果观察、原 stream/carrier 与 Program 输出各有生存期；#2844/#2845 补 finalization 异常/一次激活，#2866 <code>63ffeb8a8b</code> 提供 backlog 计数。不能把 pipeline_depth 当全部保留内存上限。#2429 当前收窄为 vLLM 消费者；跨仓组合归 #2658，capture 归 #2666，旧 VLLM/TrackA 编号仍保留原合同归属。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        }
-      ],
-      "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
-    },
     {
       "name": "✅ Worker 异步准备流水",
       "note": "让 P(N+1) 与 S(N) 重叠 —— 结构性阶段已全部交付，保留为交付记录",
@@ -1055,7 +987,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "t": "三种资源不能混账",
       "b": [
         "#2721 核定临时／持久／异步使用寿命，不预设分 arena；#2666 管执行 workspace 交接；#2460 管公共 Buffer 的逻辑关闭与物理释放。",
-        "EX-7 的 early enqueue 与 clone-request 需要 #2666 的容量与退休保证；设备 operator FIFO 串行和 host 准备重叠分别验收。"
+        "#2658 的 early enqueue 与 clone-request 需要 #2666 的容量与退休保证；设备 operator FIFO 串行和 host 准备重叠分别验收。"
       ]
     },
     {
@@ -1063,8 +995,8 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "常驻控制、域复用与设备窗口清零",
       "b": [
-        "EX-1/EX-2 提供 responsive control 与 STOP/drain；#824/#2722 提供域 ownership。",
-        "跨 run 存活不直接证明 K=2 安全：复用窗口清零、completion 和最后消费者必须符合设备 FIFO 及 EX-7 的验收。"
+        "#2721/#2723 提供 responsive control 与 STOP/drain；#824/#2722 提供域 ownership。",
+        "跨 run 存活不直接证明 K=2 安全：复用窗口清零、completion 和最后消费者必须符合设备 FIFO 及 #2658 的验收。"
       ]
     },
     {
@@ -1134,7 +1066,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "DFX 与 serving adapter",
         "d": "独立跟踪，不把程序 admission 或资源 ownership 再建一份。",
-        "n": "Qwen 四仓整体验收 → #2658；vLLM adapter → #2429/#2666；程序合同 → EX-7。continuous DFX → #2465；T7 跨 host → #2217/#2304。"
+        "n": "Qwen 四仓整体验收 → #2658；vLLM adapter → #2429/#2666；程序合同 → #2658。continuous DFX → #2465；T7 跨 host → #2217/#2304。"
       }
     ]
   },
@@ -1687,6 +1619,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
       {
+        "t": "2026-11-05 · 执行目标归并，纠正关闭项归属与机制承诺",
+        "b": "判断失误：建议把流水容量继续交给 #2316，却未先核关闭交接；实际 #2316/#1853 已关闭，剩余真实模型组合在 #2658，vLLM 消费者在 #2429。旧 EX 还把零 heap 与删除 scope 回收当独立必做项，超出了已确认寿命目标。七项逐一交接，三条评论已发布且正文未改；P0.2-f4–f7 静态归档。新判据：先读关闭/接续评论再选 owner，区分必要合同与实现机制，idle 唤醒不能代替单 Run 常驻；最后一条本地轨退役后守卫必须改验非空 GitHub 来源、历史证据与具体接口合同，不能以空图通过。"
+      },
+      {
         "t": "2026-11-05 · DS 目标通过评论交接既有方向",
         "b": "判断更正：DS 把部署会话与通信数据面混为一轨，不能因名称含“分布式”整体交给 #2724。11 项逐一交接；清点与域接口两项明确拆分职责，#2722 组织通信场景并消费 #2724 的部署结果。两条交接评论已发布、正文未变；额外 device lease、64-rank 规模及 ResourceBundle 的必要性仍待负责人确认。新判据：交接保留验收合同和具名历史证据，接口依赖不变成整个方向关闭的门槛，发布问题不等于设计已接受；退役本地进度不代表功能完成。"
       },
@@ -2104,13 +2040,13 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   },
   "delivery": {
     "title": "交付维度：用户已经能做什么",
-    "note": "资源设计和进度直接查 GitHub；本节只列验收入口及 GitHub 方向入口与 EX 索引。历史 P1/P2/P3 是场景清单，不构成阶段间硬门。具体 API 与 Arena/ResourceBundle 的必要性以 #2721 设计讨论结论为准。",
+    "note": "资源设计和进度直接查 GitHub；本节只列验收入口及 GitHub 方向入口 索引。历史 P1/P2/P3 是场景清单，不构成阶段间硬门。具体 API 与 Arena/ResourceBundle 的必要性以 #2721 设计讨论结论为准。",
     "items": [
       {
         "t": "P1 · 本地 Buffer–Attachment–Tensor 基础",
         "s": "退出条件权威 = feature_roadmap.md §5.6",
-        "w": "#2721 #2496 #2460 #2720 EX-1 EX-3",
-        "b": "逐条退出条件见 README.md §2.-1；本地拒绝路径包含 #2721，零 heap 验收与结构删除分别属于 EX-3/EX-5。"
+        "w": "#2721 #2496 #2460 #2720",
+        "b": "公共访问、拒绝路径及执行响应共同验收；零 heap 与 Arena 必要性按 #2721 设计讨论，不是独立完成门槛。"
       },
       {
         "t": "P2 · 生产级 Multi-L3 通信",
@@ -2121,26 +2057,27 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "P3 · 暴露异构逻辑域",
         "s": "退出条件权威 = feature_roadmap.md §5.8（六项已于 2026-09-07 编号 ①–⑥）",
-        "w": "#2721 #2720 EX-2 #2722",
+        "w": "#2721 #2720 #2723 #2722",
         "b": "逐路径明确实际访问、身份与完成；不预设公共 plan/capability/ResourceBundle 对象。问题见 #2721 设计评论，Region 方案见 #2720。"
       },
       {
         "t": "L3/L4 九章 · 场景验收",
         "s": "映射真源 = l3l4.md §1（场景 → 承载工作项 → 验收证据）",
-        "w": "#2724 #2722 #2460 EX-4 EX-3 #824 EX-1 EX-5",
-        "b": "九章<b>全部有承载，无一落在既定交付方向之外</b>；C.1 与 D.1 已交付。本页不再复述九章状态。<br>⭐ <b>2026-09-07 <code>EX-3</code> 拆出 <code>EX-5</code></b>：「能以零容量跑」是<b>验收</b>（P1 退出条件，不等 arena），「删掉 heap-coupled scope reclaim」是<b>迁移终点</b>（等 <code>#2721</code>）。"
+        "w": "#2724 #2722 #2460 #2721 #824",
+        "b": "九章场景各有 GitHub 归属；C.1/D.1 保留历史证据。寿命正确与具体 allocator 机制分开，零 heap 不预先承诺。"
       },
       {
         "t": "P0.2 结构性 follow-up · 超出里程碑退出条件的那部分",
         "s": "来源 = feature_roadmap.md §5.4 第 1 条 ＋ P0.2/done-followup.md 第 4–7 项",
-        "w": "EX-6",
-        "b": "结构性 follow-up 的验收记录引用 EX-6；新增 Buffer logical close 与 device workspace 目标分别引用 #2460/#2666。"
+        "w": "",
+        "b": "P0.2-f4–f7 已交付证据静态归档；新增公共关闭与 workspace 分别归 #2460/#2666，不恢复旧任务。",
+        "evidence": "review/ex-handoff.md"
       },
       {
-        "t": "连续 run 共享 stream · issue #1853 / Track A",
-        "s": "锚 = issue #1853；P1–P5 的分工写在 issue #2316 正文",
-        "w": "EX-7",
-        "b": "用户可依赖的范围以 EX-7 的具体 admission、数据依赖与 retirement 证据为准；不把 Qwen fallback 算成 early enqueue。"
+        "t": "连续执行 · 基础已交付与真实模型组合",
+        "s": "#1853/#2316 历史收口；剩余组合验收 #2658",
+        "w": "#2658",
+        "b": "普通入队/FIFO/build/access 保留原 SHA 证据；M2 组合、持续请求及性能按 #2658 验收，vLLM 消费者归 #2429。"
       },
       {
         "t": "统一 Tensor/Buffer 公共模型 · issue #2460",
@@ -2151,7 +2088,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "Device workspace ownership / 有界资源",
         "s": "#2429 第 4 条资源半；#2440/#2452/#2464",
-        "w": "#2666 EX-7",
+        "w": "#2666 #2658",
         "b": "执行资源的容量、预算与最后使用者由对应执行入口核定；L3 存储寿命的具体机制在 #2721 讨论。"
       },
       {
@@ -2197,7 +2134,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "issue": 2666,
       "title": "执行资源与消费者交接",
       "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-      "scope": "共同 prepare/launch/retain/release 及 workspace；#2883 资源分类、#2316 流水容量分别跟踪，通用 kernel 实现保持范围外。"
+      "scope": "共同 prepare/launch/retain/release 及 workspace；#2883 资源分类、#2658 真实模型组合验收分别跟踪，通用 kernel 实现保持范围外。"
     }
   ],
   "integrationReferences": [
@@ -2220,6 +2157,26 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "url": "https://github.com/hw-native-sys/simpler/issues/2722",
       "title": "通信域、跨机数据传输与后端",
       "scope": "成员/rank、事务、域寿命、传输/完成、Host 场景及故障回收；规模与公共组合类型的必要性待设计讨论。"
+    }
+  ],
+  "executionReferences": [
+    {
+      "issue": 2721,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+      "title": "公共执行、Callable 与寿命",
+      "scope": "控制响应、调用身份、有界资源；零 heap 与回收结构待必要性论证，沿用公共基础入口。"
+    },
+    {
+      "issue": 2723,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2723",
+      "title": "单次 L2 Run 常驻",
+      "scope": "多轮 work/completion、复用、背压、STOP/drain 与异常退出；区别于进程复用和重复 Run。"
+    },
+    {
+      "issue": 2658,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2658",
+      "title": "真实模型连续执行组合",
+      "scope": "默认自动准入、持续 refill、请求隔离、最后消费者与性能；#1853/#2316 为已交付历史。"
     }
   ]
 }
@@ -2338,7 +2295,7 @@ D.tracks.forEach(tr=>{
     sep.className='lane';
     sep.style.cssText='border-bottom:0;padding:16px 0 4px';
     sep.innerHTML=`<div class="lane-hd"><div class="lane-name" style="color:var(--muted);font-size:11px;
-                     letter-spacing:.06em;text-transform:uppercase">已完成的轨道</div>
+                     letter-spacing:.06em;text-transform:uppercase">历史交付证据</div>
                    <div class="lane-note">下列 track 的每个 stage 均已交付；保留在此是为了可追溯，不代表优先级</div></div>`;
     board.appendChild(sep);
   }
@@ -2504,6 +2461,8 @@ les.innerHTML = `<summary>${D.lessons.title}（${D.lessons.items.length} 条）<
 
 const integrationList=document.getElementById('integration-reference-list');
 integrationList.innerHTML=D.integrationReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
+const executionList=document.getElementById('execution-reference-list');
+executionList.innerHTML=D.executionReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const communicationList=document.getElementById('communication-reference-list');
 communicationList.innerHTML=D.communicationReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const resourceList=document.getElementById('resource-reference-list');

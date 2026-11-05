@@ -1,8 +1,8 @@
 # 目标来源与覆盖口径
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
-> **2026-11-05 交接覆盖**：83 个文档载体、604 个来源编号均有归属；工作索引保留 8 个资源/部署/通信 GitHub 入口与 7 项 EX，Qwen 的 Q1–Q4/C2b 由 #2658 直接跟踪。PR/Issue 登记覆盖以本次守卫输出为准，以下具名历史审计基线保持原日期。编号完整不等于功能全部实现。
+> **2026-11-05 交接覆盖**：84 个文档载体、604 个来源编号均有归属；10 个 GitHub 入口承接合同，资源/分布式/执行及 Qwen 不设重复本地进度。七项执行交接保留已交付基础与剩余组合验收的区别。覆盖不等于功能完成。
 >
 > **2026-11-04 编号与归属复核**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；本地来源全部重新提取，原有外部来源重新读取，#2716 30 节点 / 29 边及决定评论纳入索引。#2429 当前五项验收单独编号；历史编号保留原义。源码/CI 的当前具名核对见 [证据与动作](review/track-2716.md)，下面旧日期的计数与全量代码审计不自动前移。
 >
@@ -16,7 +16,7 @@
 
 - U2a 显式 HOST 消费已由 #2501 交付；仍未完成的 mapping/跨进程能力继续归 #2496/#2460。
 - 统一 chip materialization 已由 #2597 交付；统一 Buffer 的全部 IO/远端/close 契约仍分属 #2460、#2722、#2460。
-- #2571/#2596 提供 grant 与自动准入；真实 Qwen 的 clone/DEVICE/持续请求已有 #2511/#2568/#2592。自动模式与真实模型组合、任意动态到达及系统性能证明归 #2658；EX-7/#2666 保留程序与资源合同，不用旧“三套资源上限”描述当前通用能力。
+- #2571/#2596 提供 grant 与自动准入；真实 Qwen 的 clone/DEVICE/持续请求已有 #2511/#2568/#2592。自动模式与真实模型组合、任意动态到达及系统性能证明归 #2658；#2658/#2666 保留程序与资源合同，不用旧“三套资源上限”描述当前通用能力。
 - #2594 的七项验收归 #2724/#2722 及其 owner/Buffer/close 交接；#2598 只提供三种 session cleanup 结果观测，不关闭 #2724/#2722。
 - `simpler-pr-list.html` 的 42 项和本地别名纳入来源全集；ABORT poison、RDMA 空 provider 两条旧判断已证伪。候选页保留历史排期标记，当前状态只查工作项。
 - #2450 CLOSED/COMPLETED 不等于 KV alias 已实现：main 仍拒绝同任务重叠写。KV-R1–R5 保留在 #2721。#2425 历史故障由关闭评论列出的 #2426/#2435/#2476 收口；#2559 是独立新现象，不能假设同因。
@@ -82,20 +82,20 @@
 | #2720 | `python/simpler/worker.py::_chip_child_allocate_domain；src/common/platform/include/common/region_template.h 与 SPSC 入口` | window offset 顺序累加，未按 cache line padding；模板存在不等于通用 Buffer slice 绑定完成 |
 | #2460/#2722 | `src/common/task_interface/task_args_wire.h；python/simpler/remote_l3_protocol.py` | 本地 TaskArgs transfer 已有；Remote PROTOCOL_VERSION=4，仍不能表达全部新 entry request |
 | #2721 | `src/common/hierarchical/orchestrator.cpp；src/common/task_interface/task_args_wire.h` | lookup_overlapping/tensor_footprint 基座保留；同任务重叠写拒绝分支仍在 |
-| #2721/EX-5 | `python/simpler/worker.py::alloc_shared_tensor` | self._orch._o.alloc 仍分配 FORK_SHM，scope heap 使用者未迁完；三种候选 arena 名 0，alloc_shared_tensor 2/实际 alloc 1 为对照 |
+| #2721/#2721 | `python/simpler/worker.py::alloc_shared_tensor` | self._orch._o.alloc 仍分配 FORK_SHM，scope heap 使用者未迁完；三种候选 arena 名 0，alloc_shared_tensor 2/实际 alloc 1 为对照 |
 | #2721/#2722 | `python/simpler/comm_endpoints.py；python/simpler/global_comm_domain.py；worker.py::_global_domain_attachment_matrix` | 共同 capability、typed attachment 与 copy 访问已有；ResourceBundle 多 backing/host 组合及用户可见 completion 要逐路径联验 |
 | #824/#2724/#2722 | `python/simpler/task_interface.py::CommDomainHandle/GlobalCommDomainHandle；worker.py::_release_global_domain_handle` | 两类公开 handle 仍分开；detach_persistent_domain 0、retain_after_run 4；后续构建 run fence deferral 已有 |
 | #2460 | `python/simpler/task_interface.py::_materialize_chip_task_args；worker.py::_materialize_l2_args` | 三类 chip 入口使用同一转换，callable/source retention 仍归调用者；singleton stride 旧规则仍在 tensor.h |
 | #2460 | `python/simpler/buffer.py::Buffer.close；src/common/worker/chip_run_lane.cpp；native_run_storage_tag.h` | host close 直接 unmap/unlink；verified prepare rollback 和 unstarted launch proof 已在，launch 异常 owner 后续 #2615 尚 OPEN |
-| #2666/EX-3/EX-7 | `src/common/platform/include/host/auto_admission.h；workspace_manager.h；python/simpler/worker.py` | 四种 onboard program 的 auto admission、内部预算与源保留边界；caller allocation 不转移 ownership，自动模式排除 topology 必须保留 |
+| #2666/#2721/#2658 | `src/common/platform/include/host/auto_admission.h；workspace_manager.h；python/simpler/worker.py` | 四种 onboard program 的 auto admission、内部预算与源保留边界；caller allocation 不转移 ownership，自动模式排除 topology 必须保留 |
 | #2724/#2722 | `worker.py::_release_remote_sessions/_close_mpirun_groups；python/simpler/mpi_l3_group.py` | main session_cleanup_reports 0、两种既有清理方法各 2；#2598 的新观测不在 main；lease/epoch/全员确认仍是退出条件 |
 | #2722 | `src/a5/platform/onboard/host/comm_hccl.cpp::init_rdma_workspace；examples/workers/l4/global_tload_mpirun_l3/main.py` | RDMA bootstrap/workspace 已有；MPI 验金仍为 max_diff > 1e-3；#2026 未合入，不从旧 CI 绿推导全平台验收 |
 | #2722 | `python/simpler/global_comm_domain.py；src/common/platform_comm/comm_context.h` | 全域 rank 布局仍有 64 上限，规模扩展独立于小规模组合 |
 | #2722 | `worker.py::_allocate_global_domain` | 普通/MPI ABORT 失败都 record_unreclaimable，PREPARE/IMPORT/COMMIT/ABORT 已有；生产 lease 和异构组合不能由该事务单独证明 |
-| EX-1/EX-2 | `src/common/hierarchical/worker_manager.cpp::make_next_level_threads/make_sub_threads；worker.py::_run_mailbox_loop` | 请求帧与 run entries 分离；NEXT_LEVEL 传 granted_sets，SUB 默认；常驻 STOP/drain 与各拓扑长期 control 仍单独验收 |
-| EX-4 | `python/simpler/worker.py callable registry；tests/st 的 dynamic_register` | #1938 对不同 callable 输出的可失败观测仍 OPEN，改名/统一入口不代替身份验收 |
-| EX-6 | `worker.py::_teardown_worker_tree；tests/ut/py/test_cancellation_journal.py` | add_once(kind, identity, cleanup) 与 release-before-transport journal 仍在；新增 Buffer/domain/预算目标另归 #824/#2460/#2666 |
-| EX-7 / 外部 Qwen | `examples/a2a3/host_build_graph/qwen3_14b_serving_effective/continuous_worker_submit.py` | #2592 有固定形状/有界请求/独立存储/DEVICE feedback driver；auto admission 与 vLLM 实测不能自动继承 |
+| #2721/#2723 | `src/common/hierarchical/worker_manager.cpp::make_next_level_threads/make_sub_threads；worker.py::_run_mailbox_loop` | 请求帧与 run entries 分离；NEXT_LEVEL 传 granted_sets，SUB 默认；常驻 STOP/drain 与各拓扑长期 control 仍单独验收 |
+| #2721 | `python/simpler/worker.py callable registry；tests/st 的 dynamic_register` | #1938 对不同 callable 输出的可失败观测仍 OPEN，改名/统一入口不代替身份验收 |
+| 历史清理证据（#1689） | `worker.py::_teardown_worker_tree；tests/ut/py/test_cancellation_journal.py` | add_once(kind, identity, cleanup) 与 release-before-transport journal 仍在；新增 Buffer/domain/预算目标另归 #824/#2460/#2666 |
+| #2658 / 外部 Qwen | `examples/a2a3/host_build_graph/qwen3_14b_serving_effective/continuous_worker_submit.py` | #2592 有固定形状/有界请求/独立存储/DEVICE feedback driver；auto admission 与 vLLM 实测不能自动继承 |
 
 ## 4. 文档载体归属
 
@@ -103,16 +103,16 @@
 
 | 文档 | 归属与用途 |
 | ---- | ---------- |
-| P0.2/c-design.md（本地参考：`P0.2/c-design.md`） | P0 已交付证据；EX-6 终态回收 |
-| P0.2/done-followup.md（本地参考：`P0.2/done-followup.md`） | P0 已交付证据；EX-6 终态回收 |
-| P0.2/done.md（本地参考：`P0.2/done.md`） | P0 已交付证据；EX-6 终态回收 |
+| P0.2/c-design.md（本地参考：`P0.2/c-design.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| P0.2/done-followup.md（本地参考：`P0.2/done-followup.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| P0.2/done.md（本地参考：`P0.2/done.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | [README.md](README.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
-| [cpu-npu-shared-memory.md](cpu-npu-shared-memory.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
-| [cpu-npu-shared-memory/domain-member-vs-attachment.md](cpu-npu-shared-memory/domain-member-vs-attachment.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
-| [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
-| [cpu-npu-shared-memory/hardware-constraints.md](cpu-npu-shared-memory/hardware-constraints.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
-| [cpu-npu-shared-memory/w2-w5-inversion.md](cpu-npu-shared-memory/w2-w5-inversion.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
-| [cpu-npu-shared-memory/work-breakdown.md](cpu-npu-shared-memory/work-breakdown.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory.md](cpu-npu-shared-memory.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
+| [cpu-npu-shared-memory/domain-member-vs-attachment.md](cpu-npu-shared-memory/domain-member-vs-attachment.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
+| [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
+| [cpu-npu-shared-memory/hardware-constraints.md](cpu-npu-shared-memory/hardware-constraints.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
+| [cpu-npu-shared-memory/w2-w5-inversion.md](cpu-npu-shared-memory/w2-w5-inversion.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
+| [cpu-npu-shared-memory/work-breakdown.md](cpu-npu-shared-memory/work-breakdown.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723 |
 | deleted-closed-branches.md（本地参考：`deleted-closed-branches.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | dfx/c2a-hierarchical-trace.md（本地参考：`dfx/c2a-hierarchical-trace.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | dfx/host-swimlane-delivered.md（本地参考：`dfx/host-swimlane-delivered.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
@@ -120,17 +120,17 @@
 | dfx/l3-l2-thread-topology.html（本地参考：`dfx/l3-l2-thread-topology.html`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | docs-kernel-mode/kernel-mode-memory.html（本地参考：`docs-kernel-mode/kernel-mode-memory.html`） | 范围排除：kernel / HBG 硬件；仅保留约束证据 |
 | docs-kernel-mode/kernel-mode-plan.html（本地参考：`docs-kernel-mode/kernel-mode-plan.html`） | 范围排除：kernel / HBG 硬件；仅保留约束证据 |
-| done-P0.1.md（本地参考：`done-P0.1.md`） | P0 已交付证据；EX-6 终态回收 |
+| done-P0.1.md（本地参考：`done-P0.1.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | [feature_roadmap.md](feature_roadmap.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | [goal-coverage.md](goal-coverage.md) | 目标来源、范围与证据清单；不另维护实现状态 |
 | hbg-requirements.html（本地参考：`hbg-requirements.html`） | 范围排除：kernel / HBG 硬件；仅保留约束证据 |
 | [l3l4.md](l3l4.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
-| [l3l4/cluster-comm.md](l3l4/cluster-comm.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
-| [l3l4/inventory.md](l3l4/inventory.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
-| [l3l4/lazy-init.md](l3l4/lazy-init.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
-| [l3l4/memory-kinds.md](l3l4/memory-kinds.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
-| [l3l4/remote-startup.md](l3l4/remote-startup.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
-| [l3l4/scheduling.md](l3l4/scheduling.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/cluster-comm.md](l3l4/cluster-comm.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
+| [l3l4/inventory.md](l3l4/inventory.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
+| [l3l4/lazy-init.md](l3l4/lazy-init.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
+| [l3l4/memory-kinds.md](l3l4/memory-kinds.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
+| [l3l4/remote-startup.md](l3l4/remote-startup.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
+| [l3l4/scheduling.md](l3l4/scheduling.md) | 场景验收：#2460、#2722/#2724、#2721…#2721 |
 | [logical-physical-separation.md](logical-physical-separation.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | maintainer-loop-prompt.md（本地参考：`maintainer-loop-prompt.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | others-ref/host-trace-log-design/README.md（本地参考：`others-ref/host-trace-log-design/README.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
@@ -138,19 +138,20 @@
 | others-ref/host-trace-log-design/log-design.md（本地参考：`others-ref/host-trace-log-design/log-design.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | others-ref/host-trace-log-design/trace-and-log-requirements.md（本地参考：`others-ref/host-trace-log-design/trace-and-log-requirements.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | others-ref/memory-model.md（本地参考：`others-ref/memory-model.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
-| others-ref/worker-async-pipeline-landing.md（本地参考：`others-ref/worker-async-pipeline-landing.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md（本地参考：`others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md`） | #2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同 |
-| others-ref/worker-async-pipeline/contracts.md（本地参考：`others-ref/worker-async-pipeline/contracts.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline/implementation-plan.md（本地参考：`others-ref/worker-async-pipeline/implementation-plan.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline/implementation-record.md（本地参考：`others-ref/worker-async-pipeline/implementation-record.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline/qwen-integration.md（本地参考：`others-ref/worker-async-pipeline/qwen-integration.md`） | #2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同 |
-| others-ref/worker-async-pipeline/trace-v1.md（本地参考：`others-ref/worker-async-pipeline/trace-v1.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
+| others-ref/worker-async-pipeline-landing.md（本地参考：`others-ref/worker-async-pipeline-landing.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
+| others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md（本地参考：`others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md`） | #2658 整体目标；历史方案与验收交接，#2658 保留基础程序合同 |
+| others-ref/worker-async-pipeline/contracts.md（本地参考：`others-ref/worker-async-pipeline/contracts.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
+| others-ref/worker-async-pipeline/implementation-plan.md（本地参考：`others-ref/worker-async-pipeline/implementation-plan.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
+| others-ref/worker-async-pipeline/implementation-record.md（本地参考：`others-ref/worker-async-pipeline/implementation-record.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
+| others-ref/worker-async-pipeline/qwen-integration.md（本地参考：`others-ref/worker-async-pipeline/qwen-integration.md`） | #2658 整体目标；历史方案与验收交接，#2658 保留基础程序合同 |
+| others-ref/worker-async-pipeline/trace-v1.md（本地参考：`others-ref/worker-async-pipeline/trace-v1.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
 | review/2026-08-11-code-vs-design-audit.md（本地参考：`review/2026-08-11-code-vs-design-audit.md`） | AR/AF 审计：work-items 吸收列 |
 | [review/ra-handoff.md](review/ra-handoff.md) | 资源旧编号的静态交接；进度查 GitHub |
+| [review/ex-handoff.md](review/ex-handoff.md) | #2721/#2723/#2658：七项执行目标与历史证据，无重复进度 |
 | [review/ds-handoff.md](review/ds-handoff.md) | #2724/#2722：旧分布式目标、验收和评论交接；不维护进度 |
 | [review/qwen-handoff.md](review/qwen-handoff.md) | #2658：Qwen 旧目标与验收的静态交接，不维护进度 |
 | [review/2026-09-28-cross-plan-lessons.md](review/2026-09-28-cross-plan-lessons.md) | 只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D |
-| review/p0.2-design.md（本地参考：`review/p0.2-design.md`） | P0 已交付证据；EX-6 终态回收 |
+| review/p0.2-design.md（本地参考：`review/p0.2-design.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | [review/pr-2096.md](review/pr-2096.md) | #2720 的具名评审与 main 集成门；实施状态见工作项 |
 | review/pr-2474.md（本地参考：`review/pr-2474.md`） | #2460 的具名历史评审；不单设工作项 |
 | review/pr-2475.md（本地参考：`review/pr-2475.md`） | #2460 consumer 的具名历史评审及 P1 处置；API 剩余见工作项 |
@@ -161,14 +162,14 @@
 | tasks/README.md（本地参考：`tasks/README.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | tasks/g2-design.md（本地参考：`tasks/g2-design.md`） | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | tasks/task-device-addr-guard2.md（本地参考：`tasks/task-device-addr-guard2.md`） | RA 资源/访问/ABI；GE 交接约束按 §6 |
-| tasks/task-p0.2a-admission-fence.md（本地参考：`tasks/task-p0.2a-admission-fence.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.2b1-fake-chip-harness.md（本地参考：`tasks/task-p0.2b1-fake-chip-harness.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.2b2-eligibility-hook.md（本地参考：`tasks/task-p0.2b2-eligibility-hook.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.2c-cancellation-journal.md（本地参考：`tasks/task-p0.2c-cancellation-journal.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.2cd-teardown-convergence.md（本地参考：`tasks/task-p0.2cd-teardown-convergence.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.3-daemon-send-isolation.md（本地参考：`tasks/task-p0.3-daemon-send-isolation.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.3-deadline-hardening.md（本地参考：`tasks/task-p0.3-deadline-hardening.md`） | P0 已交付证据；EX-6 终态回收 |
-| tasks/task-p0.3-zero-residual-regression.md（本地参考：`tasks/task-p0.3-zero-residual-regression.md`） | P0 已交付证据；EX-6 终态回收 |
+| tasks/task-p0.2a-admission-fence.md（本地参考：`tasks/task-p0.2a-admission-fence.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.2b1-fake-chip-harness.md（本地参考：`tasks/task-p0.2b1-fake-chip-harness.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.2b2-eligibility-hook.md（本地参考：`tasks/task-p0.2b2-eligibility-hook.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.2c-cancellation-journal.md（本地参考：`tasks/task-p0.2c-cancellation-journal.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.2cd-teardown-convergence.md（本地参考：`tasks/task-p0.2cd-teardown-convergence.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.3-daemon-send-isolation.md（本地参考：`tasks/task-p0.3-daemon-send-isolation.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.3-deadline-hardening.md（本地参考：`tasks/task-p0.3-deadline-hardening.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
+| tasks/task-p0.3-zero-residual-regression.md（本地参考：`tasks/task-p0.3-zero-residual-regression.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | tasks/task-p1a-close-merge-gates.md（本地参考：`tasks/task-p1a-close-merge-gates.md`） | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | tasks/task-public-python-tracing-api.md（本地参考：`tasks/task-public-python-tracing-api.md`） | DFX 已交付证据 |
 | tasks/task-scenetest-singleton-alias.md（本地参考：`tasks/task-scenetest-singleton-alias.md`） | ST-1 → #2460；ST-2 → #2721 |
@@ -176,7 +177,7 @@
 | [w2-p1b-endpoint-convergence.md](w2-p1b-endpoint-convergence.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [work-items.md](work-items.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | [worker-memory-model.md](worker-memory-model.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
-| [worker-memory-model/access-retirement-contract.md](worker-memory-model/access-retirement-contract.md) | 无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、#2722、EX-7；kernel/DFX 实现仍范围外 |
+| [worker-memory-model/access-retirement-contract.md](worker-memory-model/access-retirement-contract.md) | 无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、#2722、#2658；kernel/DFX 实现仍范围外 |
 | [worker-memory-model/backend-matrix.md](worker-memory-model/backend-matrix.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [worker-memory-model/bufferhandle-abi.md](worker-memory-model/bufferhandle-abi.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [worker-memory-model/graph-execution-contract.md](worker-memory-model/graph-execution-contract.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
@@ -196,18 +197,18 @@
 | #2614 | `8b466791f374e1286b0936f8eaebffb9bf32d44b` | #2460 / #2460 |
 | #2613 | `2ee57567d01d0d86d5afb605f15e644a06a16200` | 范围外 CI/测试/文档/打包 |
 | #2612 | `49ae1ef1be8ab1e995ab12e1967721ef1421b86e` | #2460 / #2460 |
-| #2611 | `0eda81c931f982a4f8149b1cac4cda272ec3d8fb` | EX-7 |
+| #2611 | `0eda81c931f982a4f8149b1cac4cda272ec3d8fb` | #2658 |
 | #2610 | `aa91a9d60e0e7ce22cdae3cf70533ece46875546` | #2666 |
 | #2609 | `0d05dfd545591964d2995cffe5154d6d349716cb` | 范围外 CI/测试/文档/打包 |
-| #2608 | `e6d546d4c6a98e1a87bc80cd0418806630c027f9` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
-| #2596 | `a2b0ad2ade8a3cecb1517f2ee937626773f7aa85` | EX-7 |
-| #2606 | `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
+| #2608 | `e6d546d4c6a98e1a87bc80cd0418806630c027f9` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
+| #2596 | `a2b0ad2ade8a3cecb1517f2ee937626773f7aa85` | #2658 |
+| #2606 | `17129ba496c6d7d710b0e1320b3d1c25aeb9d1e1` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
 | #2604 | `4aedb1f4318f024f9d50392bb312673523841632` | 范围外 runtime/HBG 实现 |
-| #2601 | `289b3016463f60c159fb1255a581868daf04a104` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
-| #2599 | `905d336e41d324ba8c8dbf87fe138965d84e74e2` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
+| #2601 | `289b3016463f60c159fb1255a581868daf04a104` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
+| #2599 | `905d336e41d324ba8c8dbf87fe138965d84e74e2` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
 | #2597 | `e994e106d8020c049dc419a67498db37bc6fcd3d` | #2460 / #2460 |
 | #2595 | `8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba` | #2460 / #2460 |
-| #2592 | `1a8a3ee221968ec397588db070089354806c84c5` | EX-7；外部 Qwen 集成 |
+| #2592 | `1a8a3ee221968ec397588db070089354806c84c5` | #2658；外部 Qwen 集成 |
 | #2593 | `3351950f4b0fdbd60523ea63266b321ab12f5f2e` | #2724/#2722 / #824 |
 | #2576 | `cc6c4d51f79e98af5ef07829e3ca71c36f752a43` | 范围外 runtime/HBG 实现 |
 | #2575 | `e2e7405493417eaa78f0a03ee8afe25a8c947f63` | 范围外 CI/测试/文档/打包 |
@@ -216,31 +217,31 @@
 | #2579 | `b74b5f27b4c1d161aab3998c5d9dd8489308e4c1` | 范围外 runtime/HBG 实现 |
 | #2587 | `11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b` | #2460 / #2460 |
 | #2586 | `b95785db12a9f9de4d86f78688291411c0f10b77` | 范围外 CI/测试/文档/打包 |
-| #2584 | `653a24c4a61fde1ef8c28838b67a4a6dd37a916b` | EX-7 |
-| #2571 | `78365f79ccd263e2e37cef827b69a0c4fa5f2eb5` | EX-7 / #2666 |
+| #2584 | `653a24c4a61fde1ef8c28838b67a4a6dd37a916b` | #2658 |
+| #2571 | `78365f79ccd263e2e37cef827b69a0c4fa5f2eb5` | #2658 / #2666 |
 | #2540 | `c1f89ea431f5306f78c0e4ab9573c829756d7f1e` | 范围外 runtime/HBG 实现 |
-| #2582 | `7e19db4df679278d8bc4f9eea06c8e8fda4a492e` | EX-7 |
-| #2581 | `620807d2dd2dad83e8529788d7998a77b7c14e2d` | EX-7 |
-| #2577 | `7c7ec43d51ae1bdbeb955dd7ad13896fd5e0025f` | EX-7 |
-| #2580 | `f688613966341adcecb1f26c3da00254e97d977f` | EX-7 |
-| #2578 | `d793c89c32c438de6b411595a4485b2943aabf44` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
-| #2572 | `946f49acbbd4df72b333784cfad60b1573e70b40` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
-| #2568 | `127ec6e05765cdb4fc0b4e908b4136449e94048d` | EX-7；外部 Qwen 集成 |
-| #2567 | `852f6ff169f8b8a32e327c3c2ad0c105e1b5f9e3` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
+| #2582 | `7e19db4df679278d8bc4f9eea06c8e8fda4a492e` | #2658 |
+| #2581 | `620807d2dd2dad83e8529788d7998a77b7c14e2d` | #2658 |
+| #2577 | `7c7ec43d51ae1bdbeb955dd7ad13896fd5e0025f` | #2658 |
+| #2580 | `f688613966341adcecb1f26c3da00254e97d977f` | #2658 |
+| #2578 | `d793c89c32c438de6b411595a4485b2943aabf44` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
+| #2572 | `946f49acbbd4df72b333784cfad60b1573e70b40` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
+| #2568 | `127ec6e05765cdb4fc0b4e908b4136449e94048d` | #2658；外部 Qwen 集成 |
+| #2567 | `852f6ff169f8b8a32e327c3c2ad0c105e1b5f9e3` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
 | #2558 | `accab1cc54adff486c82f8367976ae8343c09ff0` | 范围外 CI/测试/文档/打包 |
 | #2543 | `d13a254ae473fadf2f45c689f15b3b15200e0e68` | 范围外 runtime/HBG 实现 |
 | #2564 | `c5cdd1b37a2e1907feeeceb82b4e70939c9c96d0` | 范围外 DFX/log |
 | #2562 | `e7cc287398593450cd18c3cb811996d2e14c1f40` | 范围外 CI/测试/文档/打包 |
 | #2563 | `c67b0eff6e6c7840d373f8c3db8146871ea91bae` | 范围外 DFX/log |
-| #2561 | `5f4f9525d3fd1163c9fed89661473b0734e271ae` | EX-7 |
-| #2560 | `a89c1170c87ae6c776a977bce2dcabea5fd74b7a` | EX-7 |
+| #2561 | `5f4f9525d3fd1163c9fed89661473b0734e271ae` | #2658 |
+| #2560 | `a89c1170c87ae6c776a977bce2dcabea5fd74b7a` | #2658 |
 | #2546 | `68d137fdfd435d8067f0efd9836cb428da3e700a` | 范围外 runtime/HBG 实现 |
 | #2541 | `dc73516d24c97ece6867a48775d9163ef7c593df` | 范围外 CI/测试/文档/打包 |
-| #2557 | `55eb522468fe702d564a131ee910ac1b5326858a` | EX-7 |
-| #2511 | `e39d35af8d1efcdc2faae90a7ccfc9743759cab3` | EX-7；外部 Qwen 集成 |
+| #2557 | `55eb522468fe702d564a131ee910ac1b5326858a` | #2658 |
+| #2511 | `e39d35af8d1efcdc2faae90a7ccfc9743759cab3` | #2658；外部 Qwen 集成 |
 | #2536 | `86e77362b6999b25ae8143a880b7d004407a2bca` | 范围外 DFX/log |
 | #2534 | `c2a58948190dcd7d122af09438944dcdc146f476` | 范围外 DFX/log |
-| #2531 | `600540064cc99f99006c11524561d2568ea2bb06` | EX-7 |
+| #2531 | `600540064cc99f99006c11524561d2568ea2bb06` | #2658 |
 | #2537 | `e0a5e9a16ce2df88643fbd20c4e31406f4062e95` | 范围外 DFX/log |
 | #2555 | `90fcb27027a000eac2f1a4d34b7083a53d2a9599` | 范围外 CI/测试/文档/打包 |
 | #2554 | `436856277dff3acd2b8b1237848075ffab9f8a1a` | 范围外 CI/测试/文档/打包 |
@@ -253,7 +254,7 @@
 | #2513 | `7f2c3af4444dcecb316c860d5daff7b95cbf7c71` | 范围外 CI/测试/文档/打包 |
 | #2539 | `190c235e2c85f9f84e2ceef2e853e7bffe313f1a` | 范围外 runtime/HBG 实现 |
 | #2535 | `1d539d3c36e7b2bf3cbd2d332d683c322daf8a15` | 范围外 runtime/HBG 实现 |
-| #2532 | `fc8b069fd4d3c6488006fb792e770de652dcf911` | EX-7 |
+| #2532 | `fc8b069fd4d3c6488006fb792e770de652dcf911` | #2658 |
 | #2528 | `b58622478764433408ac3d06deeb401614df11bb` | 范围外 CI/测试/文档/打包 |
 | #2516 | `e6fd8c608a7271b76d06a4a598fab6fcf2ab9d2c` | 范围外 runtime/HBG 实现 |
 | #2506 | `5a111b2f2f648cb5209b77bb7ffd9cd5f28054ca` | 范围外 runtime/HBG 实现 |
@@ -262,10 +263,10 @@
 | #2388 | `c0b33b0eda671116ab6c949843789fe4decfdf19` | 范围外 runtime/HBG 实现 |
 | #2503 | `b3bbcbb93c4dc58c0b9a15d77807ab16b6b3454d` | #2460 / #2460 |
 | #2515 | `085306edb0e5d2da262c9a4b01c674fce5667144` | 范围外 runtime/HBG 实现 |
-| #2510 | `27e13ce2ed221cf641b1e8fd767e4cc408f2f5e3` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
+| #2510 | `27e13ce2ed221cf641b1e8fd767e4cc408f2f5e3` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
 | #2514 | `a97cfaa81d76b747343a48fb090c6a75fbf99940` | 范围外 DFX/log |
 | #2509 | `60167bcc1ea898cc0bf861b2e3aa0aa6f70ba40d` | 范围外 DFX/log |
-| #2507 | `97f8b6c92d9cbd6b8270dfa918272c964a7c25e1` | 范围外 kernel/eager；共用执行寿命与 EX-7/#2460 联验 |
+| #2507 | `97f8b6c92d9cbd6b8270dfa918272c964a7c25e1` | 范围外 kernel/eager；共用执行寿命与 #2658/#2460 联验 |
 | #2096 | `ae234fad000cd6bfa9b67865e336d7e90058f7ad` | #2720 |
 | #2505 | `daa1670c0f85ec60acdf6bbf6551a63d7410f8d2` | 范围外 DFX/log |
 | #2502 | `f16b6bb420f3f1ed384c7a41a9df49e3a174531a` | 范围外 runtime/HBG 实现 |

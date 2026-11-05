@@ -1,6 +1,6 @@
 # 调度：submit 指定 worker + 去自由调度 + heap
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §C.3。
 
@@ -120,6 +120,6 @@
 | C.2 L2/L3/L4 接口 + orch 接口收敛 | **部分实现**（参数基座已统一；**callable 身份未真正统一**——L3 用 raw Python callable、register→下级 LOCAL_PYTHON；`run`/orch/malloc 同名异义未消歧，L4 域接口不对称） | 冻结参数基座 + 补 callable 统一 → 消歧 `run` → 统一内存面 → 补 L4 across-L3 域 |
 | C.3 submit 指定 worker | **已实现**：NEXT_LEVEL single/group 均要求 exact target | #1436；group reservation 由 #1565 补齐 |
 | C.3 跨 run admission | **已实现**：negotiated whole-run FIFO；下一 callback 由 pipeline lease 开放，非前一 run launch acceptance | #1540 + **#1541**；仍无第二个并发 device run |
-| C.3 移除 heap | **未实现**，且 2026-09-08 起**拆成两项** —— `EX-3` **零容量运行验收**（`feature_roadmap.md` §2.5 第 5 步，Ring 已支持 `heap_bytes=0` 的 slot-only allocation ⇒ **不等 arena**，且这一条是 P1 退出条件）· `EX-5` **删除 heap-coupled scope reclaim**（第 6 步，等 `#2721`）。⛔ **本行原写 `create_host_buffer`，该名全仓 0 命中**（现名 `create_buffer`，`worker.py:10877`） | 归属真源 [`work-items.md`](../work-items.md)；auto-OUTPUT 重写到显式 shm |
+| C.3 移除 heap | **未实现**，且 2026-09-08 起**拆成两项** —— `#2721` **零容量运行验收**（`feature_roadmap.md` §2.5 第 5 步，Ring 已支持 `heap_bytes=0` 的 slot-only allocation ⇒ **不等 arena**，且这一条是 P1 退出条件）· `#2721` **删除 heap-coupled scope reclaim**（第 6 步，等 `#2721`）。⛔ **本行原写 `create_host_buffer`，该名全仓 0 命中**（现名 `create_buffer`，`worker.py:10877`） | 归属真源 [`work-items.md`](../work-items.md)；auto-OUTPUT 重写到显式 shm |
 
 ---

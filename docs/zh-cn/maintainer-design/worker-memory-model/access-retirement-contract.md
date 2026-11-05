@@ -1,6 +1,6 @@
 # 访问、完成与资源退休契约
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 
 本文是 [分线契约 C/D](../track-boundaries.md) 的细化，规定各 consumer 的目标验收；**不是已实现声明**。实施状态和唯一归属见 [work-items](../work-items.md) §6。来源快照与取舍见 [跨方案评估](../review/2026-09-28-cross-plan-lessons.md)。
 
@@ -88,7 +88,7 @@ allocation owner 与实际 use/map 持有者分开。外部借用不转移物理
 
 \#2721 的 hierarchical HeapRing、#2460 的用户 Buffer 与 #2666 的内部 workspace 保持所有权边界。容量足够、scope 结束或 run 业务失败都不能单独授予复用权。
 
-EX-7 分别声明 accepted 请求、host prepare、native prepared、已 enqueue 和实际执行的容量及资源消耗。扩大 admission 必须满足账本与最后使用者约束；特定后端的 bank/event 数量不是全局深度定义。
+\#2658 分别声明 accepted 请求、host prepare、native prepared、已 enqueue 和实际执行的容量及资源消耗。扩大 admission 必须满足账本与最后使用者约束；特定后端的 bank/event 数量不是全局深度定义。
 
 Capture 要求被捕获的操作及等待边能由 device replay 完成。普通 host RPC、接收回调和 Python 调度不因被包装成 COPY 就可捕获；缺少合法 bridge 时在图外完成并证明输入就绪，或拒绝该 capture 路径。该要求不把 kernel 实现纳入三条线。
 
@@ -100,10 +100,10 @@ Capture 要求被捕获的操作及等待边能由 device replay 完成。普通
 | --------- | -------- | ------------ |
 | #2460；#2722 | 后一个参数无效，前一个参数不得先复制；预检后源关闭；源 identity 被目标接入重新创建 | 合法整组绑定，有效范围与上下文内 submit，跨 Worker 保持 identity |
 | #2722 → #2460/#2666 | send 返回但 receiver 未 commit；H2D 仍读中间块；第二段失败；旧完成记录晚到 | 对应 ready 后消费、最后读取后回收；同 backing 连续两次 copy 正确 |
-| EX-7 → #2666 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
+| #2658 → #2666 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
 | #2460 → #2460 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
 | #2460/#824；#2722 | 实际映射仍被使用、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个登记不破坏其他已接纳使用 |
-| #2666；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
+| #2666；#2658 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
 
 补充成对验收：真实 URMA/HNS manager 配有状态 HCCL/Hcomm/ACL mock，注入部分 Init、unregister/channel destroy/free 失败，并检查生产 rollback/release 的 owner 与错误传播；阳性对照为重复 allocate/release 及 A 释放后 B 继续传输。映射覆盖 native/mapped 同调用、失败 unmap 后拒绝新用与正常重试。批量覆盖未 flush 不提前完成与尾批正常返回提交、实际多队列完成；不能只换掉 manager 测 helper。
 

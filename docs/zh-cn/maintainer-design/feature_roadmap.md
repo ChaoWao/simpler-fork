@@ -1,10 +1,10 @@
 # Simpler 功能演进路线图
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > **资源设计口径**：共同原则以 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 为准，实施与迁移查 [#2460](https://github.com/hw-native-sys/simpler/issues/2460)。下文两套 Arena、公共 ResourceBundle／plan／capability 及额外 grant 策略的旧方案不构成已确认交付要求；必要性见 [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)。保留场景与验收要求，历史 API 形状不当作当前承诺。
 >
-> **交付组织**：[#2716 四方向与子树](review/track-2716.md) 承载完整业务目标；本文保留里程碑/场景验收视图，GitHub 资源/通信/部署入口与 EX 是共同合同索引。单 L2 Run 多轮常驻、L3 进程复用、重复 run 分别验收；具体实施与证据见 work-items。
+> **交付组织**：[#2716 四方向与子树](review/track-2716.md) 承载完整业务目标；本文保留里程碑/场景验收视图，GitHub 目标与验收入口 是共同合同索引。单 L2 Run 多轮常驻、L3 进程复用、重复 run 分别验收；具体实施与证据见 work-items。
 >
 > 状态：架构路线图。P0.1 eager-init core 与 P0.2 lifecycle/teardown
 > correctness 已交付；P0.2 的 admission、动态 eligibility、cooperative init
@@ -771,34 +771,13 @@ P1-C adapter 的前置。#1430 的
 revoke-before-free 与 #1541 的 run-finalization transaction 都不表示未来 Buffer
 wire 已经安全。
 
-### 2.5 HeapRing 的去留
+### 2.5 HeapRing：先确定寿命合同，再选择机制
 
-可以移除 hierarchical HeapRing 的通用 buffer 职责，但不能删除
-shared allocation 能力。
+设计问题交 [#2721](https://github.com/hw-native-sys/simpler/issues/2721)；[执行交接](review/ex-handoff.md)保存旧六步方案和原代码观察。必要目标是临时、持久与异步使用寿命明确，不提前回收、不无界滞留，在有限压力下背压且完成后可复用。
 
-当前 hierarchical Ring/heap 的耦合点包括：
+零 hierarchical heap、拆分 SlotArena/SharedBufferArena、删除 heap-coupled scope reclaim 都是待论证方案，不能仅因旧计划列过步骤就作为强制验收。先确认具体消费者、现有机制的缺陷与改动收益；若确需替换，再迁移 Orchestrator.alloc、null OUTPUT、描述符和 task-slot/scope 使用者，以回归证明合同保持。shared allocation 能力不能随内部 allocator 一起删除，公开分配/参数行为仍服从 #2460 的既定合同。
 
-- Orchestrator.alloc()；
-- null OUTPUT 自动分配；
-- L3-L2 message queue 通过 Orchestrator.alloc() 暂存的三个描述符张量；
-- Ring 自身承载的 task slot 和 scope lifetime accounting。
-
-L3-L2 queue 的通信区不由 HeapRing backing。simulation 使用独立 POSIX
-shared memory，onboard 使用独立 device VMM region；HeapRing 只与上述描述符
-暂存存在弱依赖。
-
-Ring 已支持 heap bytes 为零的 slot-only allocation。建议迁移顺序：
-
-1. 拆分 SlotArena 和 SharedBufferArena。
-2. 增加 Worker-owned shared buffer allocation。
-3. null OUTPUT 改为 fail-fast，要求用户提供 Tensor。
-4. 迁移 Orchestrator.alloc()，并把 L3-L2 queue 的三个描述符改用显式
-   shared buffer；队列通信区无需迁移。
-5. 默认用零 hierarchical heap 跑测试。
-6. 所有使用者迁移后删除 heap-coupled scope reclaim。
-
-这项工作不能顺带删除 L2 device-side TMR GM heap。L2 device heap 与
-hierarchical host HeapRing 的职责和生命周期不同。
+L2 device-side TMR GM heap 的职责与 hierarchical host HeapRing 不同，不自动纳入此迁移。公共资源只提供必要区间、访问和同步；应用 queue 不由 allocator 设计决定。
 
 ### 2.6 Runtime 基础能力、参考 adapter 与用户自定义的边界
 
@@ -1532,7 +1511,7 @@ Remote L4 或跨 L3 CommDomain 已完成。
 > P3 验收组合后的用户能力）。
 >
 > ⛔ **但「谁负责实现、什么挡着什么」不在这里** —— 那是 **`.docs/work-items.md`** 的
-> GitHub 资源、通信与部署入口以及 `EX` 执行验收索引；旧 RA/DS 编号仅供历史交接，
+> GitHub 资源、通信、部署与执行入口；旧本地编号仅供历史交接，
 > **依赖写在具体工作项之间，不写在阶段之间**。
 >
 > 这条区分是被观测逼出来的，两个例子：
@@ -1930,9 +1909,9 @@ P1 按以下小步顺序推进：
   的唯一入口。普通 submit 不 silent copy，也不把 copy capability 伪装成 host
   可解引用的 device VA。
 - **P1-E dependency/arena**：按 canonical identity + byte footprint 跟踪
-  RAW/WAR/WAW，定义 strided bounds/overlap；拆分 SlotArena 与
-  SharedBufferArena，并提供基于一个 Buffer 的 `BufferSliceArena`/offset slice，
-  作为用户构建 queue、metadata table 等 persistent structure 的基础资源；
+  RAW/WAR/WAW，定义 strided bounds/overlap；临时、持久和异步使用的
+  生命周期与资源范围必须明确。SlotArena/SharedBufferArena/BufferSliceArena
+  是待论证方案，用户 queue/metadata 的需要不自动要求这些公共类型；
   在 #1592/#1602 committed-byte 基础上补 persistent Buffer/domain resource 与
   communication-window accounting/budget。
 - **P1-F execution service**：[PR 1574][pr-1574] 已交付 B3a native phased
@@ -1970,8 +1949,8 @@ unwired、受限并按上述 lifecycle/L4 scope 条件单独验证，不能借�
 > copy-only endpoint 永远拿不到可解引用 VA；不可 attach 的数据只能通过显式
 > Transfer 得到新 identity。所有非法 memory/endpoint/capability 组合在
 > materialize 或 dispatch 前失败；release/close 后无 backing 泄漏、
-> stale-generation 误用或 double-release。Local L3 能以零 hierarchical heap
-> 运行，长时间 L2 task 执行期间仍能处理 control。
+> stale-generation 误用或 double-release。Local L3 资源使用有界、完成后可复用，
+> 长时间 L2 task 执行期间仍能处理 control；零 heap 的必要性按 §2.5 讨论。
 
 ### 5.7 P2：建立生产级 Multi-L3 通信
 
@@ -2100,7 +2079,7 @@ remote session/transfer/attachment plan，P3 才把它们组合成用户可选�
 | **①** endpoint 与 capability view | `#2721` | 与 P1/W2 共同设计，**逐 backend 交付** |
 | **②** 多 backing / adapter 的 ResourceBundle | 本地半 `#2721` · 跨节点半 `#2722` | 先定义组合与失败语义，**先验收本地域，再验收跨节点域** |
 | **③** 暴露 plan / capability / completion | `#2721` | **随每条访问路径一起交付**，成为 P1/P2 的接口要求，不单独排一段 |
-| **④** 最小同步原语与 SPSC queue | `#2720`（原语）· 上层库（schema/policy）· `EX-2`（常驻循环） | 与 W4①/W6 **合成同一工作包**，不重复排期 |
+| **④** 最小同步原语与 SPSC queue | `#2720`（原语）· 上层库（schema/policy）· `#2723`（常驻循环） | 与 W4①/W6 **合成同一工作包**，不重复排期 |
 | **⑤** 64-rank 上限改造 | `#2722` | **独立的规模扩展工作包**，不阻塞小规模域先行交付 |
 | **⑥** 验收后才发 capability view | **不是工作项，是约束** | 加在 `#2721` 上并传导到 `#2721`/`#2721` |
 
@@ -2202,7 +2181,7 @@ session、事务及故障清理验收；64-rank 扩展也不阻塞小规模域�
   provenance 是旧 raw-pointer ABI 的过渡 guard；在 BufferHandle 带
   generation/canonical identity 落地前，不得把它描述成 strict-ABA-safe
   ownership。
-- SharedBufferArena 迁移完成前不删除 HeapRing。
+- 若确认替换 HeapRing，先迁移实际使用者并验证寿命与回收；不预设 SharedBufferArena。
 - [PR 1397][pr-1397] 的 eager `Worker.init()` 与 [PR 1398][pr-1398] 的
   narrowed 五态 lifecycle/terminal CLOSED 共同构成后续基线；任何公开 API
   都不得重新承担 lazy startup，后续也不得把 #1398 的 deferred gap 写成已交付。

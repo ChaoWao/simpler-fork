@@ -1,6 +1,6 @@
 # backend 矩阵 + 范例 + 边界
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 [`worker-memory-model.md`](../worker-memory-model.md) §6 + §7 + §8。
 
@@ -44,8 +44,7 @@ dependency key 用 canonical identity 而非 materialized VA，否则 alias / re
 
 - **不删 L2 设备侧 TMR GM heap**（device arena）——那是每张
   卡 AICPU 上的另一子系统，与 host 侧 HeapRing 职责/生命周期不同。
-- **HeapRing 保留** task-slot/task-id/drain 职责，只把"通用 buffer 分配"这一
-  职责迁到 `SharedBufferArena`（`Ring::init(heap_bytes=0)` 关容量不删结构）。
+- **HeapRing 的替换机制待设计确认**：保留 task-slot/task-id/drain 与 shared allocation 的合同；是否需要独立 Arena 或零 heap，按 #2721 的具体消费者与必要性证据决定。
 - **跨机 device 共享 arch-gated**，不是到处都能做的承诺；rank 绑单卡的硬约束
   不变，host/AICPU/AIV 不是对等 rank（那是 comm-domain 的事，但跨机 kind4
   backend 必须尊重它）。

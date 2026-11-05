@@ -1,6 +1,6 @@
 # Remote L3 启动与接口
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §A + §C.2。
 
@@ -125,7 +125,7 @@ HCCL 初始化 device communicator，不启动或发现 L3；本地文件式 roo
 5. **启动顺序**：本地 eager init 与 fork-before-thread 是已有约束；禁止恢复 lazy fork、
    `init()+_start_hierarchical()` 双调用或 pre-fork 打开 remote session。
 6. **参数/任务边界**：张量布局、OUTPUT 分配、remote attachment 与 callable 身份的验收
-   分别归 #2460/#2722/EX-4；不能用共享窗口已通替代 wire consumer 的完整验收。
+   分别归 #2460/#2722/#2721；不能用共享窗口已通替代 wire consumer 的完整验收。
 
 ### A.4 落地路径
 

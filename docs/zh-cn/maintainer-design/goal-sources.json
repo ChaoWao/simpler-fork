@@ -1383,16 +1383,16 @@
   },
   "scan_date": "2026-10-07",
   "document_owners": {
-    "P0.2/c-design.md": "P0 已交付证据；EX-6 终态回收",
-    "P0.2/done-followup.md": "P0 已交付证据；EX-6 终态回收",
-    "P0.2/done.md": "P0 已交付证据；EX-6 终态回收",
+    "P0.2/c-design.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "P0.2/done-followup.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "P0.2/done.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
     "README.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
-    "cpu-npu-shared-memory.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
-    "cpu-npu-shared-memory/domain-member-vs-attachment.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
-    "cpu-npu-shared-memory/domain-membership.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
-    "cpu-npu-shared-memory/hardware-constraints.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
-    "cpu-npu-shared-memory/w2-w5-inversion.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
-    "cpu-npu-shared-memory/work-breakdown.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2",
+    "cpu-npu-shared-memory.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
+    "cpu-npu-shared-memory/domain-member-vs-attachment.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
+    "cpu-npu-shared-memory/domain-membership.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
+    "cpu-npu-shared-memory/hardware-constraints.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
+    "cpu-npu-shared-memory/w2-w5-inversion.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
+    "cpu-npu-shared-memory/work-breakdown.md": "#2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；#2723",
     "deleted-closed-branches.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "dfx/c2a-hierarchical-trace.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
     "dfx/host-swimlane-delivered.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
@@ -1400,17 +1400,17 @@
     "dfx/l3-l2-thread-topology.html": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
     "docs-kernel-mode/kernel-mode-memory.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
     "docs-kernel-mode/kernel-mode-plan.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
-    "done-P0.1.md": "P0 已交付证据；EX-6 终态回收",
+    "done-P0.1.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
     "feature_roadmap.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "goal-coverage.md": "目标来源、范围与证据清单；不另维护实现状态",
     "hbg-requirements.html": "范围排除：kernel / HBG 硬件；仅保留约束证据",
     "l3l4.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
-    "l3l4/cluster-comm.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
-    "l3l4/inventory.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
-    "l3l4/lazy-init.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
-    "l3l4/memory-kinds.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
-    "l3l4/remote-startup.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
-    "l3l4/scheduling.md": "场景验收：#2460、#2722/#2724、EX-1…EX-5",
+    "l3l4/cluster-comm.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
+    "l3l4/inventory.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
+    "l3l4/lazy-init.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
+    "l3l4/memory-kinds.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
+    "l3l4/remote-startup.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
+    "l3l4/scheduling.md": "场景验收：#2460、#2722/#2724、#2721…#2721",
     "logical-physical-separation.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "maintainer-loop-prompt.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "others-ref/host-trace-log-design/README.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
@@ -1418,16 +1418,16 @@
     "others-ref/host-trace-log-design/log-design.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
     "others-ref/host-trace-log-design/trace-and-log-requirements.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
     "others-ref/memory-model.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
-    "others-ref/worker-async-pipeline-landing.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md": "#2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同",
-    "others-ref/worker-async-pipeline/contracts.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline/implementation-plan.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline/implementation-record.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline/qwen-integration.md": "#2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同",
-    "others-ref/worker-async-pipeline/trace-v1.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
+    "others-ref/worker-async-pipeline-landing.md": "已交付流水线编号；执行契约由 #2721/#2658 承接",
+    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md": "#2658 整体目标；历史方案与验收交接，#2658 保留基础程序合同",
+    "others-ref/worker-async-pipeline/contracts.md": "已交付流水线编号；执行契约由 #2721/#2658 承接",
+    "others-ref/worker-async-pipeline/implementation-plan.md": "已交付流水线编号；执行契约由 #2721/#2658 承接",
+    "others-ref/worker-async-pipeline/implementation-record.md": "已交付流水线编号；执行契约由 #2721/#2658 承接",
+    "others-ref/worker-async-pipeline/qwen-integration.md": "#2658 整体目标；历史方案与验收交接，#2658 保留基础程序合同",
+    "others-ref/worker-async-pipeline/trace-v1.md": "已交付流水线编号；执行契约由 #2721/#2658 承接",
     "review/2026-08-11-code-vs-design-audit.md": "AR/AF 审计：work-items 吸收列",
     "review/2026-09-28-cross-plan-lessons.md": "只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D",
-    "review/p0.2-design.md": "P0 已交付证据；EX-6 终态回收",
+    "review/p0.2-design.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
     "review/pr-2474.md": "#2460 的具名历史评审；不单设工作项",
     "review/pr-2475.md": "#2460 consumer 的具名历史评审及 P1 处置；API 剩余见工作项",
     "roadmap.html": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
@@ -1436,14 +1436,14 @@
     "tasks/README.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "tasks/g2-design.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
     "tasks/task-device-addr-guard2.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
-    "tasks/task-p0.2a-admission-fence.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.2b1-fake-chip-harness.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.2b2-eligibility-hook.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.2c-cancellation-journal.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.2cd-teardown-convergence.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.3-daemon-send-isolation.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.3-deadline-hardening.md": "P0 已交付证据；EX-6 终态回收",
-    "tasks/task-p0.3-zero-residual-regression.md": "P0 已交付证据；EX-6 终态回收",
+    "tasks/task-p0.2a-admission-fence.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.2b1-fake-chip-harness.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.2b2-eligibility-hook.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.2c-cancellation-journal.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.2cd-teardown-convergence.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.3-daemon-send-isolation.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.3-deadline-hardening.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
+    "tasks/task-p0.3-zero-residual-regression.md": "P0 已交付证据；历史清理证据（#1689） 终态回收",
     "tasks/task-p1a-close-merge-gates.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
     "tasks/task-public-python-tracing-api.md": "DFX 已交付证据",
     "tasks/task-scenetest-singleton-alias.md": "ST-1 → #2460；ST-2 → #2721",
@@ -1451,7 +1451,7 @@
     "w2-p1b-endpoint-convergence.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
     "work-items.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "worker-memory-model.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
-    "worker-memory-model/access-retirement-contract.md": "无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、#2722、EX-7；kernel/DFX 实现仍范围外",
+    "worker-memory-model/access-retirement-contract.md": "无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、#2722、#2658；kernel/DFX 实现仍范围外",
     "worker-memory-model/backend-matrix.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
     "worker-memory-model/bufferhandle-abi.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
     "worker-memory-model/graph-execution-contract.md": "RA 资源/访问/ABI；GE 交接约束按 §6",
@@ -1461,11 +1461,12 @@
     "review/pr-2096.md": "#2720 的具名评审与 main 集成门；实施状态见工作项",
     "simpler-pr-list.html": "候选排期投影；SPL 编号按 work-items §6/§7 映射，源码证据与状态仅取工作项；本地 C/M/E 编号不得自成实施线",
     "review/pr-2635.md": "#2720 公共 Region/SPSC 与失败身份评审；#2460 surface 交接，实施状态见工作项",
-    "l3plus-design.md": "RA/GitHub 方向入口与 EX 设计原则与具名源码地图；约束复用现有工作项，不新增实现目标",
+    "l3plus-design.md": "RA/GitHub 方向入口 设计原则与具名源码地图；约束复用现有工作项，不新增实现目标",
     "review/track-2716.md": "2716 四方向范围、具名证据与维护动作；业务状态在 GitHub，本地合同状态见 work-items",
     "review/ra-handoff.md": "资源旧编号的一次性交接；非活跃任务或状态表",
     "review/qwen-handoff.md": "#2658：Qwen 旧目标与验收的静态交接，不维护进度",
-    "review/ds-handoff.md": "#2724/#2722：旧 DS 目标与评论交接；静态具名证据，不维护进度"
+    "review/ds-handoff.md": "#2724/#2722：旧 DS 目标与评论交接；静态具名证据，不维护进度",
+    "review/ex-handoff.md": "执行目标与静态证据交接；业务归属在 GitHub"
   },
   "pr_scope": {
     "baseRefName": "main",
@@ -1988,5 +1989,177 @@
       "DS-10": "`D.5` 残留 · `P3②` 跨节点半",
       "DS-11": "`D.2` 的 opt-in 半"
     }
-  }
+  },
+  "ex_handoff": {
+    "observed_on": "2026-11-05",
+    "scope": "static goal/acceptance handoff; questions are not accepted design; no new implementation validation",
+    "legacy_to_issues": {
+      "EX-1": [
+        2721,
+        2724
+      ],
+      "EX-2": [
+        2723,
+        2721
+      ],
+      "EX-3": [
+        2721
+      ],
+      "EX-4": [
+        2721
+      ],
+      "EX-5": [
+        2721
+      ],
+      "EX-6": [],
+      "EX-7": [
+        2658,
+        2429,
+        2666
+      ]
+    },
+    "legacy_absorbs": {
+      "EX-1": "`l3l4 E` · `P1-F` · `AF2` · `AF4`",
+      "EX-2": "`W7` · `AF1`",
+      "EX-3": "`l3l4 C.3` 的 admission 半",
+      "EX-4": "`l3l4 C.2` 的 `run`/`orch`/callable 半 · `AF3`",
+      "EX-5": "`l3l4 C.3` 的 heap 结构半",
+      "EX-6": "`P0.2-f4` · `P0.2-f5` · `P0.2-f6` · `P0.2-f7`",
+      "EX-7": "`TrackA-P1` · `TrackA-P2` · `TrackA-P3` · `TrackA-P4` · `TrackA-P5` · `TrackA-P6` · `VLLM-1` · `VLLM-2` · `VLLM-3` · `VLLM-4` 的 admission 半"
+    },
+    "issues": {
+      "2721": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+        "state": "open",
+        "updated_at": "2026-11-05T06:16:41Z",
+        "body_sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d",
+        "has_other_assignee": true,
+        "children": [
+          2460,
+          1931,
+          2720
+        ]
+      },
+      "2723": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2723",
+        "state": "open",
+        "updated_at": "2026-10-26T08:28:41Z",
+        "body_sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d",
+        "has_other_assignee": true,
+        "children": []
+      },
+      "2316": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2316",
+        "state": "closed",
+        "updated_at": "2026-10-22T00:51:29Z",
+        "body_sha256": "1363133e1088f176836aed1ed80c3c673ed0f3382bb0533baa965180dbdbac2c",
+        "has_other_assignee": false,
+        "children": []
+      },
+      "1853": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/1853",
+        "state": "closed",
+        "updated_at": "2026-10-22T00:51:36Z",
+        "body_sha256": "0a48785c1f1a232ee23bea81ccb939a6d55a6c8d218568bb1eb0ba4b10a461bb",
+        "has_other_assignee": false,
+        "children": []
+      },
+      "2666": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2666",
+        "state": "open",
+        "updated_at": "2026-11-04T07:24:11Z",
+        "body_sha256": "1c3aba3ae61fd15897592af20bb448905d781e9190e5938934ff574e6da81859",
+        "has_other_assignee": true,
+        "children": [
+          2669,
+          2429,
+          2773,
+          2774
+        ]
+      },
+      "2658": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2658",
+        "state": "open",
+        "updated_at": "2026-11-04T07:42:14Z",
+        "body_sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172"
+      },
+      "2429": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+        "state": "open",
+        "updated_at": "2026-10-27T01:44:11Z",
+        "body_sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee"
+      }
+    },
+    "comments": {
+      "2721": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6653477675",
+        "id": 6653477675,
+        "body_sha256": "128dd1ac78bf361a18588aea7fda72a60b6cc7cc61cf9070686f645488bb3ec9",
+        "created_at": "2026-11-05T08:34:45Z"
+      },
+      "2723": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2723#issuecomment-6653480374",
+        "id": 6653480374,
+        "body_sha256": "43c3103767e3aaaf8616c008c69aace1613a5552b27c8c49b0b7bd8d4db92999",
+        "created_at": "2026-11-05T08:34:54Z"
+      },
+      "2658": {
+        "url": "https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6653482776",
+        "id": 6653482776,
+        "body_sha256": "35e8982dbf82c2776fb9466ee97863f22c2d4156bebb948ef1c10db4f4d235ea",
+        "created_at": "2026-11-05T08:35:01Z"
+      }
+    },
+    "historical_delivery": {
+      "EX-6": {
+        "pr": 1689,
+        "sha": "f8106e24e",
+        "archive": "review/ex-handoff.md"
+      }
+    }
+  },
+  "interface_contracts": [
+    {
+      "consumer": 2723,
+      "provider": 2720,
+      "kind": "接口",
+      "contract": "公共区间、实际访问与必要同步；queue/发布由应用定义"
+    },
+    {
+      "consumer": 2723,
+      "provider": 2721,
+      "kind": "接口",
+      "contract": "长任务中控制响应与完成/退出合同，不预设线程或双帧"
+    },
+    {
+      "consumer": 2722,
+      "provider": 2724,
+      "kind": "接口",
+      "contract": "真实 session/endpoint/部署结果，不等待全量部署工作"
+    },
+    {
+      "consumer": 2722,
+      "provider": 824,
+      "kind": "接口",
+      "contract": "域最后使用、关闭接纳与失败回收结果"
+    },
+    {
+      "consumer": 2658,
+      "provider": 2666,
+      "kind": "条件",
+      "contract": "选用 kernel/capture 路径时核具体 prepare/launch/retain/release 产物；普通 program 不等全部 capture"
+    },
+    {
+      "consumer": 2658,
+      "provider": 2721,
+      "kind": "接口",
+      "contract": "公共使用寿命、有界资源和实际最后消费者，不强制零 heap"
+    },
+    {
+      "consumer": 2460,
+      "provider": 2496,
+      "kind": "条件",
+      "contract": "仅选用 A5 direct-map 分支时核实实际映射能力，不阻止 copy 路径"
+    }
+  ]
 }

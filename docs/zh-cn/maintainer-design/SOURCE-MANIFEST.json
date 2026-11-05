@@ -6,7 +6,7 @@
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "curated design snapshot; resource, deployment, communication and Qwen integration progress lives on GitHub; original code evidence baselines retained",
+  "scope": "curated design snapshot; resource, deployment, communication, execution and Qwen integration progress lives on GitHub; original code evidence baselines retained",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -35,23 +35,23 @@
     },
     {
       "path": "cpu-npu-shared-memory/work-breakdown.md",
-      "source_sha256": "3c8e023c74993fe4aac1e24b9e2114eca0f2f86ddb30ed0163834092f5df2df8",
-      "published_sha256": "a045f18b13fc34a30017e0195261b70788fa8928c1556485cc587221306b50cc"
+      "source_sha256": "f08b7762d56690a427b5c55601525dea0f422b9e5ab95e09c166caf0eaa0e8d1",
+      "published_sha256": "b5486a4dbb92a0bb31472500d154f0e6fe8a6019c845c7d6b335fcbc3f78f5f2"
     },
     {
       "path": "feature_roadmap.md",
-      "source_sha256": "3478fd712442913726c99232bd1ea88b7b308b8bf524bf441b36c0556f18bff0",
-      "published_sha256": "ba986c61e1cddab305f44c0f378cc9910419d03d0f71f8a250c7226d5f4240f1"
+      "source_sha256": "ddf4ba6611b5bb2285260ee06843c4df32e7488b79a6f1c42632fff582a0ebba",
+      "published_sha256": "b6383b7e190023a96a8555bbee746aae1f2e1bde8b9c6e93dbcd763e3fccb96d"
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "6d8356529a9104852de964a6e9c94db1ff2b89f8ac482f49bd3c04a1f7d2d347",
-      "published_sha256": "7f055b501ccce25e740a3f8b0866d5c67942aafa4d00b5a24c0aa9278f203b24"
+      "source_sha256": "769faaf8ffea21aa69423ee874db906bb1ac987953b964afecea2ef5e03bd2b0",
+      "published_sha256": "4affd4d38835d1f91bb2e87b3aa5fabd93d4571227cd1080a17ed397e30f5ba5"
     },
     {
       "path": "l3l4.md",
-      "source_sha256": "cc6f39dc060f710878d80230a9568745dd25f7b5526ecc366b21ba3e4d362b93",
-      "published_sha256": "66e58c7c9107668df2e0fe16842381bf1b65a45c82c55d65ba862d97afaec951"
+      "source_sha256": "e38837e496608b048cc81b613572fa42b90184dfc0f4d43e6ce4f70f6c03e691",
+      "published_sha256": "d58664c6d49e31f201bf50e5da4a90596f77a71f7c35fce6f44b15b858a2a4c7"
     },
     {
       "path": "l3l4/cluster-comm.md",
@@ -75,13 +75,13 @@
     },
     {
       "path": "l3l4/remote-startup.md",
-      "source_sha256": "a95a2eab9d3b540a8e2087a705e24beab40f948deaa027208d38e146846220f2",
-      "published_sha256": "20b9b562a003c36218b5d70d3883cf755a30ceee9127740727d0095b75d2beda"
+      "source_sha256": "2d27a6d38e14029d20d1b529c0694c97ad7e141fdb4f113647a84d1fdd5bbb33",
+      "published_sha256": "19563a6883d7b80215bbab49729e46164af2ae882919968131d56d4cfa1ba94e"
     },
     {
       "path": "l3l4/scheduling.md",
-      "source_sha256": "c0af18a2d012f201293704b3486a33160519d49b80aefca2364df6d8e558b2b9",
-      "published_sha256": "7363c75c00b7058186d31773f71a36bf70555b97952d91717c75d561b552008c"
+      "source_sha256": "21a358a54211582112a174e3ea0f06e4fd3c48a668073a8dd1cae7ff6989ba67",
+      "published_sha256": "9ecafb07e926c0881324c6a18bfa49a2e94fe0d30ec0f302a48f55bf96efbdf2"
     },
     {
       "path": "logical-physical-separation.md",
@@ -90,18 +90,18 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "466b1d3b822ce889db86c151fc020c3ef6ff58e8196ed26e1ebb71ded04e62b6",
-      "published_sha256": "56bbfcdb5ac288a5ca8153379b4ff84005cf474656d9a6f23b31876ca77864d1"
+      "source_sha256": "9d27665f34955ebb412dc25b8d5fa3d58791eddae984a3e89c0fe932d8deeac3",
+      "published_sha256": "fe23d98503b9bb59aee5ed7086659baf85048573453dbaca36698c71a4f24301"
     },
     {
       "path": "track-boundaries.md",
-      "source_sha256": "fbadc41eaf31b2ad3a73e3c5bd3cbdff64ddfcfdb4e60763603f8f5fae7b8717",
-      "published_sha256": "df9eae2539bb60791431940ecee89d0d9448873a50ad7b39b7d7e55d5f32ede5"
+      "source_sha256": "fc98eed1492f2091f593295189a18dc9399d9c4f4bf83a2a19c64747724f76b2",
+      "published_sha256": "71b38b21ed78dd1e14c39d9e1c1832582319d05be2c5f892f22787d2eaf24e82"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "6f34e521fa3704977000e9060b4b954768ab535f3b0d84d11f75612620f1286a",
-      "published_sha256": "96eef3488716b27a2f84eafefcefcb006f4428205e0b4148a39b365b65cadab7"
+      "source_sha256": "6915f997844171cf4e6fdd2ae18f8fe3fc9ea4dff8b06eb32c7fe17a063e61a1",
+      "published_sha256": "d3915bd1da2edaebb7bb83840f9f2bc2fa4209d05f900ac2583ebdf1e9577955"
     },
     {
       "path": "worker-memory-model.md",
@@ -110,13 +110,13 @@
     },
     {
       "path": "worker-memory-model/access-retirement-contract.md",
-      "source_sha256": "fb47a2fefbdf6f50170b0327f98acbbe611267baa381336afde3ad4868a89847",
-      "published_sha256": "daa06427e26110a1c94589bdf8d496a54ef7c2f481d3fe387287c40febfbfaf1"
+      "source_sha256": "0615d37bf71cc2653c413b9e824ffdbdee03239554024b80773df498de898938",
+      "published_sha256": "0a04066282441d1cdcce7c25d7872611d9ba4e90f72a0628a27ea240e697507e"
     },
     {
       "path": "worker-memory-model/backend-matrix.md",
-      "source_sha256": "4d52394a61d9c71a18dd44faff3674ebcc4afc52198860107e412ee884d37b91",
-      "published_sha256": "a326aeed4b5349b4353474349b4f77dc15ec4a809b4c7736179b4622eb3ee36f"
+      "source_sha256": "642205cb62f29955ea1c0335ee75984184ff3046b8121871fb014cef0e5c0a33",
+      "published_sha256": "c078377511973e1b22ebc8dc83e7288e60466665ca0ee4044d022da032c090c5"
     },
     {
       "path": "worker-memory-model/bufferhandle-abi.md",
@@ -130,8 +130,8 @@
     },
     {
       "path": "worker-memory-model/p1b-corrected-design.md",
-      "source_sha256": "fd05c6fd82befb9535c7ba5f97a9fbbb62109730fdf44a3393a0d1b5e69ae21d",
-      "published_sha256": "0e21d1d6fe23ce662bc073b92ed8515f2bf157f6764592ad7dccc1dc4ca6d92b"
+      "source_sha256": "e111643f4a9dfbdee0fb1f896ad259118b64e92a06ccc6042ad8b563e321b6a9",
+      "published_sha256": "70ffafb3c79265848b733be0fc97ba18dcad4d927b30d05b467bf2b5291e7a9e"
     },
     {
       "path": "worker-memory-model/p1b-review-findings.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "worker-memory-model/user-surface.md",
-      "source_sha256": "098dbe223a975cb24155d51391422e92d43b9a770c070e26b3afe834fbf5a86f",
-      "published_sha256": "fe0e4128953c270788d44cb5eec2987f70355b4869d51ef6e056333a33c81cd6"
+      "source_sha256": "a4bfeb5409e90552139d9874fae4274a7daaa8b444846aeb2f72c76eca4a8e41",
+      "published_sha256": "e2616a18e03d97f941e82917d38dc59f8a657d086dceca920eccfac7de4a1b28"
     },
     {
       "path": "review/2026-09-28-cross-plan-lessons.md",
@@ -165,8 +165,8 @@
     },
     {
       "path": "l3plus-design.md",
-      "source_sha256": "c6d1a1d17ee4d78b664fabbcbdf26babaad1c42033d19db137fa842b283bb06a",
-      "published_sha256": "556594923218a06db70cba5c0c585d9336449e100e4e055561035f8168ea816d"
+      "source_sha256": "78c0088ecc610e2d5164ecd42eefc97cf297ddf0324291667a076119be555ed5",
+      "published_sha256": "c14f5494297b4749dd8581bb12c0cd961ce0a3910e262306476b531d72d03617"
     },
     {
       "path": "review/track-2716.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "38d7a5b4206fc2be223e6910e5a59fde0bfecc477ee178ac7b9d3a0724772479",
-      "published_sha256": "b5dd0726884375a2820b409197423f0bd1e662592837823644f790b73639fd68"
+      "source_sha256": "942bc37b7d4a47203743b6626abf9938a98fb29c0db88a3a0cc43df1a0e966a9",
+      "published_sha256": "64b29cf8fa0f1abc0901576c0f9b1b3b863f09fbe552500d112c72c78e4f36a5"
     },
     {
       "path": "review/ra-handoff.md",
@@ -192,6 +192,11 @@
       "path": "review/ds-handoff.md",
       "source_sha256": "e8440a7f3d2ffa1e2dfa1e332eb7877c81f105e2d4cc69dfa5a1a1e53a52202f",
       "published_sha256": "106c64c5ee1ce37b88ba4971969f0122ae53ac41aaca4743aff6e73741d7e7aa"
+    },
+    {
+      "path": "review/ex-handoff.md",
+      "source_sha256": "b35acae2fb5f993598831ec2381f8a337729c3e12e511610255599a5c0bb5efe",
+      "published_sha256": "409ea0024df54c89f97d9cce0bb37f94889c37cfde73c4ef9753ed8f9cc7e5de"
     }
   ],
   "omitted_local_references": [
@@ -212,7 +217,6 @@
     "P0.2/c-design.md",
     "P0.2/done-followup.md",
     "P0.2/done.md",
-    "check-dep-closure.py",
     "check-single-owner.py",
     "deleted-closed-branches.md",
     "dfx/c2a-hierarchical-trace.md",
@@ -260,5 +264,6 @@
   ],
   "resource_handoff_observed_on": "2026-11-05",
   "qwen_handoff_observed_on": "2026-11-05",
-  "ds_handoff_observed_on": "2026-11-05"
+  "ds_handoff_observed_on": "2026-11-05",
+  "ex_handoff_observed_on": "2026-11-05"
 }
