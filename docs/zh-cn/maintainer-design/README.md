@@ -1,11 +1,12 @@
 # simpler 核心设计快照
 
-发布日期：2026-11-05 UTC。本轮重新核对 GitHub 依赖关系，生成可交互依赖 DAG；不推进既有代码审计基线，也不表示功能已全部交付。
+发布日期：2026-11-05 UTC。本轮记录 #2714 的具名技术评审，保留已核对的依赖 DAG；不推进既有代码审计基线，也不表示功能已全部交付。
 
 ## 阅读入口
 
 | 目的 | 文档 |
 | ---- | ---- |
+| Host DDR 技术评审 | [#2714 具名评审](review/pr-2714.md)：Host 导出寿命、并发首次映射与 CI 证据 |
 | 当前目标依赖 | [交互依赖 DAG](dependency-dag.html)：合同、条件与来源；责任树单列 |
 | 资源任务与设计问题 | [#2721](https://github.com/hw-native-sys/simpler/issues/2721) · [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998) |
 | 本地入口与验收索引 | [工作项](work-items.md) · [看板](roadmap.html) |
@@ -29,7 +30,7 @@
 - 共同模型与迁移归 #2460，Region 归 #2720；平台映射、通信域寿命和执行资源分别引用其原有入口，不全部收进 #2721。
 - Buffer 描述存储，Tensor 引用 Buffer 并描述几何，Worker 是逻辑角色。共享映射按共享读写建立；真实 OS／驱动限制保留，不新增公共读写策略。旧 access/wire 的迁移须成对处理消费者。
 - 两套 Arena、公开 ResourceBundle、plan、capability 对象的必要性仍由 #2721 的设计问题核定。评论发布不代表负责人已经接受，跟踪覆盖不代表实现完成。
-- 本地文档守卫及负对照验证见本轮记录；页面在桌面与窄屏检查，无脚本异常和横向溢出。未运行产品或硬件测试。
+- 本轮评审重建具名 head 的 CPU bindings，相关回归 56 passed，补充探针复现两项缺陷；未重跑硬件。文档守卫 13 项通过，3 项报告全局索引缺口：19 份 joint-goals 资料与 main-target 新 open PR #2906–#2909 待登记。页面桌面与窄屏渲染通过；不宣称全量看板一致性检查完成。
 - 本轮 GitHub 归属观察日期为 2026-11-05；具名代码与 CI 证据仍按各页原 SHA 阅读。此前方向审计为 `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`，历史全量源码审计为 `937c57efc71ad01a01c3a72072df075d2a5dd24f`；备份日期不是全目标重新验收日期。
 - 只登记 main 目标 PR。未收入的本地参考链接明确标注；文件来源与导出哈希见 [清单](SOURCE-MANIFEST.json)。HTML 下载后可以交互查看。
 
@@ -80,3 +81,4 @@
 - [分布式部署与通信：旧 DS 目标交接](review/ds-handoff.md)
 - [执行目标交接：历史 EX 索引退役](review/ex-handoff.md)
 - [dependency-dag.html](dependency-dag.html)
+- [PR #2714 技术评审](review/pr-2714.md)

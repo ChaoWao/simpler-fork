@@ -1467,7 +1467,8 @@
     "review/qwen-handoff.md": "#2658：Qwen 旧目标与验收的静态交接，不维护进度",
     "review/ds-handoff.md": "#2724/#2722：旧 DS 目标与评论交接；静态具名证据，不维护进度",
     "review/ex-handoff.md": "执行目标与静态证据交接；业务归属在 GitHub",
-    "dependency-dag.html": "GitHub 具体产物依赖与原生归属的图形投影；不维护独立进度"
+    "dependency-dag.html": "GitHub 具体产物依赖与原生归属的图形投影；不维护独立进度",
+    "review/pr-2714.md": "#2730/#2722 的具名技术评审与验收证据；依赖 #2731 不代表交付"
   },
   "pr_scope": {
     "baseRefName": "main",
