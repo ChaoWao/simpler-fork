@@ -1,6 +1,6 @@
 # 工作项登记表 —— 本地合同归属与验收证据
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > **2026-11-04 状态与来源刷新**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；全部本地编号重新推导，外部来源正文/决定性评论和 #2716 原生子树重新获取。新增交付、剩余合同及下一动作按本页和 [范围分析](review/track-2716.md)。下方 10 月 18 日保留为历史全量源码审计；当前具名代码/CI 核对不冒充所有平台的重新验收。
 >
@@ -250,7 +250,8 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 - **kernel 模式**：维持用户既定排除；独立栈按 §1.2 登记，完整编号与原则见 [覆盖清单](goal-coverage.md)。是否第四线仍待用户裁决，不能用栈已合入推导批准。
 - **runtime / 调度器与 HBG 硬件需求**：GE 内部实现和硬件预算归各自维护者；我们的 GE-R1–R6 交接要求仍在 §6，不能随排除项消失。
 - **DFX**：`VLLM-5`（continuous DFX）由 collector/runtime 的独立交付负责；#2588 已合入 `545c05a43469`，具体验收仍按 collector/backend，不能由普通 run 的 early enqueue 推导 DFX 完成。#2465 `02fd1f63e` 与 #2483 `92a14e4e7` 已分别交付 scope-stats、TMR dep-gen 后台输出，#2484 `8aae172e5` 修 A5 错误关闭的 run identity 传参；#2490 `01bf24bfa` 已交付 HBG 后台依赖图输出，发布证明来自 host capture，区别于 TMR device record 的完成/隔离条件；run 返回与产物发布分离，flush_diagnostics 是产物屏障。它们不等于任意 collector/runtime 的 continuous DFX 全部完成。T7 跨 host 部分由 #2217/#2304 跟踪，不能用本地 #2152/#2218 的交付关掉 #2134 全范围。
-- **Qwen / vLLM adapter 与跨仓验收**：`Q1` `Q2` `Q3` `Q4` `C2b` `V1`、`VLLM-6` `VLLM-7` `VLLM-8` `VLLM-9` 归现有 Qwen 集成轨及 #2429 的 adapter/capture/E2E 交付；程序 admission 归 EX-7，资源账本归 #2666。#2447/#2456 的 depth-one/fallback、#2511 的双请求 clone、#2568 的 DEVICE feedback、#2592 的固定形状持续多请求均已合入；#2605 vLLM eager 仍 OPEN，自动资源准入与真实模型组合及端到端性能继续独立验收。
+- **Qwen 跨仓整体验收**：`Q1` `Q2` `Q3` `Q4` `C2b` 的唯一整体跟踪入口为 [#2658](https://github.com/hw-native-sys/simpler/issues/2658)；[交接对照](review/qwen-handoff.md)保留各项验收与旧方案边界，本地不另记进度。程序 admission 归 EX-7，执行资源合同归 #2666；基础能力合入不替代真实模型、持续请求与端到端性能验收。
+- **vLLM 消费者接入**：`V1`、`VLLM-6` `VLLM-7` `VLLM-8` `VLLM-9` 按原来源分项，adapter/capture 消费者交付归 #2429/#2666；系统组合与性能交接 #2658。原编号保留原义，不把实现范围与系统验收重复排期。
 - **CI / 文档 / 打包**：按 README 登记，不建实施阶段。
 
 ⚠️ **这不是「不重要」，是「不由这三条线的交接契约管辖」。** 把它们塞进三条线会让

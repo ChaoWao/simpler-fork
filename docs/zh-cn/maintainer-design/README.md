@@ -1,6 +1,6 @@
 # simpler 核心设计快照
 
-发布日期：2026-11-05 UTC。本轮核对资源设计与 GitHub 跟踪归属；不推进既有代码审计基线，也不表示功能已全部交付。
+发布日期：2026-11-05 UTC。本轮核对资源与 Qwen 跨仓目标的 GitHub 跟踪归属；不推进既有代码审计基线，也不表示功能已全部交付。
 
 ## 阅读入口
 
@@ -9,6 +9,7 @@
 | 资源任务与设计问题 | [#2721](https://github.com/hw-native-sys/simpler/issues/2721) · [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998) |
 | 本地入口与验收索引 | [工作项](work-items.md) · [看板](roadmap.html) |
 | 历史资源编号交接 | [16 项完整对照](review/ra-handoff.md) |
+| Qwen 跨仓目标 | [#2658](https://github.com/hw-native-sys/simpler/issues/2658) · [Q1–Q4 / C2b 验收交接](review/qwen-handoff.md) |
 | 设计原则与边界 | [逻辑与物理](logical-physical-separation.md) · [L3+ 设计](l3plus-design.md) · [交接契约](track-boundaries.md) |
 | 目标来源与证据 | [来源清单](goal-sources.json) · [覆盖口径](goal-coverage.md) · [此前范围审计](review/track-2716.md) |
 | 内存与资源退休 | [用户面](worker-memory-model/user-surface.md) · [退休契约](worker-memory-model/access-retirement-contract.md) |
@@ -18,6 +19,7 @@
 
 - `.docs` 是唯一维护树，保持 gitignored；本目录是导出备份，不是第二份实时看板。
 - 公共资源不再维护本地 RA 独立任务或进度。历史 16 项全部交接到 GitHub，原编号只供历史引用；DS/EX 保留本地验收索引。
+- Qwen 不再维护独立本地进度轨；Q1–Q4/C2b 的整体目标归 #2658，#2429/#2666 保留 vLLM 接入与执行资源边界。固定两帧等旧方案不是当前强制要求，具体场景保留于交接记录。
 - 共同模型与迁移归 #2460，Region 归 #2720；平台映射、通信域寿命和执行资源分别引用其原有入口，不全部收进 #2721。
 - Buffer 描述存储，Tensor 引用 Buffer 并描述几何，Worker 是逻辑角色。共享映射按共享读写建立；真实 OS／驱动限制保留，不新增公共读写策略。旧 access/wire 的迁移须成对处理消费者。
 - 两套 Arena、公开 ResourceBundle、plan、capability 对象的必要性仍由 #2721 的设计问题核定。评论发布不代表负责人已经接受，跟踪覆盖不代表实现完成。
@@ -68,3 +70,4 @@
 - [2716：范围、代码证据与维护动作](review/track-2716.md)
 - [goal-sources.json](goal-sources.json)
 - [资源与访问：GitHub 交接对照](review/ra-handoff.md)
+- [Qwen 跨仓目标交接到 #2658](review/qwen-handoff.md)

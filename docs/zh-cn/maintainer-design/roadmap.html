@@ -262,6 +262,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </p>
 
 <section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
+<section id="integration-references"><h2>跨仓模型 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/qwen-handoff.md">Q1–Q4 / C2b 验收交接</a>。</p><div id="integration-reference-list"></div></section>
 <h2>轨道与阶段<span class="hint">行 = 轨道，格 = 阶段（宽度不编码任何量）</span></h2>
 <div class="board" id="board"></div>
 
@@ -483,60 +484,6 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       ],
       "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
       "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
-    },
-    {
-      "name": "Qwen 跨仓集成",
-      "note": "旧 Q1–Q4 与 #2429 集成验收；测试结果与合入分别记。",
-      "stages": [
-        {
-          "id": "Q1",
-          "nm": "Qwen decode 接 RunHandle",
-          "p": "flight",
-          "health": "residual",
-          "hnote": "真实 depth-one 与安全串行 fallback 已由 #2447/#2456 交付；#2436 OPEN，clone-request / serving 仍按 README §2.2 验收。",
-          "items": [],
-          "doc": "README.md §2"
-        },
-        {
-          "id": "Q2–Q4",
-          "nm": "prefill · 多层 · 端到端 serving",
-          "p": "todo",
-          "health": null,
-          "hnote": "⬜ 待 Q1 立住后推进；均在 pypto 仓侧。",
-          "items": [],
-          "doc": "README.md §2"
-        },
-        {
-          "id": "C2b",
-          "nm": "trace 关联到 serving 请求与 token",
-          "p": "todo",
-          "hnote": "旧 Qwen trace 关联目标：serving request、token/step、dispatch、code image 与既有 span 键关联。属于外部 DFX/adapter 验收（work-items.md §7）；不另创建 issue。",
-          "items": [],
-          "doc": "README.md §2"
-        },
-        {
-          "id": "VLLM",
-          "nm": "vLLM 工作负载与 adapter 验收",
-          "p": "flight",
-          "items": [
-            {
-              "n": "#2447",
-              "k": "pr",
-              "s": "merged",
-              "t": "merge 9b283ab1e45d；范围与证据见 README / goal-coverage.md。"
-            },
-            {
-              "n": "#2456",
-              "k": "pr",
-              "s": "merged",
-              "t": "merge b57629cf9f81；范围与证据见 README / goal-coverage.md。"
-            }
-          ],
-          "hnote": "#2429 九项与 Step 3 七项仍有归属；#2471 已合入身份/lease UT，真实 Qwen clone 接线与 #2459 distinct-row 验收分别保留。",
-          "doc": "README.md §2"
-        }
-      ],
-      "detail": "#2447/#2456 已合入真实 Qwen depth-one 与安全回退；#2471 为程序层测试子集。真实 clone-request、vLLM eager/dynamic/capture/E2E 仍由集成轨负责；程序能力 EX-7，资源 #2666。"
     },
     {
       "name": "✅ Worker 异步准备流水",
@@ -1292,7 +1239,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "DFX 与 serving adapter",
         "d": "独立跟踪，不把程序 admission 或资源 ownership 再建一份。",
-        "n": "Qwen/vLLM adapter → Qwen 集成轨；#2429 程序侧要求 → EX-7 / #2666；continuous DFX → #2465；T7 跨 host → #2217/#2304。"
+        "n": "Qwen 四仓整体验收 → #2658；vLLM adapter → #2429/#2666；程序合同 → EX-7。continuous DFX → #2465；T7 跨 host → #2217/#2304。"
       }
     ]
   },
@@ -1845,6 +1792,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
       {
+        "t": "2026-11-05 · Qwen 整体目标直接跟踪 #2658",
+        "b": "判断更正：README 和看板仍把 Q2–Q4 交给 #2429，并沿用旧 Q1 前置和两帧方案；#2658 与 #2429 正文已明确系统验收归 #2658。新判据：按目标逐项交接 Q1–Q4/C2b；固定容量和 API 形状不自动继承为要求，trace、动态 batch、失败退出等具体场景不得随进度轨退役而丢失。最新负责人评论与旧正文进度分别辨读，本地候选组合不等于上游 main 交付；本轮只核归属，不推进代码基线。"
+      },
+      {
         "t": "2026-11-05 · 本地 RA 独立 track 退役，16 项交接到 GitHub",
         "b": "判断更正：曾把两套 Arena、公共 ResourceBundle、plan/capability 与额外 grant 策略当成待实现目标。它们的必要性须由场景和验收证明，不能由候选类型不存在推导功能缺口。资源进度只查 GitHub；#2721 的设计澄清评论仍是待决问题。新判据：删除本地编号前逐项保留跟踪入口与验收要求；评论发布不等于方案确认，跟踪覆盖不等于功能交付。DS/EX 的外部依赖须写具体接口合同，不自动等待整个 Issue 完成。"
       },
@@ -2349,6 +2300,14 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "url": "https://github.com/hw-native-sys/simpler/issues/2666",
       "scope": "共同 prepare/launch/retain/release 及 workspace；#2883 资源分类、#2316 流水容量分别跟踪，通用 kernel 实现保持范围外。"
     }
+  ],
+  "integrationReferences": [
+    {
+      "issue": 2658,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2658",
+      "title": "四仓真实模型 HBG × Async 整体验收",
+      "scope": "Q1–Q4、C2b → M0–M4；目标、交付与进度查 GitHub。旧方案及验收要求见交接对照。#2429/#2666 保留 vLLM 接入与执行资源范围。"
+    }
   ]
 }
 </script>
@@ -2630,6 +2589,8 @@ les.innerHTML = `<summary>${D.lessons.title}（${D.lessons.items.length} 条）<
     </div>`).join('')
   + `<div class="lesson"><p><b>共同判据：</b>${D.lessons.rule}</p></div>`;
 
+const integrationList=document.getElementById('integration-reference-list');
+integrationList.innerHTML=D.integrationReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const resourceList=document.getElementById('resource-reference-list');
 resourceList.innerHTML=D.resourceReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const clog=document.getElementById('changelog');

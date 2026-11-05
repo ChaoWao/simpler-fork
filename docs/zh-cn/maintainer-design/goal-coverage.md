@@ -1,8 +1,8 @@
 # 目标来源与覆盖口径
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
-> **当前覆盖结果**：80 个文档载体、34 个合同工作项、600 个来源编号均有归属；#2716 树、决定评论及历史/当前正文共 231 个索引。188 条 main 合入登记与 169 个 open 条目受检。编号完整不等于功能全部实现。
+> **2026-11-05 交接覆盖**：82 个文档载体、604 个来源编号均有归属；工作索引保留 6 个资源 GitHub 入口、11 项 DS 与 7 项 EX，Qwen 的 Q1–Q4/C2b 由 #2658 直接跟踪。PR/Issue 登记覆盖以本次守卫输出为准，以下具名历史审计基线保持原日期。编号完整不等于功能全部实现。
 >
 > **2026-11-04 编号与归属复核**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；本地来源全部重新提取，原有外部来源重新读取，#2716 30 节点 / 29 边及决定评论纳入索引。#2429 当前五项验收单独编号；历史编号保留原义。源码/CI 的当前具名核对见 [证据与动作](review/track-2716.md)，下面旧日期的计数与全量代码审计不自动前移。
 >
@@ -16,7 +16,7 @@
 
 - U2a 显式 HOST 消费已由 #2501 交付；仍未完成的 mapping/跨进程能力继续归 #2496/#2460。
 - 统一 chip materialization 已由 #2597 交付；统一 Buffer 的全部 IO/远端/close 契约仍分属 #2460、DS-3、#2460。
-- #2571/#2596 提供 grant 与自动准入；真实 Qwen 的 clone/DEVICE/持续请求已有 #2511/#2568/#2592。自动模式与真实模型组合、任意动态到达及性能证明继续归 EX-7/#2666，不用旧“三套资源上限”描述当前通用能力。
+- #2571/#2596 提供 grant 与自动准入；真实 Qwen 的 clone/DEVICE/持续请求已有 #2511/#2568/#2592。自动模式与真实模型组合、任意动态到达及系统性能证明归 #2658；EX-7/#2666 保留程序与资源合同，不用旧“三套资源上限”描述当前通用能力。
 - #2594 的七项验收归 DS-6 及其 owner/Buffer/close 交接；#2598 只提供三种 session cleanup 结果观测，不关闭 DS-1/DS-4。
 - `simpler-pr-list.html` 的 42 项和本地别名纳入来源全集；ABORT poison、RDMA 空 provider 两条旧判断已证伪。候选页保留历史排期标记，当前状态只查工作项。
 - #2450 CLOSED/COMPLETED 不等于 KV alias 已实现：main 仍拒绝同任务重叠写。KV-R1–R5 保留在 #2721。#2425 历史故障由关闭评论列出的 #2426/#2435/#2476 收口；#2559 是独立新现象，不能假设同因。
@@ -139,13 +139,15 @@
 | others-ref/host-trace-log-design/trace-and-log-requirements.md（本地参考：`others-ref/host-trace-log-design/trace-and-log-requirements.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | others-ref/memory-model.md（本地参考：`others-ref/memory-model.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | others-ref/worker-async-pipeline-landing.md（本地参考：`others-ref/worker-async-pipeline-landing.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md（本地参考：`others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md`） | Qwen 集成轨；EX-7 消费程序侧要求 |
+| others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md（本地参考：`others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md`） | #2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同 |
 | others-ref/worker-async-pipeline/contracts.md（本地参考：`others-ref/worker-async-pipeline/contracts.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
 | others-ref/worker-async-pipeline/implementation-plan.md（本地参考：`others-ref/worker-async-pipeline/implementation-plan.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
 | others-ref/worker-async-pipeline/implementation-record.md（本地参考：`others-ref/worker-async-pipeline/implementation-record.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
-| others-ref/worker-async-pipeline/qwen-integration.md（本地参考：`others-ref/worker-async-pipeline/qwen-integration.md`） | Qwen 集成轨；EX-7 消费程序侧要求 |
+| others-ref/worker-async-pipeline/qwen-integration.md（本地参考：`others-ref/worker-async-pipeline/qwen-integration.md`） | #2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同 |
 | others-ref/worker-async-pipeline/trace-v1.md（本地参考：`others-ref/worker-async-pipeline/trace-v1.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
 | review/2026-08-11-code-vs-design-audit.md（本地参考：`review/2026-08-11-code-vs-design-audit.md`） | AR/AF 审计：work-items 吸收列 |
+| [review/ra-handoff.md](review/ra-handoff.md) | 资源旧编号的静态交接；进度查 GitHub |
+| [review/qwen-handoff.md](review/qwen-handoff.md) | #2658：Qwen 旧目标与验收的静态交接，不维护进度 |
 | [review/2026-09-28-cross-plan-lessons.md](review/2026-09-28-cross-plan-lessons.md) | 只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D |
 | review/p0.2-design.md（本地参考：`review/p0.2-design.md`） | P0 已交付证据；EX-6 终态回收 |
 | [review/pr-2096.md](review/pr-2096.md) | #2720 的具名评审与 main 集成门；实施状态见工作项 |
@@ -268,3 +270,7 @@
 | #2502 | `f16b6bb420f3f1ed384c7a41a9df49e3a174531a` | 范围外 runtime/HBG 实现 |
 | #2501 | `121d807bb988af39761c577d4e23ad2b17d6f69f` | #2460 / U2a |
 | #2500 | `a711032ed3a582d241b94af5a045bdb3d5046869` | 范围外 DFX/log |
+
+## Qwen 跨仓交接口径
+
+Q1–Q4、C2b 的整体目标由 [#2658](https://github.com/hw-native-sys/simpler/issues/2658) 承接；[逐项对照](review/qwen-handoff.md)保留具体场景，不维护本地进度。#2429/#2666 为 vLLM 接入与资源交接，不能替代 #2658 的系统验收。2026-11-05 只复核 Issue 归属与设计覆盖，不推进上方 main 审计基线。

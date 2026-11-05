@@ -1419,11 +1419,11 @@
     "others-ref/host-trace-log-design/trace-and-log-requirements.md": "DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线",
     "others-ref/memory-model.md": "入口、约束、归属/里程碑或历史证据；不创建独立实现目标",
     "others-ref/worker-async-pipeline-landing.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md": "Qwen 集成轨；EX-7 消费程序侧要求",
+    "others-ref/worker-async-pipeline-through-q1-summary-and-remaining-three-prs.md": "#2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同",
     "others-ref/worker-async-pipeline/contracts.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
     "others-ref/worker-async-pipeline/implementation-plan.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
     "others-ref/worker-async-pipeline/implementation-record.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
-    "others-ref/worker-async-pipeline/qwen-integration.md": "Qwen 集成轨；EX-7 消费程序侧要求",
+    "others-ref/worker-async-pipeline/qwen-integration.md": "#2658 整体目标；历史方案与验收交接，EX-7 保留基础程序合同",
     "others-ref/worker-async-pipeline/trace-v1.md": "已交付流水线编号；执行契约由 EX-1/EX-7 承接",
     "review/2026-08-11-code-vs-design-audit.md": "AR/AF 审计：work-items 吸收列",
     "review/2026-09-28-cross-plan-lessons.md": "只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D",
@@ -1463,7 +1463,8 @@
     "review/pr-2635.md": "#2720 公共 Region/SPSC 与失败身份评审；#2460 surface 交接，实施状态见工作项",
     "l3plus-design.md": "RA/DS/EX 设计原则与具名源码地图；约束复用现有工作项，不新增实现目标",
     "review/track-2716.md": "2716 四方向范围、具名证据与维护动作；业务状态在 GitHub，本地合同状态见 work-items",
-    "review/ra-handoff.md": "资源旧编号的一次性交接；非活跃任务或状态表"
+    "review/ra-handoff.md": "资源旧编号的一次性交接；非活跃任务或状态表",
+    "review/qwen-handoff.md": "#2658：Qwen 旧目标与验收的静态交接，不维护进度"
   },
   "pr_scope": {
     "baseRefName": "main",
@@ -1837,5 +1838,50 @@
         2498
       ]
     ]
+  },
+  "qwen_handoff": {
+    "observed_on": "2026-11-05",
+    "scope": "ownership and acceptance handoff only; no implementation revalidation",
+    "issue": 2658,
+    "milestones": {
+      "Q1": [
+        "M0",
+        "M2"
+      ],
+      "Q2": [
+        "M1",
+        "M2"
+      ],
+      "Q3": [
+        "M2"
+      ],
+      "Q4": [
+        "M1",
+        "M3",
+        "M4"
+      ],
+      "C2b": [
+        "M3"
+      ]
+    },
+    "issues": {
+      "2658": {
+        "number": 2658,
+        "url": "https://github.com/hw-native-sys/simpler/issues/2658",
+        "updated_at": "2026-11-04T07:42:14Z",
+        "body_sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172"
+      },
+      "2429": {
+        "number": 2429,
+        "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+        "updated_at": "2026-10-27T01:44:11Z",
+        "body_sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee"
+      }
+    },
+    "latest_comment": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6625458806",
+      "updated_at": "2026-11-04T07:42:14Z",
+      "body_sha256": "c594f449a4ae7eb4008ee4866b10b56213a770d42a2c7afdffbb923d74cabdf8"
+    }
   }
 }

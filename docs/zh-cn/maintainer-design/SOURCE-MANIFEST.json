@@ -6,7 +6,7 @@
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "curated design snapshot; resource progress lives on GitHub; original code evidence baselines retained",
+  "scope": "curated design snapshot; resource and Qwen integration progress lives on GitHub; original code evidence baselines retained",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -45,8 +45,8 @@
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "116d0b626c3ad19dd3a01041edf7d9a782d1016c2f7da0abb3ceaacc8fdb93f7",
-      "published_sha256": "1f9d9e4d77a1e61a0e846fa782d2903b3230bf218769f491c49d6a0f6312bbe5"
+      "source_sha256": "e736f987b2023f94ebbe1f1a4065f31807b14788bbb57ebe2f55083e43ab9f2d",
+      "published_sha256": "b05548af424a49d89cb46a77fdbbdc69595372fafd2f79fd5e707db1d4b915f0"
     },
     {
       "path": "l3l4.md",
@@ -90,18 +90,18 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "a6cfbcfac962f5223ba9377878804f4386384703c6d3e28aeaa0f4eee01f8a2e",
-      "published_sha256": "e414b1c3d83ae99d08cf390ebfc63174b6e3884191ce749c6bade2da4d517482"
+      "source_sha256": "cb92160027354e6c80b70ef91f44b971d73461dc53a814e5696bc3fd9487264c",
+      "published_sha256": "ce6273a9c0df0b9fd4efd163c9dfa57540a88b67e3b8ab426b35031189dc815d"
     },
     {
       "path": "track-boundaries.md",
-      "source_sha256": "d3c8c3fab790296eecd2f2117ede5a8df80e0275ec510aa78441ffc64fbe0cd3",
-      "published_sha256": "135e7cad197f917bf6bf217966d4545281b2a6776442f9016c7715301059b629"
+      "source_sha256": "c15a4356ed8a1245fcbbfceb1a507576daa4c748cbbf48c127f41db6b26705b5",
+      "published_sha256": "bd1b16bc2e95bff1ab739fea9ffb4960eddc6954874f44bd08f55949607bebf2"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "9a47df88bdb6a640db6b9cf8abe4442b5298c7663f8f07b180acfb4a676eddac",
-      "published_sha256": "72ea8c65e7cfe2fe8a3ab83ca966b9e37526f688548a77b0339968c8fe6204c0"
+      "source_sha256": "6f5c68fc9f1c09651b77b983d95c38367eef5aa286bf5f147391c7aad0cfeb61",
+      "published_sha256": "fc58427452ba0687c0229a6cda2e71a9b3514224cfcd6556fef87eff02424871"
     },
     {
       "path": "worker-memory-model.md",
@@ -175,17 +175,21 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "f4a9d6bf24a6f04a4d54f23b985e593d0571662e4106b67847f770cea43809b6",
-      "published_sha256": "e6454edb83433c123bf98aaee8bda3e91a07b05f8afe4a457cd2dbbd9f17c0a2"
+      "source_sha256": "2df77a742f0ef180d33b64ea9a5a397829b2dc936b12ca964a3467e81534dd58",
+      "published_sha256": "efae6ba53fdff2fc9d596cb1549236fb6784c33a5c1ee71d3e01a3cc5fa183f8"
     },
     {
       "path": "review/ra-handoff.md",
       "source_sha256": "0f9bf5cc275321abae12489af2b0217d89d31c71195e4dca8793744da6967401",
       "published_sha256": "07b02e741eedecb5cf82d05b6dd8fa65c4ee79c71281c9e8b1e1c1d2f4cadf13"
+    },
+    {
+      "path": "review/qwen-handoff.md",
+      "source_sha256": "352958c436e08833b1256b9bced6b886f7c63501db96470a7528b674dabd4e51",
+      "published_sha256": "833f9e266fbbb96e34a51b065d7394fc07ea0a91457b0bad5b922ab753b5b467"
     }
   ],
   "omitted_local_references": [
-    "${r.url}",
     ".",
     "../../hw-native-sys/docs-kernel-mode/argument-design-evidence.md",
     "../../hw-native-sys/docs-kernel-mode/argument-domain-policy.md",
@@ -249,5 +253,6 @@
     "tasks/task-public-python-tracing-api.md",
     "tasks/task-scenetest-singleton-alias.md"
   ],
-  "resource_handoff_observed_on": "2026-11-05"
+  "resource_handoff_observed_on": "2026-11-05",
+  "qwen_handoff_observed_on": "2026-11-05"
 }

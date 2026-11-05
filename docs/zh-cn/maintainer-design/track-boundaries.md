@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -44,6 +44,8 @@
 ## 0. GitHub 交付归属与共同契约
 
 [#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的四方向承载完整目标。资源设计直接跟踪 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 及 [资源入口](work-items.md#2-资源与访问github-入口)，不维护本地 RA 进度；DS/EX 保留验收索引。场景所需基础修改随场景交付，不因跨模块而重复拆 owner。历史编号见 [交接对照](review/ra-handoff.md)。
+
+跨仓模型整体目标由 [#2658](https://github.com/hw-native-sys/simpler/issues/2658) 跟踪，Qwen 旧 Q1–Q4/C2b 只留 [验收交接](review/qwen-handoff.md)。#2429/#2666 仍负责 vLLM 接入与执行资源，不能把整体验收重新分配给本地进度轨。
 
 ### 0.1 责任边界
 
