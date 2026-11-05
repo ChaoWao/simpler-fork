@@ -1,35 +1,35 @@
 # 访问、完成与资源退休契约
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 
 本文是 [分线契约 C/D](../track-boundaries.md) 的细化，规定各 consumer 的目标验收；**不是已实现声明**。实施状态和唯一归属见 [work-items](../work-items.md) §6。来源快照与取舍见 [跨方案评估](../review/2026-09-28-cross-plan-lessons.md)。
 
 公共入口见 [用户面契约](user-surface.md)，图边界见 [GE-R1/R2](graph-execution-contract.md)。本契约不增加实施线、runner、公共 completion 类型或新的 wire 字段。
 
-## 1. 身份、授权与接纳
+## 1. 身份、实际访问与接纳
 
-源登记描述 backing 的 canonical identity/generation、位置、有效范围与授权；目标 attachment 描述某 endpoint/context generation 下的可访问地址、机制、范围与使用保留。相同 backing 被不同 Worker 使用时 identity 不变。源地址不是跨进程身份，device ordinal 也不能替代 context generation。
+源登记描述 backing 的 canonical identity/generation、位置、有效范围与所有权；目标 attachment 描述某 endpoint/context generation 下的可访问地址、机制、范围与使用保留。相同 backing 被不同 Worker 使用时 identity 不变。源地址不是跨进程身份，device ordinal 也不能替代 context generation。
 
 接纳顺序：
 
 ```text
-快照调用描述 → 全调用/全路径预检 → 受保护的绑定点重核 live/grant/generation
+快照调用描述 → 全调用/全路径预检 → 受保护的绑定点重核 live/context/generation
   → 原子取得使用保留并登记失败清理义务 → 发布异步工作
 ```
 
-预检覆盖所有参数及每段传输的结构、方向、授权、范围、几何与实际 backend 能力；在 host 内容复制、DMA/send 或 kernel launch 前拒绝不支持的组合。首段搬运前保留后续必需的目的和中间存储；资源不足按外层既有 API 的阻塞或拒绝合同处理。
+预检覆盖所有参数及每段传输的结构、任务方向、上下文、范围、几何与实际 backend 能力；在 host 内容复制、DMA/send 或 kernel launch 前拒绝不支持的组合。首段搬运前保留后续必需的目的和中间存储；资源不足按外层既有 API 的阻塞或拒绝合同处理。
 
 描述符快照不等于数据已经就绪。可以提前验证、选择 adapter、预留资源；读取或快照 tensor 内容必须有 producer 已完成的证明。绑定点的重核与逻辑关闭协调，不能用先前预检或缓存 attachment 代替当前 live 检查。
 
-实际权限是本次操作所需权限与既有 grant 的约束关系，不能由 INPUT/OUTPUT 标签扩大。构造 view 不分配、不复制、不创建新 backing；显式 COPY 写入已有 destination 保持其 identity，新的 allocation 才产生新 identity。
+公共共享映射按共享读写建立，不添加用户自定义读写策略；OS／驱动真实限制不能由 INPUT/OUTPUT 标签扩大。旧 access/wire 的生产者与消费者按 #2460 成对迁移，兼容期限制不代表目标模型新增权限层。构造 view 不分配、不复制、不创建新 backing；显式 COPY 写入已有 destination 保持其 identity，新的 allocation 才产生新 identity。
 
 ## 2. 完成事实与消费边
 
- | 事实 | 证明内容 | 允许的动作 |
- | ---- | -------- | ---------- |
- | `SourceReadDone` | 这一段不再读取源 | 解除这一段的源使用引用；其他使用仍须保留 |
- | `DestinationReady` | 目的完整且对实际消费者可见 | 放行依赖这份数据的消费；不是 consumer 已完成 |
- | `OperationQuiescent` | 所有已发起步骤均不再访问相关资源 | 允许失败清理或退休对应使用；不是数据成功 |
+| 事实 | 证明内容 | 允许的动作 |
+| ---- | -------- | ---------- |
+| `SourceReadDone` | 这一段不再读取源 | 解除这一段的源使用引用；其他使用仍须保留 |
+| `DestinationReady` | 目的完整且对实际消费者可见 | 放行依赖这份数据的消费；不是 consumer 已完成 |
+| `OperationQuiescent` | 所有已发起步骤均不再访问相关资源 | 允许失败清理或退休对应使用；不是数据成功 |
 
 run 业务结果、执行域是否可继续接纳、资源是否已静止分别记录。异常、取消请求、超时、send 返回、event 被触发，都不能单独推导上述所有事实。逻辑事实可由同一后端证明同时满足，不要求三个物理 event。
 
@@ -60,33 +60,33 @@ H_A → NetworkCopy → H_B → H2D → D_B → device consumer
 
 没有静止证明时保留使用引用、平台句柄、费用与 cleanup journal；不得复用相关块，也不得对部分写入自动重试，除非已证明重试语义与幂等性。释放失败不抹账，实际 unmap/free 结果决定后续重试动作。
 
-逻辑关闭拒绝通过被关闭登记接纳新的使用。已接受的使用保留到各自最后消费者结束。有效独立 import/map grant 按自己的授权合同处理；关闭一个 handle 不得误撤销另一有效 grant。源关闭与独立 grant 的关系必须在 backend 合同中显式说明，不能通过删除共享地址缓存隐式决定。
+逻辑关闭拒绝通过被关闭登记接纳新的使用。已接受的使用保留到各自最后消费者结束。仍被使用的 import/map 按实际后端寿命合同处理；关闭一个登记不得破坏其他已接纳使用。源关闭与实际映射的关系必须显式说明，不能通过删除共享地址缓存隐式决定，也不要求新增公共授权对象。
 
-allocation owner 与 use/grant 持有者分开。外部借用不转移物理 allocation 所有权，内部保留不能自动延长调用方分配的寿命；释放借用描述符不是 device fence。graph/replay 的使用引用必须显式保留，但不能据此夺取 allocation ownership。
+allocation owner 与实际 use/map 持有者分开。外部借用不转移物理 allocation 所有权，内部保留不能自动延长调用方分配的寿命；释放借用描述符不是 device fence。graph/replay 的使用引用必须显式保留，但不能据此夺取 allocation ownership。
 
 **契约 D 的约束**：Buffer/domain 共享逻辑关闭、使用接纳、最后使用证明和可重试清理规则；清理义务可组合且恰好履行一次。一个或多个物理 registry 的组织仍见 [契约 D](../track-boundaries.md)，表的数量不能代替上述证明。
 
 **后端资源归属（#2787/#2823/#2833）**：共享 communicator/provider 资源与 domain 自有注册、peer 映射、descriptor、共享借用分别记账；manager 存放位置一致不是目标。初始化从第一笔资源取得就保留完整 owner，内部回滚/重新 Init 也必须传播失败。normal release 在已有执行/网络静止且注册/channel 引用解除后释放 backing；释放域 A 不伤害存活域 B，不能用全部延后到 Worker 退出规避独立回收。只保留仍有依赖或状态不明的资源，已成功释放的独立资源及时清账；具体 retry 依据实际 API 错误语义。
 
-**显式 Host 映射（#2730/#2731）**：map 前后 native backing identity/grant 不变；目标访问引用和 native/mapped 参数分别解析。unmap 开始即关闭新使用，失败保持关闭并保留清理责任；失败句柄不能继续被验证或解析地址。L3 所有 exposing/consuming L2 的 mapping、注册、实际 workspace 和在飞读都退休后，才能释放共享 Host backing。Host/Device 事件各归实际 workspace，不能因新增默认指针把旧请求转到另一完成队列。
+**显式 Host 映射（#2730/#2731）**：map 前后 native backing identity 与 owner 不变；目标访问引用和 native/mapped 参数分别解析。unmap 开始即关闭新使用，失败保持关闭并保留清理责任；失败句柄不能继续被验证或解析地址。L3 所有 exposing/consuming L2 的 mapping、注册、实际 workspace 和在飞读都退休后，才能释放共享 Host backing。Host/Device 事件各归实际 workspace，不能因新增默认指针把旧请求转到另一完成队列。
 
 **owner-local 扩展（#2621）**：在已有 owner 的有效 device/context 后启动，在 allocation/context 销毁前停止访问并注销；retain/pin 只保护寿命，不证明 producer ready 或访问互斥。部分 factory 初始化与异常退出共用既有 owner/journal，不创立第二套 allocation owner。
 
 ## 4. 预算、流水容量与 capture
 
-RA-16 按实际 owner、预算域、写入时刻和最后使用者管理内部 workspace。评审至少覆盖以下资源：
+\#2666 按实际 owner、预算域、写入时刻和最后使用者管理内部 workspace。评审至少覆盖以下资源：
 
- | 资源 | 最后使用者要求 |
- | ---- | -------------- |
- | 调用描述/值快照、frame 数据 | 覆盖最后读取该字段的准备或设备步骤；不能与同 frame 的状态字段混为一个寿命 |
- | upload 源与 staging | 保留到 DMA 不再读取；host API 返回不自动授予覆盖权 |
- | 执行 scratch、控制/结果记录 | 按 kernel、copyback、finalizer 或 collector 的实际最后读取退休 |
- | 旧版本、graph 保留块 | 覆盖图存活与在飞 replay；一次 eager stream 完成不释放图引用 |
- | release-unconfirmed/quarantined 块 | 持续计费并拒绝复用，直到取得所需的释放/静止证明 |
+| 资源 | 最后使用者要求 |
+| ---- | -------------- |
+| 调用描述/值快照、frame 数据 | 覆盖最后读取该字段的准备或设备步骤；不能与同 frame 的状态字段混为一个寿命 |
+| upload 源与 staging | 保留到 DMA 不再读取；host API 返回不自动授予覆盖权 |
+| 执行 scratch、控制/结果记录 | 按 kernel、copyback、finalizer 或 collector 的实际最后读取退休 |
+| 旧版本、graph 保留块 | 覆盖图存活与在飞 replay；一次 eager stream 完成不释放图引用 |
+| release-unconfirmed/quarantined 块 | 持续计费并拒绝复用，直到取得所需的释放/静止证明 |
 
 实际占用包括活跃块、必要旧版本、保留块和对齐开销。HOST/pinned、DEVICE、代码/配置常量及 provider 自有资源按各自合同核算；不能漏账、重复计算共享 backing，或通过统一预算强迫所有资源进入同一物理池。
 
-RA-7 的 hierarchical HeapRing、RA-15 的用户 Buffer 与 RA-16 的内部 workspace 保持所有权边界。容量足够、scope 结束或 run 业务失败都不能单独授予复用权。
+\#2721 的 hierarchical HeapRing、#2460 的用户 Buffer 与 #2666 的内部 workspace 保持所有权边界。容量足够、scope 结束或 run 业务失败都不能单独授予复用权。
 
 EX-7 分别声明 accepted 请求、host prepare、native prepared、已 enqueue 和实际执行的容量及资源消耗。扩大 admission 必须满足账本与最后使用者约束；特定后端的 bank/event 数量不是全局深度定义。
 
@@ -96,14 +96,14 @@ Capture 要求被捕获的操作及等待边能由 device replay 完成。普通
 
 每条访问路径交付时必须同时证明正常回收与失败保留，不能等 U4 再补安全。验收使用真实 producer/consumer 入口；fake 复用同一协议合同，但不得直接手填期望的产物字段冒充生产链路。
 
- | 归属/交接 | 必测反例 | 配对阳性对照 |
- | --------- | -------- | ------------ |
- | RA-3/RA-13；DS-3 | 后一个参数无效，前一个参数不得先复制；预检后源关闭；源 identity 被目标接入重新创建 | 合法整组绑定，授权范围内 submit，跨 Worker 保持 identity |
- | DS-3 → RA-15/RA-16 | send 返回但 receiver 未 commit；H2D 仍读中间块；第二段失败；旧完成记录晚到 | 对应 ready 后消费、最后读取后回收；同 backing 连续两次 copy 正确 |
- | EX-7 → RA-16 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
- | RA-13 → RA-15 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
- | RA-15/RA-12；DS-4 | 独立 grant 仍有效、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个 grant 不伤及另一个 |
- | RA-16；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
+| 归属/交接 | 必测反例 | 配对阳性对照 |
+| --------- | -------- | ------------ |
+| #2460；DS-3 | 后一个参数无效，前一个参数不得先复制；预检后源关闭；源 identity 被目标接入重新创建 | 合法整组绑定，有效范围与上下文内 submit，跨 Worker 保持 identity |
+| DS-3 → #2460/#2666 | send 返回但 receiver 未 commit；H2D 仍读中间块；第二段失败；旧完成记录晚到 | 对应 ready 后消费、最后读取后回收；同 backing 连续两次 copy 正确 |
+| EX-7 → #2666 | wait 已提交而 launch 失败；kernel 已提交而 fence record 失败；取消后仍有 DMA | 正常 fence/drain 证明后恰好释放相关使用，资源能重新接纳 |
+| #2460 → #2460 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
+| #2460/#824；DS-4 | 实际映射仍被使用、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个登记不破坏其他已接纳使用 |
+| #2666；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
 
 补充成对验收：真实 URMA/HNS manager 配有状态 HCCL/Hcomm/ACL mock，注入部分 Init、unregister/channel destroy/free 失败，并检查生产 rollback/release 的 owner 与错误传播；阳性对照为重复 allocate/release 及 A 释放后 B 继续传输。映射覆盖 native/mapped 同调用、失败 unmap 后拒绝新用与正常重试。批量覆盖未 flush 不提前完成与尾批正常返回提交、实际多队列完成；不能只换掉 manager 测 helper。
 

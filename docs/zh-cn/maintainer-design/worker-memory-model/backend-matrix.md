@@ -1,15 +1,15 @@
 # backend 矩阵 + 范例 + 边界
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 [`worker-memory-model.md`](../worker-memory-model.md) §6 + §7 + §8。
 
 ## 6. backend 矩阵（address_space × transport，能力门控）
 
- | 共享形态 | 同机 fork | 同机跨进程 device | 跨机（remote L3） |
- | -------- | --------- | ----------------- | ----------------- |
- | kind3 host | MAP_SHARED / POSIX-shm ✅ | — | remote-sidecar + host-staging（future） |
- | kind4 device | — | VMM shareable-handle ✅（同机） | RDMA/URMA/fabric（**capability-gated**；A3 Fabric 共享窗口已有实现，具体 backend 与组合分别按 DS-5/DS-3 验收） |
+| 共享形态 | 同机 fork | 同机跨进程 device | 跨机（remote L3） |
+| -------- | --------- | ----------------- | ----------------- |
+| kind3 host | MAP_SHARED / POSIX-shm ✅ | — | remote-sidecar + host-staging（future） |
+| kind4 device | — | VMM shareable-handle ✅（同机） | RDMA/URMA/fabric（**capability-gated**；A3 Fabric 共享窗口已有实现，具体 backend 与组合分别按 DS-5/DS-3 验收） |
 
 backend descriptor 记的就是这一格；不支持的格子显式报错，不静默降级。
 
@@ -29,7 +29,7 @@ L2  消费经验证的 Tensor view
 ```
 
 以上是契约流程示意，不承诺所有 topology 均已支持；当前 API 与 consumer 边界见
-[user-surface §5.2](user-surface.md#52-api-契约与已交付边界)、[RA-13/DS-3](../work-items.md)。
+[user-surface §5.2](user-surface.md#52-api-契约与已交付边界)、[#2460/DS-3](../work-items.md)。
 `create_buffer` 同样可为 Tensor 提供 backing，不限于 control region / queue / arena。
 
 关键：**H 每跨一条 edge 换的是"角色/视图 + 物化方式"，不是身份**——canonical
@@ -55,12 +55,12 @@ dependency key 用 canonical identity 而非 materialized VA，否则 alias / re
 §6 的矩阵按"共享形态 × transport"分格，但选 backend 时还有一条正交约束，
 它决定的是**哪些格子当下够得着**：
 
- | 分配发生在 | 可用 backend | 为什么 |
- | ---------- | ------------ | ------ |
- | `Worker.init()`（fork）**之前** | `FORK_SHM`（MAP_SHARED）/ `FORK_COW`（普通堆） | fork 继承 ⇒ 子进程同 VA，物化退化为**恒等** |
- | `Worker.init()` **之后新建独立 host backing** | `POSIX_SHM` 等可显式 export/import 的 backend | 新映射没有自动 fork 继承保证；名字或 descriptor 可事后传递 |
- | fork 后从**已继承的共享 arena** 分配子区间 | `FORK_SHM` | 继承的是整个映射；子区间分配晚于 fork 不会取消继承关系 |
- | device 侧 | `VMM_WINDOW` / `DEVICE_MALLOC` | 与 host fork 时序无关，但 ref 只到 owner 那张卡 |
+| 分配发生在 | 可用 backend | 为什么 |
+| ---------- | ------------ | ------ |
+| `Worker.init()`（fork）**之前** | `FORK_SHM`（MAP_SHARED）/ `FORK_COW`（普通堆） | fork 继承 ⇒ 子进程同 VA，物化退化为**恒等** |
+| `Worker.init()` **之后新建独立 host backing** | `POSIX_SHM` 等可显式 export/import 的 backend | 新映射没有自动 fork 继承保证；名字或 descriptor 可事后传递 |
+| fork 后从**已继承的共享 arena** 分配子区间 | `FORK_SHM` | 继承的是整个映射；子区间分配晚于 fork 不会取消继承关系 |
+| device 侧 | `VMM_WINDOW` / `DEVICE_MALLOC` | 与 host fork 时序无关，但 ref 只到 owner 那张卡 |
 
 `upstream/main@937c57efc` 的 `Worker.alloc_shared_tensor` 从 `_orch._o.alloc` 取得
 已继承 HeapRing 内的子区间，再以 `Buffer.wrap_fork_inherited` 返回 `FORK_SHM` Buffer。

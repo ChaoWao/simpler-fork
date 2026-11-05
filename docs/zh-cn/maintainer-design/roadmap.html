@@ -209,15 +209,15 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-04 设计快照；状态与证据按各自基线。<a href="README.md">阅读入口与已知更正</a>。HTML 下载后可交互查看。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-05 设计快照；资源跟踪入口见 GitHub，源码证据按正文各自 SHA。<a href="README.md">阅读入口</a>。</div>
 <div class="viz-root">
 
 <h1>simpler · 设计轨道与在飞项全景</h1>
 <p class="sub">
   <b>状态与来源刷新 #2716</b>：2026-11-04，main <code>63ffeb8a8bd9</code>；四方向完整目标与本地合同索引见 <a href="review/track-2716.md">范围分析</a>。<br>
-  当前登记：188 条覆盖区间内 main 合入、62 open PR、107 open issue；600 个来源编号有归属。<br>
+  资源入口核对：2026-11-05，16 项历史编号均有 GitHub 跟踪位置；设计澄清不代表实现验收。<br>
   历史全量源码审计基线 <code>upstream/main@937c57efc</code>（2026-10-18）；当前具名代码/CI 证据见范围分析 ·
-  实施状态见 <code>.docs/work-items.md</code>；PR/issue 登记与交付里程碑见 <code>.docs/README.md</code>。本页是两者的图形投影。
+  资源实施进度查 GitHub；本地验收索引见 <code>.docs/work-items.md</code>，PR/issue 观察记录与里程碑见 <code>.docs/README.md</code>。
   <b>本轮变更</b>见页尾「变更日志」。
 </p>
 
@@ -261,6 +261,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   以免订正完的错误继续和在飞项抢注意力。
 </p>
 
+<section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
 <h2>轨道与阶段<span class="hint">行 = 轨道，格 = 阶段（宽度不编码任何量）</span></h2>
 <div class="board" id="board"></div>
 
@@ -309,153 +310,6 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 {
   "tracks": [
     {
-      "name": "RA 资源与访问",
-      "stages": [
-        {
-          "id": "RA-1",
-          "nm": "device-id 逻辑→driver 翻译",
-          "p": "todo",
-          "hnote": "🔵 <b>device-id 翻译仍待实现</b>。main <code>63ffeb8a8bd9</code> 的 <code>device_runner.cpp::register_device_memory_to_host</code> 仍将 <code>device_id_</code> 直接传给 <code>halHostRegister</code>；<code>acl_to_hal_device_id</code> 0 命中、阳性对照 <code>halHostRegister</code> 16 处。#2516 的 driver 声明与 #2539 的 A5 VMM logical ID 修复不等于此处转换。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-2",
-          "nm": "a5 能否 host-map device 内存",
-          "p": "todo",
-          "hnote": "⛔ <b>A5 direct-map 验收未满足</b>。#2496 OPEN 继续承接 driver SVM 版本、注册/注销、双向可见性与 consumer 验收。#2501 的 HBG HOST/NONE 是显式 host storage，不是 device GM 的 host mapping；copy-capable 分支仍可推进。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "RA-3",
-          "nm": "本地 attachment adapter",
-          "p": "flight",
-          "hnote": "🟡 <b>U2a 显式 HOST 消费已交付 #2501 <code>121d807bb</code></b>。HostTensorAccessor 仅登记 HOST/NONE 的合法方向/范围；HBG DEVICE get/set 的隐式 mapping/copy 与 producer wait 已移除，PA/BGEMM/FIFO 等双侧消费者随 PR 迁移。原 <code>acquire_child_memory_host_view</code> 在该文件 0 命中，阳性对照 <code>AddressSpace::HOST</code> 与 <code>TensorTransfer::NONE</code> 各 1 处。U2a 合入不关闭全部本地 adapter：#2497 跨进程 registration 与 HOST_SVM_MAP producer/materializer、RA-1/RA-2 direct-map 仍待验收。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-4",
-          "nm": "arch cache maintenance 抽象",
-          "p": "flight",
-          "hnote": "🟡 <b>边界对齐已交付，通用可见性仍有缺口</b>。10 月 26 日 main <code>daf2f8418907</code> 的 #2672 <code>71077b04a5e4</code> 在 DomainConfig.capture 拒绝非 64 字节倍数的 nbytes/window_size，并检查总容量；调用方显式 padding，非 runtime 自动补齐。#2273 的边界缺口已被此代码覆盖，不能再说只有窗口越界检查。单 buffer 内信号布局、publish/observe 与跨架构硬件可见性仍须验收；本轮未重跑硬件。⛱ <b>挡住 <code>RA-11</code></b>。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "residual"
-        },
-        {
-          "id": "RA-5",
-          "nm": "显式 Transfer 与授权层",
-          "p": "flight",
-          "hnote": "🟡 <b>显式 TaskArgs-entry Transfer 已合入 #2454 <code>ec6a33dac</code></b>（定点核验 main <code>255d78568</code>）。TaskArgs::transfers_ 与 add_tensor 为同一 view 保留逐次 request；Remote v4 只接受可表达的 location-default request，U3 仍是后续范围。copy_to/copy_from 保持 identity；统一授权与新分配 identity 的公开契约仍按本项验收，不能仅凭 U1a 合入关闭整个 RA-5。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-6",
-          "nm": "跨任务依赖谓词",
-          "p": "flight",
-          "hnote": "🟡 <b>canonical footprint 依赖已有，显式 writable alias 仍待交付</b>。hierarchical <code>lookup_overlapping</code>/<code>tensor_footprint</code> 仍是依赖基座；main <code>task_args_wire.h::validate_submit_args</code> 仍拒绝同任务重叠写。#2450 已 CLOSED/COMPLETED，正文契约 KV-R1–R5 并未因此在 main 实现，继续归本项；#1388 OPEN 的 WAR 是能力扩展。ST-2 按共同 backing/实际 submit 验收，不恢复 raw-VA 假设。 #2872 OPEN <code>39e11ba7aceb</code> 承接自动 WAR 依赖，#2846 <code>37cf9128a556</code> 含精确 device read alias；在飞不算已交付。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-7",
-          "nm": "arena 拆分 ＋ accounting",
-          "p": "todo",
-          "hnote": "🔵 <b>L3 arena 分离仍待实现</b>。<code>Worker.alloc_shared_tensor</code> 仍调用 <code>self._orch._o.alloc</code>，创建 FORK_SHM backing，scope 生命周期仍由 hierarchical HeapRing 管。main <code>63ffeb8a8bd9</code> 的 worker.py 中 SlotArena/SharedBufferArena/BufferSliceArena 均 0 命中；阳性对照 alloc_shared_tensor 2 处、实际 alloc 调用 1 处。#2571/#2596 的 run resources 与 RA-16 workspace 不是此 arena。 ⛱ <b>挡住 <code>EX-5</code></b>。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-8",
-          "nm": "endpoint 与 capability view",
-          "p": "flight",
-          "hnote": "🟡 <b>共同能力判定与 attachment wire 已有，消费组合仍需验收</b>。main <code>63ffeb8a8bd9</code> 的 <code>select_adapter</code>、<code>_global_domain_attachment_matrix</code> 与 GlobalDomainAttachment 校验保留；worker.py 的 local_window_bases 为字段/赋值共 2 处，retain_after_run 为 24 次文本命中。域成员身份、rank 和引用消费同一判定权威；Host attachment 与支持范围按 DS-8，SPL 机型/链路输入归本项。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-9",
-          "nm": "ResourceBundle 组合多 backing",
-          "p": "todo",
-          "hnote": "🔵 <b>组合契约待实现</b>。需同时表达 Host DDR control、Device GM payload 与 communicator，含组合失败语义。本地部分归本项，跨节点验收归 DS-10；既有 Region backing 不等于完整 ResourceBundle。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-10",
-          "nm": "暴露 plan / capability / completion",
-          "p": "todo",
-          "hnote": "🔵 <b>逐路径接口验收要求</b>。RA-3、RA-5、DS-3 均须向用户呈现实际 plan/capability/completion，显式 policy 不得隐藏 copy 或 identity 变化。它不另立运行机制。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-11",
-          "nm": "最小同步原语 ＋ 首个 SPSC 示例",
-          "p": "flight",
-          "hnote": "🟡 <b>部分交付：#2096 已合入 main</b>（<code>ae234fad0</code>，2026-10-08）。内部 Region Template、双向有界 SPSC、10-scalar SPSQ 与旧 facade 迁移已交付；三个核心文件与已审 head <code>2297a9a4f29a</code> 一致。方案仍每次物化专用 Region，尚非既有 Buffer/slice 的受管理绑定；publish/observe/wait 通用接口、RA-7 资源基座与 RA-4 可见性保留为 stable 退出条件。共享区间与访问/可见性保证属 runtime，数据布局、同步协议和 queue 算法属上层；SPSC 是受 CI 看护的样例，不能自动提升为公共 queue 工厂。常驻执行/停止机制归 EX-2；通用接口与受管理绑定继续归本项，公共迁移衔接 RA-13/RA-14。<b>#2720 是方向 1 的完整需求入口，方案仍待分析；#2635 为候选，未获方案批准。#2635 OPEN</b>，11 月 4 日 head <code>05a058f9c85c</code>；<a href=\"review/pr-2635.md\">定点评审</a> 的 finalize 身份竞态与集成冲突结论仅针对旧 head <code>850a36bd9</code>，不据此裁定新 head。公共职责以 <a href=\"l3plus-design.md\">L3+ 设计</a> 的资源机制/应用协议切分为准。合入不关闭 RA-11/P3④；具名证据见 <a href=\"review/pr-2096.md\">评审与合入记录</a>。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-12",
-          "nm": "本地 per-worker domain ownership",
-          "p": "flight",
-          "hnote": "🟡 <b>Worker 级域 ownership、配置复用与后续 run 使用登记已交付</b>。main <code>63ffeb8a8bd9</code> 含 #2639/#2668（<code>abd52d666c</code>）；<code>_live_domains</code> / <code>_live_global_domains</code> 持有域，创建时 <code>retain_after_run=True</code> 保留，<code>_enroll_domain_uses</code> 按 touched identity 给缓存 Tensor 登记当前 run；显式 get_domain 与 checked device_context 登记 scalar/context 使用。#2120 已 CLOSED 未合入，关闭说明确认其试验 detach 入口被公共 API 替代；不再规划第二套 owner 转移。#824 仍 OPEN，维护动作是按原四条行为对照已有交付并明确结项范围。公共 ownership 不证明每个 backend 的物理回收；URMA #2787、RDMA #2823 及远端 DS-4 分别验收，契约 A/D 保留。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-13",
-          "nm": "四类内存模型统一成 ABI",
-          "p": "flight",
-          "hnote": "🟡 <b>公共参数与 materialization 进一步收敛</b>。#2589 <code>a8c682a32</code> 与 #2595 <code>8c3b0e174</code> 分别让 direct L2、fork chip child 使用 native ChipWorker；#2597 <code>e994e106d</code> 使三类入口共用 <code>_materialize_chip_task_args</code>。#2587 <code>11eb5d2c9</code> 把 DEVICE source 登记绑定 native environment identity；#2612/#2614 细化失败后的 source-use 退休。旧 ChipStorage/ChipTensor ABI 兼容及 U2b 统一 IO 账本仍须单独验收；#2594 的域 Buffer/远端描述消费已由 #2668 <code>abd52d666c</code> 合入，不因引用这些公共合同而另建业务 owner。#2146 OPEN <code>247689f4e3ba</code>，公共 tensor.h 仍逐维比较 stride，ST-1 未被这些 PR 顺带关闭。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "RA-14",
-          "nm": "API 收敛与迁移",
-          "p": "flight",
-          "hnote": "🟡 <b>构造和 chip 消费入口已收敛，兼容退役未完成</b>。#2479/#2480 提供公共 Tensor(Buffer, shapes=...)；#2501 同批迁移 HOST 控制用户，#2597 共享私有物化转换。#2594 的域 API 改名/兼容归本项，域目标主归属 DS-6、ownership 归 RA-12；全消费者迁移后才移除旧 ABI，不等全部 backend 串行交付。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "residual"
-        },
-        {
-          "id": "RA-15",
-          "nm": "统一 logical close ＋ 物理释放",
-          "p": "todo",
-          "hnote": "⛔ <b>U4 完整退出条件未满足，不能再把域使用保护全部列为待开发</b>。main <code>63ffeb8a8bd9</code> 的 #2668 按实际 Buffer identity 登记域使用、逻辑 release 拒绝新使用并保留 fence 债务；#2695 <code>1f12a44214</code> 保留不能确认 drain 的 native run。#1931 的 child <code>_CTRL_FREE</code> 仍 unpack Q 后 cw.free(ptr)，相邻 COPY 的 ImportRegistry.materialize 是阳性对照。Buffer 通用 owner/lock/journal、独立 grant、network→H2D 与 graph/replay 退休仍须共同验收。方向 2 的 #2787/#2823 及候选 #2835 处理 backend 资源依赖和失败 owner，不因正常传输通过而关闭本项。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "RA-16",
-          "nm": "device context workspace ownership 与预算",
-          "items": [],
-          "p": "flight",
-          "hnote": "🟡 <b>context 资源与预算已有进一步交付</b>。#2571 <code>78365f79c</code> 按 context grant 配置 run resources 并拆开传输帧/执行记录；#2596 <code>a2b0ad2ad</code> 提供四个 onboard program backend 的受限自动增长/trim/retry，#2610 <code>aa91a9d60</code> 将现有内部 workspace 管理与可选字节预算接入 borrowed eager。预算只覆盖 retained staging 和三类 pooled arena，caller tensor、代码、DFX、provider 不在其中；不等于整设备 OOM 恢复，也不替代 RA-7/RA-15。 main <code>63ffeb8a8bd9</code> 的 #2829 将执行 credit 与结果 carrier 退休分开，#2866 仅暴露未观察完成结果的当前/采样峰值；不封顶 backlog，也不表示主机内存已全部回收。",
-          "health": "residual",
-          "doc": "work-items.md"
-        }
-      ],
-      "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
-    },
-    {
       "name": "DS 分布式会话与通信域",
       "stages": [
         {
@@ -489,7 +343,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-4",
           "nm": "远端 domain lease、断连与回收",
           "p": "todo",
-          "hnote": "⛔ <b>远端 lease/断连回收退出条件未满足</b>。与 RA-12 共用域生命周期；DS-9 提供建域事务。依赖表示完整验收，不妨碍本地 owner 转移原型先交付。",
+          "hnote": "⛔ <b>远端 lease/断连回收退出条件未满足</b>。与 #824 共用域生命周期；DS-9 提供建域事务。依赖表示完整验收，不妨碍本地 owner 转移原型先交付。",
           "items": [],
           "doc": "work-items.md",
           "health": "blocked"
@@ -507,7 +361,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-6",
           "nm": "mpirun 启动与发现 ＋ 跨-L3 域接口",
           "p": "flight",
-          "hnote": "🟡 <b>统一域接口及 Buffer/Tensor 跨 run 消费已合入，部署闭环仍按方向 4 推进</b>。main <code>63ffeb8a8bd9</code> 的 #2639/#2668 已覆盖 #2594 的统一创建、查找、复用、域 Buffer、跨层描述和使用登记；#2594 CLOSED，不能继续列为 #2668 在飞。#2120 CLOSED 未合入；#824 原需求应对照 RA-12 已交付行为结项核对，不新增 detach 路线。方向 4 的 #2659 仍承接 supervisor 清理与 Group 迁移；普通 TCP/daemon 不预先删除。RA-12/13/14/15、DS-3/9 是共同合同，完整业务目标不重复拆 owner。",
+          "hnote": "🟡 <b>统一域接口及 Buffer/Tensor 跨 run 消费已合入，部署闭环仍按方向 4 推进</b>。main <code>63ffeb8a8bd9</code> 的 #2639/#2668 已覆盖 #2594 的统一创建、查找、复用、域 Buffer、跨层描述和使用登记；#2594 CLOSED，不能继续列为 #2668 在飞。#2120 CLOSED 未合入；#824 原需求应对照 #824 已交付行为结项核对，不新增 detach 路线。方向 4 的 #2659 仍承接 supervisor 清理与 Group 迁移；普通 TCP/daemon 不预先删除。#824/#2460/#2460/#2460、DS-3/9 是共同合同，完整业务目标不重复拆 owner。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -543,7 +397,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-10",
           "nm": "跨节点异构域的组合与验收",
           "p": "flight",
-          "hnote": "🟡 <b>跨机基本栈已交付</b>（#1456/#1623/#1624）。异构 ResourceBundle 的跨节点组合仍须 session、成员事务、授权及失败回收共同验收；与 RA-9 各负责一半。",
+          "hnote": "🟡 <b>跨机基本栈已交付</b>（#1456/#1623/#1624）。异构 ResourceBundle 的跨节点组合仍须 session、成员事务、授权及失败回收共同验收；与 #2721 各负责一半。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -577,7 +431,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "EX-2",
           "nm": "单 L2 Run 多轮工作 ＋ STOP/drain",
           "p": "flight",
-          "hnote": "🟡 <b>单 L2 Run 多轮交互已有示例，通用常驻能力未验收</b>。10 月 26 日 main <code>daf2f8418907</code> 的 worker_chip_message_queue 只 submit_next_level 一次，随后多轮 enqueue；chip orchestration 的 for (;;) 处理 DATA/STOP，停止前 finish_pending_inputs 并检查 drained。它是 #2723 的现有基座，不等于完整公共方案：work/completion 关联、槽位寿命与复用、背压/progress、停止准入/drain/异常退出及支持矩阵须共同验收。L3 进程/mailbox 多次接任务、重复 Worker.run 和单 L2 Run 常驻分别计证；AF1 的 idle 阻塞唤醒保留为历史交接，不再代指常驻目标。派发路径不得 sleep/backoff；#2720/RA-11 不预先批准 SPSC 公共 ABI。",
+          "hnote": "🟡 <b>单 L2 Run 多轮交互已有示例，通用常驻能力未验收</b>。10 月 26 日 main <code>daf2f8418907</code> 的 worker_chip_message_queue 只 submit_next_level 一次，随后多轮 enqueue；chip orchestration 的 for (;;) 处理 DATA/STOP，停止前 finish_pending_inputs 并检查 drained。它是 #2723 的现有基座，不等于完整公共方案：work/completion 关联、槽位寿命与复用、背压/progress、停止准入/drain/异常退出及支持矩阵须共同验收。L3 进程/mailbox 多次接任务、重复 Worker.run 和单 L2 Run 常驻分别计证；AF1 的 idle 阻塞唤醒保留为历史交接，不再代指常驻目标。派发路径不得 sleep/backoff；#2720/#2720 不预先批准 SPSC 公共 ABI。",
           "items": [],
           "doc": "work-items.md",
           "health": "residual"
@@ -602,9 +456,9 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
         },
         {
           "id": "EX-5",
-          "nm": "删除 heap-coupled scope reclaim",
+          "nm": "scope 回收机制的必要性与迁移",
           "p": "todo",
-          "hnote": "⛔ <b>使用者迁完后才能删除结构</b>。RA-7 提供 §2.5 第 1–4 步，EX-3 提供第 5 步；本项是第 6 步。L2 TMR device GM heap 不在删除范围。",
+          "hnote": "具体机制按 #2721 设计讨论确认；验收无提前回收与无界滞留，不预设两套 Arena 或删除全部层级 heap。",
           "items": [],
           "doc": "work-items.md",
           "health": "blocked"
@@ -613,7 +467,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "EX-6",
           "nm": "journal 覆盖面 ＋ 有序 commit barrier",
           "p": "done",
-          "hnote": "✅ <b>f4–f7 已交付，当前基线复核</b>。#1689 <code>f8106e24e</code> 已提供 <code>_teardown_worker_tree</code>：pre-transport 全集先入 post-success journal，失败保留 transport；remote frees 与 session shutdown 分相；child/shm 有独立重试。<code>add_once(kind, identity, cleanup)</code> 的数据表含 region/domain/provenance/remote/buffer，不能只 grep <code>.add(\"child\")</code>。<code>test_cancellation_journal.py::test_both_teardown_paths_retry_each_resource_class</code> 与 namespace/child 顺序案例在树上（本轮读测试，未重跑）。既有 f5 双锁、f6 survivor 重试、f7 确定名与 namespace sweep 均保留；新增 U4/device-workspace 的寿命目标分别归 RA-15/RA-16，不倒灌为 P0.2 遗留。",
+          "hnote": "✅ <b>f4–f7 已交付，当前基线复核</b>。#1689 <code>f8106e24e</code> 已提供 <code>_teardown_worker_tree</code>：pre-transport 全集先入 post-success journal，失败保留 transport；remote frees 与 session shutdown 分相；child/shm 有独立重试。<code>add_once(kind, identity, cleanup)</code> 的数据表含 region/domain/provenance/remote/buffer，不能只 grep <code>.add(\"child\")</code>。<code>test_cancellation_journal.py::test_both_teardown_paths_retry_each_resource_class</code> 与 namespace/child 顺序案例在树上（本轮读测试，未重跑）。既有 f5 双锁、f6 survivor 重试、f7 确定名与 namespace sweep 均保留；新增 U4/device-workspace 的寿命目标分别归 #2460/#2666，不倒灌为 P0.2 遗留。",
           "items": [],
           "doc": "work-items.md"
         },
@@ -621,7 +475,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "EX-7",
           "nm": "连续 run 共享 stream 的顺序契约",
           "p": "flight",
-          "hnote": "🟡 <b>四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付</b>。#2560 <code>a89c1170c</code> 补 A3 TMR；#2571 <code>78365f79c</code> 拆分 transport/run lifetime；#2596 <code>a2b0ad2ad</code> 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 <code>0eda81c93</code> 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 RA-16；#2588 DFX 已合入 <code>545c05a43469</code>，#2605 vLLM eager 仍为范围外交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复已合入 <code>ce493639b45f</code>。 main <code>63ffeb8a8bd9</code> 含 #2829 <code>313499d61d</code>：物理完成可归还执行 credit，结果观察、原 stream/carrier 与 Program 输出各有生存期；#2844/#2845 补 finalization 异常/一次激活，#2866 <code>63ffeb8a8b</code> 提供 backlog 计数。不能把 pipeline_depth 当全部保留内存上限。#2429 当前收窄为 vLLM 消费者；跨仓组合归 #2658，capture 归 #2666，旧 VLLM/TrackA 编号仍保留原合同归属。",
+          "hnote": "🟡 <b>四个 onboard program backend 的限定 early enqueue、可配置资源与自动准入已有交付</b>。#2560 <code>a89c1170c</code> 补 A3 TMR；#2571 <code>78365f79c</code> 拆分 transport/run lifetime；#2596 <code>a2b0ad2ad</code> 对未显式配置的 startup-root 本地 L3 direct program endpoints 按完成资源 commit 增长容量；nested/remote/MPI、L2、kernel、borrowed、sim 不在自动模式范围。#2611 <code>0eda81c93</code> 拒绝同线程递归 native prepare。#2511/#2568/#2592 已交付 Qwen clone、同请求 DEVICE feedback、限定持续多请求 driver；自动准入与真实 Qwen 组合、动态到达和性能验收仍独立。TrackA-P6 归本项，资源部分联验 #2666；#2588 DFX 已合入 <code>545c05a43469</code>，#2605 vLLM eager 仍为范围外交接。#2028 CLOSED 未合入，#2425 历史故障已关闭，新 HBG 卡住由 #2559 承接；#2615 launch 异常 owner 修复已合入 <code>ce493639b45f</code>。 main <code>63ffeb8a8bd9</code> 含 #2829 <code>313499d61d</code>：物理完成可归还执行 credit，结果观察、原 stream/carrier 与 Program 输出各有生存期；#2844/#2845 补 finalization 异常/一次激活，#2866 <code>63ffeb8a8b</code> 提供 backlog 计数。不能把 pipeline_depth 当全部保留内存上限。#2429 当前收窄为 vLLM 消费者；跨仓组合归 #2658，capture 归 #2666，旧 VLLM/TrackA 编号仍保留原合同归属。",
           "items": [],
           "health": "residual",
           "doc": "work-items.md"
@@ -682,7 +536,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "doc": "README.md §2"
         }
       ],
-      "detail": "#2447/#2456 已合入真实 Qwen depth-one 与安全回退；#2471 为程序层测试子集。真实 clone-request、vLLM eager/dynamic/capture/E2E 仍由集成轨负责；程序能力 EX-7，资源 RA-16。"
+      "detail": "#2447/#2456 已合入真实 Qwen depth-one 与安全回退；#2471 为程序层测试子集。真实 clone-request、vLLM eager/dynamic/capture/E2E 仍由集成轨负责；程序能力 EX-7，资源 #2666。"
     },
     {
       "name": "✅ Worker 异步准备流水",
@@ -1340,7 +1194,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "资源关闭与域生命周期：契约 D",
       "b": [
-        "RA-15/RA-12/DS-4 共用 logical close、使用接纳与可重试清理规则；源读取结束、目的可消费与整体静止分别证明。",
+        "#2460/#824/DS-4 共用 logical close、使用接纳与可重试清理规则；源读取结束、目的可消费与整体静止分别证明。",
         "registry 组织、锁序与 journal 组合仍待裁决；allocation owner 与 graph/grant 的使用引用分开。见 track-boundaries.md 契约 D 与访问/退休契约。"
       ]
     },
@@ -1349,7 +1203,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "跨任务依赖、同任务 alias、显式 transfer",
       "b": [
-        "RA-6 负责 canonical identity＋footprint 依赖与 #2450 的 writable alias；RA-5 负责 TaskArgs 条目的显式 transfer。#2460 不自动授权 writable overlap。",
+        "#2721 澄清同任务 writable alias 的必要性，任务间 WAR 由 #1388 跟踪；#2460 负责逐调用 transfer、共同身份与绑定，不能绕过重叠校验。",
         "GE-R1–R6 作为外部交接保留。自动 WAR 增强不等于现有显式 add_dep/add_inout 语义缺陷。"
       ]
     },
@@ -1358,8 +1212,8 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "三种资源不能混账",
       "b": [
-        "RA-7：hierarchical HeapRing 分 arena 与 accounting。RA-16：device context 的 scratch/staging/workspace 生命周期与预算。RA-15：用户 Buffer 的 logical close。",
-        "EX-7 的 early enqueue 与 clone-request 需要 RA-16 的容量与退休保证；设备 operator FIFO 串行和 host 准备重叠分别验收。"
+        "#2721 核定临时／持久／异步使用寿命，不预设分 arena；#2666 管执行 workspace 交接；#2460 管公共 Buffer 的逻辑关闭与物理释放。",
+        "EX-7 的 early enqueue 与 clone-request 需要 #2666 的容量与退休保证；设备 operator FIFO 串行和 host 准备重叠分别验收。"
       ]
     },
     {
@@ -1367,7 +1221,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "常驻控制、域复用与设备窗口清零",
       "b": [
-        "EX-1/EX-2 提供 responsive control 与 STOP/drain；RA-12/DS-4 提供域 ownership。",
+        "EX-1/EX-2 提供 responsive control 与 STOP/drain；#824/DS-4 提供域 ownership。",
         "跨 run 存活不直接证明 K=2 安全：复用窗口清零、completion 和最后消费者必须符合设备 FIFO 及 EX-7 的验收。"
       ]
     },
@@ -1376,7 +1230,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "硬件 capability 与异步 completion",
       "b": [
-        "RA-2/RA-8 负责 capability；DS-5/DS-11 负责 transport profile、默认策略与同步/异步 completion。",
+        "#2496/#2721 负责 capability；DS-5/DS-11 负责 transport profile、默认策略与同步/异步 completion。",
         "a5 direct-map 只是条件分支；copy-capable host attachment 不应被它全面挡住。实现状态只见 work-items.md。"
       ]
     }
@@ -1427,7 +1281,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "groups": [
       {
         "t": "kernel 模式",
-        "d": "明确排除在 RA/DS/EX 之外。",
+        "d": "通用 kernel 实现保持既定范围外；资源接口仅作交接。",
         "n": "H1–H3、K2–K7、2a/2B、Binder 与原则 01–11 见 goal-coverage.md。仅登记目标为 main 的 PR。"
       },
       {
@@ -1438,7 +1292,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "DFX 与 serving adapter",
         "d": "独立跟踪，不把程序 admission 或资源 ownership 再建一份。",
-        "n": "Qwen/vLLM adapter → Qwen 集成轨；#2429 程序侧要求 → EX-7 / RA-16；continuous DFX → #2465；T7 跨 host → #2217/#2304。"
+        "n": "Qwen/vLLM adapter → Qwen 集成轨；#2429 程序侧要求 → EX-7 / #2666；continuous DFX → #2465；T7 跨 host → #2217/#2304。"
       }
     ]
   },
@@ -1887,54 +1741,54 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
         "t": "历史实现不构成新的待办。"
       },
       {
-        "id": "RA-1",
+        "id": "#2721",
         "c": 1,
         "r": 0,
         "p": "todo",
-        "lab": "RA-1",
+        "lab": "#2721",
         "sub": "device-id 翻译",
         "st": "见工作项真源",
-        "t": "🔵 <b>待实现</b>。本基线 <code>src/a2a3/platform/onboard/host/device_runner.cpp:1182</code> 的注册仍传裸 <code>device_id_</code>；<code>acl_to_hal_device_id</code> 在该文件 0 命中，阳性对照 <code>halHostRegister</code> 16 处。RA-3 的 direct-map 前置；树上 #1826 是同类修法。"
+        "t": "🔵 <b>待实现</b>。本基线 <code>src/a2a3/platform/onboard/host/device_runner.cpp:1182</code> 的注册仍传裸 <code>device_id_</code>；<code>acl_to_hal_device_id</code> 在该文件 0 命中，阳性对照 <code>halHostRegister</code> 16 处。#2460 的 direct-map 前置；树上 #1826 是同类修法。"
       },
       {
-        "id": "RA-5",
+        "id": "#2460",
         "c": 2,
         "r": 0,
         "p": "flight",
-        "lab": "RA-5",
+        "lab": "#2460",
         "sub": "显式 Transfer",
         "st": "见工作项真源",
-        "t": "🟡 <b>显式 TaskArgs-entry Transfer 已合入 #2454 <code>ec6a33dac</code></b>（定点核验 main <code>255d78568</code>）。TaskArgs::transfers_ 与 add_tensor 为同一 view 保留逐次 request；Remote v4 只接受可表达的 location-default request，U3 仍是后续范围。copy_to/copy_from 保持 identity；统一授权与新分配 identity 的公开契约仍按本项验收，不能仅凭 U1a 合入关闭整个 RA-5。"
+        "t": "🟡 <b>显式 TaskArgs-entry Transfer 已合入 #2454 <code>ec6a33dac</code></b>（定点核验 main <code>255d78568</code>）。TaskArgs::transfers_ 与 add_tensor 为同一 view 保留逐次 request；Remote v4 只接受可表达的 location-default request，U3 仍是后续范围。copy_to/copy_from 保持 identity；统一授权与新分配 identity 的公开契约仍按本项验收，不能仅凭 U1a 合入关闭整个 #2460。"
       },
       {
-        "id": "RA-12",
+        "id": "#824",
         "c": 3,
         "r": 0,
         "p": "flight",
-        "lab": "RA-12",
+        "lab": "#824",
         "sub": "本地域 owner",
         "st": "见工作项真源",
-        "t": "🟡 <b>owner 转移在飞 #2120</b>（OPEN，<code>cd69b1e0ecf9</code>）。main <code>worker.py</code> 中 <code>detach_persistent_domain</code> 0 命中，阳性对照 <code>retain_after_run</code> 3 处；现有保留寿命不等于独立 Worker ownership。与 DS-4 共用契约 A，与 RA-15 共用契约 D；用户尚未裁决两种资源 registry 的归一形状。"
+        "t": "🟡 <b>owner 转移在飞 #2120</b>（OPEN，<code>cd69b1e0ecf9</code>）。main <code>worker.py</code> 中 <code>detach_persistent_domain</code> 0 命中，阳性对照 <code>retain_after_run</code> 3 处；现有保留寿命不等于独立 Worker ownership。与 DS-4 共用契约 A，与 #2460 共用契约 D；用户尚未裁决两种资源 registry 的归一形状。"
       },
       {
-        "id": "RA-15",
+        "id": "#2460",
         "c": 1,
         "r": 1,
         "p": "todo",
-        "lab": "RA-15",
+        "lab": "#2460",
         "sub": "logical close 与释放",
         "st": "见工作项真源",
         "t": "⛔ <b>U4 退出条件未满足</b>。<code>Buffer.close</code> 仍直接执行 <code>shm.close/unlink</code>；#2446 的 device borrow 与 #1689 的 cleanup journal 是现有基座。需统一 logical close、accepted-use/grant retention 与 allocator 物理释放，保持现有在飞 free 拒绝。#1931 的 child allocation/free 可信记录归本项。<b>U4 必须等 U2b 与 U3 的 network→H2D 合并验收</b>；契约 D 的 registry 归一裁决仍有对象，未擅自选择。普通 Tensor wrapper 不延长 HeapRing scope。 main <code>255d78568</code> 的 #2467 已让 Worker.free 与直接 L2 接受登记共用 chip lock；release_buffer 仍在采样后解锁再 close，统一 lifecycle 的退出条件仍未满足。#2474 只说明这个边界。"
       },
       {
-        "id": "RA-16",
+        "id": "#2666",
         "c": 2,
         "r": 1,
         "p": "flight",
-        "lab": "RA-16",
+        "lab": "#2666",
         "sub": "device workspace",
         "st": "见工作项真源",
-        "t": "🟡 <b>直接 L2 与 startup-root 本地 L3 的 workspace ownership 已交付</b>（main <code>255d78568</code>）。#2440 <code>9ca91c522</code>、#2452 <code>a1ca296f8</code>、#2464 <code>818ee04d7</code>；Worker._chip_children_manage_workspace 按 device_ids 与 _is_startup_root 决定 child ownership。nested/remote/MPI 路由与 L3 byte budget 不属于 #2464 保证。#2473 OPEN <code>28348c728831</code> 目标是下沉至全部 onboard program context，尚非 main 行为。退役须核 run/completion/host-view 引用、隔离未知执行与实际 free 结果；不拆 RA-7 的 hierarchical HeapRing，也不合并 RA-15 的用户 Buffer registry。"
+        "t": "🟡 <b>直接 L2 与 startup-root 本地 L3 的 workspace ownership 已交付</b>（main <code>255d78568</code>）。#2440 <code>9ca91c522</code>、#2452 <code>a1ca296f8</code>、#2464 <code>818ee04d7</code>；Worker._chip_children_manage_workspace 按 device_ids 与 _is_startup_root 决定 child ownership。nested/remote/MPI 路由与 L3 byte budget 不属于 #2464 保证。#2473 OPEN <code>28348c728831</code> 目标是下沉至全部 onboard program context，尚非 main 行为。退役须核 run/completion/host-view 引用、隔离未知执行与实际 free 结果；不拆 #2721 的 hierarchical HeapRing，也不合并 #2460 的用户 Buffer registry。"
       },
       {
         "id": "DS-1",
@@ -1959,8 +1813,8 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     ],
     "edges": [
       {
-        "a": "RA-12",
-        "b": "RA-15",
+        "a": "#824",
+        "b": "#2460",
         "lab": "契约 D；U4 尚需 U2b/U3 验收",
         "dash": false
       }
@@ -1969,8 +1823,8 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "t": "推进判据",
       "items": [
         {
-          "lab": "RA：U1a 与资源生命周期",
-          "sub": "RA-5 / RA-12 / RA-15 / RA-16",
+          "lab": "公共资源：U1a 与生命周期",
+          "sub": "#2460 / #824 / #2460 / #2666",
           "t": "按现有 PR head 评审，Buffer/domain registry 裁决仍挂契约 D；workspace ledger 不代替它。"
         },
         {
@@ -1990,6 +1844,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-05 · 本地 RA 独立 track 退役，16 项交接到 GitHub",
+        "b": "判断更正：曾把两套 Arena、公共 ResourceBundle、plan/capability 与额外 grant 策略当成待实现目标。它们的必要性须由场景和验收证明，不能由候选类型不存在推导功能缺口。资源进度只查 GitHub；#2721 的设计澄清评论仍是待决问题。新判据：删除本地编号前逐项保留跟踪入口与验收要求；评论发布不等于方案确认，跟踪覆盖不等于功能交付。DS/EX 的外部依赖须写具体接口合同，不自动等待整个 Issue 完成。"
+      },
       {
         "t": "2026-11-04 · #2716 设计正文与 Host 映射合同",
         "b": "<b>判断失误：</b>仅刷新状态入口仍会留下旧设计正文：域 detach owner、URMA 默认关闭/互斥与实际 main 不符；只比对父树还会漏掉 #2657/#2730/#2731 同日重写。<b>新判据：</b>状态、规范正文、当前代码事实分别更新；变更后的验收用新命名空间，旧编号保留原义与迁移去向。Host mapping 是目标访问选择，不能把消费策略挂到 allocation；全员注册同一 backing 不等于分表。workspace 接入、地址相关协调准备、实际完成和保活随完整场景交付。代码口径 <code>63ffeb8a8bd9</code>，32 个当前 V2 来源纳入归属。新 #2878 导致 open 守卫变红，已登记；更新 head 只更新候选记录，不继承旧评审结论。正文复核还发现整段替换吞掉 D.3 主标题，章节守卫仍绿；已恢复标题及对应合同，并补逐节标题集合的正负对照。"
@@ -2396,13 +2254,13 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   },
   "delivery": {
     "title": "交付维度：用户已经能做什么",
-    "note": "⭐ <b>本节回答「用户能做什么、还缺哪项证据」，上面的轨道回答「谁在做、做到哪」。</b>两个维度共用一份工作项 —— 工作项的状态<b>只在 <code>work-items.md</code> 维护一份</b>，本节只引用 ID。<br>⛔ <b>「P3 被 P1 ＋ P2 双重前置」2026-09-07 作废</b>：P3 的承载工作项里 <code>RA-11</code>（#2096 已合入，父目标仍部分交付）与 <code>RA-8</code> 都不等 P2，<code>DS-7</code>（64-rank）是独立规模包。<b>依赖在工作项之间，不在阶段之间。</b>⇒ 由此推出：<b>P3 的用户模型必须从一开始参与设计</b>，否则 P1/P2 会各自做出本地与远端接口，最后由 P3 承担一次统一改造。",
+    "note": "资源设计和进度直接查 GitHub；本节只列验收入口及 DS/EX 索引。历史 P1/P2/P3 是场景清单，不构成阶段间硬门。具体 API 与 Arena/ResourceBundle 的必要性以 #2721 设计讨论结论为准。",
     "items": [
       {
         "t": "P1 · 本地 Buffer–Attachment–Tensor 基础",
         "s": "退出条件权威 = feature_roadmap.md §5.6",
-        "w": "RA-1 RA-2 RA-3 RA-4 RA-5 RA-6 RA-7 RA-13 EX-1 EX-3 RA-8",
-        "b": "逐条退出条件见 README.md §2.-1；本地拒绝路径包含 RA-8，零 heap 验收与结构删除分别属于 EX-3/EX-5。"
+        "w": "#2721 #2496 #2460 #2720 EX-1 EX-3",
+        "b": "逐条退出条件见 README.md §2.-1；本地拒绝路径包含 #2721，零 heap 验收与结构删除分别属于 EX-3/EX-5。"
       },
       {
         "t": "P2 · 生产级 Multi-L3 通信",
@@ -2413,20 +2271,20 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "P3 · 暴露异构逻辑域",
         "s": "退出条件权威 = feature_roadmap.md §5.8（六项已于 2026-09-07 编号 ①–⑥）",
-        "w": "RA-8 RA-9 RA-10 RA-11 EX-2 DS-7 DS-10",
-        "b": "用户选逻辑 endpoint、操作与允许的 data-path policy；runtime 回最终 plan / capability / completion。⚠️ <code>P3⑥</code> 是<b>约束不是工作项</b>（backend 验收后才发 capability view）。<br>⭐ <b>2026-09-07 补入 <code>EX-2</code></b>：它提供 <code>RA-11</code> 的常驻循环契约（§5.8 ④ 的 persistent-kernel 那半），此前<b>不在任何里程碑或场景清单里</b> —— 由 <code>check-dep-closure.py</code> 的 orphan 检查查出。"
+        "w": "#2721 #2720 EX-2 DS-7 DS-10",
+        "b": "逐路径明确实际访问、身份与完成；不预设公共 plan/capability/ResourceBundle 对象。问题见 #2721 设计评论，Region 方案见 #2720。"
       },
       {
         "t": "L3/L4 九章 · 场景验收",
         "s": "映射真源 = l3l4.md §1（场景 → 承载工作项 → 验收证据）",
-        "w": "DS-6 RA-13 EX-4 EX-3 DS-11 DS-5 DS-8 DS-10 RA-12 DS-4 EX-1 RA-14 EX-5",
-        "b": "九章<b>全部有承载，无一落在三条实施线之外</b>；C.1 与 D.1 已交付。本页不再复述九章状态。<br>⭐ <b>2026-09-07 <code>EX-3</code> 拆出 <code>EX-5</code></b>：「能以零容量跑」是<b>验收</b>（P1 退出条件，不等 arena），「删掉 heap-coupled scope reclaim」是<b>迁移终点</b>（等 <code>RA-7</code>）。"
+        "w": "DS-6 #2460 EX-4 EX-3 DS-11 DS-5 DS-8 DS-10 #824 DS-4 EX-1 EX-5",
+        "b": "九章<b>全部有承载，无一落在三条实施线之外</b>；C.1 与 D.1 已交付。本页不再复述九章状态。<br>⭐ <b>2026-09-07 <code>EX-3</code> 拆出 <code>EX-5</code></b>：「能以零容量跑」是<b>验收</b>（P1 退出条件，不等 arena），「删掉 heap-coupled scope reclaim」是<b>迁移终点</b>（等 <code>#2721</code>）。"
       },
       {
         "t": "P0.2 结构性 follow-up · 超出里程碑退出条件的那部分",
         "s": "来源 = feature_roadmap.md §5.4 第 1 条 ＋ P0.2/done-followup.md 第 4–7 项",
         "w": "EX-6",
-        "b": "结构性 follow-up 的验收记录引用 EX-6；新增 Buffer logical close 与 device workspace 目标分别引用 RA-15/RA-16。"
+        "b": "结构性 follow-up 的验收记录引用 EX-6；新增 Buffer logical close 与 device workspace 目标分别引用 #2460/#2666。"
       },
       {
         "t": "连续 run 共享 stream · issue #1853 / Track A",
@@ -2437,23 +2295,61 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "统一 Tensor/Buffer 公共模型 · issue #2460",
         "s": "父 issue #2460（我开的）；U1a–U4 六个交付单元，实施归属见 work-items.md",
-        "w": "RA-5 RA-13 RA-3 DS-3 RA-15",
-        "b": "U1a→RA-5；U1b/U2b→RA-13；U2a→RA-3；U3→DS-3；U4→RA-15。U4 要等 network→H2D 合并验收与契约 D。"
+        "w": "#2460 DS-3",
+        "b": "U1a→#2460；U1b/U2b→#2460；U2a→#2460；U3→DS-3；U4→#2460。U4 要等 network→H2D 合并验收与契约 D。"
       },
       {
         "t": "Device workspace ownership / 有界资源",
         "s": "#2429 第 4 条资源半；#2440/#2452/#2464",
-        "w": "RA-16 EX-7",
-        "b": "device context 的四类 region 及最后使用者证明；L3 hierarchical HeapRing 分离仍由 RA-7 单独承担。"
+        "w": "#2666 EX-7",
+        "b": "执行资源的容量、预算与最后使用者由对应执行入口核定；L3 存储寿命的具体机制在 #2721 讨论。"
       },
       {
-        "t": "显式 writable alias / KV 共享 arena",
-        "s": "#2450 Required behavior 1–5",
-        "w": "RA-6",
-        "b": "单 backing 与嵌套传播、聚合 footprint、copy 限制、未声明重叠拒绝共同验收。"
+        "t": "重叠可写别名：必要性澄清",
+        "s": "#2721 设计澄清问题 2；#2450 为历史场景",
+        "w": "#2721",
+        "b": "先确认单参数加内部切片是否足够；必要时定义范围合并和嵌套传播，否则保持明确拒绝。任务间 WAR 由 #1388 跟踪。"
       }
     ]
-  }
+  },
+  "resourceReferences": [
+    {
+      "issue": 2721,
+      "title": "公共设计与待决问题",
+      "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+      "scope": "设备标识、别名必要性、存储寿命、实际访问、组合及可观测结果，按设计澄清评论讨论。"
+    },
+    {
+      "issue": 2460,
+      "title": "统一模型、绑定、迁移与关闭",
+      "url": "https://github.com/hw-native-sys/simpler/issues/2460",
+      "scope": "U1a/U1b/U2a/U2b/U4；#1931 身份校验、#2888 COW 清理；平台接入衔接 #2497，Remote 消费由 DS-3 引用同一合同。"
+    },
+    {
+      "issue": 2720,
+      "title": "Region 与基础同步",
+      "url": "https://github.com/hw-native-sys/simpler/issues/2720",
+      "scope": "共享区间、访问／可见性和必要同步；队列、发布协议与背压由应用定义。"
+    },
+    {
+      "issue": 2496,
+      "title": "A5 映射能力",
+      "url": "https://github.com/hw-native-sys/simpler/issues/2496",
+      "scope": "归 #2495；只约束需要 A5 direct-map 的分支，不能阻止 copy-capable 路径。"
+    },
+    {
+      "issue": 824,
+      "title": "通信域跨 run 寿命",
+      "url": "https://github.com/hw-native-sys/simpler/issues/824",
+      "scope": "归 #2722；公共关闭与接纳合同引用 #2460，远端 lease／回收与 DS-4 交接。"
+    },
+    {
+      "issue": 2666,
+      "title": "执行资源与消费者交接",
+      "url": "https://github.com/hw-native-sys/simpler/issues/2666",
+      "scope": "共同 prepare/launch/retain/release 及 workspace；#2883 资源分类、#2316 流水容量分别跟踪，通用 kernel 实现保持范围外。"
+    }
+  ]
 }
 </script>
 
@@ -2734,6 +2630,8 @@ les.innerHTML = `<summary>${D.lessons.title}（${D.lessons.items.length} 条）<
     </div>`).join('')
   + `<div class="lesson"><p><b>共同判据：</b>${D.lessons.rule}</p></div>`;
 
+const resourceList=document.getElementById('resource-reference-list');
+resourceList.innerHTML=D.resourceReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const clog=document.getElementById('changelog');
 if(clog && D.changelog){
   clog.innerHTML = `<summary>${D.changelog.title}（${D.changelog.items.length} 条）</summary>`

@@ -1,8 +1,8 @@
 # L3+：设计原则、职责与代码地图
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
-> **设计依据（2026-11-04）**：#2716 原生四方向、正文与决定性评论；#2657/#2730/#2731 采用当日更新的显式映射与全员完整 Buffer 注册合同。源码事实固定 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；下文明确区分实现与目标。状态只在 [工作项](work-items.md)，来源和验收证据见 [范围分析](review/track-2716.md)。本轮没有执行产品或硬件测试。
+> **设计依据（2026-11-04）**：#2716 原生四方向、正文与决定性评论；#2657/#2730/#2731 采用当日更新的显式映射与全员完整 Buffer 注册合同。源码事实固定 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；下文明确区分实现与目标。实际进度查 GitHub；本地归属与验收入口见 [工作项](work-items.md)，来源和验收证据见 [范围分析](review/track-2716.md)。本轮没有执行产品或硬件测试。
 
 **L3+ 的职责，是把用户声明的任务、资源访问和依赖，落实为有明确归属、可验证顺序与可安全回收的执行。** 应用定义计算与通信协议；simpler 管理执行和资源机制。L3、L4 是编排树的位置，不能单凭层级推出内存可达性或通信能力。
 
@@ -29,14 +29,14 @@ flowchart TB
 
 这是职责图，不是现有文件的分层图。`worker.py` 同时含多种职责，模块拆分不能照抄现有文件边界。
 
- | 概念 | 回答的问题 | 必须分开的概念 |
- | ---- | ---------- | -------------- |
- | Worker / endpoint | 谁接受任务，处在哪个部署与控制树中？ | level、worker id、设备 id、MPI rank、domain rank 各有自己的命名空间 |
- | CallableHandle | 注册了哪个可执行内容，哪些目标能够执行？ | handle 属于注册它的 Worker；内容 digest 不授予跨 Worker 使用权 |
- | Run / Task | 哪次构图和执行；其中哪项工作依赖哪项？ | Python callback 返回、提交被接纳、设备完成、资源退休 |
- | Buffer / Tensor | 哪块 backing；这次访问其中哪些字节、shape/stride？ | identity、物化地址、allocation owner、访问者 |
- | Attachment / access path | 此 endpoint 如何合法访问此资源？ | source 登记不等于目标端授权或已经映射 |
- | CommDomain | 哪组成员按什么顺序使用哪些通信资源？ | 逻辑成员、device rank、资源 owner、控制 transport、kernel 数据路径 |
+| 概念 | 回答的问题 | 必须分开的概念 |
+| ---- | ---------- | -------------- |
+| Worker / endpoint | 谁接受任务，处在哪个部署与控制树中？ | level、worker id、设备 id、MPI rank、domain rank 各有自己的命名空间 |
+| CallableHandle | 注册了哪个可执行内容，哪些目标能够执行？ | handle 属于注册它的 Worker；内容 digest 不授予跨 Worker 使用权 |
+| Run / Task | 哪次构图和执行；其中哪项工作依赖哪项？ | Python callback 返回、提交被接纳、设备完成、资源退休 |
+| Buffer / Tensor | 哪块 backing；这次访问其中哪些字节、shape/stride？ | identity、物化地址、allocation owner、访问者 |
+| Attachment / access path | 此 endpoint 如何合法访问此资源？ | source 登记不等于目标端授权或已经映射 |
+| CommDomain | 哪组成员按什么顺序使用哪些通信资源？ | 逻辑成员、device rank、资源 owner、控制 transport、kernel 数据路径 |
 
 三种关系必须分别描述：**编排树**表达控制与部署归属；**任务 DAG**表达执行依赖；**资源访问关系**表达 endpoint 对 backing 的权限与路径。它们相互关联，但不能用其中一张图推导另外两张。
 
@@ -60,7 +60,7 @@ simpler 负责资源身份、范围、授权、映射/copy、必要的可见性�
 
 `写 payload → 发布 ready / 观察 ready → 读 payload`：应用选择协议，底层必须让这两条顺序关系可表达且可靠。不能把地址可写当成自动 coherence；也不要求应用各自复制硬件 cache 维护代码。只提升已经证明通用、可以独立验收的最小原语。
 
-目标中的 SPSC 是受 CI 看护的参考样例。验收问题是：**应用在 simpler 仓库之外，只用公开资源/访问接口，能否实现另一种 queue？** runtime 自己的调度队列、取消和 drain 仍由 runtime 负责；它们不要求应用采用某种消息格式。此边界对应 [#2635 设计评论](https://github.com/hw-native-sys/simpler/pull/2635#issuecomment-6284970983)，是 RA-11 的目标约束，不是宣称 main 已完成接口迁移。
+目标中的 SPSC 是受 CI 看护的参考样例。验收问题是：**应用在 simpler 仓库之外，只用公开资源/访问接口，能否实现另一种 queue？** runtime 自己的调度队列、取消和 drain 仍由 runtime 负责；它们不要求应用采用某种消息格式。此边界对应 [#2635 设计评论](https://github.com/hw-native-sys/simpler/pull/2635#issuecomment-6284970983)，是 #2720 的目标约束，不是宣称 main 已完成接口迁移。
 
 ### 一个资源有明确 owner，每个使用有自己的保留
 
@@ -126,27 +126,27 @@ native CPU import、Device mapping、URMA registration 各有自己的目标上�
 
 ## 4. 四方向如何承载完整设计
 
- | 完整业务方向 | 交付边界 | 本地合同索引 |
- | ------------ | -------- | ------------ |
- | #2721 编排调度、下发与资源访问 | #2460 的身份/视图/访问/寿命；#1931 free provenance；#2720 Region 完整方案 | RA 与公共 EX |
- | #2722 通信与后端 | 域复用、后端 workspace、Host fetch、必要通信 kernel、完成与安全释放随场景交付 | DS；RA 访问/退休、EX 完成联验 |
- | #2723 单 L2 Run 常驻 | 多轮 work/completion、停止接纳与 drain；分别证明 L3 进程复用、重复 run、单 Run 多轮 | EX-2 |
- | #2724 多级多机部署 | mpirun 启动、会话/拓扑、Supervisor 与 Group 迁移、跨节点退出证据 | DS-1/DS-6 |
+| 完整业务方向 | 交付边界 | 本地合同索引 |
+| ------------ | -------- | ------------ |
+| #2721 编排调度、下发与资源访问 | #2460 的身份/视图/访问/寿命；#1931 free provenance；#2720 Region 完整方案 | GitHub 公共资源入口与 EX |
+| #2722 通信与后端 | 域复用、后端 workspace、Host fetch、必要通信 kernel、完成与安全释放随场景交付 | DS；公共访问/退休与 EX 完成联验 |
+| #2723 单 L2 Run 常驻 | 多轮 work/completion、停止接纳与 drain；分别证明 L3 进程复用、重复 run、单 Run 多轮 | EX-2 |
+| #2724 多级多机部署 | mpirun 启动、会话/拓扑、Supervisor 与 Group 迁移、跨节点退出证据 | DS-1/DS-6 |
 
-RA/DS/EX 是横切合同索引，不重复分配场景 owner。方向编号不规定执行顺序。公共基础只有独立价值和验收时才另列；#2621/#2657 所需资源和执行改动留在完整场景。
+GitHub 资源入口与 DS/EX 是横切合同索引，不重复分配场景 owner。方向编号不规定执行顺序。公共基础只有独立价值和验收时才另列；#2621/#2657 所需资源和执行改动留在完整场景。
 
 ### Device 通信能力按路径选择
 
 main 的 A5 SDMA/URMA provider 默认编译；域默认 `workspace_engines=()`，按需申请异步 workspace。A2/A3 的 `enable_sdma` 与 Worker 资源语义保持独立。当前 A5 URMA host 入口限定 L3、TMR、dense-prefix 有序成员；RDMA 仍有独立构建和使用限制。编译存在、资源创建成功、实际传输通过各自计证。来源：[A5 构建](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/CMakeLists.txt)、[资源构建与销毁](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp)、[Worker 校验](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)。
 
- | 目标 | 不可混为一项的验收 |
- | ---- | ------------------ |
- | #2738 上下文入口 | A2/A3 SDMA 入口统一保留启用语义、资源 owner 和无 HCCL 域的单卡路径；不是其他 workspace 交付的硬前置 |
- | #2673 多 AIV / 多 peer | 验证稳定执行者到 ISA 独占队列组的映射与 SHARED_POOL 接入；不要求多个生产者共写同一 SQ |
- | #2833 重叠域 | AB/BC 同时存活、域内 rank/peer 映射正确、独立释放/重建；同时存活不等于传输时间重叠 |
- | #2855 批量 TPUT | 首版单域、单发送者、同 peer；明确暂存、flush、尾批和实际多队列完成；可独立于多 AIV 交付 |
- | #2787 / #2823 生命周期 | URMA 与 RDMA 各自证明实际 manager、注册/channel 依赖、部分初始化和释放失败闭环 |
- | #2824 / #2854 / #2860 | RDMA 实机资格、分块 PUT 故障、分块 GET 故障分别验收；一次正常通过不消除间歇故障 |
+| 目标 | 不可混为一项的验收 |
+| ---- | ------------------ |
+| #2738 上下文入口 | A2/A3 SDMA 入口统一保留启用语义、资源 owner 和无 HCCL 域的单卡路径；不是其他 workspace 交付的硬前置 |
+| #2673 多 AIV / 多 peer | 验证稳定执行者到 ISA 独占队列组的映射与 SHARED_POOL 接入；不要求多个生产者共写同一 SQ |
+| #2833 重叠域 | AB/BC 同时存活、域内 rank/peer 映射正确、独立释放/重建；同时存活不等于传输时间重叠 |
+| #2855 批量 TPUT | 首版单域、单发送者、同 peer；明确暂存、flush、尾批和实际多队列完成；可独立于多 AIV 交付 |
+| #2787 / #2823 生命周期 | URMA 与 RDMA 各自证明实际 manager、注册/channel 依赖、部分初始化和释放失败闭环 |
+| #2824 / #2854 / #2860 | RDMA 实机资格、分块 PUT 故障、分块 GET 故障分别验收；一次正常通过不消除间歇故障 |
 
 以上为设计与验收分工，状态见工作项。#2673 的旧“每 peer 必共用 SQ”与 #2674 的 query/enable 备选已由决定评论取代；不能照旧正文复活为新工作。
 
@@ -176,13 +176,13 @@ peer registered base 加 Buffer-relative Tensor offset 和数据 offset 定位�
 
 新增接口先回答：哪个 owner 拥有资源；何时接纳与发布；哪个完成事实允许哪个动作；部分失败后谁还可能访问；是否存在正常回收的阳性对照。评审必须给出 main/PR/ISA/运行产物的具名版本，不能用历史 CI 绿代替当前路径。
 
- | 合同 | 反例 | 配对阳性对照 |
- | ---- | ---- | ------------ |
- | 显式映射 | native/mapped 同 identity 被错误合并；失效引用复活；unmap 失败后仍接纳 | native CPU/H2D 保留，多个 view 正确偏移；停止读者后正常 unmap/retry |
- | 多 L2 Host 访问 | 只准备消费者；半初始化发布；Device event 被 Host workspace 接管 | 全员同 backing、真实非 self PTO 读取、两类 workspace 正确共存 |
- | 域退休 | A 释放破坏 B；manager mock 替身遮住实际注册残留 | 真实 manager + 有状态 backend mock；多轮 allocate/release 与 B 持续可用 |
- | 批量传输 | 暂存当完成、尾批遗失、仅追踪最后 jetty、部分提交后重复发送 | 显式 flush 和正常返回处理尾批；实际每队列目标达成后消费 |
- | 执行/结果 | 执行 credit 归还即释放 caller-held 输出；旧 generation 完成影响新 run | 连续 run 复用执行资源，同时旧结果可观察且内容正确 |
+| 合同 | 反例 | 配对阳性对照 |
+| ---- | ---- | ------------ |
+| 显式映射 | native/mapped 同 identity 被错误合并；失效引用复活；unmap 失败后仍接纳 | native CPU/H2D 保留，多个 view 正确偏移；停止读者后正常 unmap/retry |
+| 多 L2 Host 访问 | 只准备消费者；半初始化发布；Device event 被 Host workspace 接管 | 全员同 backing、真实非 self PTO 读取、两类 workspace 正确共存 |
+| 域退休 | A 释放破坏 B；manager mock 替身遮住实际注册残留 | 真实 manager + 有状态 backend mock；多轮 allocate/release 与 B 持续可用 |
+| 批量传输 | 暂存当完成、尾批遗失、仅追踪最后 jetty、部分提交后重复发送 | 显式 flush 和正常返回处理尾批；实际每队列目标达成后消费 |
+| 执行/结果 | 执行 credit 归还即释放 caller-held 输出；旧 generation 完成影响新 run | 连续 run 复用执行资源，同时旧结果可观察且内容正确 |
 
 CPU/mock 验证协议，硬件证明实际数据路径和可见性，device trace 证明有用计算重叠；三者不能互相替代。Region 完整方案仍按 #2720 分析，#2635 只是候选；registry 形状仍按契约 D 裁决。共同生命周期合同可以先履行。
 

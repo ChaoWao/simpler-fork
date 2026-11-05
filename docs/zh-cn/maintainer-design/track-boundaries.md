@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -41,104 +41,35 @@
 > **拆分条件（写死，避免下次又「这次也不拆」）**：`§0` 连续两轮无实质修改，
 > 或本文超过 450 行 —— 满足任一条即拆，并在同一次改动里更新那 14 处锚点。
 
-## 0. 三条合同线与四方向的交付归属
+## 0. GitHub 交付归属与共同契约
 
-[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的方向一公共基础、方向二通信/backend、方向三 L2 常驻、方向四 L4 多机部署承载完整交付。RA/DS/EX 保留为本地合同与验收索引；完整场景 issue 不按所修改的模块拆开。#2621/#2657 的资源、执行和后端适配仍随方向二交付，方向三/四同理；只有独立有用且可独立验收的基础工作才单列方向一。具体树与动作见 [范围分析](review/track-2716.md)。
+[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的四方向承载完整目标。资源设计直接跟踪 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 及 [资源入口](work-items.md#2-资源与访问github-入口)，不维护本地 RA 进度；DS/EX 保留验收索引。场景所需基础修改随场景交付，不因跨模块而重复拆 owner。历史编号见 [交接对照](review/ra-handoff.md)。
 
-> **本节是操作面：分线的结论。** §1–§3 是推导过程，历经三次更正，保留是因为
-> 它们记着每次更正的成因；**要用分线的人只需要读本节**。
->
-> 工作项清单在 [`work-items.md`](work-items.md)（唯一真源，一项一归属）；
-> 交付里程碑在 [`README.md`](README.md) §2；场景验收在 [`l3l4.md`](l3l4.md)。
+### 0.1 责任边界
 
-### 0.1 职责边界
+- 公共 Buffer/Tensor、逐调用请求、内部绑定和关闭：#2460；子项 #2888 清理公共 COW 数据路径，#1931 校验 child free 身份。
+- 共享区间与必要访问／同步：#2720。queue、发布协议和背压由应用或上层库定义；runtime 自己的调度、取消和 drain 仍由 runtime 负责。
+- 平台映射：#2495 下 #2496/#2497；只约束实际需要该能力的组合。
+- 通信域 ownership：方向 2 的 #824；远端 lease 和回收与 DS-4 交接。
+- 执行资源：#2666 的共同 prepare/launch/retain/release、#2883 的资源分类及 #2316 的流水容量。通用 kernel/eager-capture 实现仍按既定范围排除。
 
-**通信路线（用户 2026-10-13 选择）**：mpirun 负责启动；通信沿用原生 CANN ACL Runtime + PTO。
-DS-6 定部署/发现与跨-L3 控制接口；DS-1 的 session owner 位于 MPI group/runtime，不要求常驻 daemon。
-DS-5 承接各原生 backend 的能力验收；SHMEM 仅为实现参考，不增加库适配任务。HCOMM/HCCL 不另立所有场景的必选建域路线；具体 backend（如 #2657 fetch）的 Hcomm/URMA setup 按能力需求评估，不能一概排除。
-RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 backend 生效。
-实现证据集中在 [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口)，状态仍只记 work-items。
+### 0.2 四处交接契约
 
- | 线 | 前缀 | 统一负责 | **不负责**（交给谁） |
- | -- | ---- | -------- | -------------------- |
- | **资源与访问** | `RA-` | Buffer/Tensor · 所有权 · Attachment · capability 判定与 view · adapter 选择 · copy/Transfer · arena · 预算 · **用户可见的访问结果** | 跨节点会话与 rank（`DS`）· 谁在什么时候跑（`EX`） |
- | **分布式会话与通信域** | `DS-` | session/lease · 成员与 rank · 建域事务 · 远端回收 · 通信 profile · 规模扩展 | **capability 判定本身**（`RA`，它是唯一权威，`DS` 只消费）· 常驻循环（`EX`） |
- | **执行与常驻运行** | `EX-` | admission · 异步准备 · control 响应 · completion/finalize · STOP/drain | 资源身份与访问权（`RA`）· 跨节点事务（`DS`） |
+**契约 A：域生命周期。** #824 与 DS-4 共用 owner、使用接纳、最后使用和失败清理规则。本地域可先交付，远端完整验收仍需 lease／事务证据；不得另建互不协调的寿命模型。
 
-通用 kernel/eager-capture、HBG 硬件规划、DFX、跨仓模型与 CI 工程保留既定归属；但 **L3+ 必需的 L2 通信初始化、资源访问、通信 kernel、后端队列和 completion 在 #2716 范围内**。以完整目标判定范围，不因文件位于 L2 runtime 就排除，也不吞并通用调度器轨。
+**契约 B：基础同步与常驻循环。** #2720 定义公共区间及必要可见性，EX-2／#2723 定义单 L2 Run 多轮交互、停止与排空。应用定义 queue／握手协议；示例使用两者，但不产生公共 queue 工厂承诺。
 
-### 0.2 四处必须写死的交接契约
+**契约 C：访问结果。** 本地绑定、显式复制和 DS-3 远端访问都必须能分辨实际路径、身份及完成条件；不得静默复制或伪造共享映射。是否需要公共 plan/capability 对象，由 [设计问题](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)决定。源读取结束、目的可见和整体静止分别证明，不要求机械增加 event 类型。
 
-契约 A–D 分别约束域寿命、同步循环、访问结果与资源 close。共同的 [访问、完成与资源退休契约](worker-memory-model/access-retirement-contract.md) 是各 consumer 的验收要求；它细化交接，不声明已实现或另建工作项。
+**契约 D：关闭与资源保留。** #2460 与 #824 统一逻辑关闭、接纳使用、最后使用证明及可重试清理义务。allocation owner、内部映射与实际使用引用分开；OS／驱动真实限制保留，不新增公共授权对象。具体 registry、锁序和 journal 组合须在相关实现中明确，表的数量不是验收目标；已有 consumer 的在飞保护不等待完整 U4。
 
-#### 契约 A —— 域生命周期：`RA-12` ⟷ `DS-4`，共享一份设计
+### 0.3 场景交接与验收
 
- | — | 归属 | 内容 |
- | - | ---- | ---- |
- | 本地独立 ownership | **`RA-12`** | 域从创建起归 Worker owner，创建时决定 retention；run 只登记实际使用与清理义务；admission / retain-release / budget / close-journal 锁序 |
- | 远端 lease、断连与回收 | **`DS-4`** | lease 续约与超时 · 断连后的资源回收 · epoch 代际 |
+Host 场景 #2657/#2730/#2731、域接口 #2594 及传输 #2621 保持完整目标的唯一交付归属。公共模型只提供共同身份、范围、上下文、内部绑定与寿命规则；实际注册、workspace、完成与异常清理随消费者验收。
 
-⛔ **只有一份生命周期设计文档，两项共用**；`DS-4` 不得自建第三种 owner-lifetime。
-本地域 ownership 与实际使用保留不要求远端 lease 先完成；DS-4 的完整退出条件仍需远端事务与回收证据。PR 登记和实现范围见 RA-12。
+临时／持久／异步使用必须有可验证的寿命，是否拆分 Arena 尚在 #2721 讨论。device workspace 与用户 Buffer 的预算和最后使用不能互相代替。公开 ResourceBundle、plan、capability 也须有必要场景才能成为交付要求。
 
-#### 契约 B —— 同步原语 vs 常驻循环：`RA-11` ⟷ `EX-2`，三方切分
-
- | — | 归属 |
- | - | ---- |
- | 受管理区间与必要的 publish/observe/wait 保证，公共原语形状由 #2720 完整方案验证；SPSC 为上层参考样例 | **`RA-11`**，只此一份工作项与验收清单 |
- | queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
- | 单 L2 Run 多轮 work/completion、停止准入与 drain；L3 进程复用、重复 run 单独计证 | **`EX-2`** |
-
-**公共职责约束**：RA-11 提供受管理区间及必要的访问/可见性保证，SPSC 是受 CI 看护的上层示例；应用选择信号含义、握手与 queue 算法。runtime 自己的调度队列、取消与 drain 不转交应用。公开 queue 工厂不能仅凭复用价值进入核心接口；验收应证明仓库外能只用公开基础接口实现不同 queue，见 [L3+ 设计](l3plus-design.md)。
-
-⇒ **`RA-11` 与 `EX-2` 不重复排期**：前者做原语，后者做循环，示例同时用到两者。
-
-#### 契约 C —— `RA-10` 不是一个阶段，是一条接口要求
-
-「向用户暴露最终 plan / capability / completion」**随每条访问路径一起交付**，
-是 `RA-3`（本地 adapter）· `RA-5`（显式 Transfer）· `DS-3`（远端 copy）的**验收条件**，
-不是排在它们后面的一格。⛔ **runtime 可按显式 policy 选 adapter，但不能 silent copy
-或隐藏 identity 变化** —— 这一条对三者同时成立。源读取结束、目的可消费、操作已静止须分别证明；完成事实及 network→H2D 的失败阻断见 [共同契约 §2](worker-memory-model/access-retirement-contract.md#2-完成事实与消费边)。
-
-#### 契约 D —— close 与 owner registry：`RA-15` ⟷ `RA-12`，先答「一个还是两个」
-
-issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry，而不是绕过它直接 unlink/free**」；
-`RA-12` 负责 **Worker 级的域 owner registry**。两件事都要一个「谁拥有、谁能关」的登记表。
-
- | — | 归属 | 登记的是什么 |
- | - | ---- | ------------ |
- | Buffer / allocation 的 close 与物理释放 | **`RA-15`** | owner / import / attachment 的 use 记录 ＋ cleanup journal |
- | 域（CommDomain）的 per-worker ownership | **`RA-12`**（远端半 `DS-4`，契约 A） | 创建时明确 owner/retention ＋ 每次使用接纳 / retain-release / budget |
-
-**共同约束**：统一逻辑关闭、接纳使用、最后使用证明与可重试清理规则，清理义务可组合且恰好履行一次；allocation owner 与 attachment/grant/graph 的使用持有者分开。互不协调的 owner-lifetime 与 close journal 才是 `P2-D` 要避免的问题，表的数量本身不能证明正确。
-
-⛔ **组织形状仍待裁决**：一个 registry，或服从同一生命周期权威的类型化 registry。推荐后者作为可选实现形状；具体 owner、锁序、journal 组合和独立 grant 的关闭合同须在 `U4` 动工前明确。此待决项不阻止各 consumer 先交付已有的在飞保护与失败保留。
-
-**资源边界补充**：RA-7 拆的是 L3 hierarchical HeapRing；RA-16 管 device context 的 ExecScratch/HostStaging；RA-15 管用户 Buffer 的 logical close。三者的容量和最后使用者证明不能互相代替。EX-7 扩大 admission 时消费 RA-16 的资源约束，但本地 L3 #2464 不是 #2466 的硬前置。accepted/prepare/enqueue/执行容量分别核算；旧版本、graph 引用与释放失败块的计费，以及部分提交的最后使用者证明，见 [共同契约 §3–§5](worker-memory-model/access-retirement-contract.md)。
-
-**#2594 域接口交接**：完整业务目标归方向二；本地合同主索引 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。域 owner 合同以统一公共入口为准，不增设 detach owner；会话清理观测不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
-
-**Host 映射交接（#2657/#2730/#2731）**：RA-13/RA-14 管 native/mapped 描述及每调用参数，RA-2/RA-3 管 endpoint-local 访问选择，DS-8 承载完整 Host 场景，RA-15/EX completion 联验保活与退休。显式选择 mapped view 不等于把 raw attach/detach 暴露给用户。两阶段采用普通 Host Buffer；L3 首版全员注册同一完整 backing，Host workspace 与 Device 域 workspace 分离。地址相关建连在协调 map preparation 完成，不以拆出 workspace-only 工作项代替完整交付。合同细节见 [用户面](worker-memory-model/user-surface.md)，后端独立验收见 [L3+ 设计](l3plus-design.md)。
-
-**U4 交接门**：U1a → U1b → U2a → U2b；U1b → U3；U2b 与 U3 的 network→H2D 合并验收 → U4。工作项是聚合归属，U1b/U2a 不能被聚合依赖误读成循环；本表中的 RA-15 同时依赖 RA-13 与 DS-3。契约 D 的裁决不因 #2440/#2452 的 workspace ledger 存在而自动解决。
-
-### 0.3 判据：一个工作项一个归属
-
-> **一个本地合同工作项恰好属于一条线；完整业务交付不按合同线拆分。它可以被任意多个交付里程碑引用，
-> 但状态只在 [`work-items.md`](work-items.md) 维护一份。**
-> 别处只许写 ID ＋ 一句话，不许复述状态。
-
-**一个旧编号可以被拆给两条线，但拆分必须声明** —— 在吸收列写明「本地半 / 远端半 /
-前半 / 后半」或用 `①②` 标明是哪一半。**未声明的多归属就是缺陷**，因为它与「两个格各自
-以为自己拥有它」在文本上完全一样。由 `check-single-owner.py`（本地参考：`check-single-owner.py`） 机器保证。
-
-⛔ **这条判据的代价是实测出来的**：重组前「跨 run 域生命周期」在 **5 个格 / 4 条轨**上
-各维护一份状态（`P1-E` · `D.5` · `W3` · `W5` · `P2-D`）。其中三处在 PR #2120 开出来的那天
-就错了，而**没有任何一处被更新** —— 因为更新哪一处都不是「唯一真源」。
-
-⚠️ **拆分声明必须紧贴它修饰的那个编号。** 守卫的第一版把限定词按**整格**检查，
-于是 `RA-12` 那格里 `#824` 后面的「本地半」替**没有声明的 `P2-D`** 作了保。
-负对照当场抓到。⇒ **一个限定词只为它旁边那个编号说话。**
+具体联合验收见 [访问与退休契约](worker-memory-model/access-retirement-contract.md)；逐旧编号归属由守卫核对 GitHub 入口及 DS/EX 索引。接口依赖写清所需产物，不把整个 Issue 的关闭当作统一前置。下方 §1 起保留具名基线的历史推导，不作为独立排期。
 
 ## 1. 推论：只有一个判定函数 —— ⛔ **依据已于 2026-08-14 重写**
 
@@ -152,13 +83,13 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 
 **实际状态（每条都可 grep 复核，0 命中一律附阳性对照）**：
 
- | 原表写的 | 代码里的实际 |
- | -------- | ------------ |
- | `RegionAccessService`（计划 region 时） | ✅ 存在，但**全仓只有 1 个 evaluator**（`_evaluate_host_vmm_copy`，`comm_endpoints.py:636`）＋ **1 个调用点**（`:811`）⇒ 是「一个函数求值一次」，不是「五次中的一次」 |
- | `ImportContext`（物化 import 时） | ✅ 存在，但**只有 2 个字段**（`buffer.py:562-563`：`is_host_endpoint` ＋ `owning_chip_instance_id`），与上者**只共享一个字符串枚举** |
- | `AttachmentPlan`（建域时） | ⛔ **此名不存在**。真名 `MemberAttachmentPlan`（`comm_endpoints.py:540`），**且它自带 `adapter_kind` ＋ `adapter_profile`**（`:543-544`）⇒ **原表分开列的「建域」与「选 adapter」两个时刻，代码里本就是同一个结构** |
- | `TransportPlan`（选 adapter 时） | ⛔ **全仓 0 命中**（阳性对照：`MemberAttachmentPlan` 在 `comm_endpoints.py` 7 处 ＋ `comm_region.py` 3 处 ⇒ 搜索有效）。代码、注释、docs 皆无 |
- | `comm_profile`（跨节点断言） | ⚠️ 存在，**但不是同一个函数** —— 见 §1b |
+| 原表写的 | 代码里的实际 |
+| -------- | ------------ |
+| `RegionAccessService`（计划 region 时） | ✅ 存在，但**全仓只有 1 个 evaluator**（`_evaluate_host_vmm_copy`，`comm_endpoints.py:636`）＋ **1 个调用点**（`:811`）⇒ 是「一个函数求值一次」，不是「五次中的一次」 |
+| `ImportContext`（物化 import 时） | ✅ 存在，但**只有 2 个字段**（`buffer.py:562-563`：`is_host_endpoint` ＋ `owning_chip_instance_id`），与上者**只共享一个字符串枚举** |
+| `AttachmentPlan`（建域时） | ⛔ **此名不存在**。真名 `MemberAttachmentPlan`（`comm_endpoints.py:540`），**且它自带 `adapter_kind` ＋ `adapter_profile`**（`:543-544`）⇒ **原表分开列的「建域」与「选 adapter」两个时刻，代码里本就是同一个结构** |
+| `TransportPlan`（选 adapter 时） | ⛔ **全仓 0 命中**（阳性对照：`MemberAttachmentPlan` 在 `comm_endpoints.py` 7 处 ＋ `comm_region.py` 3 处 ⇒ 搜索有效）。代码、注释、docs 皆无 |
+| `comm_profile`（跨节点断言） | ⚠️ 存在，**但不是同一个函数** —— 见 §1b |
 
 ⇒ **真相**：**一个函数在一处求值，外加约十几个各自独立的门，横跨两种语言，靠注释与惯例
 而非构造彼此对齐。** 「五处分散所以要收拢」这个前提本身不成立。
@@ -204,10 +135,10 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 ⛔ **「词汇两两零交集」已过时 —— 交集是单向长出来的**（2026-09-07 重测 `f45d43a67`，
 原口径见下）：
 
- | 词 | `comm_endpoints.py` | `buffer.py` | `global_comm_domain.py` |
- | -- | ------------------- | ----------- | ----------------------- |
- | `deployment` | 44（原 41） | **8（原 0）** | **6（原 0）** |
- | `address_space` / `AddressSpace` | 1，仍只在 docstring | 21（原 23） | **8（原 0）** |
+| 词 | `comm_endpoints.py` | `buffer.py` | `global_comm_domain.py` |
+| -- | ------------------- | ----------- | ----------------------- |
+| `deployment` | 44（原 41） | **8（原 0）** | **6（原 0）** |
+| `address_space` / `AddressSpace` | 1，仍只在 docstring | 21（原 23） | **8（原 0）** |
 
 ⇒ **`deployment` 已经渗进另外两个模块，`AddressSpace` 没有渗回 `comm_endpoints.py`。**
 而「唯一的代码级联系是一个字符串枚举」这句**已经明确不对**：`buffer.py` 今天从
@@ -231,10 +162,10 @@ vocabulary, not a live registry object"* —— **后半句仍然对**（`Import
 
 #### 1b `comm_profile` 问的是另一个问题（名字撞了，函数没同一）
 
- | — | 入参 | 问什么 | 输出 |
- | - | ---- | ------ | ---- |
- | `_validate_global_comm_capability`（`worker.py:634`）· `resolve_global_comm_capability`（`global_comm_domain.py:132`） | **两个字符串** `(platform, comm_profile)` | 这块**硅**能不能实现这个 profile（`a3-fabric-v1` 要求真 A3、非 sim） | `raise` |
- | `_evaluate_host_vmm_copy`（`comm_endpoints.py:636`） | `(backend_kind, provider.deployment, consumer.deployment, same_node)` | 这**两个端点之间**能不能这样访问 | `RegionAccessDecision` |
+| — | 入参 | 问什么 | 输出 |
+| - | ---- | ------ | ---- |
+| `_validate_global_comm_capability`（`worker.py:634`）· `resolve_global_comm_capability`（`global_comm_domain.py:132`） | **两个字符串** `(platform, comm_profile)` | 这块**硅**能不能实现这个 profile（`a3-fabric-v1` 要求真 A3、非 sim） | `raise` |
+| `_evaluate_host_vmm_copy`（`comm_endpoints.py:636`） | `(backend_kind, provider.deployment, consumer.deployment, same_node)` | 这**两个端点之间**能不能这样访问 | `RegionAccessDecision` |
 
 **入参无一相同；一个非关系型、一个关系型。** 前者是**平台后端支持度**门，后者是**端点关系**门。
 ⇒ 它们被同一个词命名了（`resolve_global_comm_capability` vs `RegionAccessReasonCode`），
@@ -260,10 +191,10 @@ vocabulary, not a live registry object"* —— **后半句仍然对**（`Import
 > registry/owner authority 供给。**这不是「两边互不知情」，是「不合并的话判定函数永远拿不到
 > 它要的输入」** —— 比原理由硬，且不依赖那张表。
 
- | 原来的分线 | 它其实在做什么 |
- | ---------- | -------------- |
- | **CPU↔NPU 共享内存**（W0–W8） | capability 的**物理输入**（W0 部署探测、互连矩阵）＋ 判定引擎本身（W2 / #1696）＋ 域的成员/backing 载体 |
- | **worker 内存模型 P1** | capability 的**资源侧身份**（`BufferDescriptor` / `Tensor`，已冻结）＋ 第二个求值点（`ImportContext`） |
+| 原来的分线 | 它其实在做什么 |
+| ---------- | -------------- |
+| **CPU↔NPU 共享内存**（W0–W8） | capability 的**物理输入**（W0 部署探测、互连矩阵）＋ 判定引擎本身（W2 / #1696）＋ 域的成员/backing 载体 |
+| **worker 内存模型 P1** | capability 的**资源侧身份**（`BufferDescriptor` / `Tensor`，已冻结）＋ 第二个求值点（`ImportContext`） |
 
 ⛔ **L4 集群（`l3l4.md` 的 A–E 九章）不并入**，理由是**它问的根本是另一个问题**：
 
@@ -277,10 +208,10 @@ rank**，**无 `deployment`、无 `address_space`** —— ✅ 仍成立，而�
 
 ⛔ **两条已死，不要再照它们复核**：
 
- | 原依据 | 现状（实测 `d1eb826f`） |
- | ------ | ----------------------- |
- | `global_comm_domain.py` **零包内依赖**（只 import `enum`/`struct`/`dataclass`）；把 `EndpointDeployment`/`EndpointRegistry`/`RegionAccessService`/`AdapterKind`/`AttachmentRole` 一起 grep 它加四个 cluster 模块 ＝ **0 命中** | ⛔ **已死**：`:18` `from _task_interface import AddressSpace` · `:19` `from .comm_endpoints import AdapterKind, AdapterProfile, AttachmentRole` |
- | `_allocate_global_domain` **只调 `resolve_global_comm_capability`**，**从不碰 `RegionAccessService` / `EndpointRegistry`** | ⛔ **已死**：`_global_domain_attachment_matrix`（`worker.py:9173`）内部取 `self._get_endpoint_registry()` 并构造 `BackendResolver(registry, self._get_region_access_service())`（`:9190`），由 `_allocate_global_domain` 调用。⭐ **这条桥是 #1879 新建的** —— 该函数在 `5cb8110d~1` 上 **0 命中**（阳性对照：同 commit 同文件 `_allocate_global_domain` 1 命中 ⇒ grep 姿势没错） |
+| 原依据 | 现状（实测 `d1eb826f`） |
+| ------ | ----------------------- |
+| `global_comm_domain.py` **零包内依赖**（只 import `enum`/`struct`/`dataclass`）；把 `EndpointDeployment`/`EndpointRegistry`/`RegionAccessService`/`AdapterKind`/`AttachmentRole` 一起 grep 它加四个 cluster 模块 ＝ **0 命中** | ⛔ **已死**：`:18` `from _task_interface import AddressSpace` · `:19` `from .comm_endpoints import AdapterKind, AdapterProfile, AttachmentRole` |
+| `_allocate_global_domain` **只调 `resolve_global_comm_capability`**，**从不碰 `RegionAccessService` / `EndpointRegistry`** | ⛔ **已死**：`_global_domain_attachment_matrix`（`worker.py:9173`）内部取 `self._get_endpoint_registry()` 并构造 `BackendResolver(registry, self._get_region_access_service())`（`:9190`），由 `_allocate_global_domain` 调用。⭐ **这条桥是 #1879 新建的** —— 该函数在 `5cb8110d~1` 上 **0 命中**（阳性对照：同 commit 同文件 `_allocate_global_domain` 1 命中 ⇒ grep 姿势没错） |
 
 连带作废：「**两棵树只在 `worker.py` 一处相遇**」—— 它们现在也在 `global_comm_domain.py` 相遇。
 

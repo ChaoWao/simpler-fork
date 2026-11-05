@@ -1,6 +1,6 @@
 # 四类 worker 内存模型
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §B。
 >
@@ -54,12 +54,12 @@
 
 #### 总览对照表
 
- | kind | 用户表述 | 当前主 API | 底层机制（file:line） | 递归下发到下级？ | 状态 |
- | ---- | -------- | ---------- | --------------------- | ---------------- | ---- |
- | kind1 | run 的 args；来自上级 kind3/kind4；无上级即 kind2 | `TaskArgs.add_tensor(t, tag)` + `orch.submit_next_level(h, args, cfg, worker=N)` | 见 §kind1 | 机制在（提交即下发） | **机制在，但不校验来源**（不验证 arg 真来自上级 kind3/kind4） |
- | kind2 | 本 worker local；torch tensor；不可下发 | 无专用 API（任意 CPU torch tensor） | 见 §kind2 | N/A（定义上不下发） | **未实现**（无标记/校验，纯约定） |
- | kind3 | 与下级 shared；orch.alloc/create_host_buffer；注册进 L(N)↔L(N+1) 表 | `orch.alloc(shape,dtype)` 或 `worker.create_host_buffer(nbytes)` | 见 §kind3 | 机制在，**仅单跳**（父→直接子） | **部分实现**（双机制未统一、不支持多跳；`create_host_buffer` gate 需 chip/SUB，且任何 L3/remote NEXT_LEVEL endpoint 会令后续 MAP_HOST 广播失败；跨机未落地） |
- | kind4 | 下级私有 device；worker.malloc(worker_id)+copy_to；child_memory=1 | `orch.malloc/copy_to(worker_id,...)` + `Tensor.make(...,child_memory=True)` | 见 §kind4 | 仅 L3→本地 L2 | **部分实现**：仅 **L3→本地 L2**（L4 malloc 被拒 `worker.py:4166`）；`child_memory` 仅 1 bool（无 owner/gen/addr-space）；远端需 sidecar（⚠️ 此前写「远端 sim-only」，见 §末的作废说明） |
+| kind | 用户表述 | 当前主 API | 底层机制（file:line） | 递归下发到下级？ | 状态 |
+| ---- | -------- | ---------- | --------------------- | ---------------- | ---- |
+| kind1 | run 的 args；来自上级 kind3/kind4；无上级即 kind2 | `TaskArgs.add_tensor(t, tag)` + `orch.submit_next_level(h, args, cfg, worker=N)` | 见 §kind1 | 机制在（提交即下发） | **机制在，但不校验来源**（不验证 arg 真来自上级 kind3/kind4） |
+| kind2 | 本 worker local；torch tensor；不可下发 | 无专用 API（任意 CPU torch tensor） | 见 §kind2 | N/A（定义上不下发） | **未实现**（无标记/校验，纯约定） |
+| kind3 | 与下级 shared；orch.alloc/create_host_buffer；注册进 L(N)↔L(N+1) 表 | `orch.alloc(shape,dtype)` 或 `worker.create_host_buffer(nbytes)` | 见 §kind3 | 机制在，**仅单跳**（父→直接子） | **部分实现**（双机制未统一、不支持多跳；`create_host_buffer` gate 需 chip/SUB，且任何 L3/remote NEXT_LEVEL endpoint 会令后续 MAP_HOST 广播失败；跨机未落地） |
+| kind4 | 下级私有 device；worker.malloc(worker_id)+copy_to；child_memory=1 | `orch.malloc/copy_to(worker_id,...)` + `Tensor.make(...,child_memory=True)` | 见 §kind4 | 仅 L3→本地 L2 | **部分实现**：仅 **L3→本地 L2**（L4 malloc 被拒 `worker.py:4166`）；`child_memory` 仅 1 bool（无 owner/gen/addr-space）；远端需 sidecar（⚠️ 此前写「远端 sim-only」，见 §末的作废说明） |
 
 #### §kind1 — run args 的下发（INPUT/OUTPUT 标签流）— 已实现
 
@@ -123,13 +123,13 @@
 
 ### B.2 相关 Issue / PR
 
- | PR/Issue | 状态 | 落到哪一类 | 把诉求推进到哪 |
- | -------- | ---- | ---------- | -------------- |
- | **#1256** | merged (a5895d8d) | kind3 (host shared) | L3 post-fork **zero-copy** host buffers：落地 `create_host_buffer` + `_host_buf_registry` + `_CTRL_MAP_HOST`。父子共享同一物理页、per-task blob 的 host 指针在 child 解码前重写，纯 Python 无 C++ 改动。是 kind3 host 侧的**权威落地基线**。 |
- | **#1390** | merged (470a84df) | kind3 对 SUB 的可见性 | 把 `MAP_HOST/UNMAP_HOST` 广播扩展到 **L3 SubWorker**，并在 SubWorker 任务解码前改写父 host 地址（修 subworker 不可见）。补齐 kind3 到 SUB 池。 |
- | **#1190** | **CLOSED，未合并** | kind3 | L3 post-fork host-buffer registration 的早期方案，**已被 #1256/#1390 取代**。梳理 kind3 应读后两者，而非 #1190。 |
- | **#1334** | merged | kind3/kind4 **device 侧** 跨进程 | 把跨进程 device window 从 exbus-gated `aclrtIpcMemImportByKey` 换成 **ACL VMM shareable-handle**（`aclrtMemExportToShareableHandle/ImportFromShareableHandle`，`comm_hccl.cpp:464-520/624-638`），修 PCIe 箱 507899。使设备内存能零拷贝跨进程对等访问 —— 但 `ACL_MEM_HANDLE_TYPE_NONE` 天然**单机**（`comm_hccl.cpp:20-23` 已自注 host-local），对跨机 kind3/kind4 不可直接用。 |
- | **#861** | **CLOSED，未合并**（历史实现/设计） | kind3 底层原语 | `HostDeviceMappedRegion`：64B header + signal slot + 裸 data 区，A2/A3 host-register、A5 `-ENOTSUP` 桩。只作为需求与设计审计材料；当前代码基线应读 merged #1015/#1305/#1277。 |
+| PR/Issue | 状态 | 落到哪一类 | 把诉求推进到哪 |
+| -------- | ---- | ---------- | -------------- |
+| **#1256** | merged (a5895d8d) | kind3 (host shared) | L3 post-fork **zero-copy** host buffers：落地 `create_host_buffer` + `_host_buf_registry` + `_CTRL_MAP_HOST`。父子共享同一物理页、per-task blob 的 host 指针在 child 解码前重写，纯 Python 无 C++ 改动。是 kind3 host 侧的**权威落地基线**。 |
+| **#1390** | merged (470a84df) | kind3 对 SUB 的可见性 | 把 `MAP_HOST/UNMAP_HOST` 广播扩展到 **L3 SubWorker**，并在 SubWorker 任务解码前改写父 host 地址（修 subworker 不可见）。补齐 kind3 到 SUB 池。 |
+| **#1190** | **CLOSED，未合并** | kind3 | L3 post-fork host-buffer registration 的早期方案，**已被 #1256/#1390 取代**。梳理 kind3 应读后两者，而非 #1190。 |
+| **#1334** | merged | kind3/kind4 **device 侧** 跨进程 | 把跨进程 device window 从 exbus-gated `aclrtIpcMemImportByKey` 换成 **ACL VMM shareable-handle**（`aclrtMemExportToShareableHandle/ImportFromShareableHandle`，`comm_hccl.cpp:464-520/624-638`），修 PCIe 箱 507899。使设备内存能零拷贝跨进程对等访问 —— 但 `ACL_MEM_HANDLE_TYPE_NONE` 天然**单机**（`comm_hccl.cpp:20-23` 已自注 host-local），对跨机 kind3/kind4 不可直接用。 |
+| **#861** | **CLOSED，未合并**（历史实现/设计） | kind3 底层原语 | `HostDeviceMappedRegion`：64B header + signal slot + 裸 data 区，A2/A3 host-register、A5 `-ENOTSUP` 桩。只作为需求与设计审计材料；当前代码基线应读 merged #1015/#1305/#1277。 |
 
 补充：kind3 相关的 host-buffer + runtime-arena 已合并栈还包括 #1234/#1193/#1322/#1245（arena 复用/prewarm/去 local-ready-buffer），但这些服务冷启动与调度，不直接改内存分类。**#1198（TRB 临时变量 buffer）已 merged 后又被 `fd5f16f8` 回滚，当前代码树中不存在，勿再把它当作在用基线**（与 C.3 一致）。**kind4 的 child_memory 机制无单独 PR 号**，已内置于 `tensormap_and_ringbuffer` 运行时（`runtime_maker.cpp` 的 `is_child_memory` pass-through + `examples/workers/l3/child_memory`）。
 
@@ -139,7 +139,7 @@
 2. **kind3 双机制未统一**：`orch.alloc`（运行时 HeapRing + C++ `tensormap_`）与 `create_host_buffer`（POSIX shm + MAP_HOST 广播）是两条独立代码路径、两张不同 Python 注册表（`_worker_chip_orch_comm_host_buffers` vs `_host_buf_registry`），语义都属 kind3 却互不相通，用户要自己知道何时用哪个。
 3. **仅 MAP_HOST 路径单跳（HeapRing 不是）**：`_CTRL_MAP_HOST` 只从父广播到直接 forked 子，子侧 `_handle_ctrl_map_host` 不再向孙 worker 转播；**且 `_child_worker_loop`（L4→本地 L3）与 remote endpoint 目前不处理 MAP/UNMAP_HOST**。因此纯 next-level L4 在 preflight 即被拒；mixed L4 若因另有 SUB 而通过 preflight，会在广播给全部 NEXT_LEVEL 时失败，仍映射不到 L2 grandchild。（注意：`orch.alloc` 的 HeapRing MAP_SHARED 是 fork **递归**继承，深层级*本地*后代可见；单跳缺口只在 MAP_HOST 控制路径。）
 4. **kind3 前置 gate 不等于支持矩阵**：`create_host_buffer` 要求 level≥3 且至少有一个已 fork 的 chip 或 SUB direct child；L2 单机不可用。端到端还要求没有不支持 MAP/UNMAP_HOST 的 L3/remote NEXT_LEVEL endpoint。`orch.alloc` 依赖 fork 继承 MAP_SHARED，与 remote L3（跨进程/跨机、非 fork）天然不兼容。
-5. **kind4 远端不透明（设计已存在未落地）**：本地 `orch.malloc` 走 mailbox CTRL 直达子设备；但 remote L3 上 child_memory 张量必须显式携带 remote sidecar 描述符（`remote_endpoint.cpp:631`），否则抛错 —— "本地 vs 远端下级"的 kind4 下发路径不统一，上层需感知对端是否远端。⚠️ **此处此前写「远端数据面整体 sim-only（`remote_l3_worker` 只接受 `transport=="sim"`）」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那个门现在是 `transport == "host_tcp"`，而且**旧的 `"sim"` 从来不是模拟器** —— `b535fa21` 上的 session 已是真 TCP socket（`AF_INET`/`bind`/`listen`），是名字撒了谎而我采信了它。**当前边界（`68d137fdf`）**：A3 Fabric 共享窗口已有跨机数据面；child_memory 的统一下发与授权仍按 RA-13/DS-3 验收，不能由 control profile 推导全部 peer-memory 能力。
+5. **kind4 远端不透明（设计已存在未落地）**：本地 `orch.malloc` 走 mailbox CTRL 直达子设备；但 remote L3 上 child_memory 张量必须显式携带 remote sidecar 描述符（`remote_endpoint.cpp:631`），否则抛错 —— "本地 vs 远端下级"的 kind4 下发路径不统一，上层需感知对端是否远端。⚠️ **此处此前写「远端数据面整体 sim-only（`remote_l3_worker` 只接受 `transport=="sim"`）」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那个门现在是 `transport == "host_tcp"`，而且**旧的 `"sim"` 从来不是模拟器** —— `b535fa21` 上的 session 已是真 TCP socket（`AF_INET`/`bind`/`listen`），是名字撒了谎而我采信了它。**当前边界（`68d137fdf`）**：A3 Fabric 共享窗口已有跨机数据面；child_memory 的统一下发与授权仍按 #2460/DS-3 验收，不能由 control profile 推导全部 peer-memory 能力。
 6. **跨机 kind3/kind4 硬约束**：VMM shareable-handle 用 `ACL_MEM_HANDLE_TYPE_NONE`（OS 原生 handle）只能同机；跨机需 fabric handle（CANN 9.0.0+ 且 UB/HCCS fabric 域），或改走 HCCL/RDMA channel windows backend —— 这是环境级约束，非纯软件缺口。
 7. **kind1 方向二元性无文档**：`TensorArgType`（依赖/远端权限）与 `ArgDirection`（H2D/D2H 拷贝）两套"方向"并存且作用不同，docs 未点破，容易误配（如签名给 IN 但实际要写回）。
 8. **kind4 两个 guard（均已交付）**：① **guard ①：✅ #1397** —— `_rewrite_blob_host_addrs` 改写前排除 `child_memory`，不再因 device VA 与某 host range 数值碰撞误写 device 指针；② **guard ②：✅ #1430 `c8c7b735`** —— typed `(worker_id,ptr)` provenance，`submit_next_level` 下发 `child_memory` 参数时按 provenance 校验（`worker=-1` 解析出**唯一** eligible target 放行，拒零/多/wrong-worker/stale；严格 ABA 留 P1）。（历史：曾是 correctness blocker，现已闭。）
@@ -160,7 +160,7 @@
 
 #### 阶段 3（统一本地/远端下发路径，依赖 remote 数据面成熟）
 
-- 统一 kind4 本地/远端：让 child_memory 张量在本地（mailbox）与远端（sidecar）下发对上层透明，呼应诉求 D.3"不感知对端是 L3 还是 L2"（对齐差距 5）。此步按 RA-13/DS-3 验收 consumer/wire 与授权；现有 A3 共享窗口可作基座，#866/#711 仅为历史方案。
+- 统一 kind4 本地/远端：让 child_memory 张量在本地（mailbox）与远端（sidecar）下发对上层透明，呼应诉求 D.3"不感知对端是 L3 还是 L2"（对齐差距 5）。此步按 #2460/DS-3 验收 consumer/wire 与授权；现有 A3 共享窗口可作基座，#866/#711 仅为历史方案。
 - 跨机 kind3/kind4 device 内存：评估 fabric handle（CANN 9.0.0+/UB fabric 域）或 HCCL/RDMA channel windows backend；可吸收 #861 的 `HostDeviceMappedRegion` 概念，但实现须从当前 main 重新落地并补 capability contract（对齐差距 6）。
 
 **边界提示**：以上阶段 2 的"移除/统一 heap"必须与诉求 C.3 协同 —— HeapRing 还兼任 task-slot 池/单调 task-id/drain-reset，**不能整体删**，只能把堆容量置 0 并把 `orch.alloc` 与 OUTPUT 空指针自动分配重写到显式 shm 之上（详见 C.3 章）。

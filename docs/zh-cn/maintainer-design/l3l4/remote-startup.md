@@ -1,6 +1,6 @@
 # Remote L3 启动与接口
 
-> **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §A + §C.2。
 
@@ -125,7 +125,7 @@ HCCL 初始化 device communicator，不启动或发现 L3；本地文件式 roo
 5. **启动顺序**：本地 eager init 与 fork-before-thread 是已有约束；禁止恢复 lazy fork、
    `init()+_start_hierarchical()` 双调用或 pre-fork 打开 remote session。
 6. **参数/任务边界**：张量布局、OUTPUT 分配、remote attachment 与 callable 身份的验收
-   分别归 RA-13/DS-3/EX-4；不能用共享窗口已通替代 wire consumer 的完整验收。
+   分别归 #2460/DS-3/EX-4；不能用共享窗口已通替代 wire consumer 的完整验收。
 
 ### A.4 落地路径
 
@@ -147,26 +147,26 @@ simpler 用同一个 Python `Worker(level=N, **config)` 工厂统一三层入口
 
 **生命周期对照**：
 
- | 维度 | L2 (ChipWorker) | L3 (Worker 复合体) | L4+ (递归 Worker) |
- | ---- | --------------- | ------------------ | ----------------- |
- | 构造 | `Worker(level=2, platform, runtime, device_id)` | `Worker(level=3, device_ids=[…], num_sub_workers=M)` | `Worker(level=4, num_sub_workers=M)`（禁 device_ids，`worker.py:3306-3307`） |
- | 子 worker 注册 | 无 | 无（init 里按 device_ids 自动建） | `add_worker(child)`（`worker.py:3219`）/ `add_remote_worker(spec)`（`worker.py:1843`），须 init 前 |
- | `init()` | `_init_level2`（`worker.py:3279`）：`ChipWorker.init`，**不 fork 不起调度线程** | `_init_hierarchical`（`worker.py:3302`）：**#1397 后 `init()` 内 eager fork 整树**（返回即 full-tree READY，原"推迟到首个 run"的 lazy fork 已删；#1381 CLOSED/superseded，见 C.1） | 同 L3，子是 Worker；C++ 侧 `add_next_level_worker` / `add_remote_l3_socket`（`worker.h:77/82`） |
- | C++ `Worker::init()` | 不适用 | `worker.cpp:94`：`orchestrator_.init` → `manager_.start` → `scheduler_.start` | 同 L3 |
- | `close()` | `ChipWorker.finalize` | `worker.py:4611`：释放 CommDomain → `Worker::close`（`worker.cpp:125`）→ 拆子进程/unlink shm | 同 L3 + 拆 remote session |
+| 维度 | L2 (ChipWorker) | L3 (Worker 复合体) | L4+ (递归 Worker) |
+| ---- | --------------- | ------------------ | ----------------- |
+| 构造 | `Worker(level=2, platform, runtime, device_id)` | `Worker(level=3, device_ids=[…], num_sub_workers=M)` | `Worker(level=4, num_sub_workers=M)`（禁 device_ids，`worker.py:3306-3307`） |
+| 子 worker 注册 | 无 | 无（init 里按 device_ids 自动建） | `add_worker(child)`（`worker.py:3219`）/ `add_remote_worker(spec)`（`worker.py:1843`），须 init 前 |
+| `init()` | `_init_level2`（`worker.py:3279`）：`ChipWorker.init`，**不 fork 不起调度线程** | `_init_hierarchical`（`worker.py:3302`）：**#1397 后 `init()` 内 eager fork 整树**（返回即 full-tree READY，原"推迟到首个 run"的 lazy fork 已删；#1381 CLOSED/superseded，见 C.1） | 同 L3，子是 Worker；C++ 侧 `add_next_level_worker` / `add_remote_l3_socket`（`worker.h:77/82`） |
+| C++ `Worker::init()` | 不适用 | `worker.cpp:94`：`orchestrator_.init` → `manager_.start` → `scheduler_.start` | 同 L3 |
+| `close()` | `ChipWorker.finalize` | `worker.py:4611`：释放 CommDomain → `Worker::close`（`worker.cpp:125`）→ 拆子进程/unlink shm | 同 L3 + 拆 remote session |
 
 **Orch 函数接口对照**（L3+ `orch.*` 见 `python/simpler/orchestrator.py`；L2 无 host 侧 orchestrator 对象）：
 
- | L3+ `orch.*` | 签名 / 位置 | L2 对应物 |
- | ------------ | ----------- | --------- |
- | `submit_next_level(handle, args, cfg, worker=-1)` | `orchestrator.py:157` / C++ `orchestrator.h:102` | 设备侧 `rt_submit_aiv_task` / `rt_submit_aic_task` |
- | `submit_next_level_group(handle, args_list, cfg, workers=[])` | `orchestrator.py:209` | 无直接对应 |
- | `submit_sub / submit_sub_group` | `orchestrator.py:288/304` | 无（L2 无 Python sub 概念） |
- | `alloc(shape, dtype)` | `orchestrator.py:440` / `orchestrator.cpp:70-144`（HeapRing） | 设备侧 runtime 自己的 ring |
- | `malloc/free/copy_to/copy_from(worker_id, …)` | `orchestrator.py:424` → mailbox CTRL_MALLOC → chip 子 | `worker.malloc` 直连 `ChipWorker.malloc`（rtMalloc） |
- | `allocate_domain / release_domain` | `orchestrator.py:321/362` | `ChipWorker.comm_alloc_domain_windows`（`chip_worker.h:118`），被 L3 驱动 |
- | `create_worker_chip_region / create_worker_chip_queue` | `orchestrator.py:366/372` | L2 侧 `ChipWorker` 实现 |
- | `scope() / scope_begin / scope_end` | `orchestrator.py:404-422` | 设备侧 `pto2_scope_end` 语义 |
+| L3+ `orch.*` | 签名 / 位置 | L2 对应物 |
+| ------------ | ----------- | --------- |
+| `submit_next_level(handle, args, cfg, worker=-1)` | `orchestrator.py:157` / C++ `orchestrator.h:102` | 设备侧 `rt_submit_aiv_task` / `rt_submit_aic_task` |
+| `submit_next_level_group(handle, args_list, cfg, workers=[])` | `orchestrator.py:209` | 无直接对应 |
+| `submit_sub / submit_sub_group` | `orchestrator.py:288/304` | 无（L2 无 Python sub 概念） |
+| `alloc(shape, dtype)` | `orchestrator.py:440` / `orchestrator.cpp:70-144`（HeapRing） | 设备侧 runtime 自己的 ring |
+| `malloc/free/copy_to/copy_from(worker_id, …)` | `orchestrator.py:424` → mailbox CTRL_MALLOC → chip 子 | `worker.malloc` 直连 `ChipWorker.malloc`（rtMalloc） |
+| `allocate_domain / release_domain` | `orchestrator.py:321/362` | `ChipWorker.comm_alloc_domain_windows`（`chip_worker.h:118`），被 L3 驱动 |
+| `create_worker_chip_region / create_worker_chip_queue` | `orchestrator.py:366/372` | L2 侧 `ChipWorker` 实现 |
+| `scope() / scope_begin / scope_end` | `orchestrator.py:404-422` | 设备侧 `pto2_scope_end` 语义 |
 
 L2 Worker facade 只暴露 `malloc/free/copy_to/copy_from(size, worker_id=0)`（`worker.py:4179`）、`register`、`run`；**不暴露** `get_orchestrator`/`allocate_domain`/`submit_*`（L3+ 专属）。
 
