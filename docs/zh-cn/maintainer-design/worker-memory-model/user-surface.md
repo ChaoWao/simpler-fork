@@ -17,7 +17,7 @@
  | 对象 | 用户可见契约 |
  | ---- | ------------ |
  | Buffer | 存储 identity、capacity、HOST/DEVICE、owner/backend/grant；用户可持有 |
- | Tensor | 同一 backing 的 dtype/shape/stride/offset 几何视图，不承载可变调用策略 |
+ | Tensor | 同一 backing 的 dtype/shape/stride/offset 几何视图；显式 mapped view 可携带经目标验证的访问引用，不承载可变调用策略 |
  | TaskArgs 条目 | 本次调用 direction/tag 与显式 transfer request |
  | runtime binding | 私有 endpoint-local 解析、地址与 retention；ChipTensor 可作为迁移期内部 ABI，旧入口经兼容适配 |
 
@@ -27,9 +27,20 @@
 
 ### 5.2 API 契约与已交付边界
 
-代码口径为 `upstream/main@937c57efc71ad01a01c3a72072df075d2a5dd24f`：公共 `Tensor(buffer, shapes=..., dtype=..., strides=..., byte_offset=...)` 由 #2479/#2480 提供，`Buffer.tensor(...)` 是兼容转发；`python/bindings/task_interface.cpp::make_tensor_view` 共用几何与范围 validator。构造复制 descriptor，不分配/搬运 backing。`TaskArgs.add_tensor(..., transfer=...)` 保持调用条目级 request；`Worker.create_buffer` 与 `alloc_shared_tensor` 的 owner/HeapRing 边界不变。
+源码口径 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`：公共 `Tensor(buffer, shapes=..., dtype=..., strides=..., byte_offset=...)` 与 `Buffer.tensor(...)` 兼容转发保留；构造描述不搬运 backing，`TaskArgs.add_tensor(..., transfer=...)` 仍为调用条目级 request。源登记与目标接入分开，外部 allocation/context ownership 不因 `Buffer.wrap` 或借用而转移。已接纳使用、未知完成与物理释放按 [退休契约](access-retirement-contract.md)；现有 consumer 与剩余组合状态只见 RA-13/RA-14/RA-15。
 
-目标分层遵循 §5.1。#2482 已提供 `Buffer.wrap(address=..., nbytes=..., location=worker.device_location)` 源登记与 direct-L2 submit 时接入；#2587 将 location 身份推进到 native environment，#2578/#2599 提供 borrowed RTS 接入；这不自动赋予跨 Worker/Remote 授权，也不转移外部分配或 borrowed context 的 ownership。close 拒绝在飞或未知完成的 source uses，外部分配由调用方保活和回收。#2612/#2614 补齐 prepare 失败与未启动 launch 的可证明释放；执行异常的后续仍归 #2615/RA-15。其余 consumer 与兼容移除边界见 [RA-13/RA-14](../work-items.md)。无论入口形状如何，必须保留有效源登记、provenance 校验与 accepted-use retention。Remote wire 拒绝门不替代 network→H2D 验收。
+**统一域 API**：`get_or_allocate_domain` 比较不可变配置（含有序成员、buffer、retention、topology、workspace engines），同配置复用保留 identity 和内容。域由 Worker 持有，run 登记实际使用；创建时选择 retention，不另加 detach owner。域接口不是通用 Buffer close 全部验收完成的证明。来源：[Worker](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)、[TaskArgs 与 handle](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/task_interface.py)。
+
+**显式映射目标合同（#2657/#2730/#2731，2026-11-04 正文）**：保留普通 `create_buffer(nbytes)` 与 native Tensor；显式 map 返回同 backing 的新 Tensor 访问描述。方法名/位置以最终 API 为准，示意 `map_view(native, access=READ)` 不表示 main 已提供该入口。禁止 allocation-wide `device_readable` / `host_window` 消费策略；Device READ mapping 不把原生 Host Buffer 改成只读。
+
+- Buffer 保留 HOST placement、capacity、native grant 和 owner。opaque mapping 引用须在目标 registry 校验 identity、范围、grant、context generation 与 live 状态；不能只凭整数引用授权。
+- 同目标物理 mapping 在 Buffer 范围复用，各 Tensor 保留自身 offset/extent。native 与 mapped 参数即使 identity 相同也分别解析，同时保持 canonical alias/dependency 判定。
+- CPU import 不依赖 Device map；native Host/H2D 语义保持。Python Host 访问不依赖 `.shm.buf` 或裸指针，导出 view 不能超出 backing 寿命。
+- #2730 同进程 L2 的本地 MTE 为同步读取；#2731 由 L3 持有同一完整 Host Buffer，首版准备所有子 L2，分别 map/register 完整范围。保持单一 TaskArgs/adapter 流，不自动分表或创建 table-sized Device window。
+- map preparation 在 Worker.init 后、task submit 前协调，所有必需成员确认后才能发布；包括实际地址依赖的 URMA channel/workspace 初始化。Host workspace 经 `get_dma_workspace(args, DMA_WORKSPACE_URMA)` 接入，包含 post-init 发布和 per-task 注入；Device 域 workspace 保留原入口。首版每消费 L2 一套 Host registration，拒绝第二个独立 backing。
+- CPU 写在读取前完成，读者结束前不修改表；unmap/release 遇 accepted reader 拒绝。开始 unmap 即关闭新接纳；失败保留资源供符合 backend 合同的重试，但禁止继续 validation/acquire/address resolution。异步传输保留 exposing/consuming endpoint、registration、workspace 与输出直到各自最后使用。
+
+此显式访问选择细化 §5.7 的内部 Attachment 管理，不新增让应用逐个操纵跨进程 import/map grant 的接口。#2730/#2731 的拓扑限制与硬件验收见 [L3+ 设计 §4](../l3plus-design.md#4-四方向如何承载完整设计)；归属仍为 DS-8 联验 RA/EX。
 
 显式 COPY 写入已有 destination 时保持该 destination identity；只有新分配 destination 才有新 identity。
 
@@ -77,8 +88,8 @@ simpler 管理的 owner registry **必须区分两种 lifetime**；外部借用�
 
  | lifetime | 归属 | 关联 |
  | -------- | ---- | ---- |
- | **persistent owner-managed Buffer** | Worker，跨 run 存活 | 这正是 issue #824 / [cpu-npu-shared-memory/work-breakdown.md](../cpu-npu-shared-memory/work-breakdown.md) W3 的 per-worker 归属（两种寿命之一） |
- | **run / scope-managed BufferLease** | 单次 run | 与 `_RunResources` 的 per-run 所有权对齐 |
+ | **persistent owner-managed Buffer** | Worker，跨 run 存活 | #824 / W3 的域 retention 是此规则的一个 consumer；通用 Buffer 生命周期仍由 RA-15 验收 |
+ | **run / scope-managed BufferLease** | 单次 run | run/scope 自有资源与跨 run 资源的本次 use 必须区分；`_RunResources` 同时记录使用及清理义务 |
 
 > **一个扁平的 handle 字典不满足本节**——它既表达不了两种 lifetime，也没有 retain
 > 计数可言。

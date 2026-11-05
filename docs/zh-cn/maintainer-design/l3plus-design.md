@@ -2,11 +2,7 @@
 
 > **发布快照：2026-11-04。** 设计、实现状态与历史调查须按正文各自基线阅读；不代表当前 main 全量验收。参见[阅读入口与已知更正](README.md)。
 >
-> **当前交付与证据入口（2026-11-04）**：[工作项](work-items.md) 与 [#2716 范围分析](review/track-2716.md)。本页下方是 10 月 21 日代码地图；域 ownership、workspace、URMA 使用校验与结果退休的后续交付按当前入口阅读。设计边界不随旧实现快照冻结。
->
-> **交付组织补充（2026-10-26）**：[#2716 四方向](review/track-2716.md) 是完整目标视图，RA/DS/EX 是横切合同视图。场景需要的资源/调度/backend 改动随场景交付；只把独立可验收的公共基础另列。L2 单 Run 常驻与 L3 进程复用分开；必要的通信 kernel 和后端队列属于 runtime，应用 queue 协议仍在上层。#2720 完整 Region 方案待分析，#2635 仅为候选。下方源码地图保留 10 月 21 日基线；新 main 交付与当前验收缺口见工作项。
->
-> 源码基线：main `fdcbdcc9502195f7837030cf3c130f75f83d3719`，2026-10-21（America/Los_Angeles）。本文按该 SHA 的实现梳理设计；“目标约束”不冒充全部落地。源码与现有测试已阅读，本次不构建、不重跑硬件或 CI。实施状态仍只在 [work-items.md](work-items.md)，全目标核验日期仍为 2026-10-18。
+> **设计依据（2026-11-04）**：#2716 原生四方向、正文与决定性评论；#2657/#2730/#2731 采用当日更新的显式映射与全员完整 Buffer 注册合同。源码事实固定 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；下文明确区分实现与目标。状态只在 [工作项](work-items.md)，来源和验收证据见 [范围分析](review/track-2716.md)。本轮没有执行产品或硬件测试。
 
 **L3+ 的职责，是把用户声明的任务、资源访问和依赖，落实为有明确归属、可验证顺序与可安全回收的执行。** 应用定义计算与通信协议；simpler 管理执行和资源机制。L3、L4 是编排树的位置，不能单凭层级推出内存可达性或通信能力。
 
@@ -64,7 +60,7 @@ simpler 负责资源身份、范围、授权、映射/copy、必要的可见性�
 
 `写 payload → 发布 ready / 观察 ready → 读 payload`：应用选择协议，底层必须让这两条顺序关系可表达且可靠。不能把地址可写当成自动 coherence；也不要求应用各自复制硬件 cache 维护代码。只提升已经证明通用、可以独立验收的最小原语。
 
-SPSC 是受 CI 看护的参考样例。验收问题是：**应用在 simpler 仓库之外，只用公开资源/访问接口，能否实现另一种 queue？** runtime 自己的调度队列、取消和 drain 仍由 runtime 负责；它们不要求应用采用某种消息格式。此边界对应 [#2635 设计评论](https://github.com/hw-native-sys/simpler/pull/2635#issuecomment-6284970983)，是 RA-11 的目标约束，不是宣称 main 已完成接口迁移。
+目标中的 SPSC 是受 CI 看护的参考样例。验收问题是：**应用在 simpler 仓库之外，只用公开资源/访问接口，能否实现另一种 queue？** runtime 自己的调度队列、取消和 drain 仍由 runtime 负责；它们不要求应用采用某种消息格式。此边界对应 [#2635 设计评论](https://github.com/hw-native-sys/simpler/pull/2635#issuecomment-6284970983)，是 RA-11 的目标约束，不是宣称 main 已完成接口迁移。
 
 ### 一个资源有明确 owner，每个使用有自己的保留
 
@@ -94,89 +90,100 @@ pipeline slot 复用必须校验 generation；run 的错误、输出和诊断在
 
 区分“代码有实现”“测试有覆盖入口”“某 SHA 的某平台实测通过”。每个支持路径要有成功复用与非法/失败拒绝两侧证据。CPU fake 证明协议，硬件可见性需要硬件证据；控制通路的名称不证明或否定设备数据面。
 
-## 3. 当前代码怎样兑现这些原则
+## 3. 资源与执行：当前实现及共同合同
 
-### 启动与注册
+### 域从创建起有 owner，run 登记自己的使用
 
-`Worker.init()` 取得启动 epoch，递归初始化本地子树、激活远端并等待 READY，最后在生命周期锁内发布 READY；失败走有 deadline 的回滚。`run` 不承担隐式启动。`_operation_lease()` 在整个操作期间阻止树被 teardown；`close()` 永久关闭准入，再 drain 与清理。
+当前 main 的 `allocate_domain(members=...)` / `get_or_allocate_domain` 共用入口，`DomainConfig` 比较有序成员、buffer 定义、window、retention、topology 与 `workspace_engines`。同配置复用返回原 handle，不重置数据。创建/复用发生于所属 Worker 的 orchestration callback；创建时选择 `retain_after_run`。
 
-注册由 `CallableHandle`、digest、kind、target namespace 和 eligible workers 共同约束；注册内容身份与 Worker-local handle 权限分开。[启动/lease/close 源码](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L7598) · [启动提交点](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L8875) · [handle 生成](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L7477)。
+Worker 的 local/global live table 持有域；`_RunResources` 记录本 run 的使用与清理义务。`_enroll_domain_uses` 从实际 touched Buffer identity 登记缓存 Tensor 的后续 run 使用；显式 get_domain / checked context 路径登记上下文使用。**跨 run 保留不再需要把域从 run detach 给另一个 owner。** 配置复用、逻辑关闭、在飞 fence 和 backend 物理释放仍是不同合同。#824 的原始行为应对照现有实现核定，而不是据旧 API 名重新开发。
 
-### 一次 L3+ run
+来源：[Worker 域入口与使用登记](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)、[不可变 DomainConfig](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/comm_domain.py)、[域公共合同](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/docs/comm-domain.md)。这些公共机制不证明 URMA/RDMA 所有异常释放都已闭合，后者按 #2787/#2823 验收。
+
+### Buffer identity、访问选择与调用策略分开
+
+Buffer 表达 backing 身份、位置、容量和 owner；Tensor 表达几何。#2730/#2731 的目标进一步允许显式 mapped Tensor 携带不可伪造的目标访问引用：原生 Tensor 和映射 Tensor 保持同一 backing identity，但必须独立解析。访问选择不是把地址写进 Buffer，也不是修改 allocation-wide policy；direction 与 transfer 仍属于每次 TaskArgs 调用。
+
+native CPU import、Device mapping、URMA registration 各有自己的目标上下文和生命周期。映射不复制；显式 H2D 产生独立 Device 存储。保持公共 Buffer/Tensor/TaskArgs 与既有 adapter 路径，不因 Host table 再建参数系统。具体约束见 [用户面 §5.2](worker-memory-model/user-surface.md#52-api-契约与已交付边界)。
+
+### 完成不是一个布尔值
 
 ```text
-submit
-  → 取得 Worker operation lease 与构图串行权
-  → 必要时等待前一 run 的设备清理交接
-  → native begin_run：进入有界 FIFO，建立 run identity
-  → callback(Orchestrator)：直接控制在前，随后提交任务与依赖
-  → Scheduler 派发 ready task；FIFO 头可在 callback 返回前执行
-  → 关闭本 run 的提交入口，返回 RunHandle
-  → endpoint completion / run fence
-  → run-owned 资源清理、错误发布、native run 退休
+接纳请求并保留资源 → 准备 / 发布 → 设备执行与传输
+  → 物理最后使用证明 → 归还对应执行容量
+  → 结果观察 / 输出交付 / 错误发布 → 退休相应结果与使用记录
 ```
 
-这不是严格无重叠的时间线。当前 `begin_run()` 先进入 pending FIFO，native slot lease 在具备角色时才授予；不能沿用“begin_run 总会立即取得 native slot”的旧描述。`submit()` 的 callback 在调用线程内同步构建；返回的 handle 管后续完成。
+这些阶段允许重叠；不同资源的最后使用点不同。当前 completion fence 将物理完成与强结果观察分开；完成执行后仍可能保留 caller-held 结果。`pipeline_depth` 限执行容量，不封顶未观察结果内存；backlog 计数也不是容量限制。见 [完成合同](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/docs/design/run-completion-fence.md)。
 
-`Orchestrator` 验证精确 NEXT_LEVEL 目标、参数来源和显式依赖；native `infer_deps` 用本地 canonical identity 与 view footprint 查重叠 producer，并区分 INPUT/INOUT/OUTPUT 的含义。remote sidecar 走自己的 owner/buffer/generation/offset 键。这里不是对任意内存访问自动发现 race：声明的 tag、显式依赖和支持的 view 仍是调用方合同。
+对传输还要分别证明源不再被读、目的对消费者可见、所有已发布工作已静止。issue kernel 返回、控制 ACK、超时与 transport send 返回都不能替代这些证明。DMA/网络请求、输出消费者、graph、结果 carrier 各自保留实际使用；未知完成时不提前回收。
 
-`Scheduler` 处理依赖就绪、group reservation、定向队列、prepare 和有限 early launch；`WorkerManager` / endpoint lane 承担具体投递与 completion。自动准入当前限于拥有 startup 的本地 L3 和四个 onboard program backend；nested、remote、MPI、sim 不据此获得相同能力。
+### 资源清理从第一笔分配开始负责
 
-[Python submit 与限制](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L12974) · [direct control 顺序](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/orchestrator.py#L241) · [native begin_run](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/src/common/hierarchical/orchestrator.cpp#L69) · [依赖推导](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/src/common/hierarchical/orchestrator.cpp#L1523) · [调度循环](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/src/common/hierarchical/scheduler.cpp#L481)。
+资源取得、失败回滚责任登记、能力发布构成完整事务。URMA 中 communicator 级可共享资源与 domain 注册、peer 映射和描述符按真实依赖区分；当前 SDMA manager 在 communicator、URMA manager 在 domain 的差异不要求通过“搬到同一个位置”消除。
 
-### 资源、建域与通信
+正常 domain release 必须停止新接纳、确认执行/网络静止、解除注册/channel 引用，再释放 backing。释放 A 后存活 B 必须可继续使用；把所有资源拖到 Worker 退出不满足独立域回收。失败后保留有依据的剩余 owner、句柄和错误；已成功释放的独立资源可以清账。不能把析构/reset、返回 false 或空 workspace 当作无残留证明。见 [退休契约](worker-memory-model/access-retirement-contract.md)。
 
-`Buffer` 是 backing 的描述与管理入口，`Tensor` 是带几何信息的视图。`Buffer.wrap` 是外部设备内存的源登记，不是分配或跨目标自动授权。`EndpointRegistry → BackendResolver → materialize` 分别解决定位、访问计划和实际取得资源；计划成功不代替最终 mapping/lease 成功。
+## 4. 四方向如何承载完整设计
 
-main 的 `allocate_domain(members=...)` 已统一 L3/L4 公共入口；`get_or_allocate_domain` 用不可变 `DomainConfig` 比较成员顺序、buffer 定义、window、retention 与 topology，同配置命中返回原 handle，不重置内容。`allocate_global_domain` 是兼容入口。内部 local/global allocation、live table、释放路径仍分开；API 统一不能关闭 RA-12/RA-15 的生命周期目标。
+ | 完整业务方向 | 交付边界 | 本地合同索引 |
+ | ------------ | -------- | ------------ |
+ | #2721 编排调度、下发与资源访问 | #2460 的身份/视图/访问/寿命；#1931 free provenance；#2720 Region 完整方案 | RA 与公共 EX |
+ | #2722 通信与后端 | 域复用、后端 workspace、Host fetch、必要通信 kernel、完成与安全释放随场景交付 | DS；RA 访问/退休、EX 完成联验 |
+ | #2723 单 L2 Run 常驻 | 多轮 work/completion、停止接纳与 drain；分别证明 L3 进程复用、重复 run、单 Run 多轮 | EX-2 |
+ | #2724 多级多机部署 | mpirun 启动、会话/拓扑、Supervisor 与 Group 迁移、跨节点退出证据 | DS-1/DS-6 |
 
-跨节点路径在控制层验证成员与 capability，执行 PREPARE_EXPORT、IMPORT、COMMIT，并在失败时清理/ABORT。启动采用 mpirun；main 同时有既有 MPI group/mailbox、direct MPI supervisor/controller/executor 以及 TCP session 路径。它们解决进程/会话/控制投递；共享窗口的实际访问另由 backend 与设备程序实现。direct MPI 已存在，不代表 group 路径已经退役或生产 cleanup 全部完成。
+RA/DS/EX 是横切合同索引，不重复分配场景 owner。方向编号不规定执行顺序。公共基础只有独立价值和验收时才另列；#2621/#2657 所需资源和执行改动留在完整场景。
 
-[Buffer.wrap](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/buffer.py#L348) · [访问计划](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/comm_endpoints.py#L826) · [统一建域与复用](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L10337) · [跨节点建域](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L11345) · [direct MPI controller](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/mpi_direct_runtime.py#L231)。
+### Device 通信能力按路径选择
 
-### 完成与清理
+main 的 A5 SDMA/URMA provider 默认编译；域默认 `workspace_engines=()`，按需申请异步 workspace。A2/A3 的 `enable_sdma` 与 Worker 资源语义保持独立。当前 A5 URMA host 入口限定 L3、TMR、dense-prefix 有序成员；RDMA 仍有独立构建和使用限制。编译存在、资源创建成功、实际传输通过各自计证。来源：[A5 构建](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/CMakeLists.txt)、[资源构建与销毁](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp)、[Worker 校验](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)。
 
-`_RunResources` 聚合本 run 的域、region、远端引用和清理责任；`_RunFinalizationCursor` 记录 one-shot 清理边界；`CleanupJournal` 只在清理成功后移除条目。业务执行失败和资源清理失败分别处理，后者可能禁止该 Worker 再准入。
+ | 目标 | 不可混为一项的验收 |
+ | ---- | ------------------ |
+ | #2738 上下文入口 | A2/A3 SDMA 入口统一保留启用语义、资源 owner 和无 HCCL 域的单卡路径；不是其他 workspace 交付的硬前置 |
+ | #2673 多 AIV / 多 peer | 验证稳定执行者到 ISA 独占队列组的映射与 SHARED_POOL 接入；不要求多个生产者共写同一 SQ |
+ | #2833 重叠域 | AB/BC 同时存活、域内 rank/peer 映射正确、独立释放/重建；同时存活不等于传输时间重叠 |
+ | #2855 批量 TPUT | 首版单域、单发送者、同 peer；明确暂存、flush、尾批和实际多队列完成；可独立于多 AIV 交付 |
+ | #2787 / #2823 生命周期 | URMA 与 RDMA 各自证明实际 manager、注册/channel 依赖、部分初始化和释放失败闭环 |
+ | #2824 / #2854 / #2860 | RDMA 实机资格、分块 PUT 故障、分块 GET 故障分别验收；一次正常通过不消除间歇故障 |
 
-需要保留三个不同事实：源不再被读、目的可供消费者使用、操作已静止。本文将它们作为共同设计合同；现有所有 backend 尚不能据此一概宣称已经具备独立且完整的证明接口。
+以上为设计与验收分工，状态见工作项。#2673 的旧“每 peer 必共用 SQ”与 #2674 的 query/enable 备选已由决定评论取代；不能照旧正文复活为新工作。
 
-[run resources](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L4860) · [finalizer](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L13615) · [cleanup journal](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L4717) · [close](https://github.com/hw-native-sys/simpler/blob/fdcbdcc9502195f7837030cf3c130f75f83d3719/python/simpler/worker.py#L13880)。
+### Host DDR：显式映射与两阶段完整交付
 
-## 4. 复杂度在哪里，模块应如何承担责任
+\#2730 负责 direct L2 同进程 Host Buffer 的显式映射与同步本地 MTE；native Host/H2D 继续可用。#2731 复用该合同，由 L3 持有一块完整 Host Buffer，首版显式准备所有子 L2，至少两个合格 A5 rank，各自映射并注册同一完整 backing。**不自动分表，也不为每个 rank 复制表。**
 
-本基线 `worker.py` 14,566 行，`orchestrator.py` 910 行；这些数字只是阅读导航，不是设计优劣评分。主要复杂度是同一入口协调多种状态机和 ownership 交接，单纯挪文件不会减少必须理解的合同。
+```text
+Worker.init → 创建普通 Host Buffer → CPU 填表
+  → 协调各 L2 import / map / 全 Buffer 注册 / channel 与 workspace 初始化
+  → 全部必需成员确认 → 发布可用访问描述
+  → kernel 选择本地 MTE，或经有效非 self peer 发 PTO URMA 请求
+  → 对应传输完成后放行消费者 → 最后使用后逐层退休
+```
 
- | 责任模块 | 应拥有的状态和保证 | 当前代码位置 | 不能越界承担 |
- | -------- | ------------------ | ------------ | ------------ |
- | Worker lifecycle | 启动 epoch、READY/CLOSED、operation lease、树 teardown | `worker.py` lifecycle、init/close、CleanupJournal | queue 消息协议、设备算法 |
- | Callable registration | 内容身份、handle 权限、目标资格、注册回滚 | `callable_identity.py`、`worker.py` register/unregister | run 资源容量、allocation owner |
- | Run execution | 准入、DAG、依赖、派发、结果与完成交接 | `orchestrator.py`、native hierarchical Orchestrator/Scheduler/WorkerManager、chip run lane | 假定任意 buffer 可访问；把 transport ACK 当设备完成 |
- | Resource access | backing identity、授权、attach/copy、使用保留与退休 | `buffer.py`、comm endpoints/provider/region、Worker 内资源表 | 应用字段、queue layout、业务 STOP |
- | Distributed session | topology、会话身份、启动/health、frame/control 投递与退出证据 | mpi direct/group、remote session/protocol、Worker 连接代码 | 决定共享窗口天然 coherent；替资源 owner 宣告 free |
- | Domain assembly | 成员顺序、资源组合、配置复用、prepare/commit/abort | `comm_domain.py`、`global_comm_domain.py`、Worker domain 路径 | 重新定义 Buffer 生命周期或借名称建立另一套资源所有权 |
+地址相关初始化在协调 mapping 阶段完成，不强塞进 Worker.init，也不在每个 task 中临时发起 collective。Host workspace 使用 `get_dma_workspace(args, DMA_WORKSPACE_URMA)` 的预留路径，与 Device-domain `CommContext.workSpace` 分离，包含 post-init 发布和每任务绑定。首版每消费 L2 只允许一个活跃 Host registration set；额外独立 backing 明确拒绝。
 
-这是推荐的职责组织，不是六个新公共类或六条新实施线。模块深度来自“小接口隐藏完整机制”：移除一个模块时，如果必要的硬件/并发复杂度会散回所有应用，它值得存在；如果只是透传并暴露内部表，应该收窄接口。优先建立真实入口上的合同测试，再按 owner 分离实现，不做一次性大搬家。
+peer registered base 加 Buffer-relative Tensor offset 和数据 offset 定位；本地与 peer VA 无需数值相同。kernel 决定何时读什么，runtime 不自动 gather。使用 PTO-ISA 的 issue/session/completion；CANN Engram 只提供参考证据，不能把其应用分片策略或独立 Hcomm probe 当作 simpler PTO 路径已验收。L4、子集/懒准备、通用多表 workspace、独立 L2 URMA loopback 不属于这两阶段首版。
 
-几处必须保留的现状/目标差异：
+### Owner-local 扩展与部署
 
-- **共享区间与 queue**：main 仍有 `create_worker_chip_region/queue` 与专用模板；目标是资源/访问接口加上层样例。#2635 的公共入口不能因“更通用的名字”自动获得合理的职责范围。
-- **统一生命周期**：`Buffer.close()` 的 host shm 路径仍直接 close/unlink；domain 仍有 local/global 表。共同退休规则是目标，不能写成“统一 registry 已完成”。
-- **并发控制**：构图串行、直接控制前置、带设备清理的 run 交接，都是有原因的当前限制。放宽前需补顺序与故障证明。
-- **会话收敛**：direct MPI 与 group/TCP 并存。统一 Supervisor、session epoch 与 cleanup 是独立交接，不能从 direct transport 合入推导全部结束。
+\#2621 的扩展在已有 chip owner 的有效 device/context 中初始化，借用已校验的存储；停止后端访问并注销后才能解除 pin，且先于 allocation/context teardown。pin 保活不代替 producer-ready 或计算排序；扩展不取得物理 allocation ownership，也不要求引入通用 RPC 或第三方引擎依赖。
 
-## 5. 评审与验收怎么使用本文
+跨节点沿用 mpirun 与原生 CANN ACL Runtime/PTO 路线；SHMEM 是参考而非库依赖，具体后端按需使用 HCCL/Hcomm。启动控制通路与实际共享窗口数据面分别验收。#2659 的持久外部账本、关闭期限、故障回收与 Group 迁移，不能被已有 Direct MPI health timeout / heartbeat drain 代替。
 
-评审每个新增接口或模块，先回答：它隐藏了哪类必要复杂度？哪个 owner 负责状态？在哪个时刻发布、接纳和退休？支持哪些 endpoint/backend？失败后谁仍可能访问资源？能否用已有机制实现，而不再建一套 registry、协议或可配置状态？
+## 5. 评审与验收使用方式
 
- | 合同 | 已读测试入口（源码存在，不是本轮 PASS 声明） | 必须保留的对照 |
- | ---- | -------------------------------------------- | -------------- |
- | init 的整树 READY 与回滚 | `tests/ut/py/test_worker/test_startup_readiness.py` | 多 child 正常 READY；一个 child 失败后兄弟回收 |
- | 生命周期与控制准入 | `test_worker/test_admission_fence.py`、`test_cancellation_journal.py` | 正常 lease 结束后关闭；close/submit 或取消竞争时保留责任 |
- | capacity 与 slot 复用 | `test_worker/test_pending_run_depth.py`、`test_automatic_admission_scope.py`；native `test_chip_run_lane*.cpp` | 正常多轮复用；容量之外拒绝、旧 generation 不影响新 run |
- | domain 配置与内容复用 | `tests/ut/py/test_comm_domain.py` | 同配置保留原内容与 identity；配置差异无设备副作用；后续 run 释放 |
- | endpoint 能力 | `test_worker/test_comm_endpoints.py` | 支持路径有执行者；非法 owner/epoch、HOST × VMM 直映拒绝 |
- | MPI transport | `tests/ut/py/test_mpi_direct.py`；native `test_mpi_direct_transport.cpp` | 有效 session 路由；错误 frame/session 与关闭路径 |
+新增接口先回答：哪个 owner 拥有资源；何时接纳与发布；哪个完成事实允许哪个动作；部分失败后谁还可能访问；是否存在正常回收的阳性对照。评审必须给出 main/PR/ISA/运行产物的具名版本，不能用历史 CI 绿代替当前路径。
 
-路径缩写 `test_worker/` 位于 `tests/ut/py/`，native 测试位于 `tests/ut/cpp/common/hierarchical/`。测试数量或守卫全绿不能代替这些合同的语义审查。
+ | 合同 | 反例 | 配对阳性对照 |
+ | ---- | ---- | ------------ |
+ | 显式映射 | native/mapped 同 identity 被错误合并；失效引用复活；unmap 失败后仍接纳 | native CPU/H2D 保留，多个 view 正确偏移；停止读者后正常 unmap/retry |
+ | 多 L2 Host 访问 | 只准备消费者；半初始化发布；Device event 被 Host workspace 接管 | 全员同 backing、真实非 self PTO 读取、两类 workspace 正确共存 |
+ | 域退休 | A 释放破坏 B；manager mock 替身遮住实际注册残留 | 真实 manager + 有状态 backend mock；多轮 allocate/release 与 B 持续可用 |
+ | 批量传输 | 暂存当完成、尾批遗失、仅追踪最后 jetty、部分提交后重复发送 | 显式 flush 和正常返回处理尾批；实际每队列目标达成后消费 |
+ | 执行/结果 | 执行 credit 归还即释放 caller-held 输出；旧 generation 完成影响新 run | 连续 run 复用执行资源，同时旧结果可观察且内容正确 |
 
-完整目标按 #2716 四方向交付；本地合同仍由 RA 管资源与访问、DS 管会话与通信域、EX 管执行与常驻运行。本文不新增编号、里程碑或第二份状态表；相关入口见 [分线契约](track-boundaries.md)、[用户面](worker-memory-model/user-surface.md)、[总路线图 §2.6](feature_roadmap.md#26-runtime-基础能力参考-adapter-与用户自定义的边界)。
+CPU/mock 验证协议，硬件证明实际数据路径和可见性，device trace 证明有用计算重叠；三者不能互相替代。Region 完整方案仍按 #2720 分析，#2635 只是候选；registry 形状仍按契约 D 裁决。共同生命周期合同可以先履行。
+
+进一步细节见 [分线契约](track-boundaries.md)、[用户面](worker-memory-model/user-surface.md)、[退休契约](worker-memory-model/access-retirement-contract.md) 与 [通信设计](l3l4/cluster-comm.md)。

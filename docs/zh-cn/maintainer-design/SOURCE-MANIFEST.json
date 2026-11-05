@@ -2,7 +2,7 @@
   "published": "2026-11-04",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
-  "architecture_baseline": "fdcbdcc9502195f7837030cf3c130f75f83d3719",
+  "architecture_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
@@ -40,13 +40,13 @@
     },
     {
       "path": "feature_roadmap.md",
-      "source_sha256": "9cec0a5b2517f5d2f6bc4e320df2339122036a7a986c522c7195122cfe5656f8",
-      "published_sha256": "9d9be24d147a09ee47b189037dcb9985bb4317f2fb022e64e7800187e02d87a3"
+      "source_sha256": "c373426f2b0013b38fb3a3e8f24f6b35e1a73cd36b8caadc92eeee37590eac5b",
+      "published_sha256": "2602c3d6e8ce2a5ac28a1fcef21b006e284ddb69715fb9f96d9246d0bc693354"
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "241b9b71f3378dbadd5097b2dc8226aa2e8c0c1bf84e7a06df88049b0006b956",
-      "published_sha256": "903967f908cad80f296b6f1adfead427d2155a2c77a77091f2241218ce18871c"
+      "source_sha256": "bccc34b0d334f18f9bb805e8838626cf327a7e52798754ffbf5b18f27dd227e7",
+      "published_sha256": "a42f4aec61f3637af2cdb0dab76d5cd478750940b706583ae93ef5e92198708a"
     },
     {
       "path": "l3l4.md",
@@ -55,8 +55,8 @@
     },
     {
       "path": "l3l4/cluster-comm.md",
-      "source_sha256": "7683142881bfb8f4328dd8c322e4f05b225da5a8bfee452f9d448d42bb386fd2",
-      "published_sha256": "b7cff55cb2421bfb2dc25c1ec77cbb2ea665f26b8fefe606c14f7c5f14465c8b"
+      "source_sha256": "178f84265a4f91f67538c362bfcb9a34dc6973b451c7ff9a1d008a39cf7efd5e",
+      "published_sha256": "c19c2e5e947e6aa2cfcf2d887c68f59e1fb604471050b9949cecf32a9893d73d"
     },
     {
       "path": "l3l4/inventory.md",
@@ -90,18 +90,18 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "4453b606bc14dca9882046c22c5c0cf8190c17aa7c0cffaa3cb76074e0bfcf68",
-      "published_sha256": "0546a635452385d56d2581839abbd1fa8897de98826caa9afc5be54c9f6b3a36"
+      "source_sha256": "83de078aae0618ba0c298d3d919ec0bb0f4c9d3afb49375b3db239dff247764a",
+      "published_sha256": "72a19906406c7766d65171735b98175a7e34b40ede42403b5ea4c962409db19b"
     },
     {
       "path": "track-boundaries.md",
-      "source_sha256": "4b1f82270384a51dc7c11322fef4982f8babccf53f792e99614915cdcad4cd73",
-      "published_sha256": "ae3c3187f8f3032d1e8dfbb36897b21cdefb19b1286bd7e883a8c2a4813d10e5"
+      "source_sha256": "354a30d86eec816cf982eadebc5e1577d0c492d187fbc2df15128acbde64748e",
+      "published_sha256": "e60596542cddf09c05809462345aad2990a1fafa9db164c3064283350e7396f1"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "e2fa5efa9878367d7390ecb9fb5a01cf999d7b09e3339137ace06358ce33751b",
-      "published_sha256": "01dc14126c8b1a9c8cbc151692f9823562c97f9ee56a8064e8eeecb81002f1ea"
+      "source_sha256": "3d11667b417741dabf3fb65a5e6f1db3bc714ad7e70ebb98a051a90b94de52df",
+      "published_sha256": "b352fd62fb33f06f3be8fae6cec8a631039682c437eb34c48c2b37fc78f5a98f"
     },
     {
       "path": "worker-memory-model.md",
@@ -110,8 +110,8 @@
     },
     {
       "path": "worker-memory-model/access-retirement-contract.md",
-      "source_sha256": "bd55a439a7ff9185da6f84d635e3f0c3adf9b24b0b123b29eea7e02df17305e4",
-      "published_sha256": "8866c7b1afb44588109fd3ee9828a3456bb804629f76be372603be32c4644100"
+      "source_sha256": "cb841a6c29283a90b8af7513572b7bb0b86c65b3768b6322de388de5348f3d77",
+      "published_sha256": "19ab65390391246afdf1d4a7982f08126f7cf38cc872e849979cd8dfbf2d605e"
     },
     {
       "path": "worker-memory-model/backend-matrix.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "worker-memory-model/user-surface.md",
-      "source_sha256": "9df070f5f967717da8775d3cba13658234d9b1bb850bf3778e5ba0bb65d85974",
-      "published_sha256": "7a57ca060f377fd6dc2ffc8743e990baee500b8cd5e7ed1637a46bb722f7fa9e"
+      "source_sha256": "d45ce8a0495816af296a197df2c71833c6d0ac8458c582fd80e78ae1c48660cf",
+      "published_sha256": "2250fcd6c66c0a28f558f7d1f1684fc92d8ee87aa2df5c0f74fe180496344193"
     },
     {
       "path": "review/2026-09-28-cross-plan-lessons.md",
@@ -165,18 +165,18 @@
     },
     {
       "path": "l3plus-design.md",
-      "source_sha256": "016d49616a9146e83b1b98ba9f7336ca5c1256a0ff1acb0be1d9c209797c3d52",
-      "published_sha256": "08ba5720ccc36fc972a648ed93b240704ad31ad2e4c8751dcd4341742cd6c0f2"
+      "source_sha256": "9dc14f4f3f0236cbfa315036ee4a0eb52c717c7a3b2123f57570935f5d7ca812",
+      "published_sha256": "f6c812bb150cb3b5d755cab0826179bc115d8dd6a39726f46302819749623239"
     },
     {
       "path": "review/track-2716.md",
-      "source_sha256": "c96a3daad4beac751c97c1b6a44a5cbb152f250a1b596cd54707be3059584ea7",
-      "published_sha256": "1aa2c3d06f11862dfb3196b6033c89d35a619bfa88bc3d10310be6134c4742a3"
+      "source_sha256": "c43674a0afa7884670f16d584f68505eaa8a133b7acc28b985c7a5d35af3445c",
+      "published_sha256": "ef3590fe6c22f26724c7ec427828c2f514142e3fc27f2eef92a7614bdc9bb037"
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "016deeb6f17c29b5aa75eb47c0ccb86d2b29a32c9e48c66e0f2f0e88e9005cb7",
-      "published_sha256": "2e13b5612b6e7640254c69a17c079dccc403022eb248d503d9f632e7d3beba3c"
+      "source_sha256": "84a2f6befdb6592dc9cd28a6e04596db65050309d30f9fb2cde9866176215fc3",
+      "published_sha256": "fc79ac52ff3041454ebf69bea475569b34b035a325d08d4c6b56428843953d75"
     }
   ],
   "omitted_local_references": [

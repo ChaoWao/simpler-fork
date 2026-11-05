@@ -215,7 +215,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <h1>simpler · 设计轨道与在飞项全景</h1>
 <p class="sub">
   <b>状态与来源刷新 #2716</b>：2026-11-04，main <code>63ffeb8a8bd9</code>；四方向完整目标与本地合同索引见 <a href="review/track-2716.md">范围分析</a>。<br>
-  当前登记：188 条覆盖区间内 main 合入、61 open PR、107 open issue；568 个来源编号有归属。<br>
+  当前登记：188 条覆盖区间内 main 合入、62 open PR、107 open issue；600 个来源编号有归属。<br>
   历史全量源码审计基线 <code>upstream/main@937c57efc</code>（2026-10-18）；当前具名代码/CI 证据见范围分析 ·
   实施状态见 <code>.docs/work-items.md</code>；PR/issue 登记与交付里程碑见 <code>.docs/README.md</code>。本页是两者的图形投影。
   <b>本轮变更</b>见页尾「变更日志」。
@@ -524,10 +524,11 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           "id": "DS-8",
           "nm": "host 参与域的语义（非对等成员）",
           "p": "todo",
-          "hnote": "⛔ <b>Host attachment 全组合验收未满足，已有按平台与拓扑拆开的候选</b>。#2685 head <code>33b774442ee9</code> 的 A3 L4 Host DRAM 前置 #2668 已合入；#2818 <code>fc08af9222cf</code> 是 direct L2 A3 Host buffer，#2820 <code>cbdfb94f0590</code> 是 L3 A3 Host attachment，#2796 <code>285ff1bd74d1</code> 为相关组合候选，需协调去重。#2657 已拆 #2730（#2714 <code>954dca406466</code>：单 A5 同步本地 MTE）与 #2731（跨 rank 异步 URMA / L3→L2）。本地映射不证明跨 rank fetch 或计算重叠；Host 不占 NPU rank。单 rank URMA provider 尚有限制，但不是硬件永久不可能。copy-capable 路径不等待 RA-2 全部 direct-map 能力。",
+          "hnote": "当前目标按 #2657/#2730/#2731 11 月 4 日正文：native/mapped 分离，L2 同步 MTE；L3 全员完整 Host Buffer、非 self PTO URMA，Host workspace 随完整场景交付。首版每 consumer 一套 Host registration；拒绝额外 backing。接口与寿命见用户面 §5.2，验收与历史编号迁移见 work-items §6。",
           "items": [],
           "doc": "work-items.md",
-          "health": "blocked"
+          "health": "blocked",
+          "note": "Host 显式映射与同 backing 全员注册"
         },
         {
           "id": "DS-9",
@@ -1989,6 +1990,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-04 · #2716 设计正文与 Host 映射合同",
+        "b": "<b>判断失误：</b>仅刷新状态入口仍会留下旧设计正文：域 detach owner、URMA 默认关闭/互斥与实际 main 不符；只比对父树还会漏掉 #2657/#2730/#2731 同日重写。<b>新判据：</b>状态、规范正文、当前代码事实分别更新；变更后的验收用新命名空间，旧编号保留原义与迁移去向。Host mapping 是目标访问选择，不能把消费策略挂到 allocation；全员注册同一 backing 不等于分表。workspace 接入、地址相关协调准备、实际完成和保活随完整场景交付。代码口径 <code>63ffeb8a8bd9</code>，32 个当前 V2 来源纳入归属。新 #2878 导致 open 守卫变红，已登记；更新 head 只更新候选记录，不继承旧评审结论。正文复核还发现整段替换吞掉 D.3 主标题，章节守卫仍绿；已恢复标题及对应合同，并补逐节标题集合的正负对照。"
+      },
       {
         "t": "2026-11-04 · #2716 原生树、已交付域与 URMA 看护边界",
         "b": "main <code>63ffeb8a8bd9</code>；59 条新合入、61 个 main open PR、107 个 open issue。<b>判断失误：</b>用正文/updatedAt 变化代替原生树递归会漏掉新增子项；将 #2120/#2668 继续记为在飞，会重复规划已交付 ownership；只读 #2674 正文会恢复已放弃的 query/enable 备选；旧“六项 URMA 通过”遮住当前 GET skip；#2866 正文与最终 backlog predicate 不一致，须读实际代码。本轮重建 open 区块时误覆盖了其中混放的 69 条历史合入登记，非空覆盖守卫当场检出，已按具名 main 祖先恢复。<b>新判据：</b>父子集合每轮独立核对；正文、决定评论和关闭原因共同判断目标；历史编号保留原义并给出迁移归属；代码/构建支持/实际子用例/skip/异常回收各自计证；当前 open 与历史 merged 登记分区，不能用追加快照代替更新当前区。#2779/#2790/#2825 不关闭 #2787/#2823/#2824/#2673/#2833/#2855；#2858 是诊断，不是 S3 修复。当前行动见 <a href=\"review/track-2716.md\">范围与动作</a>。"

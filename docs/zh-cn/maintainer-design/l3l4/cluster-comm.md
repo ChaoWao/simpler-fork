@@ -19,23 +19,20 @@
 > **两者早已 merged**（`60ab6ab9` / `cc9bfc45`）。⇒ **一份「快照」banner 会和它所保护的
 > 正文一起过期**，这就是为什么本 banner 只写「哪一条作废 ＋ 怎么核」，不写进度。
 >
-> ✅ **仍成立的**：D.3 关于 HCCL 的更正（`CommEngine` 0 命中 ⇒ 未实现的设计输入，
-> 与本条相反极性 —— **别一起打折**），以及域生命周期仍 run-scoped（issue #824，
-> 归 P2-D，见 README §「每条 track 的下一步」）。
->
+> **当前域 ownership**：main `63ffeb8a8bd9` 已由 Worker 持有域、run 登记使用，retention 在创建时选择；域并非一律 run-scoped。#824 原行为结项与各 backend 回收分开核验，见 RA-12、RA-15。Host 访问不通过增加 CPU rank 表达，见 §D.3。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §D + D.1–D.5。
 
 ## D. 通信 review 与改造
 
 > 状态图例:**已实现**(sim + onboard 均通)/ **部分实现**(仅 sim 或仅部分 arch onboard)/ **设计已存在未落地**(有协议位/设计文档但代码是桩)/ **未实现**。
-> **当前定位基线为 `main@b69f4537`，函数/类型名是权威锚点。** 下方保留的裸
+> **历史裸行号基线为 `main@b69f4537`；D.2/当前域与 Host 契约按各节具名基线，不能混读。** 下方保留的裸
 > `file:line` 只用于复核原调查快照，行号漂移时不得据其否定同名函数/类型的当前语义。
 
  | 诉求 | 状态 | 一句话定性 |
  | ---- | ---- | ---------- |
  | **D.1** L3 为多 L2 建域 | 已实现(sim + a2a3/a5 onboard) | `orch.allocate_domain` 为同一 L3 下的 chip 子集建对称 device 窗口 |
- | **D.2** 同步/异步模型 | 同步已实现；异步按 capability 分层 | 集合=域内同步 barrier；host↔device=counter notify/wait；A2/A3 SDMA 默认关、显式 opt-in；**A5 SDMA 自 #1615 起默认开**（URMA 变显式备选） |
+ | **D.2** 同步/异步模型 | 同步已实现；异步按 capability 分层 | A2/A3 SDMA 由 Worker opt-in；A5 SDMA/URMA provider 常编译，域按需显式申请 workspace；批量暂存与延后完成分别验收 |
  | **D.3** 对端无感/host+device 同域 | 对称同域**未实现**;host↔L2 点对点**部分实现** | host 不是域内 rank；URMA backend 存在不等于 host-peer domain 已可用 |
  | **D.4** remote L3 通信 | 见 DS-6 | 主路径为 mpirun + MPI mailbox；A3 Fabric 共享窗口的数据访问独立于 task/control transport。见 §D.4。 |
  | **D.5** L4 为多 L3 建域 | 见 DS-9 / DS-10 | PREPARE_EXPORT/IMPORT/COMMIT/ABORT 已有；异构组合与生产回收按工作项验收。历史调查见 §D.5，当前契约见 §D.4。 |
@@ -99,74 +96,54 @@ D.1 本身没有功能缺口。唯一牵连的是 **#824(OPEN)**:域窗口不跨
 
 `docs/tpush-tpop.md`,用于 MIX kernel 跨 Cube/Vector 核的生产者-消费者 FIFO —— **L2 片内跨核,不是跨卡通信原语**,列此仅为与跨卡 TPUT/TGET 区分。
 
-#### 4. 异步(deferred completion)—— 按 backend capability 分层
+#### 4. 异步（deferred completion）—— 资源选择、提交与完成分开
 
-- **A2/A3 SDMA async completion**：`TGET_ASYNC`/`TPUT_ASYNC` 返回 `AsyncEvent`，producer kernel **不阻塞**等 DMA；`register_completion_condition` 把 event-record 写入 per-task `DeferredCompletionSlab`，AICPU 的 `drain_aicore_completion_mailbox_locked` 单消费者轮询并 retire。**被推迟的是 task 的逻辑完成，AICore 核本身不阻塞。** Provider 在 A2/A3 onboard 构建中始终编译，但 `Worker(..., enable_sdma=False)` 默认不 provision；只有显式 `True` 才创建 worker-lifetime workspace/streams。独立 `@pytest.mark.sdma` onboard ST 证明 opt-in 路径，不代表默认常开。
-- **集合通信的 NPU 异步被阻断**:IBing forward phase 在 **sim** 用 `TPUT_ASYNC`+`WaitAll`,**NPU 仍走同步** `TPUT<AtomicNone>`(`allreduce_ibing_kernel.cpp:252` 是同步回退;async SDMA helper 触发的 AICore loader 问题记于注释 `:30/:96`,归因 issue **#900**——**已 CLOSED**)。
-- **A5 SDMA overlay 默认门控 OFF**(`docs/a5-sdma-overlay.md`,#1315:CANN 缺 `aclnnShmemSdmaStarsQuery`),`CommContext.workSpace==0` 时 producer kernel self-skip。
-- **A5 URMA backend 已实现但不可按默认构建直接执行**：#1392 已合并 AICore submit、AICPU `UrmaCqCtx` CQ poll/retire 和 host overlay 接线；device path 仍受 `PTO_URMA_SUPPORTED` capability gate，host `SIMPLER_ENABLE_PTO_URMA_WORKSPACE` 默认 OFF，且与 A5 SDMA workspace 互斥。因此准确状态是 **backend merged / capability+workspace gated**，不是“URMA 未实现”或“URMA 已可用”。
+源码口径 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`：[域使用校验](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)、[A5 后端资源](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp)。
+
+- A2/A3 SDMA provider 编译存在，`enable_sdma=False` 为默认，显式 opt-in 才配置 Worker workspace/streams；#2828 的 HBG 接入按该 runtime 独立计证。
+- A5 SDMA/URMA provider 常编译；域默认不申请异步 workspace，按 `workspace_engines` 显式选择。SDMA manager 由 communicator 持有并被域借用，URMA manager 归 domain。SDMA/URMA 分字段并支持已验收的混合路径，不能沿用旧构建互斥或默认 OFF gate。
+- 当前 A5 URMA 支持入口限定 L3、TMR、dense-prefix 有序成员。初始化失败、缺失/错误 workspace 在实际使用前拒绝；默认编译不等于所有成员拓扑、Host backing 或 runtime 可用。
+- A5 RDMA 仍有独立构建与同域选择限制；正常传输/独立域共存验收归 #2824，失败 ownership 归 #2823。
+- deferred completion 指请求已提交但任务逻辑完成延后；#2855 的 batch DEFER 是尚未物理提交，须独立定义 flush 和尾批，不能混用完成含义。
 
 ### D.2(b) 相关 Issue/PR
 
-- **#1130 / #1187 / #1236 merged** — L3-L2 message queue 底座 / 示例 / L2 input window(异步流水载体)。
-- **#1015 merged**(设计)/ **#1305 merged**(a2a3 onboard 数据路径)/ **#1277 merged**(a5 onboard);**#1291 CLOSED-未合并，但其目标已在 main 实现**(`docs/l3-l2-orch-comm.md:48`:稳态数据路径 sim + onboard 均跑在 L3 Host 进程、走同一高层 mapped 路径)。
-- **#1383 merged** — TPUT_ASYNC(IBing forward)+ NeighborBarrier(ring)。
-- **#1179 / #1109 / #823 merged** — SDMA workspace overlay + async completion demo + port 到 a5(SDMA deferred completion 的落地栈)。
-- **#1392 merged `ca000263`**（A5 URMA deferred completion backend）/ **#1303 CLOSED-未合并**（早期 workspace staging）— backend 代码已落地，但当前 capability/workspace gate 仍使它不构成可执行 onboard 能力。
-- **#755 CLOSED-未合并（docs-only 历史设计）** — L3/L2 multichannel MPMC 在 main 无落地文件；当前 message queue 仍仅 SPSC。
-- **#900 CLOSED(bug issue,标题 "A2A3 spmd_paged_attention_highperf hardware run times out")** — 代码注释(`allreduce_ibing_kernel.cpp:30/96`)把 async SDMA helper 触发的 AICore loader 问题归到 #900;IBing NPU 分支仍走同步 `TPUT<AtomicNone>`(`:252` 是同步回退,非 #900 引用点)。**#900 已关闭,"NPU 集合异步仍被阻断"的定性需按当前代码/loader 现状复核**,不能仅据一条已关 issue 断言。
-- **#1379 open** — pipelined orchestration/scheduling:提供 per-token L3↔L2 **背压式异步交互** + trace 证据,是"当前异步模型是什么"的最新演进答案。
+\#1392 是 URMA backend 的历史入口；当前合同包含 #2779 完成协议、#2790 workspace 分离、#2825 常编译与使用校验。当前证据与 PR 登记见 [工作项](../work-items.md) DS-5/DS-11，不以某一合入代替父目标完成。#1130/#1187/#1236 的 L3-L2 queue、#1015/#1305/#1277 的 region 与集合通信各有不同语义；#755 是未合入的历史 MPMC 方案。
 
 ### D.2(c) 差距
 
-1. A2/A3 SDMA 是当前唯一有 runnable onboard evidence 的 DMA deferred-completion backend，但它是 **显式 Worker capability**，不是默认启用；NPU 集合 IBing 仍走同步 `TPUT<AtomicNone>`，历史 #900 不足以证明现行 blocker。
-2. A5 URMA backend(#1392)已经实现，剩余缺口是 capability/workspace gate 与 onboard acceptance；#755 只是 CLOSED-未合并的 MPMC 纸面设计。
-3. **异步不是"只在 sim"，也不是"A2/A3 常开"**：A2/A3 的 `enable_sdma=True` opt-in 路径有 onboard ST。⚠️ **「A5 SDMA/URMA overlays 均默认 OFF」自 #1615（`63f47a11`，2026-08-04）起不再成立** —— a5 SDMA workspace 现为 **default-on**，URMA 变显式备选；a2a3 仍是 opt-in。文档与测试选择必须同时表达 backend 是否编译、Worker 是否 provision、device capability 是否存在这三层，且 **a2a3 与 a5 的默认值现在相反**。
-4. 集合(域对称窗口)与 L3-L2(独立 host↔device region)是两套底座并存,尚无统一抽象(是 D.3 的根)。
+独立目标包括 #2673 稳定 AIV 身份/独占队列/多 peer、#2833 重叠成员域隔离、#2855 单发送者同 peer 批量、#2787 URMA 生命周期、#2823 RDMA 异常清理、#2824 RDMA 实机资格，以及 #2854/#2860 分块 PUT/GET 故障。多 AIV、多 peer、多 domain、batch 与同 kernel 多后端不是同一能力，不设置彼此循环等待。
 
 ### D.2(d) 建议 / 落地路径
 
-1. **交付 D.2 时明确四分**：(a) 集合=域内同步 barrier；(b) L3-L2=host↔device counter notify/wait（L3 侧阻塞）；(c) A2/A3 SDMA=provider compiled + Worker opt-in + runnable onboard evidence；(d) **A5 SDMA=default-on 自 #1615（`63f47a11`）** ／ A5 URMA=backend merged + capability/workspace gated 的显式备选。⚠️ **(c) 与 (d) 的默认值相反**，四分表述必须把「默认」而不只是「是否编译」写出来。
-2. **NPU 集合异步（IBing）的启用不以 #900 为 gate**：#900 已 CLOSED 且归因可疑（其标题是 `spmd_paged_attention_highperf` 超时，非 AICore loader 专项）。IBing NPU 现走同步 `TPUT<AtomicNone>` 是代码现状，是否仍受 loader 限制须**按当前 loader 实测复核**，不应援引一条已关 issue 当阻断门。
-3. **URMA(#1392)是完整 backend 链路，非"补一个表项"，但尚非可用 capability**：保留 AICore submit + AICPU CQ + host overlay 的实现事实，同时把 `PTO_URMA_SUPPORTED` 与 `SIMPLER_ENABLE_PTO_URMA_WORKSPACE` 的 gate 写进验收条件。
-4. #755 已 CLOSED-未合并；若重新推进 MPMC，应从当前 SPSC queue 契约重新立项，而不是把 closed PR 当作在途基线。
+复用当前 ISA 的每 AIV 独占队列模型及完成协议，核稳定执行身份映射、实际多 jetty 目标与跨任务复用；不依据 #2673 正文旧 pin 推定多生产者必共享 SQ。重叠域必须证明实际成员/peer/MR 隔离，不能仅删除 dense-prefix 校验。域生命周期按 [共同退休契约](../worker-memory-model/access-retirement-contract.md)，manager 移位或全延后 Worker.close 不代替独立回收。
 
----
+CI 逐子用例记录实际源码 SHA；五项 URMA ST 的具名通过、ChunkedFetch skip 与间歇故障分别见 [CI 证据](../review/track-2716.md#3-ci配置实际执行缺口分别记录)。同步集合/应用协议不因 backend 异步存在就自动异步化；已关闭 #900 不能作为现行 loader blocker。
 
 ## D.3 "对端无感"通信域(host + 多 device 同域,CPU↔NPU,让 L4 直连 L2)
 
-### D.3(a) 当前代码状态 — 对称同域**未实现**;host↔L2 点对点**部分实现**
+### D.3(a) 资源位置与 rank 分开
 
-- **通信域成员强制是单个 L3 下的 chip 子集**:`workers` 是本 L3 `device_ids` 下标(`worker.py:3880`),域内所有 rank 都是 chip(L2),**host/L3 不是域内 rank**;`CommContext` 全是 chip window。
-- **host↔L2 是另一条独立的点对点原语**,不是对称多成员域:`orch.create_worker_chip_region` / `create_worker_chip_queue`(`orchestrator.py:366`)—— L3 host 与**单个** L2 chip 之间的 SPSC region;onboard 用 `L3HostRegionMappingHandle` + `ONBOARD_VMM` + shareable_handle 让 **host 导入 child 拥有的 GM region**(`src/common/platform/include/host/worker_chip_orch_region_access.h`),host 端用 ACL copy 搬字节。**它不是对称域,也不"对端无感知"**。
-- **L4 直连 L2 不存在**:L4→L3 是 mailbox/远端帧 dispatch,L3→在飞 L2 才是 orch-comm region,两层不统一,L4 无法直接进 L2。
+Host Buffer 是 backing；device rank 是通信成员身份；AICPU/AIV 是执行或通信引擎。三者不能互换。#2731 由已有 device ranks 注册各自可访问的同一 Host backing，Host 不因此成为新的 rank。跨 endpoint 传递 canonical identity 与访问描述，由目标解析地址，不能把 VA 当跨进程身份。
 
-> **关键纠偏(CANN/HCCL 官方机制):HCCL rank 是调用方分配的、绑定一张 NPU 的逻辑 communicator ID（≠ 物理 device ID；simpler 用 `chip_idx` 作 rank、`device_ids[chip_idx]` 选设备），host/AICPU/AIV 不是对等 rank。** 每个 rank 必须 `aclrtSetDevice` 绑定恰好一张 NPU；CANN **无 CUDA UVM / OpenCL SVM 式统一寻址**（host pinned 内存最接近零拷贝但仍非 device 对等直读 host）。HCOMM 把 **CPU、AICPU_TS、AIV、CCU 建模为不同的通信引擎 / 资源视图（CommEngine），而不是三个可互换的 rank**——不同芯片的 engine/protocol 矩阵不同（官方 `CommEngine` / `HcclChannelAcquire` 能力矩阵；**矩阵随 CANN 版本/产品变化，引用须固定 CANN tag**）。UB / URMA（Ascend 950 / A5 级，CloudMatrix384 xDeepServe / OpenURMA）扩大了 CPU/NPU 对等直访能力，但**仍不改变"rank 绑定单卡"**。**因此 D.3 的正确抽象是"一张 simpler 逻辑域 + capability-specific views"（device collective / host-device channel / AICPU / AIV / control 五视图），而不是把 host、AICPU、AIV 塞进同一个 `windowsIn[]`。API 可隐藏 peer 属于 L3 还是直接寻址的 L2，但不能隐藏"操作是否受当前硬件支持"（须 capability validation 门控）。** 与 `ascend.md` "AICore LSU 不能碰 SPR MMIO" 同源。
->
-> **区分 host-CPU 与 AICPU 作 peer(D.3 明列 aicpu/aicore)**:D.3 说的"CPU"要分两种。**host CPU** 越 PCIe,只能做 importer/copier(VMM import + ACL copy),硬件上无法作对称 rank(除非 A5 UB/URMA)。**AICPU** 是片上控制处理器,本就能读写本卡 GM 并经 MMIO 与 AICore 协作(见 `ascend.md`:AICPU 写 DMB、AICore SPR-读;AICore LSU 不能碰 SPR MMIO)——它已经是 L2 片内 orch-comm region 的 host 侧对端(`create_worker_chip_region`,notify/wait counter 就落在 AICPU 可达的 GM/映射区)。因此"让 AICPU 参与通信域"在**本卡范围**已部分成立(L3 Host↔本卡 AICPU 的 region 通道),真正缺的是"**跨卡/跨 host 的 CPU(或 AICPU)作对称集合 rank**",那一步才需要 UB/URMA。梳理时不要把这两种 CPU 混为一谈。
+当前域入口与 Device URMA 限制按 main `63ffeb8a8bd9` 的 `Worker._domain_config` / `comm_alloc_domain_windows`；Host 显式映射按 2026-11-04 #2657/#2730/#2731 的目标合同，不冒充已合入。L3-L2 region 示例、Device URMA 数据面和新的 Host fetch 各有独立验收。
 
 ### D.3(b) 相关 Issue/PR
 
-- **#861 CLOSED-未合并** — `HostDeviceMappedRegion` 底层原语的历史设计（64B header + signal slot + data 区；A2/A3 host-register，A5 `-ENOTSUP` 桩）。概念可审计，但不是当前实现砖块。
-- **#803 CLOSED-未合并** — L3/L2 host-device multichannel 通信历史原型；不能再称“最实的代码基线”。
-- **#755 CLOSED-未合并（docs-only）** — 多 lane SPSC 对外呈现 MPMC 的历史语义草案。
-- **已落地版本**:#803/#861 的实现雏形是已合并的 L3-L2 Orchestrator Communication 栈(#1015/#1305/#1277),但那是 **host↔L2 一对一**,不是 D.3 的对称多成员/对端无感域。
-- **#1392 merged `ca000263` / #1303 CLOSED-未合并** — A5 URMA deferred-completion backend 已合并，但 capability/workspace 仍 gated；它既不证明 CPU 已是 rank，也不证明 host-peer domain 已可运行。
+\#861/#803/#755 为未合入的历史需求来源；#1015/#1305/#1277 为已有 L3-L2 通信栈。当前 Host DDR 完整目标为 #2657 → #2730/#2731；#2714 是 Stage 1 候选，当前 head 见 README。A3 L2/L3/L4 候选由 DS-8 按拓扑协调，不以另一平台路径代验。
 
-### D.3(c) 差距
+### D.3(c) 目标与限制
 
-1. **无 "host + 多 device 同一通信域" 路径**:域成员强制是 chip 子集,host 不是 rank,`CommContext` 全是 chip window。
-2. **无 "对端无感知"**:host↔L2 只有独立点对点 `create_worker_chip_region`(SPSC),让 L4 直接与 L2 建域当前没有任何抽象。
-3. **CommContext 寻址模型硬编码 `windowsIn[pe]+offset`**,若要让 host/CPU 参与同一集合域,需扩展 ABI 与寻址模型 —— 当前无此路径。
-4. UB/URMA 的对等语义属 A5/Ascend950;A2/A3 上只能用机内映射窗口近似。
+1. direct L2 本地映射返回同 backing 的新访问描述，native Host/H2D 保持；Device READ grant 不改变原 Buffer grant。映射复用、offset、失败 unmap 后拒绝新使用属于 #2730。
+2. L3 首版由所有子 L2 map/register 同一完整 Host Buffer，至少两个合格 A5 rank。经有效非 self peer 做真实 PTO URMA 读取；本地 MTE、私有副本或单独 Hcomm probe 均不代替该验收。
+3. Host workspace 与 Device-domain workspace、事件完成 owner 分离；每 consuming L2 首版一套 Host registration，第二独立 backing 拒绝。不能强制普通 Host table 配对等大 Device 通信窗口。
+4. L4/跨节点、子集/懒准备、通用多 Host workspace、独立 L2 URMA loopback 不在当前两子项首版；保留目标来源，不能把排除误记成实现完成。
 
-### D.3(d) 建议 / 落地路径
+### D.3(d) 实施合同
 
-1. **正确方向是"逻辑域 + capability views"（非"host 当 rank"）**(建议写进 `docs/investigations/`,当前无相关条目):
-   - **不要走"host 作 HCCL rank"**:HCCL rank 绑定一张卡（≠物理 dev ID，见上纠偏），把 host 塞进 `CommContext.windowsIn[]` 与硬件模型冲突;即便 A5 UB/URMA 也是"扩大对等直访",不是"host 变 rank"。
-   - **倾向方案:逻辑域 + capability-specific views + facade**:在 L3 编排层加 facade，让 L4 提交时不区分目标是 L2 还是本地/远端 L3，由 L3 按 capability view 落到 domain(chip↔chip collective) 或 region(host↔chip channel);对不支持的 engine/protocol 组合走 **capability validation 明确失败**，不静默降级。
-2. **实现起点应是 main 上 merged 的 L3-L2 Orchestrator Communication 栈**（#1015/#1305/#1277）与 [cpu-npu-shared-memory.md](../cpu-npu-shared-memory.md) 的当前设计；#803/#861/#755 仅用于提取历史需求，不能作为待合入分支。
-3. A5 上的 CPU/NPU 对等**直访**仍须先证明 UB/URMA capability 与 workspace 可用；#1392 只交付 backend 代码，且仍非 "host 作 HCCL rank"。不要在 A2/A3 设计依赖 "host 直接解引用 device 指针" 的协议。
+复用 Buffer/Tensor/TaskArgs、目标 registry、控制通路与 PTO-ISA manager/session/completion。Worker.init 完成后创建和填充 Buffer，在 task submit 前协调各 endpoint 的 map、注册、channel/workspace 准备；需要相互等待的端点必须能共同推进，全部确认后再发布可用描述。
+
+读取何处、布局、分片策略由应用/kernel 决定。runtime 提供正确访问、传输完成、依赖放行及保活；first-version 全员映射完整 Buffer 不自动分片。父 backing 要等所有 exposing/consuming endpoint 的映射、注册和在飞访问退休后才能回收。具体接口、失败与验收见 [用户面 §5.2](../worker-memory-model/user-surface.md#52-api-契约与已交付边界)、[退休契约](../worker-memory-model/access-retirement-contract.md)。
 
 ---
 
@@ -381,7 +358,7 @@ HCCL rootInfo/barrier/teardown 调用，当前 A2/A3 CANN 9 构建从 `libhcomm`
 
 - **#824 open** — persistent communication domains across `Worker.run`:与 L4/L3 反复建域的开销直接相关(见文末)。
 - **#866/#711/#803/#861 均 CLOSED-未合并** —— 只保留为历史设计来源；直接承接者 **#1456（mixed local/remote L4 CommDomains）已 merged `60ab6ab9`（2026-08-11）**；其后继 #1623 / #1624 亦已在 main 祖先链；当前层次见 §D.4。
-- **#1392 merged `ca000263`** — A5 URMA deferred-completion backend 代码已合并，但 capability/workspace gated；它**不是** Remote CommDomain / window bootstrap，跨 host window 仍需 endpoint + memory registration。（#1303 CLOSED-未合并）
+- **#1392 merged `ca000263`** — A5 URMA backend 的历史交付；当前 Device 支持见 D.2。它**不是** Remote CommDomain / window bootstrap，跨 host window 仍需 endpoint + memory registration；#2731 首版同 host 不覆盖 L4。（#1303 CLOSED-未合并）
 - **对照 HCCL 官方——管理层级 ≠ HCCL rank 嵌套**:D.5 的正确基线是 **L4 把所有选中的 L2 flatten 成一张全局 device-rank 空间、建立单一 global communicator**（用 ranktable `HcclCommInitClusterInfo`，或 L4 选 root L2 + 广播 opaque rootInfo `HcclCommInitRootInfo`）。**L4→L3→L2 是控制面管理层级，不对应 HCCL 的 rank 嵌套**；**不要"每层独立建 world"**（那会把 collective 域切碎）。子集（TP/DP/EP）如目标 CANN 支持可用 `HcclCreateSubCommConfig` 从 global 派生（该 API **只支持从 global 域拆分、不支持嵌套拆分**），否则由 simpler 自建 versioned subdomain。
 
 ### D.5(c) 历史差距（不可作为当前实施清单；归属见 DS-7/DS-9/DS-10）

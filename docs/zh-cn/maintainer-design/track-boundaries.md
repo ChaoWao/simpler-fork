@@ -75,17 +75,17 @@ RA 的 Buffer/Attachment identity、ownership 与 completion 合同对所有 bac
 
  | — | 归属 | 内容 |
  | - | ---- | ---- |
- | 本地独立 ownership | **`RA-12`** | 把域从 `_RunResources` 的账本转成 Worker 级 owner；显式、可枚举的 registry；admission / retain-release / budget / close-journal 锁序 |
+ | 本地独立 ownership | **`RA-12`** | 域从创建起归 Worker owner，创建时决定 retention；run 只登记实际使用与清理义务；admission / retain-release / budget / close-journal 锁序 |
  | 远端 lease、断连与回收 | **`DS-4`** | lease 续约与超时 · 断连后的资源回收 · epoch 代际 |
 
 ⛔ **只有一份生命周期设计文档，两项共用**；`DS-4` 不得自建第三种 owner-lifetime。
-本地 owner 转移不要求远端 lease 先完成；DS-4 的完整退出条件仍需远端事务与回收证据。PR 登记和实现范围见 RA-12。
+本地域 ownership 与实际使用保留不要求远端 lease 先完成；DS-4 的完整退出条件仍需远端事务与回收证据。PR 登记和实现范围见 RA-12。
 
 #### 契约 B —— 同步原语 vs 常驻循环：`RA-11` ⟷ `EX-2`，三方切分
 
  | — | 归属 |
  | - | ---- |
- | 同步原语（publish/observe/wait，由 counter `notify/test/wait` 提升为 Buffer-backed Attachment 通用 API）＋ 首个有界 SPSC 示例 | **`RA-11`**，只此一份工作项与验收清单 |
+ | 受管理区间与必要的 publish/observe/wait 保证，公共原语形状由 #2720 完整方案验证；SPSC 为上层参考样例 | **`RA-11`**，只此一份工作项与验收清单 |
  | queue schema · opcode · batching · backpressure policy · persistent-kernel 业务循环 | **上层库 / 用户** —— **不进 Buffer/Attachment 基础 ABI** |
  | 单 L2 Run 多轮 work/completion、停止准入与 drain；L3 进程复用、重复 run 单独计证 | **`EX-2`** |
 
@@ -108,7 +108,7 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
  | — | 归属 | 登记的是什么 |
  | - | ---- | ------------ |
  | Buffer / allocation 的 close 与物理释放 | **`RA-15`** | owner / import / attachment 的 use 记录 ＋ cleanup journal |
- | 域（CommDomain）的 per-worker ownership | **`RA-12`**（远端半 `DS-4`，契约 A） | 域 handle 的 owner 转移 ＋ admission / retain-release / budget |
+ | 域（CommDomain）的 per-worker ownership | **`RA-12`**（远端半 `DS-4`，契约 A） | 创建时明确 owner/retention ＋ 每次使用接纳 / retain-release / budget |
 
 **共同约束**：统一逻辑关闭、接纳使用、最后使用证明与可重试清理规则，清理义务可组合且恰好履行一次；allocation owner 与 attachment/grant/graph 的使用持有者分开。互不协调的 owner-lifetime 与 close journal 才是 `P2-D` 要避免的问题，表的数量本身不能证明正确。
 
@@ -116,7 +116,9 @@ issue #2460 的 `U4` 写明「**`Buffer.close` 必须最终经由 owner registry
 
 **资源边界补充**：RA-7 拆的是 L3 hierarchical HeapRing；RA-16 管 device context 的 ExecScratch/HostStaging；RA-15 管用户 Buffer 的 logical close。三者的容量和最后使用者证明不能互相代替。EX-7 扩大 admission 时消费 RA-16 的资源约束，但本地 L3 #2464 不是 #2466 的硬前置。accepted/prepare/enqueue/执行容量分别核算；旧版本、graph 引用与释放失败块的计费，以及部分提交的最后使用者证明，见 [共同契约 §3–§5](worker-memory-model/access-retirement-contract.md)。
 
-**#2594 域接口交接**：完整业务目标归方向二；本地合同主索引 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。#2120 与 #2594 共用域 owner 合同；#2598 的三种清理结果仅为 DS-1 观测，不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
+**#2594 域接口交接**：完整业务目标归方向二；本地合同主索引 DS-6；RA-14 管公开入口与兼容，RA-12 管复用/跨 run owner，RA-13/DS-3 管域 Buffer 的本地/远端描述与授权，RA-15 管接纳/最后使用/释放，DS-9 管建域事务。CommDomainRef 是身份而不是 grant；借用描述符不取得 ownership，已接纳使用必须保留到最后消费者。域 owner 合同以统一公共入口为准，不增设 detach owner；会话清理观测不代替远端 lease 或 actual free。registry 组织仍按上面的契约 D 待裁决，不以统一 API 自动拍板。
+
+**Host 映射交接（#2657/#2730/#2731）**：RA-13/RA-14 管 native/mapped 描述及每调用参数，RA-2/RA-3 管 endpoint-local 访问选择，DS-8 承载完整 Host 场景，RA-15/EX completion 联验保活与退休。显式选择 mapped view 不等于把 raw attach/detach 暴露给用户。两阶段采用普通 Host Buffer；L3 首版全员注册同一完整 backing，Host workspace 与 Device 域 workspace 分离。地址相关建连在协调 map preparation 完成，不以拆出 workspace-only 工作项代替完整交付。合同细节见 [用户面](worker-memory-model/user-surface.md)，后端独立验收见 [L3+ 设计](l3plus-design.md)。
 
 **U4 交接门**：U1a → U1b → U2a → U2b；U1b → U3；U2b 与 U3 的 network→H2D 合并验收 → U4。工作项是聚合归属，U1b/U2a 不能被聚合依赖误读成循环；本表中的 RA-15 同时依赖 RA-13 与 DS-3。契约 D 的裁决不因 #2440/#2452 的 workspace ledger 存在而自动解决。
 

@@ -35,6 +35,10 @@ run 业务结果、执行域是否可继续接纳、资源是否已静止分别�
 
 证明限定本次 operation 与 endpoint/session/context generation；重复 copy 不递增 backing generation，旧 operation 的完成不能放行新 operation。
 
+**执行容量与结果观察**：物理最后使用可以归还对应 execution credit，不替代结果观察、输出交付和错误发布。caller-held 结果、Program 输出、原 stream/carrier 的寿命分别验收；pipeline_depth 或 backlog 观测值不能充当全部内存上限。
+
+**批量提交（#2855）**：已提交后等待完成与 DEFER 暂存后等待提交分别记账。首版限定单域、单发送者、同 peer 多次 TPUT；明确显式 flush、阈值与正常返回前尾批处理。完成覆盖实际参与队列的独立 BB/CQE 目标，暂存 event 不放行消费者；容量触发多次物理提交时仍保留整批跟踪。partial flush 不能丢弃已发布请求，也不能盲目重发。
+
 ### 多段复制
 
 ```text
@@ -61,6 +65,12 @@ H_A → NetworkCopy → H_B → H2D → D_B → device consumer
 allocation owner 与 use/grant 持有者分开。外部借用不转移物理 allocation 所有权，内部保留不能自动延长调用方分配的寿命；释放借用描述符不是 device fence。graph/replay 的使用引用必须显式保留，但不能据此夺取 allocation ownership。
 
 **契约 D 的约束**：Buffer/domain 共享逻辑关闭、使用接纳、最后使用证明和可重试清理规则；清理义务可组合且恰好履行一次。一个或多个物理 registry 的组织仍见 [契约 D](../track-boundaries.md)，表的数量不能代替上述证明。
+
+**后端资源归属（#2787/#2823/#2833）**：共享 communicator/provider 资源与 domain 自有注册、peer 映射、descriptor、共享借用分别记账；manager 存放位置一致不是目标。初始化从第一笔资源取得就保留完整 owner，内部回滚/重新 Init 也必须传播失败。normal release 在已有执行/网络静止且注册/channel 引用解除后释放 backing；释放域 A 不伤害存活域 B，不能用全部延后到 Worker 退出规避独立回收。只保留仍有依赖或状态不明的资源，已成功释放的独立资源及时清账；具体 retry 依据实际 API 错误语义。
+
+**显式 Host 映射（#2730/#2731）**：map 前后 native backing identity/grant 不变；目标访问引用和 native/mapped 参数分别解析。unmap 开始即关闭新使用，失败保持关闭并保留清理责任；失败句柄不能继续被验证或解析地址。L3 所有 exposing/consuming L2 的 mapping、注册、实际 workspace 和在飞读都退休后，才能释放共享 Host backing。Host/Device 事件各归实际 workspace，不能因新增默认指针把旧请求转到另一完成队列。
+
+**owner-local 扩展（#2621）**：在已有 owner 的有效 device/context 后启动，在 allocation/context 销毁前停止访问并注销；retain/pin 只保护寿命，不证明 producer ready 或访问互斥。部分 factory 初始化与异常退出共用既有 owner/journal，不创立第二套 allocation owner。
 
 ## 4. 预算、流水容量与 capture
 
@@ -94,5 +104,7 @@ Capture 要求被捕获的操作及等待边能由 device replay 完成。普通
  | RA-13 → RA-15 | 同调用混合 owned/external，完成未知；逻辑关闭与 submit 竞争 | all-owned 完成可释放；外部描述符撤销不误 free；正常借用执行可退休 |
  | RA-15/RA-12；DS-4 | 独立 grant 仍有效、graph/replay 仍引用、unmap/free 失败时提前清账 | 最后使用者结束且平台释放成功后清账；关闭一个 grant 不伤及另一个 |
  | RA-16；EX-7 联验 | 第一轮产物未消费时第二轮覆盖、身份串轮 | 第一轮消费后第三轮可复用，旧 host 副本仍保留原身份和内容 |
+
+补充成对验收：真实 URMA/HNS manager 配有状态 HCCL/Hcomm/ACL mock，注入部分 Init、unregister/channel destroy/free 失败，并检查生产 rollback/release 的 owner 与错误传播；阳性对照为重复 allocate/release 及 A 释放后 B 继续传输。映射覆盖 native/mapped 同调用、失败 unmap 后拒绝新用与正常重试。批量覆盖未 flush 不提前完成与尾批正常返回提交、实际多队列完成；不能只换掉 manager 测 helper。
 
 CPU fake 证明协议、引用与拒绝路径；device cache visibility 必须有相应硬件证据。模拟器的外部地址与 onboard native allocator 登记内地址分别标明，不能互相代替证明。DFX 若承诺 run 返回时产物完整，异步收集必须保持该合同或明确交付新的 flush 边界；DFX 实现仍按 work-items §7 归属。

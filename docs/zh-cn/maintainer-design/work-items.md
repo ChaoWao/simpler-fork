@@ -84,7 +84,7 @@
  | **DS-5** | A3 HCCS/RoCE ＋ A5 UB/URMA profile | `P2-E` · `D.2` 的 backend 半 | DS-4 | 🟡 **URMA 完成协议、多 backend workspace 与 A2/A3 HBG SDMA 已有新交付**。main `63ffeb8a8bd9` 含 #2779 `42803935df` 逐实际队列 BB/CQE 完成目标、#2790 `9609da8a8b` 分离 SDMA/URMA/RDMA workspace、#2828 `349125e005` HBG SDMA；#2775/#2739 CLOSED。原 #2650/#2675 仍 OPEN，须对已合入内容去重。余量分别归 #2787 URMA 生命周期、#2823 RDMA 清理、#2824 RDMA 真机/CI、#2833 重叠子域、#2673 AIV 队列映射、#2855 batch/flush、#2783 handshake 文件及 #2800 bootstrap。#2854/#2860 跟踪现有 PUT/GET 停滞；#2858 只补诊断。A5 CI 具名日志中五个 URMA ST 通过、ChunkedFetch 跳过；详见 [范围证据](review/track-2716.md)。正常传输、并发、多域和异常清理分别计证，不外推全 backend PASS。 |
  | **DS-6** | mpirun 启动与发现 ＋ 跨-L3 域接口 | `A.1` 残留 · `D.4` · `C.2` 的 L4 半 | — | 🟡 **统一域接口及 Buffer/Tensor 跨 run 消费已合入，部署闭环仍按方向 4 推进**。main `63ffeb8a8bd9` 的 #2639/#2668 已覆盖 #2594 的统一创建、查找、复用、域 Buffer、跨层描述和使用登记；#2594 CLOSED，不能继续列为 #2668 在飞。#2120 CLOSED 未合入；#824 原需求应对照 RA-12 已交付行为结项核对，不新增 detach 路线。方向 4 的 #2659 仍承接 supervisor 清理与 Group 迁移；普通 TCP/daemon 不预先删除。RA-12/13/14/15、DS-3/9 是共同合同，完整业务目标不重复拆 owner。 |
  | **DS-7** | 移除或重构 64-rank device ABI 上限 | `P3⑤` | DS-2 | 🔵 **独立规模扩展包**。device rank ABI 的 64 上限需要独立兼容与容量验收；不阻止小规模异构域先行。 |
- | **DS-8** | host 参与域的语义（非对等成员） | `D.3` | RA-8 · 条件 RA-2〔仅 A5 direct-map 分支；copy-capable host attachment 走 `OWNER_DELEGATED_COPY`，不需要它〕 | ⛔ **Host attachment 全组合验收未满足，已有按平台与拓扑拆开的候选**。#2685 head `33b774442ee9` 的 A3 L4 Host DRAM 前置 #2668 已合入；#2818 `fc08af9222cf` 是 direct L2 A3 Host buffer，#2820 `cbdfb94f0590` 是 L3 A3 Host attachment，#2796 `285ff1bd74d1` 为相关组合候选，需协调去重。#2657 已拆 #2730（#2714 `954dca406466`：单 A5 同步本地 MTE）与 #2731（跨 rank 异步 URMA / L3→L2）。本地映射不证明跨 rank fetch 或计算重叠；Host 不占 NPU rank。单 rank URMA provider 尚有限制，但不是硬件永久不可能。copy-capable 路径不等待 RA-2 全部 direct-map 能力。 |
+ | **DS-8** | host 参与域的语义（非对等成员） | `D.3` | RA-8 · 条件 RA-2〔仅 A5 direct-map 分支；copy-capable host attachment 走 `OWNER_DELEGATED_COPY`，不需要它〕 | ⛔ **Host 路径全组合验收未满足**。#2657/#2730/#2731 按 2026-11-04 正文：普通 Host Buffer，native/mapped 描述分离；#2730 同进程同步 MTE，#2731 同 host 全员完整 Buffer 注册、非 self PTO URMA、独立 Host workspace 与异步 completion。首版每 consuming L2 一套 Host registration，第二独立 backing 拒绝；方法形状为方案，不冒充 main API。#2714 为 Stage 1 候选，最新 head 见 README；旧 head 的缺陷/测试不外推。#2685、#2818、#2820、#2796 是不同层级的 A3 Host 候选，须按完整场景去重。跨 rank 与 overlap 不能借用本地 MTE 成绩，Host 不占 NPU rank；copy-capable 路径不等待 RA-2 全部 direct-map。当前与历史验收编号迁移见 §6，设计见用户面 §5.2。 |
  | **DS-9** | 成员事务执行（唯一设计归属） | `W5` · `P2-B` 的事务半 | DS-1 · DS-2 | 🟡 **PREPARE/IMPORT/COMMIT/ABORT 事务已有，生产闭环未完成**。_allocate_global_domain 的普通/MPI ABORT 失败都调用_record_unreclaimable；SPL-1.6 的“只写 stderr 后继续”已被源码反证。epoch/lease、冻结成员、全员 READY、失败资源可追踪仍需与 DS-1/DS-2 联验，不重复设计现有事务。 ⛱ **挡住 `DS-4` `DS-10`**。 |
  | **DS-10** | 跨节点异构域的组合与验收 | `D.5` 残留 · `P3②` 跨节点半 | DS-4 · RA-9 · **DS-9** | 🟡 **跨机基本栈已交付**（#1456/#1623/#1624）。异构 ResourceBundle 的跨节点组合仍须 session、成员事务、授权及失败回收共同验收；与 RA-9 各负责一半。 |
  | **DS-11** | 同步与异步模型（SDMA / URMA gate） | `D.2` 的 opt-in 半 | — | 🟡 **URMA 默认编译、显式域资源和使用前验证已交付**。main `63ffeb8a8bd9` 的 #2825 `3338ca33fa` 按 #2674 10 月 29 日确认范围删除 A5 URMA 编译开关，保留 `workspace_engines=("urma",)` 资源申请及 `device_context(..., workspace_engines=...)` 使用检查；初始化失败、空 workspace、非 dense-prefix 组合明确拒绝。#2674 CLOSED，不再要求额外 capability query / enable_urma API。SDMA 默认编译，A2/A3 enable_sdma 与 A5 按域选择仍控制资源；RDMA 仍可选。当前 URMA 限 A5 TMR L3 dense-prefix，HBG、L4 async、任意子集及 single-rank provider 路径不因此完成。#2738 的 A2/A3 上下文统一仍独立，#2855 batch 暂存不等于已提交/已完成。 |
@@ -224,6 +224,24 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
  | `C6599735013-SCOPE` · `C6599735013-A1` · `C6599735013-A2` · `C6599735013-A3` · `C6599735013-A4` · `C6599735013-R1` · `C6599735013-R2` · `C6599735013-R3` | DS-5 | #2673 范围决定；正文历史编号保留溯源 |
  | `C6492946320-SCOPE` | DS-11 | #2674 范围决定；正文历史编号保留溯源 |
  | `VLLM-CURRENT-A1` · `VLLM-CURRENT-A2` · `VLLM-CURRENT-A3` · `VLLM-CURRENT-A4` · `VLLM-CURRENT-A5` | 范围外 #2666 → #2429；EX-7 / RA-16 接口联验 | vLLM 完整数值/请求生命周期/产物；系统组合 #2658，非重新开发普通 Async |
+
+### Host DDR 当前合同与历史编号迁移（2026-11-04）
+
+\#2657/#2730/#2731 的正文已实质修订；旧编号与原验收文字不换义，当前采用 V2 命名空间。完整业务 owner 仍在方向二，DS-8 是本地合同索引。
+
+ | 来源编号 | 本地合同索引 | 业务归属 |
+ | -------- | ------------ | -------- |
+ | `T2657-V2-SCOPE` · `T2657-V2-A1` · `T2657-V2-A2` · `T2657-V2-A3` · `T2657-V2-A4` · `T2657-V2-A5` · `T2657-V2-A6` · `T2657-V2-A7` · `T2657-V2-A8` | DS-8；RA-2/RA-3/RA-13/RA-14/RA-15 与 EX completion 联验 | #2657 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
+ | `T2730-V2-SCOPE` · `T2730-V2-A1` · `T2730-V2-A2` · `T2730-V2-A3` · `T2730-V2-A4` · `T2730-V2-A5` · `T2730-V2-A6` · `T2730-V2-A7` · `T2730-V2-A8` · `T2730-V2-A9` | DS-8；RA-2/RA-3/RA-13/RA-14/RA-15 与 EX completion 联验 | #2730 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
+ | `T2731-V2-SCOPE` · `T2731-V2-A1` · `T2731-V2-A2` · `T2731-V2-A3` · `T2731-V2-A4` · `T2731-V2-A5` · `T2731-V2-A6` · `T2731-V2-A7` · `T2731-V2-A8` · `T2731-V2-A9` · `T2731-V2-A10` · `T2731-V2-A11` · `T2731-V2-A12` | DS-8；RA-2/RA-3/RA-13/RA-14/RA-15 与 EX completion 联验 | #2731 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
+
+ | 历史范围 | 当前去向 |
+ | -------- | -------- |
+ | #2657 原持久 Host、稀疏读取、异步完成、并发/错误与 overlap 验收 | V2 父验收及 #2730/#2731；两子项不自动关闭父项 |
+ | #2730 allocation-wide device_readable/read-only 模型 | 被显式 mapped view 替代；native Host/H2D 和原 grant 保持 |
+ | #2731 原自动分片/多表假设、旧固定依赖 head | 首版所有子 L2 注册同一完整 Buffer；每 consumer 一套 Host registration，第二独立 backing 拒绝；基于 #2730 最终合同，不冻结旧 PR head |
+ | 原本地/跨 rank读取与 BF16/MXFP8、边界、延迟完成、无整表复制要求 | 保留于当前 V2 验收；真实非 self PTO URMA 与有用计算重叠须独立证据 |
+ | 子集/懒准备、多独立 Host workspace、L4/跨节点、独立 L2 URMA loopback | 明确不属于当前两阶段首版；保留需求来源，不算已实现；L4 部署关联 #2724，扩展范围须另行明确 |
 
 ## 7. 不属于这三条线的活
 

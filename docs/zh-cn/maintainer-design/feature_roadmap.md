@@ -1084,8 +1084,10 @@ Domain/Worker 驱动的 attachment establishment
 
 [PR 1609][pr-1609] 还把 SDMA 从“编译到某架构就天然可用”收敛成 construction-time
 Worker capability：A2/A3 虽编译 backend，`enable_sdma` 默认仍为 false，只有显式
-opt-in 才 provision worker-lifetime SDMA workspace/streams；A5 当前 capability
-absent。它是异步 completion transport capability，不等同于通用 `rtMemcpy`，也不能
+opt-in 才 provision worker-lifetime SDMA workspace/streams。A5 在 main `63ffeb8a8bd9`
+已按域 `workspace_engines` 选择 SDMA/URMA；provider 编译支持与资源实际创建分开，
+域默认不申请异步 workspace，详见 [通信合同 D.2](l3l4/cluster-comm.md#d2-同步--异步通信模型)。
+它是异步 completion transport capability，不等同于通用 `rtMemcpy`，也不能
 仅由 arch 名称推导 actual capability。
 
 [PR 1521][pr-1521] 将 `CallConfig.aicpu_thread_num=0` 冻结为 per-run auto

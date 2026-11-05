@@ -691,7 +691,10 @@
       ],
       "observed_state": "OPEN",
       "observed_on": "2026-11-04",
-      "previous_body_sha256": "97d421a108cc5b94a68973cfb50a49c419d446c10dc00f90d11620709d61f1a1"
+      "previous_body_sha256": "97d421a108cc5b94a68973cfb50a49c419d446c10dc00f90d11620709d61f1a1",
+      "historical_numbering": true,
+      "current_body_sha256": "595f2d4a4ed2a3a13e126f1b090f265b3b6a0bdb251e4f03924d9c987c58d3af",
+      "scope_note": "旧编号与原 checkbox 保留原义；当前显式 mapped view / 全员完整 Host Buffer 注册合同见独立 V2 来源，不复活 allocation-wide 消费策略或自动分片假设。"
     },
     "track2716-2708": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2708",
@@ -799,7 +802,10 @@
         "Required regression checks are resolved or explicitly triaged, and #2714 is merged with its supported scope documented."
       ],
       "observed_state": "OPEN",
-      "observed_on": "2026-11-04"
+      "observed_on": "2026-11-04",
+      "historical_numbering": true,
+      "current_body_sha256": "e4f0cd1393963b59c14a6a4333b5e0d1290ef1336f3f22a6a808bc63c4df29a0",
+      "scope_note": "旧编号与原 checkbox 保留原义；当前显式 mapped view / 全员完整 Host Buffer 注册合同见独立 V2 来源，不复活 allocation-wide 消费策略或自动分片假设。"
     },
     "track2716-2731": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2731",
@@ -831,7 +837,10 @@
         "Runnable L3 example, control/resource contracts, exact supported topology and test evidence are published."
       ],
       "observed_state": "OPEN",
-      "observed_on": "2026-11-04"
+      "observed_on": "2026-11-04",
+      "historical_numbering": true,
+      "current_body_sha256": "d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3",
+      "scope_note": "旧编号与原 checkbox 保留原义；当前显式 mapped view / 全员完整 Host Buffer 注册合同见独立 V2 来源，不复活 allocation-wide 消费策略或自动分片假设。"
     },
     "track2716-2738": {
       "url": "https://github.com/hw-native-sys/simpler/issues/2738",
@@ -1181,6 +1190,106 @@
       ],
       "observed_on": "2026-11-04",
       "extraction": "当前 vLLM 消费者五项完成标准；旧 VLLM/TrackA 编号保留原合同与历史出处"
+    },
+    "track2716-2657-v2": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+      "updated_at": "2026-11-04T14:36:31Z",
+      "body_sha256": "595f2d4a4ed2a3a13e126f1b090f265b3b6a0bdb251e4f03924d9c987c58d3af",
+      "ids": [
+        "T2657-V2-SCOPE",
+        "T2657-V2-A1",
+        "T2657-V2-A2",
+        "T2657-V2-A3",
+        "T2657-V2-A4",
+        "T2657-V2-A5",
+        "T2657-V2-A6",
+        "T2657-V2-A7",
+        "T2657-V2-A8"
+      ],
+      "checkboxes": [
+        "#2730 accepted: native/mapped Tensor separation, synchronous local A5 MTE and safe mapping lifetime.",
+        "#2731 accepted: real L3-to-L2 cross-process execution and non-self-rank PTO URMA reads of the one shared complete Host Buffer.",
+        "BF16 boundary/repeated/invalid-index and nonzero-offset cases pass; Host MXFP8 payload with existing Device scales/consumer is validated.",
+        "Persistent mappings/registrations are reused; no whole-table Device replica or steady-state whole-table H2D/IPC copy.",
+        "Issue return cannot expose incomplete output; completion, concurrent readers, destination reuse and failure cleanup obey existing dependency/lifetime contracts.",
+        "Device evidence demonstrates useful independent computation while reads are outstanding; Host-call asynchrony alone is insufficient.",
+        "Native Host/H2D, local MTE and existing Device URMA behavior remain usable; supported hardware, software versions, topology and runtime coverage are explicit.",
+        "Runnable examples and exact tested-revision evidence are published. Simulators and source inspection do not qualify hardware behavior."
+      ],
+      "parent": 2722,
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "extraction": "V2-SCOPE 覆盖全部当前正文、资源/API/拓扑/限制；V2-A 逐项当前 checkbox。旧编号仍在历史来源，不能静默改义。"
+    },
+    "track2716-2730-v2": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2730",
+      "updated_at": "2026-11-04T14:36:39Z",
+      "body_sha256": "e4f0cd1393963b59c14a6a4333b5e0d1290ef1336f3f22a6a808bc63c4df29a0",
+      "ids": [
+        "T2730-V2-SCOPE",
+        "T2730-V2-A1",
+        "T2730-V2-A2",
+        "T2730-V2-A3",
+        "T2730-V2-A4",
+        "T2730-V2-A5",
+        "T2730-V2-A6",
+        "T2730-V2-A7",
+        "T2730-V2-A8",
+        "T2730-V2-A9"
+      ],
+      "checkboxes": [
+        "Native and mapped views retain the same backing identity; native CPU/H2D behavior and grant remain unchanged.",
+        "Native/mapped arguments resolve independently in one call where the runtime supports both consumer types.",
+        "TMR and HBG have separate local A5 hardware evidence: BF16 gather and dependent consumer, and Host MXFP8 payload with existing Device scales/consumer.",
+        "Repeated/boundary IDs, invalid ranges, offsets and multiple local tables/runs are covered.",
+        "No whole-table Device replica or steady-state whole-table H2D; physical mapping reuse is demonstrated.",
+        "Wrong target/context, stale references, access/range violations and unsupported forwarding fail at the existing interfaces.",
+        "Concurrent accepted readers, early release, partial initialization, interrupted admission, unmap failure -> no new use -> cleanup retry, and unknown completion are covered.",
+        "Python Host access and backing lifetime are validated.",
+        "Exact-head regressions and documentation are complete; historical CI/results are not relabeled as current-head evidence."
+      ],
+      "parent": 2657,
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "extraction": "V2-SCOPE 覆盖全部当前正文、资源/API/拓扑/限制；V2-A 逐项当前 checkbox。旧编号仍在历史来源，不能静默改义。"
+    },
+    "track2716-2731-v2": {
+      "url": "https://github.com/hw-native-sys/simpler/issues/2731",
+      "updated_at": "2026-11-04T14:36:45Z",
+      "body_sha256": "d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3",
+      "ids": [
+        "T2731-V2-SCOPE",
+        "T2731-V2-A1",
+        "T2731-V2-A2",
+        "T2731-V2-A3",
+        "T2731-V2-A4",
+        "T2731-V2-A5",
+        "T2731-V2-A6",
+        "T2731-V2-A7",
+        "T2731-V2-A8",
+        "T2731-V2-A9",
+        "T2731-V2-A10",
+        "T2731-V2-A11",
+        "T2731-V2-A12"
+      ],
+      "checkboxes": [
+        "Real L3 orchestration with distinct L2 processes and at least two A5 devices maps/registers one complete shared Host Buffer on every member.",
+        "A consumer performs actual non-self-rank PTO URMA reads of that backing; independent local MTE, CPU gather, private copies or direct Hcomm-only probes cannot substitute.",
+        "The same global offsets return the same expected data through different available peers; nonzero Tensor byte offsets are correct.",
+        "BF16 repeated/boundary IDs, invalid ranges, multiple views/runs and Host MXFP8 payload with existing Device scales/consumer are verified.",
+        "Native Host/H2D access and local mapped MTE remain correct; CPU updates between fully drained runs are visible.",
+        "No whole-table Device replica or steady-state whole-table H2D/IPC copy; persistent registrations and mappings are reused.",
+        "A second independent Host registration is rejected explicitly under the first-version limit; stale/replaced references never revive.",
+        "Existing Device URMA and the new Host workspace coexist and retain correct completion ownership.",
+        "Delayed completion cannot expose output early. Device trace evidence shows useful independent computation while reads are outstanding.",
+        "Concurrent readers, early release, partial setup, one child failing/closing, refusal, lost replies and unproven completion preserve safety and report cleanup debt.",
+        "Both applicable real child execution routes (serial and staged) are covered. TMR has independent acceptance; HBG needs reusable adaptation and separate evidence, otherwise reject/document it.",
+        "#2730 local MTE OFF/ON and existing Device URMA regressions pass. Publish exact code/PTO/CANN/driver versions, topology, constraints and a runnable L3 example."
+      ],
+      "parent": 2657,
+      "observed_state": "OPEN",
+      "observed_on": "2026-11-04",
+      "extraction": "V2-SCOPE 覆盖全部当前正文、资源/API/拓扑/限制；V2-A 逐项当前 checkbox。旧编号仍在历史来源，不能静默改义。"
     }
   },
   "explicit_sources": {
