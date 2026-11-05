@@ -297,3 +297,26 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 ⛔ **反例**（重组前 `P2-D` 的写法）：把「被 P2-C 挡住」「唯一残留」「无人认领」
 写进四个不同的格 —— 其中三个在 #2120 开出来之后就错了，而**没有任何一处会被更新**，
 因为更新哪一处都不是「唯一真源」。
+
+## 10. 依赖图的具体关系
+
+[交互式依赖图](dependency-dag.html) 按提供方 → 消费方绘制，原生父子归属单独展示。关系观察为 2026-11-05T08:49:45.036422+00:00；main 引用 `91f0004517a9f1415228d33bfd8ca95eddbf936d`，不推进代码/CI 核验基线。下表补充 §8 的具体关系；不是 Issue 关闭的顺序。#824 已关闭，作为已有基础引用。#2721→#2658 按正文仅适用于所选 L3+ 路径。
+
+| 关系 | 提供方 | 消费方 | 类型 | 具体产物／条件 | 依据 |
+| ---- | ------ | ------ | ---- | -------------- | ---- |
+| e01 | #2720 | #2723 | interface | 常驻消费者使用 Region 的区间、访问和必要同步；queue 协议仍由应用定义。 | [#2723 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2723) · 正文/评论 SHA-256 `6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d` |
+| e02 | #2721 | #2723 | interface | 公共执行和资源合同供常驻接入；场景所需改动随常驻任务交付。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d` |
+| e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。 | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81` |
+| e04 | #824 | #2722 | foundation | 跨 run 复用与显式释放已有交付；通信场景在此基础上各自验收。 | [#824 · 关闭依据](https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467) · 正文/评论 SHA-256 `0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444` |
+| e05 | #2666 | #2658 | conditional | 核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。 适用：仅选用 kernel / capture 模式 | [#2658 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
+| e06 | #2721 | #2658 | conditional | 对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。 适用：仅选用相关 L3+ 路径 | [#2658 · ③ L3+ 设计交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
+| e07 | #2496 | #2460 | conditional | 只在需要 A5 Device→Host direct-map 的消费者上核定能力，不阻止 copy-capable 路径。 适用：仅 A5 direct-map 分支 | [#2721 · ③ 外部映射能力](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d` |
+| e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。 | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81` |
+| e09 | #2460 | #2666 | interface | Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。 | [#2460 · Delivery and dependency plan](https://github.com/hw-native-sys/simpler/issues/2460) · 正文/评论 SHA-256 `20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc` |
+| e10 | #2721 | #2724 | interface | 部署方向消费已确认的资源与执行合同，自行完成多级、多机接入验收。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d` |
+| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。 | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee` |
+| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。 | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee` |
+| e13 | #2429 | #2658 | conditional | 系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。 适用：仅选用 vLLM 路径／比较对象 | [#2658 · ③ vLLM eager 接入](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
+| e14 | #2730 | #2731 | required | 多 L2 Host URMA 建立在单 L2 显式 mapped-view 与所有权合同之上；可先并行开发，交付需对齐最终合同。 | [#2731 · Dependencies / Delivery](https://github.com/hw-native-sys/simpler/issues/2731) · 正文/评论 SHA-256 `d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3` |
+
+\#2460 合同细化按其正文 U1a→U1b→U2a→U2b、本地/Remote 并行合流→U4 展示，不建立新的实施编号或状态。#2730→#2731 是明确映射/寿命合同前置；Host DDR 不等待反方向 #2496。额外 device lease、零 heap、公共组合类型仍是设计问题，不进入强前置。

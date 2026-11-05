@@ -2,7 +2,7 @@
 
 > **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
-> **2026-11-05 交接覆盖**：84 个文档载体、604 个来源编号均有归属；10 个 GitHub 入口承接合同，资源/分布式/执行及 Qwen 不设重复本地进度。七项执行交接保留已交付基础与剩余组合验收的区别。覆盖不等于功能完成。
+> **2026-11-05 交接覆盖**：85 个文档载体、604 个来源编号均有归属；10 个 GitHub 入口承接合同，资源/分布式/执行及 Qwen 不设重复本地进度。七项执行交接保留已交付基础与剩余组合验收的区别。覆盖不等于功能完成。
 >
 > **2026-11-04 编号与归属复核**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；本地来源全部重新提取，原有外部来源重新读取，#2716 30 节点 / 29 边及决定评论纳入索引。#2429 当前五项验收单独编号；历史编号保留原义。源码/CI 的当前具名核对见 [证据与动作](review/track-2716.md)，下面旧日期的计数与全量代码审计不自动前移。
 >
@@ -147,6 +147,7 @@
 | others-ref/worker-async-pipeline/trace-v1.md（本地参考：`others-ref/worker-async-pipeline/trace-v1.md`） | 已交付流水线编号；执行契约由 #2721/#2658 承接 |
 | review/2026-08-11-code-vs-design-audit.md（本地参考：`review/2026-08-11-code-vs-design-audit.md`） | AR/AF 审计：work-items 吸收列 |
 | [review/ra-handoff.md](review/ra-handoff.md) | 资源旧编号的静态交接；进度查 GitHub |
+| [dependency-dag.html](dependency-dag.html) | 既有目标的产物关系与原生归属投影，不新增任务 |
 | [review/ex-handoff.md](review/ex-handoff.md) | #2721/#2723/#2658：七项执行目标与历史证据，无重复进度 |
 | [review/ds-handoff.md](review/ds-handoff.md) | #2724/#2722：旧分布式目标、验收和评论交接；不维护进度 |
 | [review/qwen-handoff.md](review/qwen-handoff.md) | #2658：Qwen 旧目标与验收的静态交接，不维护进度 |

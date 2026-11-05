@@ -1,11 +1,12 @@
 # simpler 核心设计快照
 
-发布日期：2026-11-05 UTC。本轮核对资源、部署通信、执行与 Qwen 跨仓目标的 GitHub 跟踪归属；不推进既有代码审计基线，也不表示功能已全部交付。
+发布日期：2026-11-05 UTC。本轮重新核对 GitHub 依赖关系，生成可交互依赖 DAG；不推进既有代码审计基线，也不表示功能已全部交付。
 
 ## 阅读入口
 
 | 目的 | 文档 |
 | ---- | ---- |
+| 当前目标依赖 | [交互依赖 DAG](dependency-dag.html)：合同、条件与来源；责任树单列 |
 | 资源任务与设计问题 | [#2721](https://github.com/hw-native-sys/simpler/issues/2721) · [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998) |
 | 本地入口与验收索引 | [工作项](work-items.md) · [看板](roadmap.html) |
 | 历史资源编号交接 | [16 项完整对照](review/ra-handoff.md) |
@@ -19,6 +20,7 @@
 
 ## 快照范围
 
+- 依赖图观察时间为 2026-11-05T08:49:45Z，关联 main `91f0004517a9f1415228d33bfd8ca95eddbf936d`。14 条具体关系与 7 条迁移合同关系均保留来源；#2716 原生责任树为 33 个节点、32 条归属边。关系刷新不代表新 main 实现验收。
 - `.docs` 是唯一维护树，保持 gitignored；本目录是导出备份，不是第二份实时看板。
 - 公共资源不再维护本地 RA 独立任务或进度。历史 16 项全部交接到 GitHub，原编号只供历史引用。
 - DS 不再维护独立本地进度轨；部署/会话归 #2724，通信域/数据面归 #2722。两条设计交接评论已发布，原正文与负责人保持；额外 lease、规模与公共组合类型必要性仍待确认。
@@ -77,3 +79,4 @@
 - [Qwen 跨仓目标交接到 #2658](review/qwen-handoff.md)
 - [分布式部署与通信：旧 DS 目标交接](review/ds-handoff.md)
 - [执行目标交接：历史 EX 索引退役](review/ex-handoff.md)
+- [dependency-dag.html](dependency-dag.html)

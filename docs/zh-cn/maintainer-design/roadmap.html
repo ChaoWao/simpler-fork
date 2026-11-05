@@ -261,6 +261,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   以免订正完的错误继续和在飞项抢注意力。
 </p>
 
+<section><h2>目标依赖</h2><p><a href="dependency-dag.html">打开交互式依赖 DAG</a>：具体产物、适用条件与责任归属分开看。</p></section>
 <section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
 <section id="communication-references"><h2>部署与通信 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/ds-handoff.md">11 项历史目标与评论交接</a>；设计问题待负责人确认。</p><div id="communication-reference-list"></div></section>
 <section id="execution-references"><h2>执行与常驻 · GitHub 跟踪入口</h2><p>业务进度在 GitHub；<a href="review/ex-handoff.md">七项目标与历史证据交接</a>。方案问题待负责人确认。</p><div id="execution-reference-list"></div></section>
@@ -1618,6 +1619,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-05 · 依赖关系与责任归属分别画图",
+        "b": "判断更正：此前入口列表难以看出产物先后；把父子关系或接口交接画成统一 blocking 会误导排期。新图逐关系保留条件与正文/评论哈希，责任树单独展示；#824 已关闭，作为基础而非未满足门槛。#2730→#2731 有明确合同前置，但 Host DDR 不等待相反方向 #2496；#2460 的本地 IO 与 Remote 可并行。新判据：原生 blocked_by 为空不等于没有依赖；正文关系须单独核对，讨论提案不升格为强制前置。"
+      },
       {
         "t": "2026-11-05 · 执行目标归并，纠正关闭项归属与机制承诺",
         "b": "判断失误：建议把流水容量继续交给 #2316，却未先核关闭交接；实际 #2316/#1853 已关闭，剩余真实模型组合在 #2658，vLLM 消费者在 #2429。旧 EX 还把零 heap 与删除 scope 回收当独立必做项，超出了已确认寿命目标。七项逐一交接，三条评论已发布且正文未改；P0.2-f4–f7 静态归档。新判据：先读关闭/接续评论再选 owner，区分必要合同与实现机制，idle 唤醒不能代替单 Run 常驻；最后一条本地轨退役后守卫必须改验非空 GitHub 来源、历史证据与具体接口合同，不能以空图通过。"
