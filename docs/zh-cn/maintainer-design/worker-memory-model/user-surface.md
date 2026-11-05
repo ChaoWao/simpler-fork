@@ -1,6 +1,6 @@
 # 用户面契约：分配 API 与 `Buffer` 的可见性
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 [`worker-memory-model.md`](../worker-memory-model.md) §5。
 
@@ -40,7 +40,7 @@
 - map preparation 在 Worker.init 后、task submit 前协调，所有必需成员确认后才能发布；包括实际地址依赖的 URMA channel/workspace 初始化。Host workspace 经 `get_dma_workspace(args, DMA_WORKSPACE_URMA)` 接入，包含 post-init 发布和 per-task 注入；Device 域 workspace 保留原入口。首版每消费 L2 一套 Host registration，拒绝第二个独立 backing。
 - CPU 写在读取前完成，读者结束前不修改表；unmap/release 遇 accepted reader 拒绝。开始 unmap 即关闭新接纳；失败保留资源供符合 backend 合同的重试，但禁止继续 validation/acquire/address resolution。异步传输保留 exposing/consuming endpoint、registration、workspace 与输出直到各自最后使用。
 
-此显式访问选择细化 §5.7 的内部 Attachment 管理，不新增让应用逐个操纵跨进程 import/map grant 的接口。#2730/#2731 的拓扑限制与硬件验收见 [L3+ 设计 §4](../l3plus-design.md#4-四方向如何承载完整设计)；归属仍为 DS-8 联验 资源合同与 EX。
+此显式访问选择细化 §5.7 的内部 Attachment 管理，不新增让应用逐个操纵跨进程 import/map grant 的接口。#2730/#2731 的拓扑限制与硬件验收见 [L3+ 设计 §4](../l3plus-design.md#4-四方向如何承载完整设计)；归属仍为 #2722 联验 资源合同与 EX。
 
 显式 COPY 写入已有 destination 时保持该 destination identity；只有新分配 destination 才有新 identity。
 

@@ -262,6 +262,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </p>
 
 <section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
+<section id="communication-references"><h2>部署与通信 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/ds-handoff.md">11 项历史目标与评论交接</a>；设计问题待负责人确认。</p><div id="communication-reference-list"></div></section>
 <section id="integration-references"><h2>跨仓模型 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/qwen-handoff.md">Q1–Q4 / C2b 验收交接</a>。</p><div id="integration-reference-list"></div></section>
 <h2>轨道与阶段<span class="hint">行 = 轨道，格 = 阶段（宽度不编码任何量）</span></h2>
 <div class="board" id="board"></div>
@@ -310,112 +311,6 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <script type="application/json" id="data">
 {
   "tracks": [
-    {
-      "name": "DS 分布式会话与通信域",
-      "stages": [
-        {
-          "id": "DS-1",
-          "nm": "MPI 会话的 session/epoch registry",
-          "p": "flight",
-          "hnote": "🟡 <b>Direct MPI session 与清理观测已有多项交付，supervisor 闭环仍有明确残留</b>。main <code>63ffeb8a8bd9</code> 含 #2656 session_epoch、#2665 逐 rank 报告、#2741 <code>8f592545b9</code> 独立 health timeout，以及 #2792 <code>4383189c98</code> 在 shutdown echo 前停止 heartbeat sender、controller drain 精确 echo。health timeout 和消息 drain 不等于外部关闭期限；mpi_direct_supervisor.py 主等待仍为 <code>proc.wait()</code>，异常终止中的带 timeout wait 是阳性对照。#2598 CLOSED 未合入；#2659 的正文尚未回填这些交付，持久账本、独立关闭期限、故障/远端残留确认、Group 迁移与删除仍按方向 4 验收。候选 #2791 head <code>096efb9757a5</code> 是 startup artifacts / drained completion 子集。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "residual"
-        },
-        {
-          "id": "DS-2",
-          "nm": "device lease ＋ rank inventory ＋ 冻结 rank",
-          "p": "todo",
-          "hnote": "⛔ <b>生产清点/冻结验收未满足</b>。归属为 endpoint inventory、device lease、global rank 编号；PREPARE/COMMIT/ABORT 的执行归 DS-9。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "DS-3",
-          "nm": "remote transfer：两条 copy 语义分清",
-          "p": "todo",
-          "hnote": "⛔ <b>U3 合并验收未满足</b>。现有 owner-delegated socket copy 不能算 device-peer/collective。#2460 要求 producer/receiver/version 成对迁移、保留 entry request/direction/grant/identity/range、不得 receiver 默认 H2D 或把 host transport storage 标成 DEVICE；network→H2D 故障时保留中间资源。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "DS-4",
-          "nm": "远端 domain lease、断连与回收",
-          "p": "todo",
-          "hnote": "⛔ <b>远端 lease/断连回收退出条件未满足</b>。与 #824 共用域生命周期；DS-9 提供建域事务。依赖表示完整验收，不妨碍本地 owner 转移原型先交付。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked"
-        },
-        {
-          "id": "DS-5",
-          "nm": "A3 HCCS/RoCE ＋ A5 UB/URMA profile",
-          "p": "flight",
-          "hnote": "🟡 <b>URMA 完成协议、多 backend workspace 与 A2/A3 HBG SDMA 已有新交付</b>。main <code>63ffeb8a8bd9</code> 含 #2779 <code>42803935df</code> 逐实际队列 BB/CQE 完成目标、#2790 <code>9609da8a8b</code> 分离 SDMA/URMA/RDMA workspace、#2828 <code>349125e005</code> HBG SDMA；#2775/#2739 CLOSED。原 #2650/#2675 仍 OPEN，须对已合入内容去重。余量分别归 #2787 URMA 生命周期、#2823 RDMA 清理、#2824 RDMA 真机/CI、#2833 重叠子域、#2673 AIV 队列映射、#2855 batch/flush、#2783 handshake 文件及 #2800 bootstrap。#2854/#2860 跟踪现有 PUT/GET 停滞；#2858 只补诊断。A5 CI 具名日志中五个 URMA ST 通过、ChunkedFetch 跳过；详见 <a href=\"review/track-2716.md\">范围证据</a>。正常传输、并发、多域和异常清理分别计证，不外推全 backend PASS。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "DS-6",
-          "nm": "mpirun 启动与发现 ＋ 跨-L3 域接口",
-          "p": "flight",
-          "hnote": "🟡 <b>统一域接口及 Buffer/Tensor 跨 run 消费已合入，部署闭环仍按方向 4 推进</b>。main <code>63ffeb8a8bd9</code> 的 #2639/#2668 已覆盖 #2594 的统一创建、查找、复用、域 Buffer、跨层描述和使用登记；#2594 CLOSED，不能继续列为 #2668 在飞。#2120 CLOSED 未合入；#824 原需求应对照 #824 已交付行为结项核对，不新增 detach 路线。方向 4 的 #2659 仍承接 supervisor 清理与 Group 迁移；普通 TCP/daemon 不预先删除。#824/#2460/#2460/#2460、DS-3/9 是共同合同，完整业务目标不重复拆 owner。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "DS-7",
-          "nm": "移除 64-rank device ABI 上限",
-          "p": "todo",
-          "hnote": "🔵 <b>独立规模扩展包</b>。device rank ABI 的 64 上限需要独立兼容与容量验收；不阻止小规模异构域先行。",
-          "items": [],
-          "doc": "work-items.md"
-        },
-        {
-          "id": "DS-8",
-          "nm": "host 参与域的语义（非对等成员）",
-          "p": "todo",
-          "hnote": "当前目标按 #2657/#2730/#2731 11 月 4 日正文：native/mapped 分离，L2 同步 MTE；L3 全员完整 Host Buffer、非 self PTO URMA，Host workspace 随完整场景交付。首版每 consumer 一套 Host registration；拒绝额外 backing。接口与寿命见用户面 §5.2，验收与历史编号迁移见 work-items §6。",
-          "items": [],
-          "doc": "work-items.md",
-          "health": "blocked",
-          "note": "Host 显式映射与同 backing 全员注册"
-        },
-        {
-          "id": "DS-9",
-          "nm": "成员事务执行（唯一设计归属）",
-          "p": "flight",
-          "hnote": "🟡 <b>PREPARE/IMPORT/COMMIT/ABORT 事务已有，生产闭环未完成</b>。_allocate_global_domain 的普通/MPI ABORT 失败都调用 _record_unreclaimable；SPL-1.6 的“只写 stderr 后继续”已被源码反证。epoch/lease、冻结成员、全员 READY、失败资源可追踪仍需与 DS-1/DS-2 联验，不重复设计现有事务。 ⛱ <b>挡住 <code>DS-4</code> <code>DS-10</code></b>。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "DS-10",
-          "nm": "跨节点异构域的组合与验收",
-          "p": "flight",
-          "hnote": "🟡 <b>跨机基本栈已交付</b>（#1456/#1623/#1624）。异构 ResourceBundle 的跨节点组合仍须 session、成员事务、授权及失败回收共同验收；与 #2721 各负责一半。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        },
-        {
-          "id": "DS-11",
-          "nm": "同步与异步模型（SDMA / URMA gate）",
-          "p": "flight",
-          "hnote": "🟡 <b>URMA 默认编译、显式域资源和使用前验证已交付</b>。main <code>63ffeb8a8bd9</code> 的 #2825 <code>3338ca33fa</code> 按 #2674 10 月 29 日确认范围删除 A5 URMA 编译开关，保留 <code>workspace_engines=(\"urma\",)</code> 资源申请及 <code>device_context(..., workspace_engines=...)</code> 使用检查；初始化失败、空 workspace、非 dense-prefix 组合明确拒绝。#2674 CLOSED，不再要求额外 capability query / enable_urma API。SDMA 默认编译，A2/A3 enable_sdma 与 A5 按域选择仍控制资源；RDMA 仍可选。当前 URMA 限 A5 TMR L3 dense-prefix，HBG、L4 async、任意子集及 single-rank provider 路径不因此完成。#2738 的 A2/A3 上下文统一仍独立，#2855 batch 暂存不等于已提交/已完成。",
-          "items": [],
-          "health": "residual",
-          "doc": "work-items.md"
-        }
-      ],
-      "note": "状态投影自 work-items.md；退出条件与开工条件分别判断。",
-      "detail": "全目标核验 main <code>937c57efc71a</code>（2026-10-18）；状态投影自 work-items.md；硬件证据保留各自测试 SHA。"
-    },
     {
       "name": "EX 执行与常驻运行",
       "stages": [
@@ -1141,7 +1036,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "资源关闭与域生命周期：契约 D",
       "b": [
-        "#2460/#824/DS-4 共用 logical close、使用接纳与可重试清理规则；源读取结束、目的可消费与整体静止分别证明。",
+        "#2460/#824/#2722 共用 logical close、使用接纳与可重试清理规则；源读取结束、目的可消费与整体静止分别证明。",
         "registry 组织、锁序与 journal 组合仍待裁决；allocation owner 与 graph/grant 的使用引用分开。见 track-boundaries.md 契约 D 与访问/退休契约。"
       ]
     },
@@ -1168,7 +1063,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "常驻控制、域复用与设备窗口清零",
       "b": [
-        "EX-1/EX-2 提供 responsive control 与 STOP/drain；#824/DS-4 提供域 ownership。",
+        "EX-1/EX-2 提供 responsive control 与 STOP/drain；#824/#2722 提供域 ownership。",
         "跨 run 存活不直接证明 K=2 安全：复用窗口清零、completion 和最后消费者必须符合设备 FIFO 及 EX-7 的验收。"
       ]
     },
@@ -1177,7 +1072,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "icon": "◆",
       "t": "硬件 capability 与异步 completion",
       "b": [
-        "#2496/#2721 负责 capability；DS-5/DS-11 负责 transport profile、默认策略与同步/异步 completion。",
+        "#2496/#2721 负责 capability；#2722 负责 transport profile、默认策略与同步/异步 completion。",
         "a5 direct-map 只是条件分支；copy-capable host attachment 不应被它全面挡住。实现状态只见 work-items.md。"
       ]
     }
@@ -1792,6 +1687,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
       {
+        "t": "2026-11-05 · DS 目标通过评论交接既有方向",
+        "b": "判断更正：DS 把部署会话与通信数据面混为一轨，不能因名称含“分布式”整体交给 #2724。11 项逐一交接；清点与域接口两项明确拆分职责，#2722 组织通信场景并消费 #2724 的部署结果。两条交接评论已发布、正文未变；额外 device lease、64-rank 规模及 ResourceBundle 的必要性仍待负责人确认。新判据：交接保留验收合同和具名历史证据，接口依赖不变成整个方向关闭的门槛，发布问题不等于设计已接受；退役本地进度不代表功能完成。"
+      },
+      {
         "t": "2026-11-05 · Qwen 整体目标直接跟踪 #2658",
         "b": "判断更正：README 和看板仍把 Q2–Q4 交给 #2429，并沿用旧 Q1 前置和两帧方案；#2658 与 #2429 正文已明确系统验收归 #2658。新判据：按目标逐项交接 Q1–Q4/C2b；固定容量和 API 形状不自动继承为要求，trace、动态 batch、失败退出等具体场景不得随进度轨退役而丢失。最新负责人评论与旧正文进度分别辨读，本地候选组合不等于上游 main 交付；本轮只核归属，不推进代码基线。"
       },
@@ -2205,7 +2104,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   },
   "delivery": {
     "title": "交付维度：用户已经能做什么",
-    "note": "资源设计和进度直接查 GitHub；本节只列验收入口及 DS/EX 索引。历史 P1/P2/P3 是场景清单，不构成阶段间硬门。具体 API 与 Arena/ResourceBundle 的必要性以 #2721 设计讨论结论为准。",
+    "note": "资源设计和进度直接查 GitHub；本节只列验收入口及 GitHub 方向入口与 EX 索引。历史 P1/P2/P3 是场景清单，不构成阶段间硬门。具体 API 与 Arena/ResourceBundle 的必要性以 #2721 设计讨论结论为准。",
     "items": [
       {
         "t": "P1 · 本地 Buffer–Attachment–Tensor 基础",
@@ -2216,20 +2115,20 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "P2 · 生产级 Multi-L3 通信",
         "s": "退出条件权威 = feature_roadmap.md §5.7",
-        "w": "DS-1 DS-2 DS-3 DS-4 DS-5 DS-9",
+        "w": "#2724 #2722",
         "b": "session、lease、事务、profile 和故障清理共同验收；实现状态只引工作项。"
       },
       {
         "t": "P3 · 暴露异构逻辑域",
         "s": "退出条件权威 = feature_roadmap.md §5.8（六项已于 2026-09-07 编号 ①–⑥）",
-        "w": "#2721 #2720 EX-2 DS-7 DS-10",
+        "w": "#2721 #2720 EX-2 #2722",
         "b": "逐路径明确实际访问、身份与完成；不预设公共 plan/capability/ResourceBundle 对象。问题见 #2721 设计评论，Region 方案见 #2720。"
       },
       {
         "t": "L3/L4 九章 · 场景验收",
         "s": "映射真源 = l3l4.md §1（场景 → 承载工作项 → 验收证据）",
-        "w": "DS-6 #2460 EX-4 EX-3 DS-11 DS-5 DS-8 DS-10 #824 DS-4 EX-1 EX-5",
-        "b": "九章<b>全部有承载，无一落在三条实施线之外</b>；C.1 与 D.1 已交付。本页不再复述九章状态。<br>⭐ <b>2026-09-07 <code>EX-3</code> 拆出 <code>EX-5</code></b>：「能以零容量跑」是<b>验收</b>（P1 退出条件，不等 arena），「删掉 heap-coupled scope reclaim」是<b>迁移终点</b>（等 <code>#2721</code>）。"
+        "w": "#2724 #2722 #2460 EX-4 EX-3 #824 EX-1 EX-5",
+        "b": "九章<b>全部有承载，无一落在既定交付方向之外</b>；C.1 与 D.1 已交付。本页不再复述九章状态。<br>⭐ <b>2026-09-07 <code>EX-3</code> 拆出 <code>EX-5</code></b>：「能以零容量跑」是<b>验收</b>（P1 退出条件，不等 arena），「删掉 heap-coupled scope reclaim」是<b>迁移终点</b>（等 <code>#2721</code>）。"
       },
       {
         "t": "P0.2 结构性 follow-up · 超出里程碑退出条件的那部分",
@@ -2246,8 +2145,8 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       {
         "t": "统一 Tensor/Buffer 公共模型 · issue #2460",
         "s": "父 issue #2460（我开的）；U1a–U4 六个交付单元，实施归属见 work-items.md",
-        "w": "#2460 DS-3",
-        "b": "U1a→#2460；U1b/U2b→#2460；U2a→#2460；U3→DS-3；U4→#2460。U4 要等 network→H2D 合并验收与契约 D。"
+        "w": "#2460 #2722",
+        "b": "U1a→#2460；U1b/U2b→#2460；U2a→#2460；U3→#2722；U4→#2460。U4 要等 network→H2D 合并验收与契约 D。"
       },
       {
         "t": "Device workspace ownership / 有界资源",
@@ -2274,7 +2173,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "issue": 2460,
       "title": "统一模型、绑定、迁移与关闭",
       "url": "https://github.com/hw-native-sys/simpler/issues/2460",
-      "scope": "U1a/U1b/U2a/U2b/U4；#1931 身份校验、#2888 COW 清理；平台接入衔接 #2497，Remote 消费由 DS-3 引用同一合同。"
+      "scope": "U1a/U1b/U2a/U2b/U4；#1931 身份校验、#2888 COW 清理；平台接入衔接 #2497，Remote 消费由 #2722 引用同一合同。"
     },
     {
       "issue": 2720,
@@ -2292,7 +2191,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "issue": 824,
       "title": "通信域跨 run 寿命",
       "url": "https://github.com/hw-native-sys/simpler/issues/824",
-      "scope": "归 #2722；公共关闭与接纳合同引用 #2460，远端 lease／回收与 DS-4 交接。"
+      "scope": "归 #2722；公共关闭与接纳合同引用 #2460，远端 lease／回收与 #2722 交接。"
     },
     {
       "issue": 2666,
@@ -2307,6 +2206,20 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "url": "https://github.com/hw-native-sys/simpler/issues/2658",
       "title": "四仓真实模型 HBG × Async 整体验收",
       "scope": "Q1–Q4、C2b → M0–M4；目标、交付与进度查 GitHub。旧方案及验收要求见交接对照。#2429/#2666 保留 vLLM 接入与执行资源范围。"
+    }
+  ],
+  "communicationReferences": [
+    {
+      "issue": 2724,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2724",
+      "title": "Worker 部署、会话与任务路由",
+      "scope": "启动/发现、实际部署信息、session/epoch、连续任务、结果返回与退出观察；设计问题见交接评论。"
+    },
+    {
+      "issue": 2722,
+      "url": "https://github.com/hw-native-sys/simpler/issues/2722",
+      "title": "通信域、跨机数据传输与后端",
+      "scope": "成员/rank、事务、域寿命、传输/完成、Host 场景及故障回收；规模与公共组合类型的必要性待设计讨论。"
     }
   ]
 }
@@ -2591,6 +2504,8 @@ les.innerHTML = `<summary>${D.lessons.title}（${D.lessons.items.length} 条）<
 
 const integrationList=document.getElementById('integration-reference-list');
 integrationList.innerHTML=D.integrationReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
+const communicationList=document.getElementById('communication-reference-list');
+communicationList.innerHTML=D.communicationReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const resourceList=document.getElementById('resource-reference-list');
 resourceList.innerHTML=D.resourceReferences.map(r=>`<div class="lesson"><h4><a href="${r.url}">#${r.issue} · ${r.title}</a></h4><p>${r.scope}</p></div>`).join('');
 const clog=document.getElementById('changelog');

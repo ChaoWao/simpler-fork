@@ -1,8 +1,8 @@
 # 目标来源与覆盖口径
 
-> **发布快照：2026-11-05。** 本轮为资源与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
-> **2026-11-05 交接覆盖**：82 个文档载体、604 个来源编号均有归属；工作索引保留 6 个资源 GitHub 入口、11 项 DS 与 7 项 EX，Qwen 的 Q1–Q4/C2b 由 #2658 直接跟踪。PR/Issue 登记覆盖以本次守卫输出为准，以下具名历史审计基线保持原日期。编号完整不等于功能全部实现。
+> **2026-11-05 交接覆盖**：83 个文档载体、604 个来源编号均有归属；工作索引保留 8 个资源/部署/通信 GitHub 入口与 7 项 EX，Qwen 的 Q1–Q4/C2b 由 #2658 直接跟踪。PR/Issue 登记覆盖以本次守卫输出为准，以下具名历史审计基线保持原日期。编号完整不等于功能全部实现。
 >
 > **2026-11-04 编号与归属复核**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；本地来源全部重新提取，原有外部来源重新读取，#2716 30 节点 / 29 边及决定评论纳入索引。#2429 当前五项验收单独编号；历史编号保留原义。源码/CI 的当前具名核对见 [证据与动作](review/track-2716.md)，下面旧日期的计数与全量代码审计不自动前移。
 >
@@ -15,9 +15,9 @@
 ## 1. 本轮判断与剩余工作
 
 - U2a 显式 HOST 消费已由 #2501 交付；仍未完成的 mapping/跨进程能力继续归 #2496/#2460。
-- 统一 chip materialization 已由 #2597 交付；统一 Buffer 的全部 IO/远端/close 契约仍分属 #2460、DS-3、#2460。
+- 统一 chip materialization 已由 #2597 交付；统一 Buffer 的全部 IO/远端/close 契约仍分属 #2460、#2722、#2460。
 - #2571/#2596 提供 grant 与自动准入；真实 Qwen 的 clone/DEVICE/持续请求已有 #2511/#2568/#2592。自动模式与真实模型组合、任意动态到达及系统性能证明归 #2658；EX-7/#2666 保留程序与资源合同，不用旧“三套资源上限”描述当前通用能力。
-- #2594 的七项验收归 DS-6 及其 owner/Buffer/close 交接；#2598 只提供三种 session cleanup 结果观测，不关闭 DS-1/DS-4。
+- #2594 的七项验收归 #2724/#2722 及其 owner/Buffer/close 交接；#2598 只提供三种 session cleanup 结果观测，不关闭 #2724/#2722。
 - `simpler-pr-list.html` 的 42 项和本地别名纳入来源全集；ABORT poison、RDMA 空 provider 两条旧判断已证伪。候选页保留历史排期标记，当前状态只查工作项。
 - #2450 CLOSED/COMPLETED 不等于 KV alias 已实现：main 仍拒绝同任务重叠写。KV-R1–R5 保留在 #2721。#2425 历史故障由关闭评论列出的 #2426/#2435/#2476 收口；#2559 是独立新现象，不能假设同因。
 - kernel 范围排除与契约 D 的 registry 组织仍待用户裁决；保持既定边界，不因此阻止 consumer 保护或本地 owner 工作。
@@ -80,18 +80,18 @@
 | #2721 | `src/a2a3/platform/onboard/host/device_runner.cpp::register_device_memory_to_host` | DEV_SVM_MAP_HOST 仍传 device_id_；符号 acl_to_hal_device_id 0、halHostRegister 16 为阳性对照 |
 | #2496/#2460 | `src/common/host_build_graph/host/host_tensor_access.cpp；python/simpler/comm_endpoints.py` | HOST/NONE 显式访问已在；旧 acquire_child_memory_host_view 在 accessor 0，HOST/NONE 条件各 1；HOST_SVM_MAP 注释仍明确无 producer |
 | #2720 | `python/simpler/worker.py::_chip_child_allocate_domain；src/common/platform/include/common/region_template.h 与 SPSC 入口` | window offset 顺序累加，未按 cache line padding；模板存在不等于通用 Buffer slice 绑定完成 |
-| #2460/DS-3 | `src/common/task_interface/task_args_wire.h；python/simpler/remote_l3_protocol.py` | 本地 TaskArgs transfer 已有；Remote PROTOCOL_VERSION=4，仍不能表达全部新 entry request |
+| #2460/#2722 | `src/common/task_interface/task_args_wire.h；python/simpler/remote_l3_protocol.py` | 本地 TaskArgs transfer 已有；Remote PROTOCOL_VERSION=4，仍不能表达全部新 entry request |
 | #2721 | `src/common/hierarchical/orchestrator.cpp；src/common/task_interface/task_args_wire.h` | lookup_overlapping/tensor_footprint 基座保留；同任务重叠写拒绝分支仍在 |
 | #2721/EX-5 | `python/simpler/worker.py::alloc_shared_tensor` | self._orch._o.alloc 仍分配 FORK_SHM，scope heap 使用者未迁完；三种候选 arena 名 0，alloc_shared_tensor 2/实际 alloc 1 为对照 |
-| #2721/DS-8 | `python/simpler/comm_endpoints.py；python/simpler/global_comm_domain.py；worker.py::_global_domain_attachment_matrix` | 共同 capability、typed attachment 与 copy 访问已有；ResourceBundle 多 backing/host 组合及用户可见 completion 要逐路径联验 |
-| #824/DS-6 | `python/simpler/task_interface.py::CommDomainHandle/GlobalCommDomainHandle；worker.py::_release_global_domain_handle` | 两类公开 handle 仍分开；detach_persistent_domain 0、retain_after_run 4；后续构建 run fence deferral 已有 |
+| #2721/#2722 | `python/simpler/comm_endpoints.py；python/simpler/global_comm_domain.py；worker.py::_global_domain_attachment_matrix` | 共同 capability、typed attachment 与 copy 访问已有；ResourceBundle 多 backing/host 组合及用户可见 completion 要逐路径联验 |
+| #824/#2724/#2722 | `python/simpler/task_interface.py::CommDomainHandle/GlobalCommDomainHandle；worker.py::_release_global_domain_handle` | 两类公开 handle 仍分开；detach_persistent_domain 0、retain_after_run 4；后续构建 run fence deferral 已有 |
 | #2460 | `python/simpler/task_interface.py::_materialize_chip_task_args；worker.py::_materialize_l2_args` | 三类 chip 入口使用同一转换，callable/source retention 仍归调用者；singleton stride 旧规则仍在 tensor.h |
 | #2460 | `python/simpler/buffer.py::Buffer.close；src/common/worker/chip_run_lane.cpp；native_run_storage_tag.h` | host close 直接 unmap/unlink；verified prepare rollback 和 unstarted launch proof 已在，launch 异常 owner 后续 #2615 尚 OPEN |
 | #2666/EX-3/EX-7 | `src/common/platform/include/host/auto_admission.h；workspace_manager.h；python/simpler/worker.py` | 四种 onboard program 的 auto admission、内部预算与源保留边界；caller allocation 不转移 ownership，自动模式排除 topology 必须保留 |
-| DS-1/DS-2/DS-4 | `worker.py::_release_remote_sessions/_close_mpirun_groups；python/simpler/mpi_l3_group.py` | main session_cleanup_reports 0、两种既有清理方法各 2；#2598 的新观测不在 main；lease/epoch/全员确认仍是退出条件 |
-| DS-5/DS-11 | `src/a5/platform/onboard/host/comm_hccl.cpp::init_rdma_workspace；examples/workers/l4/global_tload_mpirun_l3/main.py` | RDMA bootstrap/workspace 已有；MPI 验金仍为 max_diff > 1e-3；#2026 未合入，不从旧 CI 绿推导全平台验收 |
-| DS-7 | `python/simpler/global_comm_domain.py；src/common/platform_comm/comm_context.h` | 全域 rank 布局仍有 64 上限，规模扩展独立于小规模组合 |
-| DS-9/DS-10 | `worker.py::_allocate_global_domain` | 普通/MPI ABORT 失败都 record_unreclaimable，PREPARE/IMPORT/COMMIT/ABORT 已有；生产 lease 和异构组合不能由该事务单独证明 |
+| #2724/#2722 | `worker.py::_release_remote_sessions/_close_mpirun_groups；python/simpler/mpi_l3_group.py` | main session_cleanup_reports 0、两种既有清理方法各 2；#2598 的新观测不在 main；lease/epoch/全员确认仍是退出条件 |
+| #2722 | `src/a5/platform/onboard/host/comm_hccl.cpp::init_rdma_workspace；examples/workers/l4/global_tload_mpirun_l3/main.py` | RDMA bootstrap/workspace 已有；MPI 验金仍为 max_diff > 1e-3；#2026 未合入，不从旧 CI 绿推导全平台验收 |
+| #2722 | `python/simpler/global_comm_domain.py；src/common/platform_comm/comm_context.h` | 全域 rank 布局仍有 64 上限，规模扩展独立于小规模组合 |
+| #2722 | `worker.py::_allocate_global_domain` | 普通/MPI ABORT 失败都 record_unreclaimable，PREPARE/IMPORT/COMMIT/ABORT 已有；生产 lease 和异构组合不能由该事务单独证明 |
 | EX-1/EX-2 | `src/common/hierarchical/worker_manager.cpp::make_next_level_threads/make_sub_threads；worker.py::_run_mailbox_loop` | 请求帧与 run entries 分离；NEXT_LEVEL 传 granted_sets，SUB 默认；常驻 STOP/drain 与各拓扑长期 control 仍单独验收 |
 | EX-4 | `python/simpler/worker.py callable registry；tests/st 的 dynamic_register` | #1938 对不同 callable 输出的可失败观测仍 OPEN，改名/统一入口不代替身份验收 |
 | EX-6 | `worker.py::_teardown_worker_tree；tests/ut/py/test_cancellation_journal.py` | add_once(kind, identity, cleanup) 与 release-before-transport journal 仍在；新增 Buffer/domain/预算目标另归 #824/#2460/#2666 |
@@ -107,12 +107,12 @@
 | P0.2/done-followup.md（本地参考：`P0.2/done-followup.md`） | P0 已交付证据；EX-6 终态回收 |
 | P0.2/done.md（本地参考：`P0.2/done.md`） | P0 已交付证据；EX-6 终态回收 |
 | [README.md](README.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
-| [cpu-npu-shared-memory.md](cpu-npu-shared-memory.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
-| [cpu-npu-shared-memory/domain-member-vs-attachment.md](cpu-npu-shared-memory/domain-member-vs-attachment.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
-| [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
-| [cpu-npu-shared-memory/hardware-constraints.md](cpu-npu-shared-memory/hardware-constraints.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
-| [cpu-npu-shared-memory/w2-w5-inversion.md](cpu-npu-shared-memory/w2-w5-inversion.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
-| [cpu-npu-shared-memory/work-breakdown.md](cpu-npu-shared-memory/work-breakdown.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；DS-8/DS-9/DS-10；EX-2 |
+| [cpu-npu-shared-memory.md](cpu-npu-shared-memory.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory/domain-member-vs-attachment.md](cpu-npu-shared-memory/domain-member-vs-attachment.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory/domain-membership.md](cpu-npu-shared-memory/domain-membership.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory/hardware-constraints.md](cpu-npu-shared-memory/hardware-constraints.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory/w2-w5-inversion.md](cpu-npu-shared-memory/w2-w5-inversion.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
+| [cpu-npu-shared-memory/work-breakdown.md](cpu-npu-shared-memory/work-breakdown.md) | #2721 公共资源；#2496/#2497 平台映射；#824 域寿命；#2722；EX-2 |
 | deleted-closed-branches.md（本地参考：`deleted-closed-branches.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | dfx/c2a-hierarchical-trace.md（本地参考：`dfx/c2a-hierarchical-trace.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
 | dfx/host-swimlane-delivered.md（本地参考：`dfx/host-swimlane-delivered.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
@@ -125,12 +125,12 @@
 | [goal-coverage.md](goal-coverage.md) | 目标来源、范围与证据清单；不另维护实现状态 |
 | hbg-requirements.html（本地参考：`hbg-requirements.html`） | 范围排除：kernel / HBG 硬件；仅保留约束证据 |
 | [l3l4.md](l3l4.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
-| [l3l4/cluster-comm.md](l3l4/cluster-comm.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
-| [l3l4/inventory.md](l3l4/inventory.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
-| [l3l4/lazy-init.md](l3l4/lazy-init.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
-| [l3l4/memory-kinds.md](l3l4/memory-kinds.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
-| [l3l4/remote-startup.md](l3l4/remote-startup.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
-| [l3l4/scheduling.md](l3l4/scheduling.md) | 场景验收：#2460、DS-5…DS-11、EX-1…EX-5 |
+| [l3l4/cluster-comm.md](l3l4/cluster-comm.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/inventory.md](l3l4/inventory.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/lazy-init.md](l3l4/lazy-init.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/memory-kinds.md](l3l4/memory-kinds.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/remote-startup.md](l3l4/remote-startup.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
+| [l3l4/scheduling.md](l3l4/scheduling.md) | 场景验收：#2460、#2722/#2724、EX-1…EX-5 |
 | [logical-physical-separation.md](logical-physical-separation.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | maintainer-loop-prompt.md（本地参考：`maintainer-loop-prompt.md`） | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | others-ref/host-trace-log-design/README.md（本地参考：`others-ref/host-trace-log-design/README.md`） | DFX 已交付证据 / 外部 follow-up；T7 跨 host 不归三线 |
@@ -147,6 +147,7 @@
 | others-ref/worker-async-pipeline/trace-v1.md（本地参考：`others-ref/worker-async-pipeline/trace-v1.md`） | 已交付流水线编号；执行契约由 EX-1/EX-7 承接 |
 | review/2026-08-11-code-vs-design-audit.md（本地参考：`review/2026-08-11-code-vs-design-audit.md`） | AR/AF 审计：work-items 吸收列 |
 | [review/ra-handoff.md](review/ra-handoff.md) | 资源旧编号的静态交接；进度查 GitHub |
+| [review/ds-handoff.md](review/ds-handoff.md) | #2724/#2722：旧分布式目标、验收和评论交接；不维护进度 |
 | [review/qwen-handoff.md](review/qwen-handoff.md) | #2658：Qwen 旧目标与验收的静态交接，不维护进度 |
 | [review/2026-09-28-cross-plan-lessons.md](review/2026-09-28-cross-plan-lessons.md) | 只读来源评估；现行约束见访问与退休契约、用户面及分线 C/D |
 | review/p0.2-design.md（本地参考：`review/p0.2-design.md`） | P0 已交付证据；EX-6 终态回收 |
@@ -175,7 +176,7 @@
 | [w2-p1b-endpoint-convergence.md](w2-p1b-endpoint-convergence.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [work-items.md](work-items.md) | 入口、约束、归属/里程碑或历史证据；不创建独立实现目标 |
 | [worker-memory-model.md](worker-memory-model.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
-| [worker-memory-model/access-retirement-contract.md](worker-memory-model/access-retirement-contract.md) | 无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、DS-3/DS-4、EX-7；kernel/DFX 实现仍范围外 |
+| [worker-memory-model/access-retirement-contract.md](worker-memory-model/access-retirement-contract.md) | 无编号的接纳/完成/退休/预算/capture/六组联验 → work-items §6 的 #2460/#2666、#2722、EX-7；kernel/DFX 实现仍范围外 |
 | [worker-memory-model/backend-matrix.md](worker-memory-model/backend-matrix.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [worker-memory-model/bufferhandle-abi.md](worker-memory-model/bufferhandle-abi.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
 | [worker-memory-model/graph-execution-contract.md](worker-memory-model/graph-execution-contract.md) | RA 资源/访问/ABI；GE 交接约束按 §6 |
@@ -185,7 +186,7 @@
 
 ## 5. 非空登记与验证口径
 
-11 条 check-*.py 覆盖章节、依赖、可达性、GitHub 状态、main 合入与 open 登记、投影状态、渲染结构、撤回、单归属、引用同步。merged 守卫保留 `01bf24bfa..937c57efc` 的 79 条非空区间，避免基线前移变成空检查。阴性案例必须配阳性：删实际新合入 PR 的全部登记、删新编号归属，守卫应失败；完整输入必须通过。本轮 11 条守卫全绿；移除 #2616 登记、移除 DOMAIN-A7 归属两个负对照均被守卫拒绝，完整输入通过。浏览器 1500/390 宽度均有 65 行、无脚本错误或横向溢出；DS-6 提示与 changelog 展开通过。仅核源码、现有 CI 证据与文档，本轮未重新执行硬件组合验收。
+11 条 check-*.py 覆盖章节、依赖、可达性、GitHub 状态、main 合入与 open 登记、投影状态、渲染结构、撤回、单归属、引用同步。merged 守卫保留 `01bf24bfa..937c57efc` 的 79 条非空区间，避免基线前移变成空检查。阴性案例必须配阳性：删实际新合入 PR 的全部登记、删新编号归属，守卫应失败；完整输入必须通过。本轮 11 条守卫全绿；移除 #2616 登记、移除 DOMAIN-A7 归属两个负对照均被守卫拒绝，完整输入通过。浏览器 1500/390 宽度均有 65 行、无脚本错误或横向溢出；#2724/#2722 提示与 changelog 展开通过。仅核源码、现有 CI 证据与文档，本轮未重新执行硬件组合验收。
 
 ## 6. 本轮 main 合入清单
 
@@ -207,7 +208,7 @@
 | #2597 | `e994e106d8020c049dc419a67498db37bc6fcd3d` | #2460 / #2460 |
 | #2595 | `8c3b0e174cb41acb13bcb2d49baeb68b38ad82ba` | #2460 / #2460 |
 | #2592 | `1a8a3ee221968ec397588db070089354806c84c5` | EX-7；外部 Qwen 集成 |
-| #2593 | `3351950f4b0fdbd60523ea63266b321ab12f5f2e` | DS-6 / #824 |
+| #2593 | `3351950f4b0fdbd60523ea63266b321ab12f5f2e` | #2724/#2722 / #824 |
 | #2576 | `cc6c4d51f79e98af5ef07829e3ca71c36f752a43` | 范围外 runtime/HBG 实现 |
 | #2575 | `e2e7405493417eaa78f0a03ee8afe25a8c947f63` | 范围外 CI/测试/文档/打包 |
 | #2566 | `e9e04fe3b0942e4652e2e4b3f5f6ced3d66a00ac` | 范围外 runtime/HBG 实现 |

@@ -1,6 +1,6 @@
 # Remote L3 启动与接口
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` §A + §C.2。
 
@@ -59,7 +59,7 @@ L4 管理本地 L3 走 fork/共享内存，是三阶段：
 - **启动/发现**：mpirun 按部署配置启动 L3，rank 0 落在 L4 父进程所在主机，manifest 通过 MPI 广播。
   显式主机配置不等于通用自动发现，但不要求用户先部署 Simpler daemon。
 - **建域控制**：MPI descriptor/status exchange 与现有 PREPARE_EXPORT/IMPORT/COMMIT/ABORT；
-  session epoch、lease 与故障回收仍按 DS-1/DS-2/DS-9 验收。
+  session epoch、lease 与故障回收仍按 #2724/#2722 验收。
 - **设备数据**：A3 Fabric V2 共享窗口由 ACL 分配/导出/导入，kernel 通过 TLOAD/MTE 访问。
   沿用原生 ACL/PTO 路径；不新增 SHMEM 库或强制 HCCL/HCOMM 建域前置。
 
@@ -115,22 +115,22 @@ HCCL 初始化 device communicator，不启动或发现 L3；本地文件式 roo
 
 ### A.3 后续验收
 
-1. **原生 backend 能力**：A3 HCCS 数据面已在 #1456；其他互连适配归 DS-5，
+1. **原生 backend 能力**：A3 HCCS 数据面已在 #1456；其他互连适配归 #2722，
    按硬件、CANN/PTO 版本、同步/completion 和回收证据验收。
-2. **启动与发现**：DS-6 承接 mpirun 部署、rank 放置与跨-L3 接口；HCCL 不承担 L3 服务发现。
-3. **建域事务**：DS-2/DS-9 在已有 MPI exchange 与阶段协议上补生产合同，
+2. **启动与发现**：#2724/#2722 承接 mpirun 部署、rank 放置与跨-L3 接口；HCCL 不承担 L3 服务发现。
+3. **建域事务**：#2724/#2722 在已有 MPI exchange 与阶段协议上补生产合同，
    HCCL rootInfo 带外分发仅适用于选择该 collective adapter 的路径。
 4. **窗口与权限**：A3 Fabric V2 已支持跨机；remote direct Attachment、owner-delegated copy、
    显式 Transfer 的能力与身份仍分别验证，不能用 HCCL collective 透明替代 peer-window 访问。
 5. **启动顺序**：本地 eager init 与 fork-before-thread 是已有约束；禁止恢复 lazy fork、
    `init()+_start_hierarchical()` 双调用或 pre-fork 打开 remote session。
 6. **参数/任务边界**：张量布局、OUTPUT 分配、remote attachment 与 callable 身份的验收
-   分别归 #2460/DS-3/EX-4；不能用共享窗口已通替代 wire consumer 的完整验收。
+   分别归 #2460/#2722/EX-4；不能用共享窗口已通替代 wire consumer 的完整验收。
 
 ### A.4 落地路径
 
-复用 mpirun/mailbox 与 A3 共享窗口基座，按 DS-1/DS-2/DS-9 补会话和成员事务的失败闭环；
-DS-4 负责远端生命周期与回收，DS-5 负责其他原生通信 backend，DS-10 联验异构组合。
+复用 mpirun/mailbox 与 A3 共享窗口基座，按 #2724/#2722 补会话和成员事务的失败闭环；
+\#2722 负责远端生命周期与回收，#2722 负责其他原生通信 backend，#2722 联验异构组合。
 这些是工作项的完整退出条件；不要求先部署独立 daemon，也不将 backend 实作串行锁在所有前项后面。
 
 ---

@@ -1,10 +1,10 @@
 # Simpler 功能演进路线图
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > **资源设计口径**：共同原则以 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 为准，实施与迁移查 [#2460](https://github.com/hw-native-sys/simpler/issues/2460)。下文两套 Arena、公共 ResourceBundle／plan／capability 及额外 grant 策略的旧方案不构成已确认交付要求；必要性见 [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)。保留场景与验收要求，历史 API 形状不当作当前承诺。
 >
-> **交付组织**：[#2716 四方向与子树](review/track-2716.md) 承载完整业务目标；本文保留里程碑/场景验收视图，GitHub 资源入口与 DS/EX 是共同合同索引。单 L2 Run 多轮常驻、L3 进程复用、重复 run 分别验收；具体实施与证据见 work-items。
+> **交付组织**：[#2716 四方向与子树](review/track-2716.md) 承载完整业务目标；本文保留里程碑/场景验收视图，GitHub 资源/通信/部署入口与 EX 是共同合同索引。单 L2 Run 多轮常驻、L3 进程复用、重复 run 分别验收；具体实施与证据见 work-items。
 >
 > 状态：架构路线图。P0.1 eager-init core 与 P0.2 lifecycle/teardown
 > correctness 已交付；P0.2 的 admission、动态 eligibility、cooperative init
@@ -32,7 +32,7 @@
 > ⇒ **本文凡出现「simulation remote」，读作「`host_tcp` remote transport」**；
 > 它**不是模拟器**。启动/控制 transport 不能代表设备数据面；当前主路径为 mpirun，
 > A3 HCCS 的 Fabric V2 共享窗口与 peer-TLOAD 已有交付。通信沿用原生 ACL Runtime + PTO；
-> session/lease/partition recovery 仍按 DS-1/DS-4 验收。通信定点基线 `68d137fdf`（2026-10-13），详见 §1.3。；
+> session/lease/partition recovery 仍按 #2724/#2722 验收。通信定点基线 `68d137fdf`（2026-10-13），详见 §1.3。；
 > ⚠️ **#1599 已合入 ≠ P1-A 达成**：它冻结了 byte layout，而本文 §5.6 P1-A 条列的
 > 实现级 merge gate **在合入时一条未闭**。收口进度见 §5.6 P1-A 与
 > [状态看板](README.md) §1.1；`tasks/task-p1a-close-merge-gates.md`（本地参考：`tasks/task-p1a-close-merge-gates.md`）
@@ -287,8 +287,8 @@ SHMEM 仅为实现参考，不依赖其库；不增加 SHMEM 库适配、heap/te
 本地 `comm_init` 的 HCCL rootInfo/barrier 与 Global Fabric 窗口是不同路径；
 不要求先建立跨机 HCCL world 才能使用已有 A3 共享窗口。
 
-CommContext 的 64-rank ABI、持久化 ownership、生产会话与失败回收分别归 DS-7、#824/DS-4、
-DS-1/DS-9；不能从已有代码或历史测试通过推导这些目标全部完成。
+CommContext 的 64-rank ABI、持久化 ownership、生产会话与失败回收分别归 #2722、#824/#2722、
+\#2724/#2722；不能从已有代码或历史测试通过推导这些目标全部完成。
 具名函数、原生通信层次与后续验收见 [通信方案 D.4](l3l4/cluster-comm.md#d4-remote-l3-通信mpirun--共享窗口)。
 
 ## 2. 生命周期、Worker API 与四类内存
@@ -1532,7 +1532,7 @@ Remote L4 或跨 L3 CommDomain 已完成。
 > P3 验收组合后的用户能力）。
 >
 > ⛔ **但「谁负责实现、什么挡着什么」不在这里** —— 那是 **`.docs/work-items.md`** 的
-> GitHub 资源入口与两条本地验收线（`RA` 资源与访问 · `DS` 分布式会话与通信域 · `EX` 执行与常驻运行），
+> GitHub 资源、通信与部署入口以及 `EX` 执行验收索引；旧 RA/DS 编号仅供历史交接，
 > **依赖写在具体工作项之间，不写在阶段之间**。
 >
 > 这条区分是被观测逼出来的，两个例子：
@@ -1980,7 +1980,7 @@ unwired、受限并按上述 lifecycle/L4 scope 条件单独验证，不能借�
 A3 数据路径有当前代码与持续双机 PR CI 证据，近期具名测试 SHA 逐项通过（见通信方案 D.4）；PREPARE_EXPORT/IMPORT/COMMIT/ABORT 与 MPI readiness 已有基座。
 P2 要补齐的是生产级 session/epoch、lease、成员冻结与失败后确定性回收，
 不能写成跨机通信或建域事务从零实现。`host_tcp` 的限制只适用于该控制 transport。
-各原生 backend 验收归 DS-5；SHMEM 仅为实现参考，不增加库依赖或 HCCL/HCOMM 必选建域路线。
+各原生 backend 验收归 #2722；SHMEM 仅为实现参考，不增加库依赖或 HCCL/HCOMM 必选建域路线。
 
 [Issue 824][issue-824] 的 local-only domain persistence 与 remote transaction
 可以分 PR，但不是简单跳过 run fence：#1466 已把 domain/region/remote refs
@@ -2029,9 +2029,9 @@ transaction 约束。
 
 **保留的是真实的远端安全门，按工作项表达**（真源 `.docs/work-items.md`）：
 
-- 远端资源的 lease、断连与回收（`DS-4`）**必须**在 MPI session owner 拥有 session/epoch registry
-  （`DS-1`）与成员事务执行（`DS-9`）之后 —— 没有事务就没有可回滚的远端状态。
-- 后续 onboard backend（`DS-5`）**不能**与 session transaction 合成一次大切换。
+- 远端资源的 lease、断连与回收（`#2722`）**必须**在 MPI session owner 拥有 session/epoch registry
+  （`#2724`）与成员事务执行（`#2722`）之后 —— 没有事务就没有可回滚的远端状态。
+- 后续 onboard backend（`#2722`）**不能**与 session transaction 合成一次大切换。
   这一条是原文里唯一真正的「不许合并」，与阶段编号无关。
 - **本地**的 per-worker domain ownership（`#824`）**不受**上述门约束。
 
@@ -2052,14 +2052,14 @@ transaction 约束。
 
 | P2 退出条件（逐条） | 承载 |
 | ------------------- | ---- |
-| 一个 L4 能创建、复用和销毁跨 Local/Remote L3 的通信域 | `DS-10` |
-| 任意 rank 部分失败时完成**确定性清理** | `DS-9`（PREPARE/COMMIT/ABORT ＋ 回滚） |
-| ACK'd remote 标 confirmed-clean；未 ACK 明确返回 cleanup-unconfirmed；finite lease 最终回收 | `DS-4` |
-| CANCEL/SHUTDOWN 重传具有**幂等 terminal outcome** | `DS-9` |
-| 健康长任务不会被 command deadline 冒充为 session health failure（三者必须相互独立） | `DS-4` |
-| remote direct Attachment 与 explicit Transfer 在 identity / completion / 可观测 data-path 上严格区分 | `DS-3`（本地那半＝`#2460`） |
+| 一个 L4 能创建、复用和销毁跨 Local/Remote L3 的通信域 | `#2722` |
+| 任意 rank 部分失败时完成**确定性清理** | `#2722`（PREPARE/COMMIT/ABORT ＋ 回滚） |
+| ACK'd remote 标 confirmed-clean；未 ACK 明确返回 cleanup-unconfirmed；finite lease 最终回收 | `#2722` |
+| CANCEL/SHUTDOWN 重传具有**幂等 terminal outcome** | `#2724`；域资源释放结果对接 `#2722` |
+| 健康长任务不会被 command deadline 冒充为 session health failure（三者必须相互独立） | `#2724` |
+| remote direct Attachment 与 explicit Transfer 在 identity / completion / 可观测 data-path 上严格区分 | `#2722`（本地那半＝`#2460`） |
 
-⇒ **六条全部有承载，且都在 `DS` 线内**（`#2460` 是它的本地对应物）。
+这六条是部署与通信的联合验收：#2724 提供会话、任务取消和退出观察，#2722 负责通信域与数据面的完成/清理；公共资源合同消费 #2460。具体 lease/registry 必要性按 [交接问题](review/ds-handoff.md) 确认，不预设另一套公共对象。
 
 ### 5.8 P3：暴露异构逻辑域
 
@@ -2098,10 +2098,10 @@ remote session/transfer/attachment plan，P3 才把它们组合成用户可选�
 | — | 归属 | 验收怎么拆 |
 | - | ---- | ---------- |
 | **①** endpoint 与 capability view | `#2721` | 与 P1/W2 共同设计，**逐 backend 交付** |
-| **②** 多 backing / adapter 的 ResourceBundle | 本地半 `#2721` · 跨节点半 `DS-10` | 先定义组合与失败语义，**先验收本地域，再验收跨节点域** |
+| **②** 多 backing / adapter 的 ResourceBundle | 本地半 `#2721` · 跨节点半 `#2722` | 先定义组合与失败语义，**先验收本地域，再验收跨节点域** |
 | **③** 暴露 plan / capability / completion | `#2721` | **随每条访问路径一起交付**，成为 P1/P2 的接口要求，不单独排一段 |
 | **④** 最小同步原语与 SPSC queue | `#2720`（原语）· 上层库（schema/policy）· `EX-2`（常驻循环） | 与 W4①/W6 **合成同一工作包**，不重复排期 |
-| **⑤** 64-rank 上限改造 | `DS-7` | **独立的规模扩展工作包**，不阻塞小规模域先行交付 |
+| **⑤** 64-rank 上限改造 | `#2722` | **独立的规模扩展工作包**，不阻塞小规模域先行交付 |
 | **⑥** 验收后才发 capability view | **不是工作项，是约束** | 加在 `#2721` 上并传导到 `#2721`/`#2721` |
 
 ⇒ ⭐ **本地异构域与 SPSC 示例无需等待全部远端可靠性工作完成**；跨节点异构域仍必须过
@@ -2207,7 +2207,7 @@ session、事务及故障清理验收；64-rank 扩展也不阻塞小规模域�
   narrowed 五态 lifecycle/terminal CLOSED 共同构成后续基线；任何公开 API
   都不得重新承担 lazy startup，后续也不得把 #1398 的 deferred gap 写成已交付。
 - A3 HCCS 数据面与 MPI 启动/派发已有交付；生产 session/lease/partition recovery
-  仍按 DS-1/DS-4/DS-9 验收。控制 transport 字符串与单个拓扑用例的边界，不能代表全部数据路径。
+  仍按 #2724/#2722 验收。控制 transport 字符串与单个拓扑用例的边界，不能代表全部数据路径。
 
 - 每个仍需创建 local child 的进程都保持 fork-before-thread invariant；fork 前
   只能准备不连接 daemon、不启动线程的 remote spec/descriptor。

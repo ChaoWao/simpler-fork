@@ -1,8 +1,8 @@
 # 通信 review 与改造
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
-> **当前启动/建域/数据面契约见 §D.4**（`68d137fdf`，2026-10-13）。§D.5 保留旧调查与反证史，不作为实施清单；状态只引 DS-1/DS-5/DS-6/DS-9/DS-10。
+> **当前启动/建域/数据面契约见 §D.4**（`68d137fdf`，2026-10-13）。§D.5 保留旧调查与反证史，不作为实施清单；当前目标与进度查 #2724/#2722。
 >
 > ⛔ **本文 §D.5 描述的机制有一半已被实现取代 —— 引用前必须先核对。**
 > （措辞与 [`memory-kinds.md`](memory-kinds.md) 的 ⛔ banner 同源，处置方式相同。）
@@ -34,8 +34,8 @@
 | **D.1** L3 为多 L2 建域 | 已实现(sim + a2a3/a5 onboard) | `orch.allocate_domain` 为同一 L3 下的 chip 子集建对称 device 窗口 |
 | **D.2** 同步/异步模型 | 同步已实现；异步按 capability 分层 | A2/A3 SDMA 由 Worker opt-in；A5 SDMA/URMA provider 常编译，域按需显式申请 workspace；批量暂存与延后完成分别验收 |
 | **D.3** 对端无感/host+device 同域 | 对称同域**未实现**;host↔L2 点对点**部分实现** | host 不是域内 rank；URMA backend 存在不等于 host-peer domain 已可用 |
-| **D.4** remote L3 通信 | 见 DS-6 | 主路径为 mpirun + MPI mailbox；A3 Fabric 共享窗口的数据访问独立于 task/control transport。见 §D.4。 |
-| **D.5** L4 为多 L3 建域 | 见 DS-9 / DS-10 | PREPARE_EXPORT/IMPORT/COMMIT/ABORT 已有；异构组合与生产回收按工作项验收。历史调查见 §D.5，当前契约见 §D.4。 |
+| **D.4** remote L3 通信 | 见 #2724/#2722 | 主路径为 mpirun + MPI mailbox；A3 Fabric 共享窗口的数据访问独立于 task/control transport。见 §D.4。 |
+| **D.5** L4 为多 L3 建域 | 见 #2722 / #2722 | PREPARE_EXPORT/IMPORT/COMMIT/ABORT 已有；异构组合与生产回收按工作项验收。历史调查见 §D.5，当前契约见 §D.4。 |
 
 ---
 
@@ -108,7 +108,7 @@ D.1 本身没有功能缺口。唯一牵连的是 **#824(OPEN)**:域窗口不跨
 
 ### D.2(b) 相关 Issue/PR
 
-\#1392 是 URMA backend 的历史入口；当前合同包含 #2779 完成协议、#2790 workspace 分离、#2825 常编译与使用校验。当前证据与 PR 登记见 [工作项](../work-items.md) DS-5/DS-11，不以某一合入代替父目标完成。#1130/#1187/#1236 的 L3-L2 queue、#1015/#1305/#1277 的 region 与集合通信各有不同语义；#755 是未合入的历史 MPMC 方案。
+\#1392 是 URMA backend 的历史入口；当前合同包含 #2779 完成协议、#2790 workspace 分离、#2825 常编译与使用校验。当前证据与 PR 登记见 [工作项](../work-items.md) #2722，不以某一合入代替父目标完成。#1130/#1187/#1236 的 L3-L2 queue、#1015/#1305/#1277 的 region 与集合通信各有不同语义；#755 是未合入的历史 MPMC 方案。
 
 ### D.2(c) 差距
 
@@ -130,7 +130,7 @@ Host Buffer 是 backing；device rank 是通信成员身份；AICPU/AIV 是执�
 
 ### D.3(b) 相关 Issue/PR
 
-\#861/#803/#755 为未合入的历史需求来源；#1015/#1305/#1277 为已有 L3-L2 通信栈。当前 Host DDR 完整目标为 #2657 → #2730/#2731；#2714 是 Stage 1 候选，当前 head 见 README。A3 L2/L3/L4 候选由 DS-8 按拓扑协调，不以另一平台路径代验。
+\#861/#803/#755 为未合入的历史需求来源；#1015/#1305/#1277 为已有 L3-L2 通信栈。当前 Host DDR 完整目标为 #2657 → #2730/#2731；#2714 是 Stage 1 候选，当前 head 见 README。A3 L2/L3/L4 候选由 #2722 按拓扑协调，不以另一平台路径代验。
 
 ### D.3(c) 目标与限制
 
@@ -207,11 +207,11 @@ ACL backend 位于 `src/a2a3/platform/onboard/host/`。
 
 | NETWORK1 用例（均为 a2a3 / TMR） | 看护范围 | 归属 |
 | -------------------------------- | -------- | ---- |
-| `test_global_tload_mpirun_l3` | 两机各两卡，mpirun/mailbox、MPI descriptor exchange、全局共享窗口与 peer-TLOAD、结果回读 | DS-6 启动；DS-5 数据面 |
-| `test_global_tload_mixed_l3` | 本地 fork L3 + 远端 daemon L3，两机各一卡的共享窗口与 peer-TLOAD | DS-5 |
-| `test_compute_then_tload_mixed_l3` | 同一 Worker/domain 多轮先计算、后 peer-TLOAD；分别检查计算与通信结果 | DS-5 |
-| `test_vector_add_mixed_l3` | 混合 L3 的任务派发和计算正确性；不能单独证明 peer-memory 通信 | DS-6 |
-| `test_global_tload_mixed_l3_network1` | 重用 mixed TLOAD 的 tests/st 收集哨兵，确认该目录也受 NETWORK1 选择 | DS-5 验收入口，不是第五种 transport |
+| `test_global_tload_mpirun_l3` | 两机各两卡，mpirun/mailbox、MPI descriptor exchange、全局共享窗口与 peer-TLOAD、结果回读 | #2724 启动；#2722 数据面 |
+| `test_global_tload_mixed_l3` | 本地 fork L3 + 远端 daemon L3，两机各一卡的共享窗口与 peer-TLOAD | #2722 |
+| `test_compute_then_tload_mixed_l3` | 同一 Worker/domain 多轮先计算、后 peer-TLOAD；分别检查计算与通信结果 | #2722 |
+| `test_vector_add_mixed_l3` | 混合 L3 的任务派发和计算正确性；不能单独证明 peer-memory 通信 | #2724/#2722 |
+| `test_global_tload_mixed_l3_network1` | 重用 mixed TLOAD 的 tests/st 收集哨兵，确认该目录也受 NETWORK1 选择 | #2722 验收入口，不是第五种 transport |
 
 **逐项日志样本**（PR 的 baseRefName 已核为 main；SHA 取 checkout 后 `git log -1 --format=%H`，不是只抄 API headSha）：
 
@@ -230,9 +230,9 @@ ACL backend 位于 `src/a2a3/platform/onboard/host/`。
 共用 suite 的 `network1-run-pytest` action 会为 mixed 用例启动 peer daemon；
 因此 MPI 用例通过证明 MPI 启动路径执行，不单独证明“整机没有 Simpler daemon 时也通过”。
 本表的阳性是 A3/TMR 的具体拓扑，不是 RoCE、A5、任意异构组合或 session/lease 故障注入的验收证据；
-这些目标仍按 DS-1/DS-2/DS-4/DS-5/DS-9/DS-10 各自退出条件判定。
+这些目标仍按 #2724/#2722 各自退出条件判定。
 
-**验金缺口（DS-5）**：当前 MPI 示例 `main.py:191–198` 只检查 `max_diff > 1e-3`。
+**验金缺口（#2722）**：当前 MPI 示例 `main.py:191–198` 只检查 `max_diff > 1e-3`。
 本轮直接提取源码 `_input_values`/`_expected_values`，以 CPU 探针重放该比较：
 正确四 rank 求和得到 `max_diff=0`，仅本 rank 输入得到 `1365` 并被拒绝；
 全 NaN 输出得到 `max_diff=nan`，比较为 false，未被拒绝。
@@ -270,14 +270,13 @@ HCCL rootInfo/barrier/teardown 调用，当前 A2/A3 CANN 9 构建从 `libhcomm`
 
 ### D.4(c) 后续验收归属
 
-- **DS-6**：mpirun 部署、rank 放置/发现与跨-L3 控制接口；rank 0 必须与父进程同机，
+- **#2724**：mpirun 部署、rank 放置/发现与跨-L3 控制接口；rank 0 必须与父进程同机，
   各机 MPI/mpi4py 与解释器配置须匹配。
-- **DS-1 / DS-2 / DS-9**：以 MPI group/runtime 为会话组织，补齐 session epoch、租约、
-  device inventory 与已有成员事务的故障闭环；不要求部署常驻 daemon。
-- **DS-4 / DS-5 / DS-10**：远端 lifetime/回收、原生通信 backend 与其他互连组合的验收。
+- **#2724 → #2722 的接口**：会话与真实部署信息交给通信域成员/事务；device lease 的必要性、成员冻结与异常结果合同见 [设计交接](../review/ds-handoff.md)，不要求部署常驻 daemon。
+- **#2722**：远端 lifetime/回收、原生通信 backend 与其他互连组合的验收。
   A3 数据路径有源码与持续双机 PR CI 证据，具名测试结果见上表；不能外推其他 backend。
 
-状态只以 [work-items.md](../work-items.md) 为准。依赖是完整退出条件，不阻止 backend 独立推进。
+业务进度查 GitHub；[work-items.md](../work-items.md) 只保留目标与验收入口。依赖是完整退出条件，不阻止 backend 独立推进。
 
 ## D.5 L4 为多个 L3 构建通信域
 
@@ -358,7 +357,7 @@ HCCL rootInfo/barrier/teardown 调用，当前 A2/A3 CANN 9 构建从 `libhcomm`
 - **#1392 merged `ca000263`** — A5 URMA backend 的历史交付；当前 Device 支持见 D.2。它**不是** Remote CommDomain / window bootstrap，跨 host window 仍需 endpoint + memory registration；#2731 首版同 host 不覆盖 L4。（#1303 CLOSED-未合并）
 - **对照 HCCL 官方——管理层级 ≠ HCCL rank 嵌套**:D.5 的正确基线是 **L4 把所有选中的 L2 flatten 成一张全局 device-rank 空间、建立单一 global communicator**（用 ranktable `HcclCommInitClusterInfo`，或 L4 选 root L2 + 广播 opaque rootInfo `HcclCommInitRootInfo`）。**L4→L3→L2 是控制面管理层级，不对应 HCCL 的 rank 嵌套**；**不要"每层独立建 world"**（那会把 collective 域切碎）。子集（TP/DP/EP）如目标 CANN 支持可用 `HcclCreateSubCommConfig` 从 global 派生（该 API **只支持从 global 域拆分、不支持嵌套拆分**），否则由 simpler 自建 versioned subdomain。
 
-### D.5(c) 历史差距（不可作为当前实施清单；归属见 DS-7/DS-9/DS-10）
+### D.5(c) 历史差距（不可作为当前实施清单；归属见 #2722）
 
 1. **L4 为多个 L3 建跨 host 通信域未实现**:线协议 RESERVE 但 session 拒绝;VMM 是 host-local,跨 host 需 RDMA/URMA。
 2. **结构性限制**:allocate_domain 分发链全走 `_chip_shms`,L4 无 chip mailbox,路径跑不起来。

@@ -1,6 +1,6 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-11-05。** 本轮为资源与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
 >
 > ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
 >
@@ -13,7 +13,7 @@
 >
 > **上游原理**：[`logical-physical-separation.md`](logical-physical-separation.md) §1 的
 > `potential = deployment × interconnect × backing × runtime` 公式与 §3 的检验标准。
-> **实施状态真源**是 [`work-items.md`](work-items.md)；README 负责登记与里程碑。本文只谈分线判断，不记进度。
+> **业务进度以 GitHub 为准**；[`work-items.md`](work-items.md) 保留目标与验收索引，README 负责登记与里程碑。本文只谈分线判断，不记进度。
 >
 >
 > **新增 2026-08-07，由用户指出。** §3 的检验标准是拿来查 API 的；本文说的是它的
@@ -43,25 +43,27 @@
 
 ## 0. GitHub 交付归属与共同契约
 
-[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的四方向承载完整目标。资源设计直接跟踪 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 及 [资源入口](work-items.md#2-资源与访问github-入口)，不维护本地 RA 进度；DS/EX 保留验收索引。场景所需基础修改随场景交付，不因跨模块而重复拆 owner。历史编号见 [交接对照](review/ra-handoff.md)。
+[#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的四方向承载完整目标。资源设计直接跟踪 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 及 [资源入口](work-items.md#2-资源与访问github-入口)，不维护本地 RA 进度；GitHub 方向入口与 EX 保留验收索引。场景所需基础修改随场景交付，不因跨模块而重复拆 owner。历史编号见 [交接对照](review/ra-handoff.md)。
 
 跨仓模型整体目标由 [#2658](https://github.com/hw-native-sys/simpler/issues/2658) 跟踪，Qwen 旧 Q1–Q4/C2b 只留 [验收交接](review/qwen-handoff.md)。#2429/#2666 仍负责 vLLM 接入与执行资源，不能把整体验收重新分配给本地进度轨。
+
+部署/会话与通信/数据面分别对接 #2724 与 #2722；旧 DS 目标和评论见 [交接对照](review/ds-handoff.md)。部署侧提供真实 session/endpoint 信息，通信侧定义域成员、事务与释放结果；额外 lease、规模和组合类型必要性仍按评论讨论。
 
 ### 0.1 责任边界
 
 - 公共 Buffer/Tensor、逐调用请求、内部绑定和关闭：#2460；子项 #2888 清理公共 COW 数据路径，#1931 校验 child free 身份。
 - 共享区间与必要访问／同步：#2720。queue、发布协议和背压由应用或上层库定义；runtime 自己的调度、取消和 drain 仍由 runtime 负责。
 - 平台映射：#2495 下 #2496/#2497；只约束实际需要该能力的组合。
-- 通信域 ownership：方向 2 的 #824；远端 lease 和回收与 DS-4 交接。
+- 通信域 ownership：方向 2 的 #824；远端 lease 和回收与 #2722 交接。
 - 执行资源：#2666 的共同 prepare/launch/retain/release、#2883 的资源分类及 #2316 的流水容量。通用 kernel/eager-capture 实现仍按既定范围排除。
 
 ### 0.2 四处交接契约
 
-**契约 A：域生命周期。** #824 与 DS-4 共用 owner、使用接纳、最后使用和失败清理规则。本地域可先交付，远端完整验收仍需 lease／事务证据；不得另建互不协调的寿命模型。
+**契约 A：域生命周期。** #824 与 #2722 共用 owner、使用接纳、最后使用和失败清理规则。本地域可先交付，远端完整验收仍需 lease／事务证据；不得另建互不协调的寿命模型。
 
 **契约 B：基础同步与常驻循环。** #2720 定义公共区间及必要可见性，EX-2／#2723 定义单 L2 Run 多轮交互、停止与排空。应用定义 queue／握手协议；示例使用两者，但不产生公共 queue 工厂承诺。
 
-**契约 C：访问结果。** 本地绑定、显式复制和 DS-3 远端访问都必须能分辨实际路径、身份及完成条件；不得静默复制或伪造共享映射。是否需要公共 plan/capability 对象，由 [设计问题](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)决定。源读取结束、目的可见和整体静止分别证明，不要求机械增加 event 类型。
+**契约 C：访问结果。** 本地绑定、显式复制和 #2722 远端访问都必须能分辨实际路径、身份及完成条件；不得静默复制或伪造共享映射。是否需要公共 plan/capability 对象，由 [设计问题](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)决定。源读取结束、目的可见和整体静止分别证明，不要求机械增加 event 类型。
 
 **契约 D：关闭与资源保留。** #2460 与 #824 统一逻辑关闭、接纳使用、最后使用证明及可重试清理义务。allocation owner、内部映射与实际使用引用分开；OS／驱动真实限制保留，不新增公共授权对象。具体 registry、锁序和 journal 组合须在相关实现中明确，表的数量不是验收目标；已有 consumer 的在飞保护不等待完整 U4。
 
@@ -71,7 +73,7 @@ Host 场景 #2657/#2730/#2731、域接口 #2594 及传输 #2621 保持完整目�
 
 临时／持久／异步使用必须有可验证的寿命，是否拆分 Arena 尚在 #2721 讨论。device workspace 与用户 Buffer 的预算和最后使用不能互相代替。公开 ResourceBundle、plan、capability 也须有必要场景才能成为交付要求。
 
-具体联合验收见 [访问与退休契约](worker-memory-model/access-retirement-contract.md)；逐旧编号归属由守卫核对 GitHub 入口及 DS/EX 索引。接口依赖写清所需产物，不把整个 Issue 的关闭当作统一前置。下方 §1 起保留具名基线的历史推导，不作为独立排期。
+具体联合验收见 [访问与退休契约](worker-memory-model/access-retirement-contract.md)；逐旧编号归属由守卫核对 GitHub 入口及 GitHub 方向入口与 EX 索引。接口依赖写清所需产物，不把整个 Issue 的关闭当作统一前置。下方 §1 起保留具名基线的历史推导，不作为独立排期。
 
 ## 1. 推论：只有一个判定函数 —— ⛔ **依据已于 2026-08-14 重写**
 

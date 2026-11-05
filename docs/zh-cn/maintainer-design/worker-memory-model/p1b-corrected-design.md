@@ -1,6 +1,6 @@
 # P1-B 最终设计：BufferHandle / BufferRef 内存模型
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > **资源设计口径**：共同原则以 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 为准，实施与迁移查 [#2460](https://github.com/hw-native-sys/simpler/issues/2460)。下文两套 Arena、公共 ResourceBundle／plan／capability 及额外 grant 策略的旧方案不构成已确认交付要求；必要性见 [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)。保留场景与验收要求，历史 API 形状不当作当前承诺。
 >
@@ -323,7 +323,7 @@ descriptor 内嵌在每个 ref 里，所以消费者无需事先知道任何事�
 | **提交时 alias 校验** | 提交点 | 同一 TaskArgs 内各 ref 的 footprint | 提交时 | **同一任务内**（§5.3） |
 
 > 本节规定三层职责，不给外部 GE 维护第二份状态。GE-R1–R6 交接要求见
-> [graph-execution-contract.md](graph-execution-contract.md)，本板归属 #2721 / #824 / #2460 / DS-4 / EX-7。
+> [graph-execution-contract.md](graph-execution-contract.md)，本板归属 #2721 / #824 / #2460 / #2722 / EX-7。
 > 自动 WAR 是能力增强；当前调用者通过 `add_dep` 或 `add_inout` 表达反依赖，见仓库 `docs/war-anti-dependency.md`。
 > \#1375/#1376 的 wait/retain 与边归约实现归外部 runtime，不能作为整条 P1 不可开工的笼统前提。
 

@@ -1,6 +1,6 @@
 # 通信域的成员模型：level 是逻辑概念，能力挂在 endpoint–resource 边上（契约）
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > **状态**：⬜ **设计契约提案**。这是 [cpu-npu-shared-memory.md](../cpu-npu-shared-memory.md)
 > 的 §3.0 展开。
@@ -336,7 +336,7 @@ owner 完成。**
 | 同一 L3 下的多个 `DEVICE_*` | VMM / Fabric-V2 设备共享 | ✅ 今天就有 |
 | **`HOST_CPU` + 同机 `DEVICE_*`** | host-map control Buffer + device-local/VMM payload Buffer；逐 Buffer 选 direct/copy adapter | ⬜ **本设计要补的那块砖** |
 | 同机 `HOST_CPU` + `HOST_CPU` | host 共享内存（fork-shm / POSIX） | ✅ 机制已有 |
-| 跨机 device 窗口；其他异构组合逐项验收 | 主路径 mpirun/MPI + A3 ACL/Fabric V2 共享窗口；SHMEM 库适配另验 | A3 基本栈 #1456/#1623/#1624 已合入（`68d137fdf` 复核）；任意 host/device ResourceBundle 组合见 DS-10 |
+| 跨机 device 窗口；其他异构组合逐项验收 | 主路径 mpirun/MPI + A3 ACL/Fabric V2 共享窗口；SHMEM 库适配另验 | A3 基本栈 #1456/#1623/#1624 已合入（`68d137fdf` 复核）；任意 host/device ResourceBundle 组合见 #2722 |
 
 > ### ⚠️ 订正（2026-08-05，用户指出）：本行此前写作 ❌「今天不可达 → 显式失败」，**错在把
 >
@@ -344,7 +344,7 @@ owner 完成。**
 >
 > **A3 HCCS/Fabric V2 的跨机实现已在 main**（`68d137fdf`）；#1456 → #1623 → #1624
 > 均已合入，#1623 正文自报**双机 A3 2x2** 四 rank `max_diff == 0`；独立读取的原始 CI 证据
-> 包括 #1624 head `87489e1a` 的历史 PASS，以及 10 月 12–13 日三个面向 main 的具名 PR 测试 SHA 的五项 NETWORK1 PASS，确认持续双机 CI 看护。证据及 NaN 验金缺口见 [D.4](../l3l4/cluster-comm.md#调用链与执行证据2026-10-13)；任意异构组合由 DS-10 验收。
+> 包括 #1624 head `87489e1a` 的历史 PASS，以及 10 月 12–13 日三个面向 main 的具名 PR 测试 SHA 的五项 NETWORK1 PASS，确认持续双机 CI 看护。证据及 NaN 验金缺口见 [D.4](../l3l4/cluster-comm.md#调用链与执行证据2026-10-13)；任意异构组合由 #2722 验收。
 >
 > #### 这条错误为什么值得单独记**：它和 §4.1 旧版那个「跨机一行 ❌ 无」是**同一个错误的两处副本
 >

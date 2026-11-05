@@ -1,6 +1,6 @@
 # Issue / PR 关联总表
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 `l3l4-cluster-requirements-analysis.md` 跨节说明 + §E + 附录 + §F。
 
@@ -8,7 +8,7 @@
 
 ### #824 —— per-worker 域 ownership
 
-当前实施状态只见 [#824 / DS-4](../work-items.md)。`77132c7bf` 的 `retain_after_run` 已提供跨 run 存活；独立 Worker ownership 的 PR #2120 仍 OPEN。
+当前实施状态只见 [#824 / #2722](../work-items.md)。`77132c7bf` 的 `retain_after_run` 已提供跨 run 存活；独立 Worker ownership 的 PR #2120 仍 OPEN。
 资源寿命只有 per-orch 与 per-worker 两种。本文 2026-07-30 的「必须新增第三种 lifetime」建议已被 2026-08-03 裁决撤回；不得作为新 registry 的依据。
 
 ### investigations 立项(discipline.md §4)
@@ -69,7 +69,7 @@
 
 | 栈 | PR（全 MERGED，除注明） | 推进了哪条诉求到什么状态 |
 | -- | ----------------------- | ------------------------ |
-| **Remote-L3 worker**（从 #866 拆栈） | #1006 契约 · #1007 import descriptor · #1008 wire codec · #1009 endpoint eligibility · #1010 C++ facade · #1011 Python session | A.1 / D.4：从零到"契约 + 四层骨架（identity→wire→eligibility→facade→session）已合并"。⚠️ **此处此前写「仅 sim 打通」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那条 transport 从来是真 TCP socket，`"sim"` 只是个撒谎的名字（现已正名 `host_tcp`）；#1688 更给出**双机真硬件**的 L4 mixed-L3 用例与 CI job。**当前边界**：host_tcp 属控制 transport；主路径为 mpirun，A3 Fabric 共享窗口已有数据面。原生通信 backend 验收见 DS-5；SHMEM 仅为实现参考。承接情况已变：⛔ #866/#711 仍 CLOSED-未合并，但 **#1688 已 merged**；#1456 亦已 merged `60ab6ab9`（2026-08-11），其后继 #1623 `cc9bfc45` / #1624 `43094d44` 亦在 main（`68d137fdf` 复核）。 |
+| **Remote-L3 worker**（从 #866 拆栈） | #1006 契约 · #1007 import descriptor · #1008 wire codec · #1009 endpoint eligibility · #1010 C++ facade · #1011 Python session | A.1 / D.4：从零到"契约 + 四层骨架（identity→wire→eligibility→facade→session）已合并"。⚠️ **此处此前写「仅 sim 打通」—— 已作废（2026-08-05，#1688 `e78d8437`）**：那条 transport 从来是真 TCP socket，`"sim"` 只是个撒谎的名字（现已正名 `host_tcp`）；#1688 更给出**双机真硬件**的 L4 mixed-L3 用例与 CI job。**当前边界**：host_tcp 属控制 transport；主路径为 mpirun，A3 Fabric 共享窗口已有数据面。原生通信 backend 验收见 #2722；SHMEM 仅为实现参考。承接情况已变：⛔ #866/#711 仍 CLOSED-未合并，但 **#1688 已 merged**；#1456 亦已 merged `60ab6ab9`（2026-08-11），其后继 #1623 `cc9bfc45` / #1624 `43094d44` 亦在 main（`68d137fdf` 复核）。 |
 | **Comm-domain**（HCCL 动态域 + L3-Host↔L2 在途通信） | #817 Option A · #809/#813 类型/清理 · #1334 VMM 跨进程窗口(#1037) · #1015 设计 · #1305 a2a3 onboard · #1277 a5 onboard；**#1291 CLOSED-未合并** | D.1 完整落地；D.3 的一半（L3 Host CPU 与本卡 L2 AICPU 共享控制域）。#1291（把 onboard 数据路径统一搬到 L3 Host mapped-region）虽 CLOSED-未合并，但其目标已在 main 实现（`l3-l2-orch-comm.md:48`：sim+onboard 均在 L3 Host 走同一 mapped 路径）；域生命周期仍 run-scoped（=#824 未解）。 |
 | **L3-L2 message-queue** | #1130 底座 · #1187 示例 · #1236 L2 input window | D.2：一个持久 L2 orch run 与 L3 交换一串 input/output 消息，免每 task 停/起 L2；为 C.1 的"L2 常驻"提供通信载体。当前仅 **SPSC**；#755 MPMC 设计已 CLOSED-未合并。 |
 | **Memory / host-buffer + runtime-arena** | #1256 post-fork zero-copy · #1390 暴露给 SubWorker · #1234/#1193 arena 复用 · #1322 prewarm · #1245 去 local-ready-buffer（#1198 已回滚，不计） | B.kind3（host 侧）权威落地；arena 预热服务 C.1（eager）与 #984/#545 perf。 |

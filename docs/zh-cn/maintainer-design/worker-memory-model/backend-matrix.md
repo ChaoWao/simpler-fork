@@ -1,6 +1,6 @@
 # backend 矩阵 + 范例 + 边界
 
-> **发布快照：2026-11-05。** 本轮为资源设计与跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
+> **发布快照：2026-11-05。** 本轮为资源、部署通信与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](../README.md)。
 >
 > 来源：原 [`worker-memory-model.md`](../worker-memory-model.md) §6 + §7 + §8。
 
@@ -9,7 +9,7 @@
 | 共享形态 | 同机 fork | 同机跨进程 device | 跨机（remote L3） |
 | -------- | --------- | ----------------- | ----------------- |
 | kind3 host | MAP_SHARED / POSIX-shm ✅ | — | remote-sidecar + host-staging（future） |
-| kind4 device | — | VMM shareable-handle ✅（同机） | RDMA/URMA/fabric（**capability-gated**；A3 Fabric 共享窗口已有实现，具体 backend 与组合分别按 DS-5/DS-3 验收） |
+| kind4 device | — | VMM shareable-handle ✅（同机） | RDMA/URMA/fabric（**capability-gated**；A3 Fabric 共享窗口已有实现，具体 backend 与组合分别按 #2722 验收） |
 
 backend descriptor 记的就是这一格；不支持的格子显式报错，不静默降级。
 
@@ -29,7 +29,7 @@ L2  消费经验证的 Tensor view
 ```
 
 以上是契约流程示意，不承诺所有 topology 均已支持；当前 API 与 consumer 边界见
-[user-surface §5.2](user-surface.md#52-api-契约与已交付边界)、[#2460/DS-3](../work-items.md)。
+[user-surface §5.2](user-surface.md#52-api-契约与已交付边界)、[#2460/#2722](../work-items.md)。
 `create_buffer` 同样可为 Tensor 提供 backing，不限于 control region / queue / arena。
 
 关键：**H 每跨一条 edge 换的是"角色/视图 + 物化方式"，不是身份**——canonical
