@@ -1,5 +1,5 @@
 {
-  "published": "2026-11-05",
+  "published": "2026-11-10",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
   "architecture_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
@@ -90,8 +90,8 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "d148076d1a4cdf711081ea8fa392835efba906b2905d9cab596f4728faeec36f",
-      "published_sha256": "bc7186c43d81a63f9d67a55e058d1788aac1e5981d7010c0f528cb4c17807368"
+      "source_sha256": "9c903b0ab91c3063eb134a0cfed4e92c19ed57990d04dc9c849c6b3a0700155a",
+      "published_sha256": "943d073c45bc6d84e736d9a6c3e45b2d9779e0c72a06f4953b1ceaa4b45f81b4"
     },
     {
       "path": "track-boundaries.md",
@@ -205,8 +205,8 @@
     },
     {
       "path": "review/pr-2714.md",
-      "source_sha256": "88355ee21f7e1eda53d4917e2455c1fef6477117b002413f87dd356de1082da7",
-      "published_sha256": "7b728cd87035d07869450cb8e14916b6feb2c60a5f05812f5888f55923e675f6"
+      "source_sha256": "f0d43e26cadef90520b7fe5a5e4f1be3f7c5d838e4ba65b56d2bf7def5faeae4",
+      "published_sha256": "a5fcea698983ad4916c522367fb8aad43baf8b00571380f542d951ac4cc96503"
     }
   ],
   "omitted_local_references": [
@@ -276,5 +276,7 @@
   "qwen_handoff_observed_on": "2026-11-05",
   "ds_handoff_observed_on": "2026-11-05",
   "ex_handoff_observed_on": "2026-11-05",
-  "dependency_graph_observed_at": "2026-11-05T08:49:45.036422+00:00"
+  "dependency_graph_observed_at": "2026-11-05T08:49:45.036422+00:00",
+  "pr_2714_review_head": "c15ba2529ae0a34113c4cac9e4a5498109cfb063",
+  "pr_2714_review_date": "2026-11-10"
 }
