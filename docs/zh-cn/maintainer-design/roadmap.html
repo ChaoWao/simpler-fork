@@ -209,7 +209,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 评审记录快照；其他目标与 DAG 按各自原观察日期阅读。<a href="README.md">阅读入口</a>。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 复审快照；其他目标与 DAG 按各自原观察日期阅读。<a href="README.md">阅读入口</a>。</div>
 <div class="viz-root">
 
 <h1>simpler · 设计轨道与在飞项全景</h1>
@@ -1619,6 +1619,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-10 · framework 退休修复的复核边界",
+        "b": "当前 #2714 head d9ee29e55a90 已补齐 framework Host use 退休，原 HBG/TMR 两个失败探针与普通 wait 对照均通过。旧缺陷只对 c15ba2529ae0 有效，不能作为新 head 的阻塞。新判据：清理重试须分别证明幂等 Host release 与非幂等 Device decrement 的处理；纯 rebase 也可能改变 A5 executor，MAP 文件相同不能外推完整硬件资格。当前代码评审通过，最终 A5 验证仍待补；本次不推进全局 DAG/目标状态。"
+      },
       {
         "t": "2026-11-10 · MAP 评审与特殊完成路径",
         "b": "判断更正：此前“设计已对齐”漏读了按调用 MAP 的讨论，旧公开 mapped-view 契约不再有效。当前 #2714 head c15ba2529ae0 的 MAP 接口与上轮两项修复已核对，但 framework 专用退休漏掉新的 Host use；普通 wait 对照通过不能证明所有 completion authority 都退休引用。新判据：新增所有权必须逐一核普通、framework、取消、失败与 close 路径；手工 CI 的 workflow head 与实际 checkout SHA 分别核对。此为单 PR 评审，既有 DAG 和全局登记仍按各自观察日期阅读。"
