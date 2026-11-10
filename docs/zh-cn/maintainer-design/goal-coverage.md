@@ -1,13 +1,15 @@
 # 目标来源与覆盖口径
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
->
-> **2026-11-05 交接覆盖**：已登记的 86 个文档载体、604 个来源编号有归属（当前另有 19 份 joint-goals 资料待全局索引核对）；10 个 GitHub 入口承接合同，资源/分布式/执行及 Qwen 不设重复本地进度。七项执行交接保留已交付基础与剩余组合验收的区别。覆盖不等于功能完成。
->
+> **发布快照：2026-11-10。** GitHub 进展与依赖投影；源码和硬件结论按各自精确版本阅读。参见[阅读入口](README.md)。
+
+> **当前图形入口**：[2026-11-10 进展 DAG](dependency-dag.html) 覆盖 #2716 原生 39 节点及既有模型/资源交接，17 个节点均有来源、当前观察与下一步。历史编号交接保持原验收语义，新增 joint-goals 资料已登记为跨仓/工具/历史引用，不混入 simpler 产品实施范围。
+
+> **2026-11-05 交接覆盖（历史快照）**：已登记的 86 个文档载体、604 个来源编号有归属（当前另有 19 份 joint-goals 资料待全局索引核对）；10 个 GitHub 入口承接合同，资源/分布式/执行及 Qwen 不设重复本地进度。七项执行交接保留已交付基础与剩余组合验收的区别。覆盖不等于功能完成。
+
 > **2026-11-04 编号与归属复核**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；本地来源全部重新提取，原有外部来源重新读取，#2716 30 节点 / 29 边及决定评论纳入索引。#2429 当前五项验收单独编号；历史编号保留原义。源码/CI 的当前具名核对见 [证据与动作](review/track-2716.md)，下面旧日期的计数与全量代码审计不自动前移。
->
+
 > **2026-10-26 范围补充**：#2716 的 16 节点原生树、每条正文 checkbox 与具名提案编号已纳入 goal-sources 和 work-items §6；[分析与证据](review/track-2716.md)。这是定点来源扩展，不改写下面 10 月 18 日的全目标审计日期与历史计数。
->
+
 > **核验基线：`upstream/main@937c57efc71ad01a01c3a72072df075d2a5dd24f`（2026-10-18）。** 34 个实施项（16 RA / 11 DS / 7 EX），364 个来源编号，77 个文档载体。28 个 main OPEN/DRAFT PR、60 个 OPEN issue；相对 `01bf24bfa` 的 79 条 main 合入已逐 merge SHA 核祖先链。全部编号有实施、约束、历史或范围外归属；这不是全部目标已完成的声明。
 
 本轮读 main 代码、合入 diff、GitHub 正文和设计来源；没有运行实现测试或硬件。既有 CI/硬件记录只在其具名测试 SHA 下有效。SSH fetch 认证失败后使用 HTTPS/HTTP1.1 成功读取同一 upstream，未切换共享分支。
@@ -27,7 +29,7 @@
 每组来源均非空提取。新增编号是带命名空间的来源索引，避免与 P1/P2、W、G 或外部规划同名；唯一归属见 work-items 吸收列及 §5–§7。
 
 | 来源组 | 具名来源 | 编号全集 |
-| ------ | -------- | -------- |
+| --- | --- | --- |
 | P1/P2 stages | [feature_roadmap.md](feature_roadmap.md) | `P1-A` · `P1-B` · `P1-C` · `P1-D` · `P1-E` · `P1-F` · `P2-A` · `P2-B` · `P2-C` · `P2-D` · `P2-E` |
 | W resource capability | [cpu-npu-shared-memory/work-breakdown.md](cpu-npu-shared-memory/work-breakdown.md) | `W0` · `W1` · `W1lite` · `W2` · `W3` · `W4` · `W5` · `W6` · `W7` · `W8` |
 | L3/L4 scenarios | [l3l4.md](l3l4.md) | `A.1` · `B` · `C.1` · `C.2` · `C.3` · `D.1` · `D.2` · `D.3` · `D.4` · `D.5` · `E` |
@@ -76,7 +78,7 @@
 下列路径均以本页 SHA 的 `git show` 为准。源码存在、测试定义存在和执行通过是不同证据层。
 
 | 承载项 | 路径 / 检查点 | 结论边界 |
-| ------ | ------------- | -------- |
+| --- | --- | --- |
 | #2721 | `src/a2a3/platform/onboard/host/device_runner.cpp::register_device_memory_to_host` | DEV_SVM_MAP_HOST 仍传 device_id_；符号 acl_to_hal_device_id 0、halHostRegister 16 为阳性对照 |
 | #2496/#2460 | `src/common/host_build_graph/host/host_tensor_access.cpp；python/simpler/comm_endpoints.py` | HOST/NONE 显式访问已在；旧 acquire_child_memory_host_view 在 accessor 0，HOST/NONE 条件各 1；HOST_SVM_MAP 注释仍明确无 producer |
 | #2720 | `python/simpler/worker.py::_chip_child_allocate_domain；src/common/platform/include/common/region_template.h 与 SPSC 入口` | window offset 顺序累加，未按 cache line padding；模板存在不等于通用 Buffer slice 绑定完成 |
@@ -102,7 +104,7 @@
 77 个 Markdown/HTML 载体均入清单；历史调查、范围外实现与当前设计分开，不把副本中的旧“未做”作为实施状态。无编号的身份/接纳/完成/关闭/预算/capture 契约由 work-items §6 明确承接。
 
 | 文档 | 归属与用途 |
-| ---- | ---------- |
+| --- | --- |
 | P0.2/c-design.md（本地参考：`P0.2/c-design.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | P0.2/done-followup.md（本地参考：`P0.2/done-followup.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
 | P0.2/done.md（本地参考：`P0.2/done.md`） | P0 已交付证据；历史清理证据（#1689） 终态回收 |
@@ -194,7 +196,7 @@
 ## 6. 本轮 main 合入清单
 
 | PR | main merge SHA | 归属 |
-| -- | -------------- | ---- |
+| --- | --- | --- |
 | #2616 | `937c57efc71ad01a01c3a72072df075d2a5dd24f` | 范围外 CI/测试/文档/打包 |
 | #2614 | `8b466791f374e1286b0936f8eaebffb9bf32d44b` | #2460 / #2460 |
 | #2613 | `2ee57567d01d0d86d5afb605f15e644a06a16200` | 范围外 CI/测试/文档/打包 |

@@ -1468,7 +1468,49 @@
     "review/ds-handoff.md": "#2724/#2722：旧 DS 目标与评论交接；静态具名证据，不维护进度",
     "review/ex-handoff.md": "执行目标与静态证据交接；业务归属在 GitHub",
     "dependency-dag.html": "GitHub 具体产物依赖与原生归属的图形投影；不维护独立进度",
-    "review/pr-2714.md": "#2730/#2722 的具名技术评审与验收证据；依赖 #2731 不代表交付"
+    "review/pr-2714.md": "#2730/#2722 的具名技术评审与验收证据；依赖 #2731 不代表交付",
+    "joint-goals/EVALUATION.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/WORKFLOW.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/designs/taskboard-delivery-graph/README.md": "Taskboard 联合交付图工具设计；独立工具范围，不纳入 simpler L3+ 实施",
+    "joint-goals/designs/taskboard-delivery-graph/api.md": "Taskboard 联合交付图工具设计；独立工具范围，不纳入 simpler L3+ 实施",
+    "joint-goals/designs/taskboard-delivery-graph/data-model.md": "Taskboard 联合交付图工具设计；独立工具范围，不纳入 simpler L3+ 实施",
+    "joint-goals/designs/taskboard-delivery-graph/migration-and-acceptance.md": "Taskboard 联合交付图工具设计；独立工具范围，不纳入 simpler L3+ 实施",
+    "joint-goals/designs/taskboard-delivery-graph/projection.md": "Taskboard 联合交付图工具设计；独立工具范围，不纳入 simpler L3+ 实施",
+    "joint-goals/reviews/2026-11-07-goal-task-feasibility.md": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-07-html-iteration/before/joint-goals-map.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-07-html-iteration/before/joint-goals-people.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-07-html-iteration/report.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-07-semantic-audit/audit.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-07-semantic-audit/evidence/code/pypto/docs/zh/dev/ir/11-simt.md": "跨仓联合目标的固定源码证据副本；只作引用，不另设 simpler 实施项",
+    "joint-goals/reviews/2026-11-07-semantic-audit/evidence/code/pypto-lib/docs/models/deepseek_v4_flash_lowlat/index.md": "跨仓联合目标的固定源码证据副本；只作引用，不另设 simpler 实施项",
+    "joint-goals/reviews/2026-11-07-semantic-audit/evidence/code/pypto-serving/docs/user-guide/pd-disaggregation.md": "跨仓联合目标的固定源码证据副本；只作引用，不另设 simpler 实施项",
+    "joint-goals/reviews/2026-11-07-semantic-audit/evidence/code/simpler/docs/design/native-framework-submission.md": "跨仓联合目标的固定源码证据副本；只作引用，不另设 simpler 实施项",
+    "joint-goals/reviews/2026-11-07-semantic-audit/evidence/code/simpler/examples/a5/tensormap_and_ringbuffer/urma_deferred_completion_demo/README.md": "跨仓联合目标的固定源码证据副本；只作引用，不另设 simpler 实施项",
+    "joint-goals/reviews/2026-11-07-semantic-audit/pypto-necessity.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-08-task-crosscheck/tables.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/2026-11-09-taskboard-design/live-app.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/visuals/goal-dependency-swimlanes-preview.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/visuals/goal-dependency-swimlanes.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/visuals/joint-goals-map.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/visuals/joint-goals-people.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/reviews/visuals/source/shell.html": "联合目标历史审视与可视化资料；业务归属沿原跨仓来源，非本轮 simpler 进度",
+    "joint-goals/skills/joint-goal-coordinator/SKILL.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-coordinator/references/async-workflow.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-coordinator/references/runtime-and-state.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-coordinator/references/scenarios.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-coordinator/references/weekly-deep-dive.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-improver/SKILL.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-improver/references/diagnosis.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-improver/references/evaluation.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-improver/references/regression-cases.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-improver/references/versioning.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/SKILL.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/evidence-and-decisions.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/goal-baseline.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/main-verification.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/output-templates.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/source-workflow.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标",
+    "joint-goals/skills/joint-goal-tracker/references/topic-deep-dive.md": "联合目标协调和质量工作流；工具流程，非 simpler 产品目标"
   },
   "pr_scope": {
     "baseRefName": "main",
@@ -2165,9 +2207,9 @@
     }
   ],
   "dependency_graph": {
-    "observed_at": "2026-11-05T08:49:45.036422+00:00",
-    "main_reference": "91f0004517a9f1415228d33bfd8ca95eddbf936d",
-    "scope": "GitHub 入口的具体产物依赖；#2716 原生归属单独展示；不创建进度或排期。",
+    "observed_at": "2026-11-10T13:45:28.010397+00:00",
+    "main_reference": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+    "scope": "GitHub 进展与下一步的定时快照；目标为 main 的 PR 单列；依赖与原生归属分开。不是新的本地实施轨。",
     "nodes": [
       {
         "id": "2721",
@@ -2182,8 +2224,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2721",
             "label": "#2721 · 正文",
-            "sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2201,7 +2243,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · 正文",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2219,7 +2261,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2720",
             "label": "#2720 · 正文",
             "sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2237,7 +2279,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2496",
             "label": "#2496 · 正文",
             "sha256": "36baae0d0d1a464fe5b14ac1318506d5cfaf774189dac049b55e2e6d6ce1781b",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2255,13 +2297,13 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/824",
             "label": "#824 · 正文",
             "sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           },
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467",
             "label": "#824 · 关闭依据",
             "sha256": "0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2278,8 +2320,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2724",
             "label": "#2724 · 正文",
-            "sha256": "aca9476666dc35bfc685412764dfdd0d4a2f0d60e95436fc2b3f83d624da1ee5",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "a823d3788eb52ab8608da197046d5a46d07fbedbb71aff3a3758cc0e059081c4",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2296,8 +2338,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2722",
             "label": "#2722 · 正文",
-            "sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2314,8 +2356,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2723",
             "label": "#2723 · 正文",
-            "sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2332,8 +2374,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2666",
             "label": "#2666 · 正文",
-            "sha256": "1c3aba3ae61fd15897592af20bb448905d781e9190e5938934ff574e6da81859",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "61ee277a6fdaa25ed7df029f499c94a3bdcdd04ce6c05ecd14fced0a4e5f6eb8",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2351,25 +2393,25 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2715",
             "label": "#2715 · 正文",
             "sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
       {
         "id": "2429",
         "issue": 2429,
-        "title": "vLLM 消费者接入",
+        "title": "Qwen 六格应用集成",
         "group": "模型",
-        "description": "adapter、artifact ABI、KV、数值与请求寿命。",
-        "note": "向系统验收交付产物；不重复开发已交付的普通 Async。",
+        "description": "Serving Program + vLLM eager/capture，各 TMR/HBG。",
+        "note": "本地六格成绩与各仓 main/正式 CI 分开；原 HBG eager 完整数值合同保留。",
         "state": "open",
         "url": "https://github.com/hw-native-sys/simpler/issues/2429",
         "evidence": [
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2429",
             "label": "#2429 · 正文",
-            "sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2387,43 +2429,97 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2658",
             "label": "#2658 · 正文",
             "sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
       {
         "id": "2730",
         "issue": 2730,
-        "title": "Host DDR：单 L2 映射",
+        "title": "Host DDR：本地 MAP",
         "group": "通信",
-        "description": "Host backing → A5 显式 mapped view；本地同步 MTE。",
-        "note": "独立交付；不需要通信域或 URMA workspace，也不等待 #2496。",
-        "state": "open",
+        "description": "按调用 MAP；A5 direct-L2 本地同步 MTE。",
+        "note": "#2714 已合入 main；不包含 L3 MAP，也不等于全部 A5 拓扑验收。",
+        "state": "closed",
         "url": "https://github.com/hw-native-sys/simpler/issues/2730",
         "evidence": [
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2730",
             "label": "#2730 · 正文",
-            "sha256": "ec734fcb6e00b559ab53d6496888f0d312caa8f7bfcad2480e51a2d166605422",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "3a15b0586dd0b7f3b7e9083d32f885dd816361f649e7ad45cf7cebc7cc080bcc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
       {
         "id": "2731",
         "issue": 2731,
-        "title": "Host DDR：多 L2 / URMA",
+        "title": "Host DDR：多 L2 整表 MAP",
         "group": "通信",
-        "description": "同一完整 Host backing、多进程 map/register、异步完成。",
-        "note": "依赖 #2730 的最终映射与寿命合同；workspace 是本项一体交付。",
+        "description": "L3 拥有整表，各 child 导入同一 backing 并本地 MTE。",
+        "note": "对齐已合入 #2714 的 MAP 与寿命合同；不准备 URMA/domain/workspace。允许多 backing，初始 A5 TMR；L3 HBG 独立验收。",
         "state": "open",
         "url": "https://github.com/hw-native-sys/simpler/issues/2731",
         "evidence": [
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2731",
             "label": "#2731 · 正文",
-            "sha256": "d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "2657",
+        "issue": 2657,
+        "title": "Host 数据读取整体验收",
+        "group": "通信",
+        "description": "稀疏读取、异步完成、有用计算重叠及应用接入。",
+        "note": "MAP 与分片通信域是不同部署路径；子 PR 合入不关闭父目标。",
+        "state": "open",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+            "label": "#2657 · 正文",
+            "sha256": "da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "2922",
+        "issue": 2922,
+        "title": "分片 Host 通信域",
+        "group": "通信",
+        "description": "各 L2 拥有独立 Host shard；本地 MTE + 跨 rank URMA。",
+        "note": "不依赖 #2731；#2913 已合入，但 PCIe Host-source URMA ACK timeout 限制仍保留。",
+        "state": "closed",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2922",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2922",
+            "label": "#2922 · 正文",
+            "sha256": "9780680c30381e576722c7458998b4beca2fd5aa6b4c555c21e43ac5ca413f85",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "2938",
+        "issue": 2938,
+        "title": "域创建时初始化",
+        "group": "通信",
+        "description": "首次创建完成映射后同步 initializer；复用不重填。",
+        "note": "#2939 已合入；checkpoint 格式、分片、业务加载与模型接入归应用。",
+        "state": "closed",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2938",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2938",
+            "label": "#2938 · 正文",
+            "sha256": "26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       }
@@ -2442,8 +2538,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2723",
             "label": "#2723 · ③ 依赖与交接",
-            "sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2460,8 +2556,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2721",
             "label": "#2721 · ③ 依赖与交接",
-            "sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2478,8 +2574,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2722",
             "label": "#2722 · ③ 依赖与交接",
-            "sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2497,7 +2593,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467",
             "label": "#824 · 关闭依据",
             "sha256": "0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2515,7 +2611,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2658",
             "label": "#2658 · ③ 依赖与交接",
             "sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2533,7 +2629,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2658",
             "label": "#2658 · ③ L3+ 设计交接",
             "sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2550,8 +2646,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2721",
             "label": "#2721 · ③ 外部映射能力",
-            "sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2568,8 +2664,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2722",
             "label": "#2722 · ③ 资源身份与访问",
-            "sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2587,7 +2683,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2604,8 +2700,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2721",
             "label": "#2721 · ③ 依赖与交接",
-            "sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2622,8 +2718,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2429",
             "label": "#2429 · ③ 依赖与责任交接",
-            "sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2640,8 +2736,8 @@
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2429",
             "label": "#2429 · ③ #2715 交接",
-            "sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "sha256": "8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2659,7 +2755,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2658",
             "label": "#2658 · ③ vLLM eager 接入",
             "sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2669,15 +2765,69 @@
         "to": "2731",
         "kind": "required",
         "label": "映射与寿命合同",
-        "contract": "多 L2 Host URMA 建立在单 L2 显式 mapped-view 与所有权合同之上；可先并行开发，交付需对齐最终合同。",
+        "contract": "多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；基础 #2714 已合入，#2893 可以对齐实现并独立验收。",
         "condition": "",
         "origin": "issue-body",
         "evidence": [
           {
             "url": "https://github.com/hw-native-sys/simpler/issues/2731",
-            "label": "#2731 · Dependencies / Delivery",
-            "sha256": "d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "label": "#2731 · 正文",
+            "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "e15",
+        "from": "2922",
+        "to": "2938",
+        "kind": "foundation",
+        "label": "域创建与寿命",
+        "contract": "首次初始化复用 Host-source 域的映射、发布与失败回收合同；#2913/#2939 已合入。",
+        "condition": "",
+        "origin": "issue-body",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2938",
+            "label": "#2938 · 正文",
+            "sha256": "26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "e16",
+        "from": "2731",
+        "to": "2657",
+        "kind": "conditional",
+        "label": "共享整表场景",
+        "contract": "共享整表路径以多 L2 本地 MAP 为基础，再完成实际应用与所需性能验收。",
+        "condition": "选用 L3 拥有整表的部署；不是分片域的前置",
+        "origin": "issue-body",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+            "label": "#2657 · 正文",
+            "sha256": "da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      {
+        "id": "e17",
+        "from": "2938",
+        "to": "2657",
+        "kind": "conditional",
+        "label": "分片域场景",
+        "contract": "分片 Host 域和首次初始化供异步读取应用使用；独立验收有用计算重叠、拓扑和失败路径。",
+        "condition": "选用 rank-local Host shard；不依赖 #2731",
+        "origin": "issue-body",
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+            "label": "#2657 · 正文",
+            "sha256": "da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       }
@@ -2697,7 +2847,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2715,7 +2865,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2733,7 +2883,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2751,7 +2901,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2769,7 +2919,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2787,7 +2937,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2805,7 +2955,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       }
@@ -2825,7 +2975,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2843,7 +2993,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2861,7 +3011,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2879,7 +3029,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2897,7 +3047,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2915,7 +3065,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       },
@@ -2933,7 +3083,7 @@
             "url": "https://github.com/hw-native-sys/simpler/issues/2460",
             "label": "#2460 · Delivery and dependency plan",
             "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-            "observed_at": "2026-11-05T08:49:45.036422+00:00"
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
           }
         ]
       }
@@ -2948,317 +3098,852 @@
       "2496->2460": "e07"
     },
     "issues": {
-      "2460": {
-        "number": 2460,
-        "title": "[Feature] Unify Tensor and Buffer across L3, Remote and L2: design and delivery plan",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2460",
-        "updated_at": "2026-10-22T08:13:46Z",
-        "body_sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc"
-      },
-      "2496": {
-        "number": 2496,
-        "title": "[Feature] A5 driver SVM registration for Host↔Device shared memory mapping",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2496",
-        "updated_at": "2026-10-22T08:15:20Z",
-        "body_sha256": "36baae0d0d1a464fe5b14ac1318506d5cfaf774189dac049b55e2e6d6ce1781b"
-      },
       "824": {
         "number": 824,
         "title": "[Feature] Support persistent communication domains across Worker.run calls",
         "state": "closed",
+        "state_reason": "",
         "url": "https://github.com/hw-native-sys/simpler/issues/824",
         "updated_at": "2026-11-05T07:26:18Z",
-        "body_sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc"
-      },
-      "2716": {
-        "number": 2716,
-        "title": "[Track] L3+ / 总体设计与重构",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2716",
-        "updated_at": "2026-10-26T08:31:53Z",
-        "body_sha256": "fdcf91c904ebeec74b8a2e7e25a4556deb3d3baf2bea548aebe9e84c22e483d6"
-      },
-      "2720": {
-        "number": 2720,
-        "title": "[Feature] Region 资源访问边界与能力梳理（完整方案待分析）",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2720",
-        "updated_at": "2026-10-26T08:31:58Z",
-        "body_sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40"
+        "body_sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc",
+        "prs": []
       },
       "1931": {
         "number": 1931,
         "title": "[Code Health] CTRL_FREE hands the chip child a bare device pointer it frees unconditionally",
         "state": "open",
+        "state_reason": "",
         "url": "https://github.com/hw-native-sys/simpler/issues/1931",
         "updated_at": "2026-10-22T08:14:52Z",
-        "body_sha256": "ab801829ff299dc50a91b2409573b56273a8ae7c0d539b00a3c3d2498dbd3478"
+        "body_sha256": "ab801829ff299dc50a91b2409573b56273a8ae7c0d539b00a3c3d2498dbd3478",
+        "prs": []
       },
-      "2721": {
-        "number": 2721,
-        "title": "[Track] L3+ / 方向 1：编排调度、任务下发与资源访问",
+      "2429": {
+        "number": 2429,
+        "title": "[Track] Qwen3-14B A3 六格功能交付与原生 vLLM 性能归因",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2721",
-        "updated_at": "2026-11-05T08:34:45Z",
-        "body_sha256": "cbcafe38b02e1d1077023b8302354c526b0fdf8df0d46bd6d6c453b4976e266d"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+        "updated_at": "2026-11-10T13:38:12Z",
+        "body_sha256": "8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931",
+        "prs": [
+          {
+            "number": 2605,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2605",
+            "head": "591f003be553ae074dbcec1fcb55e41445b479a8",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          },
+          {
+            "number": 2948,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2948",
+            "head": "1be20db0b90d207f0f6525529cfa9dd85a54564c",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
       },
-      "2666": {
-        "number": 2666,
-        "title": "[Track] Kernel-mode eager/capture integration across the PyPTO stack",
+      "2460": {
+        "number": 2460,
+        "title": "[Feature] Unify Tensor and Buffer across L3, Remote and L2: design and delivery plan",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-        "updated_at": "2026-11-04T07:24:11Z",
-        "body_sha256": "1c3aba3ae61fd15897592af20bb448905d781e9190e5938934ff574e6da81859"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2460",
+        "updated_at": "2026-10-22T08:13:46Z",
+        "body_sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
+        "prs": [
+          {
+            "number": 2820,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2820",
+            "head": "d85931ffaed4039e720d9a1ef4b9e0695435f466",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
       },
-      "2724": {
-        "number": 2724,
-        "title": "[Track] L3+ / 方向 4：L4 多级与多机部署",
+      "2496": {
+        "number": 2496,
+        "title": "[Feature] A5 driver SVM registration for Host↔Device shared memory mapping",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2724",
-        "updated_at": "2026-11-05T07:51:58Z",
-        "body_sha256": "aca9476666dc35bfc685412764dfdd0d4a2f0d60e95436fc2b3f83d624da1ee5"
-      },
-      "2659": {
-        "number": 2659,
-        "title": "[Track] Supervisor + Direct MPI 清理闭环与 Group 迁移",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2659",
-        "updated_at": "2026-10-26T08:32:08Z",
-        "body_sha256": "48696921d7b98b2fd57a53f20fe14759059b9ecd6491935e170470e273d4dad2"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2496",
+        "updated_at": "2026-10-22T08:15:20Z",
+        "body_sha256": "36baae0d0d1a464fe5b14ac1318506d5cfaf774189dac049b55e2e6d6ce1781b",
+        "prs": []
       },
       "2594": {
         "number": 2594,
         "title": "[Feature] 统一 L3/L4 通信域的建域、访问与释放接口，新增 get_or_allocate_domain",
         "state": "closed",
+        "state_reason": "COMPLETED",
         "url": "https://github.com/hw-native-sys/simpler/issues/2594",
         "updated_at": "2026-10-28T03:52:53Z",
-        "body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71"
-      },
-      "2657": {
-        "number": 2657,
-        "title": "[Feature] Support device-initiated asynchronous Engram fetch from host memory",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2657",
-        "updated_at": "2026-11-04T14:36:31Z",
-        "body_sha256": "595f2d4a4ed2a3a13e126f1b090f265b3b6a0bdb251e4f03924d9c987c58d3af"
+        "body_sha256": "2d5a670bbb9966a68d9bf5511600364fb0bd42ea2bd5e8ac956749f30e89ae71",
+        "prs": []
       },
       "2621": {
         "number": 2621,
         "title": "[Feature] Support owner-local transfer extensions with safe device-buffer lifetime",
         "state": "open",
+        "state_reason": "",
         "url": "https://github.com/hw-native-sys/simpler/issues/2621",
-        "updated_at": "2026-10-22T08:13:23Z",
-        "body_sha256": "28e14db4b9dbe03deda6dfbb5580482fdf90ba90eca3997bc7997967ead6e4dc"
+        "updated_at": "2026-11-10T02:44:36Z",
+        "body_sha256": "28e14db4b9dbe03deda6dfbb5580482fdf90ba90eca3997bc7997967ead6e4dc",
+        "prs": []
       },
-      "2723": {
-        "number": 2723,
-        "title": "[Track] L3+ / 方向 3：L2 Worker 常驻执行",
+      "2657": {
+        "number": 2657,
+        "title": "[Feature] Support device-initiated asynchronous Engram fetch from host memory",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2723",
-        "updated_at": "2026-11-05T08:34:54Z",
-        "body_sha256": "6ec53ee86b84aed483177ad1d464cf46a5325369b3190aa5830414fb0a586a0d"
-      },
-      "2731": {
-        "number": 2731,
-        "title": "[Feature] A5 cross-rank asynchronous Host DDR reads through URMA and L3-to-L2 dispatch",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2731",
-        "updated_at": "2026-11-04T14:36:45Z",
-        "body_sha256": "d338b5dd637ebc3b5dec252e59297d450f9b2c2e902dddf0ede088abe6503bf3"
-      },
-      "2730": {
-        "number": 2730,
-        "title": "[Feature] A5 local L2 Host DDR access through synchronous MTE",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2730",
-        "updated_at": "2026-11-05T02:03:15Z",
-        "body_sha256": "ec734fcb6e00b559ab53d6496888f0d312caa8f7bfcad2480e51a2d166605422"
-      },
-      "2722": {
-        "number": 2722,
-        "title": "[Track] L3+ / 方向 2：多卡通信与后端能力",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2722",
-        "updated_at": "2026-11-05T07:52:05Z",
-        "body_sha256": "c36c0d939ed9e6602b50481ee5d3a75f4cefac414059e7417ce692a221967b81"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+        "updated_at": "2026-11-06T09:29:23Z",
+        "body_sha256": "da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d",
+        "prs": [
+          {
+            "number": 2714,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "merge": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+            "in_main": true,
+            "draft": false
+          },
+          {
+            "number": 2893,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          },
+          {
+            "number": 2913,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2913",
+            "head": "76d9ffbbf93dac9d58b31b80bd2c36d0d0d0d27d",
+            "merge": "e889508ceb8ed2945e45432609d5fed7ac6f997a",
+            "in_main": true,
+            "draft": false
+          },
+          {
+            "number": 2928,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2928",
+            "head": "ecb7d06aad48a88a226baed9a0cf4f3e3c8c25d8",
+            "merge": "630e2024711d39b53867bb24e8c9ec3b94638d93",
+            "in_main": true,
+            "draft": false
+          },
+          {
+            "number": 2939,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2939",
+            "head": "4b3bf8745ce4f911f13475608affbace6a9b119c",
+            "merge": "f9273457744ae6c7783a98e96aa10e4b5ab24ac5",
+            "in_main": true,
+            "draft": false
+          }
+        ]
       },
       "2658": {
         "number": 2658,
         "title": "[Track] HBG × Async 四仓整体验收与性能验证",
         "state": "open",
+        "state_reason": "",
         "url": "https://github.com/hw-native-sys/simpler/issues/2658",
         "updated_at": "2026-11-05T08:35:01Z",
-        "body_sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172"
+        "body_sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
+        "prs": []
       },
-      "2429": {
-        "number": 2429,
-        "title": "[Feature] 完成真实 vLLM eager 接入、数值正确性与请求生命周期",
+      "2659": {
+        "number": 2659,
+        "title": "[Track] Supervisor + Direct MPI 清理闭环与 Group 迁移",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-        "updated_at": "2026-10-27T01:44:11Z",
-        "body_sha256": "9f631b7d3e27a2bf00b91586ecbbf0d6a4f83932198443a4e83490ca1b371bee"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2659",
+        "updated_at": "2026-10-26T08:32:08Z",
+        "body_sha256": "48696921d7b98b2fd57a53f20fe14759059b9ecd6491935e170470e273d4dad2",
+        "prs": [
+          {
+            "number": 2791,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2791",
+            "head": "26b5af59e0ea15f07508a3a3fd90a2291160beab",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
       },
-      "2888": {
-        "number": 2888,
-        "title": "[Code Health] Remove public FORK_COW Buffer support and require shared storage across processes",
+      "2666": {
+        "number": 2666,
+        "title": "[Track] Kernel-mode eager/capture integration across the PyPTO stack",
         "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2888",
-        "updated_at": "2026-11-05T07:33:49Z",
-        "body_sha256": "a57c214d1e9b140b792a84473ae933dc0cb7eeed764920596cc0b16edd1df7d1"
-      },
-      "2715": {
-        "number": 2715,
-        "title": "[Integration/CI] 补充真实 vLLM eager → Simpler Worker 的 A3 集成验收",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2715",
-        "updated_at": "2026-10-29T11:24:27Z",
-        "body_sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1"
-      },
-      "2883": {
-        "number": 2883,
-        "title": "[Code Health] Classify run resources by delivery and readback, so HBG's GM heap and graph image stop scaling with pipeline depth",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2883",
-        "updated_at": "2026-11-05T02:19:18Z",
-        "body_sha256": "bde4fcea496a43247482efc925b0bffe2b81396f553de2c0fe160194996f450b"
-      },
-      "2708": {
-        "number": 2708,
-        "title": "[Track] A5 URMA 通信：多 AIV 并发发送与编译能力暴露",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2708",
-        "updated_at": "2026-10-26T08:32:03Z",
-        "body_sha256": "8021695ca66fbe7201f0bce871b45d47956798c1deebba6433264d3b481316a6"
-      },
-      "2738": {
-        "number": 2738,
-        "title": "[Code Health] 评估将 SDMA workspace 统一由 CommContext 传递，保留现有启用开关",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2738",
-        "updated_at": "2026-10-27T03:02:42Z",
-        "body_sha256": "8d451a1f0ccb627e80c9e81ab2a77cb253e8fb1a0ec30541226bd207a0607c85"
-      },
-      "2739": {
-        "number": 2739,
-        "title": "[Feature] 分离 SDMA、URMA、RDMA workspace，支持多通信后端共存",
-        "state": "closed",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2739",
-        "updated_at": "2026-11-02T07:18:21Z",
-        "body_sha256": "b4017de3cea04c5dee93eb2721a9bfec40b94bbf4955ef16dc0d21fdd32afb3b"
-      },
-      "2783": {
-        "number": 2783,
-        "title": "[Bug] Dynamic domain handshake markers exhaust /tmp inodes before communicator teardown",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2783",
-        "updated_at": "2026-10-30T07:35:51Z",
-        "body_sha256": "a46714c7a981f26afd1d23cad043ac8870de4c01d796f388577fa9537806b1ee"
-      },
-      "2775": {
-        "number": 2775,
-        "title": "[Bug] 修正当前 ISA 下的 URMA 提交与完成协议",
-        "state": "closed",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2775",
-        "updated_at": "2026-10-30T09:01:21Z",
-        "body_sha256": "7f12662957b91db801c66c76dc9ad79b696f6897ffe521d5abed11b1be8c37cc"
-      },
-      "2787": {
-        "number": 2787,
-        "title": "[Bug] 修正 URMA 资源生命周期",
-        "state": "closed",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2787",
-        "updated_at": "2026-11-05T02:51:16Z",
-        "body_sha256": "749da3bbc23bdb41519e582c72974d2dc2291023831562c2e05676a0d452e595"
-      },
-      "2800": {
-        "number": 2800,
-        "title": "[Bug] Intermittent two-rank comm_init failure with mismatched bootstrap progress",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2800",
-        "updated_at": "2026-10-31T12:32:48Z",
-        "body_sha256": "624d8c15e937513cdbc39e33d4665c4055ee0d2ddfb410d7ef02c924f6bb136e"
-      },
-      "2823": {
-        "number": 2823,
-        "title": "[Code Health] A5 RDMA/HNS1825 清理失败后丢失资源所有权与错误状态",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2823",
-        "updated_at": "2026-11-02T07:32:02Z",
-        "body_sha256": "bb0331eb75fbc8b58502225c2a068fb5ef52c3dcc2c1d7ba2a10b029cb9141db"
-      },
-      "2824": {
-        "number": 2824,
-        "title": "[Code Health] 补齐 A5 RDMA 实机传输、独立域共存验证与 CI 覆盖",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2824",
-        "updated_at": "2026-11-02T07:16:21Z",
-        "body_sha256": "6e19776ba1b903dc69d715f3b4c3175aad2025c14f0ded60130e4890917dcd63"
-      },
-      "2833": {
-        "number": 2833,
-        "title": "[Feature] 支持 A5 URMA 重叠子通信域及域间资源隔离",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2833",
-        "updated_at": "2026-11-02T12:35:00Z",
-        "body_sha256": "c569257d5c8f2822d945df24c1ec07379ac61ad9f42ddb5cab0002b60ba74753"
-      },
-      "2855": {
-        "number": 2855,
-        "title": "[Feature] 支持 A5 URMA 批量提交与明确的 flush 边界",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2855",
-        "updated_at": "2026-11-03T12:31:03Z",
-        "body_sha256": "a5f1091015cd53bdfec4c72f2b22c9b13e711ab2b6fbcd0a98150eee4fad5bc6"
-      },
-      "2854": {
-        "number": 2854,
-        "title": "[Bug] A5 TMR 分块 URMA PUT 在 CI 中出现 S3 停滞及后续释放超时",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2854",
-        "updated_at": "2026-11-04T10:32:20Z",
-        "body_sha256": "73ca54f4e502c3853626d3f900785c564ff8dc15edfac2242156854666e2d00c"
-      },
-      "2860": {
-        "number": 2860,
-        "title": "[Bug] A5 TMR 分块 URMA GET 在 CI 中偶发 S3 超时",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2860",
-        "updated_at": "2026-11-04T08:38:48Z",
-        "body_sha256": "344e6c58b14ad708a2e62b8002e6c757750c5721dde50bc76b4f4f2ac530abf5"
-      },
-      "2899": {
-        "number": 2899,
-        "title": "[Bug] MPI group mailbox completion racing wait timeout can dereference empty frames and segfault",
-        "state": "open",
-        "url": "https://github.com/hw-native-sys/simpler/issues/2899",
-        "updated_at": "2026-11-05T07:34:04Z",
-        "body_sha256": "abb7574103eee839721adbb561775ed84197aa8c5e2e96a7fd4be3741b09c7e9"
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2666",
+        "updated_at": "2026-11-07T06:33:35Z",
+        "body_sha256": "61ee277a6fdaa25ed7df029f499c94a3bdcdd04ce6c05ecd14fced0a4e5f6eb8",
+        "prs": [
+          {
+            "number": 2972,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2972",
+            "head": "f9b749c9cdc6474b437f29a42a4860c6a5783d8f",
+            "merge": "20af3c1d25aa4cc04f22680ab8360d6e3cdfe042",
+            "in_main": true,
+            "draft": false
+          }
+        ]
       },
       "2673": {
         "number": 2673,
         "title": "[Feature] 支持 URMA 多 AIV 向同一 peer 并发发送",
-        "state": "open",
+        "state": "closed",
+        "state_reason": "COMPLETED",
         "url": "https://github.com/hw-native-sys/simpler/issues/2673",
-        "updated_at": "2026-11-03T09:14:20Z",
-        "body_sha256": "746116aff3f07d8995c5e5e36ec3dbe2a526e7d3c981ad845a06d2dab989a730"
+        "updated_at": "2026-11-06T06:07:18Z",
+        "body_sha256": "1782f440828e9d6d46251988746f166ea137451df2c3392471a7507b46cbb61a",
+        "prs": [
+          {
+            "number": 2886,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2886",
+            "head": "9d58b47d04dac3584dfffe0bd55fc9560849a0b9",
+            "merge": "6d73fb4cca8cb780158c9377a716954af11a4285",
+            "in_main": true,
+            "draft": false
+          }
+        ]
       },
       "2674": {
         "number": 2674,
         "title": "[Feature] Expose compiled URMA capability or an explicit enable_urma initialization option",
         "state": "closed",
+        "state_reason": "COMPLETED",
         "url": "https://github.com/hw-native-sys/simpler/issues/2674",
         "updated_at": "2026-11-04T05:59:52Z",
-        "body_sha256": "3fb596a5d69d5b96dde9fb679d370c675aaba5c04587deab400876ba9f4197e2"
+        "body_sha256": "3fb596a5d69d5b96dde9fb679d370c675aaba5c04587deab400876ba9f4197e2",
+        "prs": [
+          {
+            "number": 2825,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2825",
+            "head": "ad3d41c5ee21b3e7440f2482b8586af7b1f71db9",
+            "merge": "3338ca33fabd47a2f45871def94f51f60ce3f2e2",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2708": {
+        "number": 2708,
+        "title": "[Track] A5 URMA 通信：多 AIV 并发发送与编译能力暴露",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2708",
+        "updated_at": "2026-11-05T13:13:52Z",
+        "body_sha256": "d21379e0de03ba852d2b3d170a60d8dbfbe1a7cd6ba18849499f8c434b561d39",
+        "prs": []
+      },
+      "2715": {
+        "number": 2715,
+        "title": "[Integration/CI] 补充真实 vLLM eager → Simpler Worker 的 A3 集成验收",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2715",
+        "updated_at": "2026-10-29T11:24:27Z",
+        "body_sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
+        "prs": [
+          {
+            "number": 2748,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2748",
+            "head": "04d03179592188dbe704aef8ccc6361a1791d462",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
+      },
+      "2716": {
+        "number": 2716,
+        "title": "[Track] L3+ / 总体设计与重构",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2716",
+        "updated_at": "2026-11-10T12:23:55Z",
+        "body_sha256": "6f8ac8a6f0e0cc46eae5d60f75535e3649648296c0fd5ff1a3becf7b790f06c5",
+        "prs": []
+      },
+      "2720": {
+        "number": 2720,
+        "title": "[Feature] Region 资源访问边界与能力梳理（完整方案待分析）",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2720",
+        "updated_at": "2026-10-26T08:31:58Z",
+        "body_sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40",
+        "prs": [
+          {
+            "number": 2635,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2635",
+            "head": "05a058f9c85c59b0583be014813022fda5539c13",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2721": {
+        "number": 2721,
+        "title": "[Track] L3+ / 方向 1：编排调度、任务下发与资源访问",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+        "updated_at": "2026-11-10T12:24:02Z",
+        "body_sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+        "prs": [
+          {
+            "number": 2635,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2635",
+            "head": "05a058f9c85c59b0583be014813022fda5539c13",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          },
+          {
+            "number": 2820,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2820",
+            "head": "d85931ffaed4039e720d9a1ef4b9e0695435f466",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
+      },
+      "2722": {
+        "number": 2722,
+        "title": "[Track] L3+ / 方向 2：多卡通信与后端能力",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2722",
+        "updated_at": "2026-11-10T12:24:10Z",
+        "body_sha256": "af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc",
+        "prs": [
+          {
+            "number": 2714,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "merge": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+            "in_main": true,
+            "draft": false
+          },
+          {
+            "number": 2789,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2789",
+            "head": "1714b9c4910691e76e56b12a6f38a81a5ff85b54",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          },
+          {
+            "number": 2893,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          },
+          {
+            "number": 2940,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2940",
+            "head": "60cdf42a4a6a40d073059a39fc99a2674aaa0d5d",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          },
+          {
+            "number": 2970,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2970",
+            "head": "b6ba2e8e306d62de6aa6777df145c4a386e5ebec",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          },
+          {
+            "number": 2974,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2974",
+            "head": "606be9d3f8c9ec6a2ce0be26c928ae19488792f3",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2723": {
+        "number": 2723,
+        "title": "[Track] L3+ / 方向 3：L2 Worker 常驻执行",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2723",
+        "updated_at": "2026-11-10T12:24:22Z",
+        "body_sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
+        "prs": []
+      },
+      "2724": {
+        "number": 2724,
+        "title": "[Track] L3+ / 方向 4：L4 多级与多机部署",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2724",
+        "updated_at": "2026-11-10T12:24:28Z",
+        "body_sha256": "a823d3788eb52ab8608da197046d5a46d07fbedbb71aff3a3758cc0e059081c4",
+        "prs": [
+          {
+            "number": 2791,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2791",
+            "head": "26b5af59e0ea15f07508a3a3fd90a2291160beab",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          },
+          {
+            "number": 2900,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2900",
+            "head": "56c0946a839dc78277ab764a8664fa6b830ec473",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2730": {
+        "number": 2730,
+        "title": "[Feature] TensorTransfer.MAP for local A5 Host DDR access",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2730",
+        "updated_at": "2026-11-10T13:33:43Z",
+        "body_sha256": "3a15b0586dd0b7f3b7e9083d32f885dd816361f649e7ad45cf7cebc7cc080bcc",
+        "prs": [
+          {
+            "number": 2714,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "merge": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2731": {
+        "number": 2731,
+        "title": "[Feature] L3 shared Host tables with per-device TensorTransfer.MAP",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2731",
+        "updated_at": "2026-11-06T09:29:49Z",
+        "body_sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
+        "prs": [
+          {
+            "number": 2893,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
+      },
+      "2738": {
+        "number": 2738,
+        "title": "[Code Health] 评估将 SDMA workspace 统一由 CommContext 传递，保留现有启用开关",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2738",
+        "updated_at": "2026-10-27T03:02:42Z",
+        "body_sha256": "8d451a1f0ccb627e80c9e81ab2a77cb253e8fb1a0ec30541226bd207a0607c85",
+        "prs": []
+      },
+      "2739": {
+        "number": 2739,
+        "title": "[Feature] 分离 SDMA、URMA、RDMA workspace，支持多通信后端共存",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2739",
+        "updated_at": "2026-11-02T07:18:21Z",
+        "body_sha256": "b4017de3cea04c5dee93eb2721a9bfec40b94bbf4955ef16dc0d21fdd32afb3b",
+        "prs": []
+      },
+      "2775": {
+        "number": 2775,
+        "title": "[Bug] 修正当前 ISA 下的 URMA 提交与完成协议",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2775",
+        "updated_at": "2026-10-30T09:01:21Z",
+        "body_sha256": "7f12662957b91db801c66c76dc9ad79b696f6897ffe521d5abed11b1be8c37cc",
+        "prs": []
+      },
+      "2783": {
+        "number": 2783,
+        "title": "[Bug] Dynamic domain handshake markers exhaust /tmp inodes before communicator teardown",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2783",
+        "updated_at": "2026-10-30T07:35:51Z",
+        "body_sha256": "a46714c7a981f26afd1d23cad043ac8870de4c01d796f388577fa9537806b1ee",
+        "prs": [
+          {
+            "number": 2789,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2789",
+            "head": "1714b9c4910691e76e56b12a6f38a81a5ff85b54",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2787": {
+        "number": 2787,
+        "title": "[Bug] 修正 URMA 资源生命周期",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2787",
+        "updated_at": "2026-11-05T02:51:16Z",
+        "body_sha256": "749da3bbc23bdb41519e582c72974d2dc2291023831562c2e05676a0d452e595",
+        "prs": [
+          {
+            "number": 2835,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2835",
+            "head": "e895be4babb92769d574fd0de9d6431f3be308b0",
+            "merge": "cae0f728df00bbf77eb058815d71afaaee284af8",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2800": {
+        "number": 2800,
+        "title": "[Bug] Intermittent two-rank comm_init failure with mismatched bootstrap progress",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2800",
+        "updated_at": "2026-10-31T12:32:48Z",
+        "body_sha256": "624d8c15e937513cdbc39e33d4665c4055ee0d2ddfb410d7ef02c924f6bb136e",
+        "prs": [
+          {
+            "number": 2940,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2940",
+            "head": "60cdf42a4a6a40d073059a39fc99a2674aaa0d5d",
+            "merge": null,
+            "in_main": false,
+            "draft": true
+          }
+        ]
+      },
+      "2823": {
+        "number": 2823,
+        "title": "[Code Health] A5 RDMA/HNS1825 清理失败后丢失资源所有权与错误状态",
+        "state": "closed",
+        "state_reason": "NOT_PLANNED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2823",
+        "updated_at": "2026-11-09T02:01:52Z",
+        "body_sha256": "bb0331eb75fbc8b58502225c2a068fb5ef52c3dcc2c1d7ba2a10b029cb9141db",
+        "prs": []
+      },
+      "2824": {
+        "number": 2824,
+        "title": "[Code Health] 补齐 A5 RDMA 实机传输、独立域共存验证与 CI 覆盖",
+        "state": "closed",
+        "state_reason": "NOT_PLANNED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2824",
+        "updated_at": "2026-11-09T02:02:12Z",
+        "body_sha256": "6e19776ba1b903dc69d715f3b4c3175aad2025c14f0ded60130e4890917dcd63",
+        "prs": []
+      },
+      "2833": {
+        "number": 2833,
+        "title": "[Feature] 支持 A5 URMA 重叠子通信域及域间资源隔离",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2833",
+        "updated_at": "2026-11-10T02:45:03Z",
+        "body_sha256": "c569257d5c8f2822d945df24c1ec07379ac61ad9f42ddb5cab0002b60ba74753",
+        "prs": [
+          {
+            "number": 2970,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2970",
+            "head": "b6ba2e8e306d62de6aa6777df145c4a386e5ebec",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2854": {
+        "number": 2854,
+        "title": "[Bug] A5 TMR 分块 URMA PUT 在 CI 中出现 S3 停滞及后续释放超时",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2854",
+        "updated_at": "2026-11-10T12:06:39Z",
+        "body_sha256": "73ca54f4e502c3853626d3f900785c564ff8dc15edfac2242156854666e2d00c",
+        "prs": []
+      },
+      "2855": {
+        "number": 2855,
+        "title": "[Feature] 支持 A5 URMA 批量提交与明确的 flush 边界",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2855",
+        "updated_at": "2026-11-03T12:31:03Z",
+        "body_sha256": "a5f1091015cd53bdfec4c72f2b22c9b13e711ab2b6fbcd0a98150eee4fad5bc6",
+        "prs": []
+      },
+      "2860": {
+        "number": 2860,
+        "title": "[Bug] A5 TMR 分块 URMA GET 在 CI 中偶发 S3 超时",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2860",
+        "updated_at": "2026-11-04T08:38:48Z",
+        "body_sha256": "344e6c58b14ad708a2e62b8002e6c757750c5721dde50bc76b4f4f2ac530abf5",
+        "prs": []
+      },
+      "2883": {
+        "number": 2883,
+        "title": "[Code Health] Classify run resources by delivery and readback, so HBG's GM heap and graph image stop scaling with pipeline depth",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2883",
+        "updated_at": "2026-11-10T04:51:10Z",
+        "body_sha256": "bde4fcea496a43247482efc925b0bffe2b81396f553de2c0fe160194996f450b",
+        "prs": []
       },
       "2885": {
         "number": 2885,
         "title": "[Bug] 接入 ISA URMA 可报告的清理结果并保留失败资源所有权",
-        "state": "open",
+        "state": "closed",
+        "state_reason": "NOT_PLANNED",
         "url": "https://github.com/hw-native-sys/simpler/issues/2885",
-        "updated_at": "2026-11-05T02:49:57Z",
-        "body_sha256": "6e6002d34bee41142dfc1a3dce52d47024743e42e8ed4724cbe450d48dfb38c7"
+        "updated_at": "2026-11-09T02:02:32Z",
+        "body_sha256": "6e6002d34bee41142dfc1a3dce52d47024743e42e8ed4724cbe450d48dfb38c7",
+        "prs": []
+      },
+      "2888": {
+        "number": 2888,
+        "title": "[Code Health] Remove public FORK_COW Buffer support and require shared storage across processes",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2888",
+        "updated_at": "2026-11-05T07:33:49Z",
+        "body_sha256": "a57c214d1e9b140b792a84473ae933dc0cb7eeed764920596cc0b16edd1df7d1",
+        "prs": []
+      },
+      "2899": {
+        "number": 2899,
+        "title": "[Bug] MPI group mailbox completion racing wait timeout can dereference empty frames and segfault",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2899",
+        "updated_at": "2026-11-05T07:34:04Z",
+        "body_sha256": "abb7574103eee839721adbb561775ed84197aa8c5e2e96a7fd4be3741b09c7e9",
+        "prs": [
+          {
+            "number": 2900,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2900",
+            "head": "56c0946a839dc78277ab764a8664fa6b830ec473",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2922": {
+        "number": 2922,
+        "title": "[Feature] A5 sharded Host-source communication domains for Engram",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2922",
+        "updated_at": "2026-11-06T11:12:38Z",
+        "body_sha256": "9780680c30381e576722c7458998b4beca2fd5aa6b4c555c21e43ac5ca413f85",
+        "prs": [
+          {
+            "number": 2913,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2913",
+            "head": "76d9ffbbf93dac9d58b31b80bd2c36d0d0d0d27d",
+            "merge": "e889508ceb8ed2945e45432609d5fed7ac6f997a",
+            "in_main": true,
+            "draft": false
+          },
+          {
+            "number": 2928,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2928",
+            "head": "ecb7d06aad48a88a226baed9a0cf4f3e3c8c25d8",
+            "merge": "630e2024711d39b53867bb24e8c9ec3b94638d93",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2669": {
+        "number": 2669,
+        "title": "[Bug] A5 TMR capture/replay intermittently reaches the AICPU watchdog",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2669",
+        "updated_at": "2026-10-28T02:30:45Z",
+        "body_sha256": "7eccd2eebfeaf0962fd62de0b6c76ee5c2d427cd04b46d8aaadc05ba9d1cb183",
+        "prs": []
+      },
+      "2737": {
+        "number": 2737,
+        "title": "[Performance] A3 PyPTO Attention：解释长上下文 TMR/HBG 排序与短负载差距",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2737",
+        "updated_at": "2026-11-04T07:37:49Z",
+        "body_sha256": "e16ed2313068313bf1223db185221d640ccfb38af006532563ed0835c9c6e6e4",
+        "prs": []
+      },
+      "2773": {
+        "number": 2773,
+        "title": "[Code Health] 共用运行协议承载模式相关的新鲜度取舍，迫使 capture 自建身份协议",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2773",
+        "updated_at": "2026-11-04T01:17:02Z",
+        "body_sha256": "6da418cffd58a2102d434966f6bfbdbaf49847e9aa0d0f30da35f378933145f8",
+        "prs": []
+      },
+      "2774": {
+        "number": 2774,
+        "title": "[Feature] 提供不依赖 GIL 的原生提交接口，解决 Python Worker.submit 的异步队列集成问题",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2774",
+        "updated_at": "2026-11-05T08:42:25Z",
+        "body_sha256": "26fea339d8bf7580a3f83d80b6c846b6d295450d5cb14a17f5dada2d29c76031",
+        "prs": []
+      },
+      "2910": {
+        "number": 2910,
+        "title": "[Feature] 接入 A5 URMA SHARED_POOL 并推动 ISA 初始化回退修复",
+        "state": "closed",
+        "state_reason": "NOT_PLANNED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2910",
+        "updated_at": "2026-11-09T02:02:59Z",
+        "body_sha256": "8129019cc5f9804069d00253263c02241b5a603d16a8b192bbac9dedc785b02a",
+        "prs": []
+      },
+      "2911": {
+        "number": 2911,
+        "title": "[Feature] 支持 A5 URMA 单 AIV 多 jetty 的有效使用与验收",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2911",
+        "updated_at": "2026-11-10T07:40:58Z",
+        "body_sha256": "a74335108329338818da6fd38ac640ae3965f6f9af8db2f25d7d54f24b646fa5",
+        "prs": [
+          {
+            "number": 2929,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2929",
+            "head": "0b7b554ba654b8261dbda49115c14ef53db4695f",
+            "merge": "2af686f219bfe6640bb9e23e416ea8ff878fe570",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2938": {
+        "number": 2938,
+        "title": "[Feature] Initialize Host communication domains on first creation",
+        "state": "closed",
+        "state_reason": "COMPLETED",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2938",
+        "updated_at": "2026-11-09T08:35:36Z",
+        "body_sha256": "26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7",
+        "prs": [
+          {
+            "number": 2939,
+            "state": "MERGED",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2939",
+            "head": "4b3bf8745ce4f911f13475608affbace6a9b119c",
+            "merge": "f9273457744ae6c7783a98e96aa10e4b5ab24ac5",
+            "in_main": true,
+            "draft": false
+          }
+        ]
+      },
+      "2969": {
+        "number": 2969,
+        "title": "[Bug] A5 URMA first GET stalls waiting for CQE on physical cards 5 to 6",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2969",
+        "updated_at": "2026-11-09T10:45:32Z",
+        "body_sha256": "fa102160635bcbaeb850fd2817c7fff53fb83593465eee813c6bb340f559fbd3",
+        "prs": []
+      },
+      "2971": {
+        "number": 2971,
+        "title": "[Feature] CCU 完整用户 kernel 接入方案：通信域、独立 mission、AIV 触发与生命周期",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2971",
+        "updated_at": "2026-11-10T12:01:40Z",
+        "body_sha256": "ba47e044b1f9f2557be671a2c81461d4b07a3fb31812e7d9c9177696db6fb1c6",
+        "prs": [
+          {
+            "number": 2974,
+            "state": "OPEN",
+            "url": "https://github.com/hw-native-sys/simpler/pull/2974",
+            "head": "606be9d3f8c9ec6a2ce0be26c928ae19488792f3",
+            "merge": null,
+            "in_main": false,
+            "draft": false
+          }
+        ]
+      },
+      "2988": {
+        "number": 2988,
+        "title": "[Design] Kernel mode 多卡通信：能力边界、方向清单与首期交付",
+        "state": "open",
+        "state_reason": "",
+        "url": "https://github.com/hw-native-sys/simpler/issues/2988",
+        "updated_at": "2026-11-10T11:39:35Z",
+        "body_sha256": "77975102af8981a9b7bf52b7dd1f480c57110374eca8fbae6135c913e5e9d1d7",
+        "prs": []
       }
     },
     "ownership": [
@@ -3267,20 +3952,12 @@
         "child": 2721
       },
       {
-        "parent": 2716,
-        "child": 2722
-      },
-      {
-        "parent": 2716,
-        "child": 2723
-      },
-      {
-        "parent": 2716,
-        "child": 2724
-      },
-      {
         "parent": 2721,
         "child": 2460
+      },
+      {
+        "parent": 2460,
+        "child": 2888
       },
       {
         "parent": 2721,
@@ -3289,6 +3966,10 @@
       {
         "parent": 2721,
         "child": 2720
+      },
+      {
+        "parent": 2716,
+        "child": 2722
       },
       {
         "parent": 2722,
@@ -3307,8 +3988,40 @@
         "child": 2657
       },
       {
+        "parent": 2657,
+        "child": 2730
+      },
+      {
+        "parent": 2657,
+        "child": 2731
+      },
+      {
+        "parent": 2657,
+        "child": 2922
+      },
+      {
+        "parent": 2657,
+        "child": 2938
+      },
+      {
         "parent": 2722,
         "child": 2708
+      },
+      {
+        "parent": 2708,
+        "child": 2673
+      },
+      {
+        "parent": 2708,
+        "child": 2674
+      },
+      {
+        "parent": 2708,
+        "child": 2910
+      },
+      {
+        "parent": 2708,
+        "child": 2911
       },
       {
         "parent": 2722,
@@ -3359,36 +4072,32 @@
         "child": 2860
       },
       {
+        "parent": 2722,
+        "child": 2885
+      },
+      {
+        "parent": 2722,
+        "child": 2969
+      },
+      {
+        "parent": 2722,
+        "child": 2971
+      },
+      {
+        "parent": 2716,
+        "child": 2723
+      },
+      {
+        "parent": 2716,
+        "child": 2724
+      },
+      {
         "parent": 2724,
         "child": 2659
       },
       {
-        "parent": 2460,
-        "child": 2888
-      },
-      {
-        "parent": 2657,
-        "child": 2730
-      },
-      {
-        "parent": 2657,
-        "child": 2731
-      },
-      {
         "parent": 2659,
         "child": 2899
-      },
-      {
-        "parent": 2708,
-        "child": 2673
-      },
-      {
-        "parent": 2708,
-        "child": 2674
-      },
-      {
-        "parent": 2708,
-        "child": 2885
       }
     ],
     "native_blocker_observation": {
@@ -3422,7 +4131,8 @@
         "native_tree_nodes": 33,
         "native_tree_edges": 32
       },
-      "meaning": "本轮成功读取的 blocked_by 均为空；正文仍明确存在合同依赖（例如 #2730→#2731），不能据此断言没有依赖。"
+      "meaning": "2026-11-05 的原生 blocked_by 查询为空，保留历史口径；本轮依赖取当前正文，不能把原生字段为空当作没有依赖。",
+      "observed_at": "2026-11-05T08:49:45.036422+00:00"
     },
     "questions": [
       {
@@ -3433,7 +4143,7 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6653477675",
           "label": "#2721 · 执行设计澄清",
           "sha256": "128dd1ac78bf361a18588aea7fda72a60b6cc7cc61cf9070686f645488bb3ec9",
-          "observed_at": "2026-11-05T08:49:45.036422+00:00"
+          "observed_at": "2026-11-10T13:45:28.010397+00:00"
         }
       },
       {
@@ -3444,7 +4154,7 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2724#issuecomment-6652724365",
           "label": "#2724 · 部署设计问题",
           "sha256": "8013cbf94c48f1e8998dba9174e3021bc3ca1a4183b9c8cb23526bf9f572193c",
-          "observed_at": "2026-11-05T08:49:45.036422+00:00"
+          "observed_at": "2026-11-10T13:45:28.010397+00:00"
         }
       },
       {
@@ -3455,9 +4165,675 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2722#issuecomment-6652726385",
           "label": "#2722 · 通信设计问题",
           "sha256": "34bdd72278bbe5edb909c853f8b9ab8847b9f0a2ad73d831c652eef5e49b9514",
-          "observed_at": "2026-11-05T08:49:45.036422+00:00"
+          "observed_at": "2026-11-10T13:45:28.010397+00:00"
         }
       }
-    ]
+    ],
+    "ownership_observation": {
+      "observed_at": "2026-11-10T13:45:28.010397+00:00",
+      "nodes": 39,
+      "edges": 38,
+      "issues_read": 50
+    },
+    "observations": {
+      "2721": {
+        "phase": "partial",
+        "label": "已有基础 · 迁移中",
+        "current": "公共 Tensor/Buffer 与接纳保护已有合入；模型、旧协议及消费者迁移未收口。",
+        "next": "推进 #2460/#2888/#1931；先确认 #2720 Region 边界，再核 #2635。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2635,
+            "title": "Update: publish endpoint-based Region and SPSC queue APIs",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "05a058f9c85c59b0583be014813022fda5539c13",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2635",
+            "in_main": false
+          },
+          {
+            "number": 2820,
+            "title": "Add: local L3 multi-worker A3 Host buffer mappings",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "d85931ffaed4039e720d9a1ef4b9e0695435f466",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2820",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2721",
+            "label": "#2721 · 正文",
+            "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2460": {
+        "phase": "partial",
+        "label": "部分交付",
+        "current": "公共入口与直接 L2 绑定已有基础；COW 清理和跨 endpoint 迁移仍在目标内。",
+        "next": "明确现有消费者迁移差额，避免将局部 MAP 当作统一模型完成。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2820,
+            "title": "Add: local L3 multi-worker A3 Host buffer mappings",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "d85931ffaed4039e720d9a1ef4b9e0695435f466",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2820",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2460",
+            "label": "#2460 · 正文",
+            "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2720": {
+        "phase": "design",
+        "label": "方案待收敛",
+        "current": "Issue 明确完整方案待分析；#2635 为候选，SPSC 公共 API 未因此获批准。",
+        "next": "以共享区间、真实访问和必要同步收敛职责；queue/发布协议留给应用。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2635,
+            "title": "Update: publish endpoint-based Region and SPSC queue APIs",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "05a058f9c85c59b0583be014813022fda5539c13",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2635",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2720",
+            "label": "#2720 · 正文",
+            "sha256": "0ce2382b95356e29bc4d3eb101338a11cfd05ed68b0f57bb09c4598e5aa2be40",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2496": {
+        "phase": "external",
+        "label": "外部能力待确认",
+        "current": "A5 Device→Host 映射仍开放，与 Host→Device MAP 方向相反。",
+        "next": "向所选 direct-map 消费者确认驱动版本和接口；copy 路径可独立推进。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2496",
+            "label": "#2496 · 正文",
+            "sha256": "36baae0d0d1a464fe5b14ac1318506d5cfaf774189dac049b55e2e6d6ce1781b",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "824": {
+        "phase": "delivered",
+        "label": "已有主线基础",
+        "current": "跨 Run 域使用与复用已由 #2668 交付；本 Issue 已关闭。",
+        "next": "复用既有寿命基础；扩展拓扑和失败组合继续在消费者验收。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/824",
+            "label": "#824 · 正文",
+            "sha256": "2aa481c9df92b849e2c55e0b519e5edd1c8bc103d6b23ec4f996a0c9920972dc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2724": {
+        "phase": "partial",
+        "label": "已有基础 · 故障闭环中",
+        "current": "session epoch、逐 rank 清理回执、独立 health timeout 已有交付。",
+        "next": "评审 #2791/#2900，继续 #2659 部署迁移及结果/退出/释放分别验收。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2791,
+            "title": "Support direct MPI startup artifacts and drained task completion",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "26b5af59e0ea15f07508a3a3fd90a2291160beab",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2791",
+            "in_main": false
+          },
+          {
+            "number": 2900,
+            "title": "Fix: honor MPI group completion after a timed wait",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "56c0946a839dc78277ab764a8664fa6b830ec473",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2900",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2724",
+            "label": "#2724 · 正文",
+            "sha256": "a823d3788eb52ab8608da197046d5a46d07fbedbb71aff3a3758cc0e059081c4",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2722": {
+        "phase": "partial",
+        "label": "多项合入 · 扩展中",
+        "current": "域寿命、URMA 和 Host 域已有交付；MAP、子域、CCU 与故障处理分别推进。",
+        "next": "#2893 对齐 MAP；#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2714,
+            "title": "Add: per-call MAP for local A5 Host DDR access",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "mergeCommit": {
+              "oid": "7be3fd3126db6b1d075fa5ba32611d833122cbe0"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "in_main": true
+          },
+          {
+            "number": 2893,
+            "title": "Add: share L3 Host DDR with A5 URMA reads",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "in_main": false
+          },
+          {
+            "number": 2970,
+            "title": "Add: support ordered Device URMA subgroups on A5",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "b6ba2e8e306d62de6aa6777df145c4a386e5ebec",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2970",
+            "in_main": false
+          },
+          {
+            "number": 2974,
+            "title": "Add: define native CCU module and completion ABI",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "606be9d3f8c9ec6a2ce0be26c928ae19488792f3",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2974",
+            "in_main": false
+          },
+          {
+            "number": 2789,
+            "title": "Fix: retire dynamic communication handshake files safely",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "1714b9c4910691e76e56b12a6f38a81a5ff85b54",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2789",
+            "in_main": false
+          },
+          {
+            "number": 2940,
+            "title": "Fix: isolate communicator bootstrap across Worker lifetimes",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "60cdf42a4a6a40d073059a39fc99a2674aaa0d5d",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2940",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2722",
+            "label": "#2722 · 正文",
+            "sha256": "af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2723": {
+        "phase": "design",
+        "label": "示例已有 · 通用契约待定",
+        "current": "已有多轮交互示例；原生子项尚为空（对照 #2722 有 20 个直接子项）。",
+        "next": "定义同一 Run 的 work/completion、背压、STOP/drain 和异常收尾验收。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2723",
+            "label": "#2723 · 正文",
+            "sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2666": {
+        "phase": "partial",
+        "label": "执行基础持续交付",
+        "current": "native submit、部分 capture 与 stock 图桥接已有合入；按实际平台/入口限定。",
+        "next": "向应用交付可复现的 eager/capture 公共入口与版本组合，边界留在原 track。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2972,
+            "title": "Support: capture native submissions with stock Torch-NPU",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "f9b749c9cdc6474b437f29a42a4860c6a5783d8f",
+            "mergeCommit": {
+              "oid": "20af3c1d25aa4cc04f22680ab8360d6e3cdfe042"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2972",
+            "in_main": true
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2666",
+            "label": "#2666 · 正文",
+            "sha256": "61ee277a6fdaa25ed7df029f499c94a3bdcdd04ce6c05ecd14fced0a4e5f6eb8",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2715": {
+        "phase": "flight",
+        "label": "CI 入口在飞",
+        "current": "目标环境与 Engine 验证已有历史证据；#2748 仍为 draft。",
+        "next": "与 #2429 的 Lib 正式 CI 和软件栈对齐，再核短测工具/Daily 去留。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2748,
+            "title": "Support: add real vLLM eager A3 integration watch",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "04d03179592188dbe704aef8ccc6361a1791d462",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2748",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2715",
+            "label": "#2715 · 正文",
+            "sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2429": {
+        "phase": "acceptance",
+        "label": "本地六格 · 主线/CI 待收口",
+        "current": "最新正文记录 Program 两格及 vLLM eager/capture 四格的本地结果。",
+        "next": "先完成各仓 main 和正式六格 CI；原 HBG 数值合同与同卡性能复验分别收口。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2605,
+            "title": "Add fixed-shape vLLM eager integration",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "591f003be553ae074dbcec1fcb55e41445b479a8",
+            "mergeCommit": null,
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2605",
+            "in_main": false
+          },
+          {
+            "number": 2948,
+            "title": "Add: check Qwen Program requests through the serving engine",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "1be20db0b90d207f0f6525529cfa9dd85a54564c",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2948",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2429",
+            "label": "#2429 · 正文",
+            "sha256": "8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2658": {
+        "phase": "acceptance",
+        "label": "局部验证 · 组合验收中",
+        "current": "11 月 4 日评论报告 M0/M1 局部完成、M2 部分完成；不是四仓全 main 验收。",
+        "next": "M2 持续请求/自动准入/DEVICE 反馈，M3 同条件性能，M4 合入组合回归。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2658",
+            "label": "#2658 · 正文",
+            "sha256": "a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          },
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6625458806",
+            "label": "#2658 · 阶段交付评论",
+            "sha256": "c594f449a4ae7eb4008ee4866b10b56213a770d42a2c7afdffbb923d74cabdf8",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2730": {
+        "phase": "delivered",
+        "label": "已合入 main",
+        "current": "PR #2714 于 11 月 10 日合入；代码评审已验证 framework Host-use 修复。",
+        "next": "#2731 复用最终 MAP 接口；当前合入组合的硬件资格按精确版本留证。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2714,
+            "title": "Add: per-call MAP for local A5 Host DDR access",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "mergeCommit": {
+              "oid": "7be3fd3126db6b1d075fa5ba32611d833122cbe0"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "in_main": true
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2730",
+            "label": "#2730 · 正文",
+            "sha256": "3a15b0586dd0b7f3b7e9083d32f885dd816361f649e7ad45cf7cebc7cc080bcc",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2731": {
+        "phase": "flight",
+        "label": "Draft · 需对齐 MAP",
+        "current": "PR #2893 仍为旧 URMA 形态的 draft；最终合同是多 L2 本地 MAP。",
+        "next": "移除 MAP 触发的 URMA 准备，基于 #2714 重整；验证至少两张 A5 的 TMR serial/staged。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2893,
+            "title": "Add: share L3 Host DDR with A5 URMA reads",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "in_main": false
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2731",
+            "label": "#2731 · 正文",
+            "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2657": {
+        "phase": "acceptance",
+        "label": "基础已落地 · 场景未收口",
+        "current": "本地 MAP、分片域、initializer 已合入；整表多 L2 路线仍在飞。",
+        "next": "按应用所选部署验证异步完成、有用计算重叠、拓扑与持续复用，不按子项关闭数收口。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2714,
+            "title": "Add: per-call MAP for local A5 Host DDR access",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
+            "mergeCommit": {
+              "oid": "7be3fd3126db6b1d075fa5ba32611d833122cbe0"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2714",
+            "in_main": true
+          },
+          {
+            "number": 2893,
+            "title": "Add: share L3 Host DDR with A5 URMA reads",
+            "state": "OPEN",
+            "baseRefName": "main",
+            "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
+            "mergeCommit": null,
+            "isDraft": true,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+            "in_main": false
+          },
+          {
+            "number": 2913,
+            "title": "Add: A5 Host-source communication domains",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "76d9ffbbf93dac9d58b31b80bd2c36d0d0d0d27d",
+            "mergeCommit": {
+              "oid": "e889508ceb8ed2945e45432609d5fed7ac6f997a"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2913",
+            "in_main": true
+          },
+          {
+            "number": 2939,
+            "title": "Add: initialize Host communication domains on creation",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "4b3bf8745ce4f911f13475608affbace6a9b119c",
+            "mergeCommit": {
+              "oid": "f9273457744ae6c7783a98e96aa10e4b5ab24ac5"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2939",
+            "in_main": true
+          },
+          {
+            "number": 2928,
+            "title": "Add: A3 Host-source communication domains",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "ecb7d06aad48a88a226baed9a0cf4f3e3c8c25d8",
+            "mergeCommit": {
+              "oid": "630e2024711d39b53867bb24e8c9ec3b94638d93"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2928",
+            "in_main": true
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2657",
+            "label": "#2657 · 正文",
+            "sha256": "da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2922": {
+        "phase": "delivered",
+        "label": "已合入 · 拓扑有限制",
+        "current": "PR #2913 已合入；本地 MTE 成功不能外推 PCIe 下跨 rank Host URMA 可用。",
+        "next": "保留 PCIe ACK timeout 边界；按设备/驱动/CANN 明确支持组合。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2913,
+            "title": "Add: A5 Host-source communication domains",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "76d9ffbbf93dac9d58b31b80bd2c36d0d0d0d27d",
+            "mergeCommit": {
+              "oid": "e889508ceb8ed2945e45432609d5fed7ac6f997a"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2913",
+            "in_main": true
+          },
+          {
+            "number": 2928,
+            "title": "Add: A3 Host-source communication domains",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "ecb7d06aad48a88a226baed9a0cf4f3e3c8c25d8",
+            "mergeCommit": {
+              "oid": "630e2024711d39b53867bb24e8c9ec3b94638d93"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2928",
+            "in_main": true
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2922",
+            "label": "#2922 · 正文",
+            "sha256": "9780680c30381e576722c7458998b4beca2fd5aa6b4c555c21e43ac5ca413f85",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      },
+      "2938": {
+        "phase": "delivered",
+        "label": "已合入 main",
+        "current": "PR #2939 提供首次创建 initializer；reuse 不重复初始化。",
+        "next": "应用负责分片/加载策略；端到端 Engram/Serving 组合留在父目标。",
+        "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
+        "trigger": "关联 PR head、CI、设计决定或验收证据更新",
+        "prs": [
+          {
+            "number": 2939,
+            "title": "Add: initialize Host communication domains on creation",
+            "state": "MERGED",
+            "baseRefName": "main",
+            "headRefOid": "4b3bf8745ce4f911f13475608affbace6a9b119c",
+            "mergeCommit": {
+              "oid": "f9273457744ae6c7783a98e96aa10e4b5ab24ac5"
+            },
+            "isDraft": false,
+            "url": "https://github.com/hw-native-sys/simpler/pull/2939",
+            "in_main": true
+          }
+        ],
+        "evidence": [
+          {
+            "url": "https://github.com/hw-native-sys/simpler/issues/2938",
+            "label": "#2938 · 正文",
+            "sha256": "26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7",
+            "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          }
+        ]
+      }
+    },
+    "next_actions": [
+      {
+        "issue": "2731",
+        "priority": "先推进",
+        "title": "共享整表 MAP 对齐主线",
+        "why": "#2714 已合入，映射基础已具备。",
+        "action": "移除 MAP 触发的 URMA 准备，基于 #2714 重整；验证至少两张 A5 的 TMR serial/staged。",
+        "view": "host"
+      },
+      {
+        "issue": "2722",
+        "priority": "并行评审",
+        "title": "子域隔离 / CCU / 通信故障",
+        "why": "不等待整个资源方向完成。",
+        "action": "#2893 对齐 MAP；#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
+        "view": "l3"
+      },
+      {
+        "issue": "2723",
+        "priority": "先定验收",
+        "title": "Region 与单 Run 常驻",
+        "why": "已有示例，通用边界与退出证据还需收敛。",
+        "action": "定义同一 Run 的 work/completion、背压、STOP/drain 和异常收尾验收。",
+        "view": "l3"
+      },
+      {
+        "issue": "2429",
+        "priority": "集成收口",
+        "title": "六格功能进入各仓 main / CI",
+        "why": "本地实测不等于已持续看护。",
+        "action": "先完成各仓 main 和正式六格 CI；原 HBG 数值合同与同卡性能复验分别收口。",
+        "view": "model"
+      }
+    ],
+    "snapshot": {
+      "main": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+      "observed_at": "2026-11-10T13:45:28.010397+00:00",
+      "issues_read": 50,
+      "main_prs_read": 139,
+      "main_merged_verified": 71,
+      "scope": "#2716 完整原生树及既有资源/模型交接入口；通用 kernel/HBG 内部实施仍由原 track 负责。",
+      "limits": "本轮核 GitHub 正文/评论、main 祖先与关键源码入口；没有重跑硬件，也没有独立复验跨仓本地成绩。",
+      "source_conflict": "#2716/#2722 的 11 月 10 日正文仍把 #2714 写为未合入；当前 PR merge SHA 已在 main，图以精确合入记录为准。"
+    }
   }
 }

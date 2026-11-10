@@ -6,7 +6,7 @@
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "curated design snapshot; resource, deployment, communication, execution and Qwen integration progress lives on GitHub; original code evidence baselines retained",
+  "scope": "GitHub progress/dependency snapshot and current Host DDR contracts; original code and hardware qualification boundaries retained",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -45,8 +45,8 @@
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "23d9a05c01eb108df09c1e158010dc6f30a8de04df73ad54aaa783d53d2fb7fd",
-      "published_sha256": "a4e0e3702b11a29b275c5b49561ed3dca9f692f34e84f6c0802cf6e6fd451b99"
+      "source_sha256": "42e85b0e75f63044eb9ce3fa99cf8d13aa7d53c510d98d4e37d6ef5922a776af",
+      "published_sha256": "72e5261f8ebbb8e875a2b05f1ad9178a34fdd4f055dff981c453dd337c357c1f"
     },
     {
       "path": "l3l4.md",
@@ -90,8 +90,8 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "a2469a38bd2c32cb1cff53174eb1c74b0d949c34a91ec6a61688817448e20898",
-      "published_sha256": "b53d521393918f6acaf32aba9b345d6ba368322adc3223947a3fed2adc59e990"
+      "source_sha256": "8cbe0954a4ce7e76fc8a115ff655e36fa4a2106e13348ffae19479d818273f3d",
+      "published_sha256": "7f435e82635aa9497876ed15d0ee6056ba4caea89f99d6a38c04e64dffd4448d"
     },
     {
       "path": "track-boundaries.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "work-items.md",
-      "source_sha256": "ec0de075491d4c03aed7f1ba306176dc17bb276d21824c8cfaaae78e54599b8f",
-      "published_sha256": "5a14ec0d281bc73de0545cdb61b8f3d6ad66d67e6bef316afe67e59a6dbdba72"
+      "source_sha256": "1682c20e375a59aa3c05cd6b532d52b1dc11d722634ed419fe5130f179b8b805",
+      "published_sha256": "d3ff250f49fc50d109d7f74d7d54a15f394cf10b7f2987db44851ca360ff91f7"
     },
     {
       "path": "worker-memory-model.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "worker-memory-model/user-surface.md",
-      "source_sha256": "a4bfeb5409e90552139d9874fae4274a7daaa8b444846aeb2f72c76eca4a8e41",
-      "published_sha256": "e2616a18e03d97f941e82917d38dc59f8a657d086dceca920eccfac7de4a1b28"
+      "source_sha256": "fe2503216b698e6f72d459a21310d52cb94655f20308db7de7a2401eb85a6059",
+      "published_sha256": "a83c7cbbd500b6bee304401892fc81df8554f9c4a6f84612032b56c9b25c773a"
     },
     {
       "path": "review/2026-09-28-cross-plan-lessons.md",
@@ -165,8 +165,8 @@
     },
     {
       "path": "l3plus-design.md",
-      "source_sha256": "78c0088ecc610e2d5164ecd42eefc97cf297ddf0324291667a076119be555ed5",
-      "published_sha256": "c14f5494297b4749dd8581bb12c0cd961ce0a3910e262306476b531d72d03617"
+      "source_sha256": "dd809b38b4f255af9137787934cb397770f3aa6d4a55fb95562ec554d3a6ad43",
+      "published_sha256": "4f4f7442ac621336641b0aa45da52f860f14cc504ab2e4781bb6e33692770b7e"
     },
     {
       "path": "review/track-2716.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "851382a9fc96ba2cede5cded48bb23fd46a3ab27c0cce9f03bdb1a748293e1c9",
-      "published_sha256": "e7abe2c811cd653a74326c500a559ac9c3d025cf7a304da9dbc731431ec8b34a"
+      "source_sha256": "89a9e9899ae153b09ed8e5deb0eb1ba59122777f0a946416edd29f04e57abcb3",
+      "published_sha256": "756979e8eebb3f8ab793b971e83b15809d68e354cd8f0d6c7e11d493f48a99c6"
     },
     {
       "path": "review/ra-handoff.md",
@@ -200,13 +200,13 @@
     },
     {
       "path": "dependency-dag.html",
-      "source_sha256": "30d3ddf7ca552264b2df4f80eed95da3305aa3eb1c48bd52a5654323262713d0",
-      "published_sha256": "65497ea9b70de5417913367abb74403cebc33d1cea2ae549c947de24df78624c"
+      "source_sha256": "ecf5439e2de766e066715bc5899efe531668dc7b1e7f3f2b3a5a9fcdf9661c92",
+      "published_sha256": "8a43fd3e3ce17f4e125793c5e8789b1eb9e94374c883f11d0cb54a77342e4b31"
     },
     {
       "path": "review/pr-2714.md",
-      "source_sha256": "7f6d8107ec7018810a1c6ebd96d26828979b206cfdd960a636977cb7d6341653",
-      "published_sha256": "63d4a20cd7649ba0510c568dbb7c052c8d86208fa5957b59c6b3aaa7a8c58738"
+      "source_sha256": "c80dd7b42b502bb792f31e7b69869bc2b629515c55e59b4dea9d4fd1917792eb",
+      "published_sha256": "0d37f9f481cb03116bacb6568bd14f9d6331bb763898f477111daff4a8662821"
     }
   ],
   "omitted_local_references": [
@@ -276,7 +276,12 @@
   "qwen_handoff_observed_on": "2026-11-05",
   "ds_handoff_observed_on": "2026-11-05",
   "ex_handoff_observed_on": "2026-11-05",
-  "dependency_graph_observed_at": "2026-11-05T08:49:45.036422+00:00",
+  "dependency_graph_observed_at": "2026-11-10T13:45:28.010397+00:00",
   "pr_2714_review_head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
-  "pr_2714_review_date": "2026-11-10"
+  "pr_2714_review_date": "2026-11-10",
+  "roadmap_main": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+  "doc_checks": {
+    "passed": 16,
+    "total": 16
+  }
 }

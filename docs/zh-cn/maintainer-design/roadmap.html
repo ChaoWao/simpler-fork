@@ -209,10 +209,14 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 复审快照；其他目标与 DAG 按各自原观察日期阅读。<a href="README.md">阅读入口</a>。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 进展与依赖快照；main 与各项验收范围分别留证。<a href="README.md">阅读入口</a>。</div>
 <div class="viz-root">
 
-<h1>simpler · 设计轨道与在飞项全景</h1>
+<h1>simpler · 当前进展与下一步</h1>
+<p class="sub">2026-11-10 · main <code>7be3fd3126db</code>。<a href="dependency-dag.html">全屏打开交互 DAG</a> · <a href="README.md">来源与进展登记</a>。下方历史材料保留各自验收基线。</p>
+<iframe id="current-roadmap" title="当前交付进展、依赖与下一步" src="dependency-dag.html" style="width:100%;height:1750px;border:1px solid var(--grid);border-radius:14px;background:#f5f8f8"></iframe>
+<details id="historical-roadmap" style="margin-top:24px"><summary style="cursor:pointer;font-size:16px;font-weight:650">历史阶段、验收索引与判断记录（按原日期阅读）</summary>
+<h2>设计轨道与历史具名证据</h2>
 <p class="sub">
   <b>状态与来源刷新 #2716</b>：2026-11-04，main <code>63ffeb8a8bd9</code>；四方向完整目标与本地合同索引见 <a href="review/track-2716.md">范围分析</a>。<br>
   资源入口核对：2026-11-05，16 项历史编号均有 GitHub 跟踪位置；设计澄清不代表实现验收。<br>
@@ -272,7 +276,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <h2>交付维度<span class="hint">用户能做什么 —— 轨道回答的是谁在做</span></h2>
 <div class="card" id="delivery"></div>
 
-<h2>PR 依赖图<span class="hint">箭头 = 硬前置；虚线 = 仅排序 / 已承接</span></h2>
+<h2>旧依赖图入口<span class="hint">已退役；当前关系见页首 DAG</span></h2>
 <div class="prg" id="prg"></div>
 
 <h2>跨轨道耦合<span class="hint">这一节才是分析的产出——单看任一轨道都看不见</span></h2>
@@ -307,11 +311,11 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   一律<b>图标 + 文字</b>，颜色从不单独承载含义。二者<b>互不借用</b>。
 </p>
 
+</details>
 </div>
 <div id="tip" role="tooltip"></div>
-
-<script type="application/json" id="data">
-{
+<script>window.addEventListener("message",e=>{const f=document.getElementById("current-roadmap");if(e.source===f.contentWindow&&e.data?.kind==="simpler-roadmap-height"&&Number.isFinite(e.data.height))f.style.height=Math.max(900,Math.min(18000,e.data.height+24))+"px";});</script>
+<script type="application/json" id="data">{
   "tracks": [
     {
       "name": "✅ Worker 异步准备流水",
@@ -1497,7 +1501,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
   "prgraph": {
     "title": "Issue / PR 依赖图",
     "hint": "箭头 = 硬前置；虚线 = 仅排序/已承接。节点颜色只编码进度，状态一律另写文字",
-    "note": "只画当前跨线交接；完整依赖在 work-items.md。口径 77132c7bf。",
+    "note": "旧图已退役；当前具体产物关系统一查页首 DAG。旧本地 RA/DS/EX 不恢复为实施轨。",
     "cols": [
       "✅ 已闭合",
       "现在动手",
@@ -1510,107 +1514,20 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
         "c": 0,
         "r": 0,
         "p": "done",
-        "lab": "已交付证据",
-        "sub": "P0 · P1-A/B · EX-6",
-        "st": "验收证据见 work-items.md §5",
-        "t": "历史实现不构成新的待办。"
-      },
-      {
-        "id": "#2721",
-        "c": 1,
-        "r": 0,
-        "p": "todo",
-        "lab": "#2721",
-        "sub": "device-id 翻译",
-        "st": "见工作项真源",
-        "t": "🔵 <b>待实现</b>。本基线 <code>src/a2a3/platform/onboard/host/device_runner.cpp:1182</code> 的注册仍传裸 <code>device_id_</code>；<code>acl_to_hal_device_id</code> 在该文件 0 命中，阳性对照 <code>halHostRegister</code> 16 处。#2460 的 direct-map 前置；树上 #1826 是同类修法。"
-      },
-      {
-        "id": "#2460",
-        "c": 2,
-        "r": 0,
-        "p": "flight",
-        "lab": "#2460",
-        "sub": "显式 Transfer",
-        "st": "见工作项真源",
-        "t": "🟡 <b>显式 TaskArgs-entry Transfer 已合入 #2454 <code>ec6a33dac</code></b>（定点核验 main <code>255d78568</code>）。TaskArgs::transfers_ 与 add_tensor 为同一 view 保留逐次 request；Remote v4 只接受可表达的 location-default request，U3 仍是后续范围。copy_to/copy_from 保持 identity；统一授权与新分配 identity 的公开契约仍按本项验收，不能仅凭 U1a 合入关闭整个 #2460。"
-      },
-      {
-        "id": "#824",
-        "c": 3,
-        "r": 0,
-        "p": "flight",
-        "lab": "#824",
-        "sub": "本地域 owner",
-        "st": "见工作项真源",
-        "t": "🟡 <b>owner 转移在飞 #2120</b>（OPEN，<code>cd69b1e0ecf9</code>）。main <code>worker.py</code> 中 <code>detach_persistent_domain</code> 0 命中，阳性对照 <code>retain_after_run</code> 3 处；现有保留寿命不等于独立 Worker ownership。与 DS-4 共用契约 A，与 #2460 共用契约 D；用户尚未裁决两种资源 registry 的归一形状。"
-      },
-      {
-        "id": "#2460",
-        "c": 1,
-        "r": 1,
-        "p": "todo",
-        "lab": "#2460",
-        "sub": "logical close 与释放",
-        "st": "见工作项真源",
-        "t": "⛔ <b>U4 退出条件未满足</b>。<code>Buffer.close</code> 仍直接执行 <code>shm.close/unlink</code>；#2446 的 device borrow 与 #1689 的 cleanup journal 是现有基座。需统一 logical close、accepted-use/grant retention 与 allocator 物理释放，保持现有在飞 free 拒绝。#1931 的 child allocation/free 可信记录归本项。<b>U4 必须等 U2b 与 U3 的 network→H2D 合并验收</b>；契约 D 的 registry 归一裁决仍有对象，未擅自选择。普通 Tensor wrapper 不延长 HeapRing scope。 main <code>255d78568</code> 的 #2467 已让 Worker.free 与直接 L2 接受登记共用 chip lock；release_buffer 仍在采样后解锁再 close，统一 lifecycle 的退出条件仍未满足。#2474 只说明这个边界。"
-      },
-      {
-        "id": "#2666",
-        "c": 2,
-        "r": 1,
-        "p": "flight",
-        "lab": "#2666",
-        "sub": "device workspace",
-        "st": "见工作项真源",
-        "t": "🟡 <b>直接 L2 与 startup-root 本地 L3 的 workspace ownership 已交付</b>（main <code>255d78568</code>）。#2440 <code>9ca91c522</code>、#2452 <code>a1ca296f8</code>、#2464 <code>818ee04d7</code>；Worker._chip_children_manage_workspace 按 device_ids 与 _is_startup_root 决定 child ownership。nested/remote/MPI 路由与 L3 byte budget 不属于 #2464 保证。#2473 OPEN <code>28348c728831</code> 目标是下沉至全部 onboard program context，尚非 main 行为。退役须核 run/completion/host-view 引用、隔离未知执行与实际 free 结果；不拆 #2721 的 hierarchical HeapRing，也不合并 #2460 的用户 Buffer registry。"
-      },
-      {
-        "id": "DS-1",
-        "c": 3,
-        "r": 1,
-        "p": "todo",
-        "lab": "DS-1",
-        "sub": "session / epoch registry",
-        "st": "见工作项真源",
-        "t": "🟢 <b>session/epoch 生产契约待实现，无工作项前置</b>。本基线 daemon <code>_start_session</code> 仍明确 host_tcp 无 ACK/lease；已有 startup session 不等于 P2-A 的 daemon-owned registry 与租约。blocked 项可以先做不依赖它的部分。"
-      },
-      {
-        "id": "EX-7",
-        "c": 1,
-        "r": 2,
-        "p": "flight",
-        "lab": "EX-7",
-        "sub": "连续 run 的顺序",
-        "st": "见工作项真源",
-        "t": "🟡 <b>有边界的生产 early enqueue 已交付</b>。#2419 <code>5818054bb</code> 为同 endpoint 的非 group 单 NEXT_LEVEL run 提供 joined enqueue；#2446 <code>0ff85d6a4</code> 保留 caller device borrow 并按 producer 约束 host read；#2449 <code>410502f7b</code> stage 全部 eligible successor worker（#2415 CLOSED）。<b>三 run 容量 #2466 在飞</b>（<code>9038cb7a6fb2</code>），限定 onboard A3 HBG/level-3 root/单 local endpoint/无 SUB，设备 operator 仍串行。新 head 补 disposition 迟到晋升的重新发布、默认 grant=2 与 fork 前范围拒绝；16-run refill 按 dispatch identity 复用验收，当前形态的 scene cases 尚未执行（作者执行账本），不能记为验证完成。#2429 的 Step 3 clone-request/独立 KV 与连续 refill 验收归本项：同内容不等于同存储，#2459 distinct-row 数值工作不是开始 clone 路径的前置。Qwen #2447/#2456 均 OPEN，effective depth=1 fallback 不证明真实 Qwen depth-two enqueue。 #2028（OPEN，<code>46e3adf123ee</code>）按当前 Track A 契约比较；#1987 是历史参考 draft，#1967 的 group activation 属本项/EX-3 交接。#2425 的五条 early-enqueue 验收作为本项约束，CI 标签不代表基础设施问题。"
+        "lab": "历史图已归档",
+        "sub": "当前进展见页首 DAG",
+        "st": "依赖与业务进度归 GitHub",
+        "t": "#824 的跨 Run 域寿命由 #2668 交付。原图的 session、资源与执行待办沿静态交接归入 GitHub，不按过期 daemon/lease 或本地编号重新排期。"
       }
     ],
-    "edges": [
-      {
-        "a": "#824",
-        "b": "#2460",
-        "lab": "契约 D；U4 尚需 U2b/U3 验收",
-        "dash": false
-      }
-    ],
+    "edges": [],
     "standalone": {
       "t": "推进判据",
       "items": [
         {
-          "lab": "公共资源：U1a 与生命周期",
-          "sub": "#2460 / #824 / #2460 / #2666",
-          "t": "按现有 PR head 评审，Buffer/domain registry 裁决仍挂契约 D；workspace ledger 不代替它。"
-        },
-        {
-          "lab": "DS：生产 session/lease 与事务闭环",
-          "sub": "DS-1 / DS-2 / DS-9",
-          "t": "完整验收依赖不阻止 backend 与本地 owner 部分先行。"
-        },
-        {
-          "lab": "EX：有界能力扩展与 clone-request 验收",
-          "sub": "EX-1 / EX-7",
-          "t": "区分 prepared、enqueued、completed、retired；effective depth-one fallback 不证明 joined enqueue。"
+          "lab": "当前依赖与下一步",
+          "sub": "页首进展 DAG",
+          "t": "按观察时间、具名 main PR 和实际合同判断；Issue 父子关系独立于前置。"
         }
       ]
     }
@@ -1619,6 +1536,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-10 · 进展 DAG 的证据与前置边界",
+        "b": "旧 DAG 把 #2731 写成多 L2 URMA，并把单 workspace 限制带进当前设计，这是过期合同。当前按调用 MAP → 多 L2 本地 MAP；分片 Host 域/initializer 独立供应用消费。#2714 merge <code>7be3fd3126db6b1d075fa5ba32611d833122cbe0</code> 已在 main，早先等待合入的动作撤回。关闭必须区分交付与 NOT_PLANNED 暂缓；本地六格成绩必须区别于各仓 main/正式 CI。图提供当前观察、下一步和精确 PR 版本，父子归属单列；不以完成比例推断产品验收。 同页旧 prgraph 曾继续把 #824 标在飞并复活 DS/EX 待办，缓存更新后才暴露；旧依赖图现退役，当前关系只由同一 DAG 投影。"
+      },
       {
         "t": "2026-11-10 · framework 退休修复的复核边界",
         "b": "当前 #2714 head d9ee29e55a90 已补齐 framework Host use 退休，原 HBG/TMR 两个失败探针与普通 wait 对照均通过。旧缺陷只对 c15ba2529ae0 有效，不能作为新 head 的阻塞。新判据：清理重试须分别证明幂等 Host release 与非幂等 Device decrement 的处理；纯 rebase 也可能改变 A5 executor，MAP 文件相同不能外推完整硬件资格。当前代码评审通过，最终 A5 验证仍待补；本次不推进全局 DAG/目标状态。"
@@ -2196,8 +2117,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
       "scope": "默认自动准入、持续 refill、请求隔离、最后消费者与性能；#1853/#2316 为已交付历史。"
     }
   ]
-}
-</script>
+}</script>
 
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);

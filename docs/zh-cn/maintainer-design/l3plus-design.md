@@ -1,8 +1,8 @@
 # L3+：设计原则、职责与代码地图
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
->
-> **设计依据（2026-11-04）**：#2716 原生四方向、正文与决定性评论；#2657/#2730/#2731 采用当日更新的显式映射与全员完整 Buffer 注册合同。源码事实固定 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；下文明确区分实现与目标。实际进度查 GitHub；本地归属与验收入口见 [工作项](work-items.md)，来源和验收证据见 [范围分析](review/track-2716.md)。本轮没有执行产品或硬件测试。
+> **发布快照：2026-11-10。** GitHub 进展与依赖投影；源码和硬件结论按各自精确版本阅读。参见[阅读入口](README.md)。
+
+> **设计依据**：#2716 原生四方向、正文与决定性评论；Host DDR 合同按 2026-11-10 观察的按调用 MAP / 共享整表 / 独立分片域解释，详见 [用户面 §5.2](worker-memory-model/user-surface.md#52-api-契约与已交付边界)。源码事实固定 main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；下文明确区分实现与目标。实际进度查 GitHub；本地归属与验收入口见 [工作项](work-items.md)，来源和验收证据见 [范围分析](review/track-2716.md)。本轮没有执行产品或硬件测试。
 
 **L3+ 的职责，是把用户声明的任务、资源访问和依赖，落实为有明确归属、可验证顺序与可安全回收的执行。** 应用定义计算与通信协议；simpler 管理执行和资源机制。L3、L4 是编排树的位置，不能单凭层级推出内存可达性或通信能力。
 
@@ -30,7 +30,7 @@ flowchart TB
 这是职责图，不是现有文件的分层图。`worker.py` 同时含多种职责，模块拆分不能照抄现有文件边界。
 
 | 概念 | 回答的问题 | 必须分开的概念 |
-| ---- | ---------- | -------------- |
+| --- | --- | --- |
 | Worker / endpoint | 谁接受任务，处在哪个部署与控制树中？ | level、worker id、设备 id、MPI rank、domain rank 各有自己的命名空间 |
 | CallableHandle | 注册了哪个可执行内容，哪些目标能够执行？ | handle 属于注册它的 Worker；内容 digest 不授予跨 Worker 使用权 |
 | Run / Task | 哪次构图和执行；其中哪项工作依赖哪项？ | Python callback 返回、提交被接纳、设备完成、资源退休 |
@@ -102,7 +102,7 @@ Worker 的 local/global live table 持有域；`_RunResources` 记录本 run 的
 
 ### Buffer identity、访问选择与调用策略分开
 
-Buffer 表达 backing 身份、位置、容量和 owner；Tensor 表达几何。#2730/#2731 的目标进一步允许显式 mapped Tensor 携带不可伪造的目标访问引用：原生 Tensor 和映射 Tensor 保持同一 backing identity，但必须独立解析。访问选择不是把地址写进 Buffer，也不是修改 allocation-wide policy；direction 与 transfer 仍属于每次 TaskArgs 调用。
+Buffer 表达 backing 身份、位置、容量和 owner；Tensor 表达几何。#2730/#2731 通过 TaskArgs 条目级 `TensorTransfer.MAP` 选择目标端访问；Tensor 保持同一 backing identity，目标 registry 独立解析并保留实际 mapping。direction 与 transfer 均属于每次调用，Buffer 不回写目标地址。
 
 native CPU import、Device mapping、URMA registration 各有自己的目标上下文和生命周期。映射不复制；显式 H2D 产生独立 Device 存储。保持公共 Buffer/Tensor/TaskArgs 与既有 adapter 路径，不因 Host table 再建参数系统。具体约束见 [用户面 §5.2](worker-memory-model/user-surface.md#52-api-契约与已交付边界)。
 
@@ -127,7 +127,7 @@ native CPU import、Device mapping、URMA registration 各有自己的目标上�
 ## 4. 四方向如何承载完整设计
 
 | 完整业务方向 | 交付边界 | 本地合同索引 |
-| ------------ | -------- | ------------ |
+| --- | --- | --- |
 | #2721 编排调度、下发与资源访问 | #2460 的身份/视图/访问/寿命；#1931 free provenance；#2720 Region 完整方案 | GitHub 公共资源入口与 EX |
 | #2722 通信与后端 | 域复用、后端 workspace、Host fetch、必要通信 kernel、完成与安全释放随场景交付 | DS；公共访问/退休与 EX 完成联验 |
 | #2723 单 L2 Run 常驻 | 多轮 work/completion、停止接纳与 drain；分别证明 L3 进程复用、重复 run、单 Run 多轮 | #2723 |
@@ -140,9 +140,9 @@ GitHub 目标与验收入口 是横切合同索引，不重复分配场景 owner
 main 的 A5 SDMA/URMA provider 默认编译；域默认 `workspace_engines=()`，按需申请异步 workspace。A2/A3 的 `enable_sdma` 与 Worker 资源语义保持独立。当前 A5 URMA host 入口限定 L3、TMR、dense-prefix 有序成员；RDMA 仍有独立构建和使用限制。编译存在、资源创建成功、实际传输通过各自计证。来源：[A5 构建](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/CMakeLists.txt)、[资源构建与销毁](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/src/a5/platform/onboard/host/comm_hccl.cpp)、[Worker 校验](https://github.com/hw-native-sys/simpler/blob/63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0/python/simpler/worker.py)。
 
 | 目标 | 不可混为一项的验收 |
-| ---- | ------------------ |
+| --- | --- |
 | #2738 上下文入口 | A2/A3 SDMA 入口统一保留启用语义、资源 owner 和无 HCCL 域的单卡路径；不是其他 workspace 交付的硬前置 |
-| #2673 多 AIV / 多 peer | 验证稳定执行者到 ISA 独占队列组的映射与 SHARED_POOL 接入；不要求多个生产者共写同一 SQ |
+| #2673 多 AIV / 多 peer | 稳定执行者到独占队列的映射；共享池另归 #2910，当前暂缓，不作为已交付能力 |
 | #2833 重叠域 | AB/BC 同时存活、域内 rank/peer 映射正确、独立释放/重建；同时存活不等于传输时间重叠 |
 | #2855 批量 TPUT | 首版单域、单发送者、同 peer；明确暂存、flush、尾批和实际多队列完成；可独立于多 AIV 交付 |
 | #2787 / #2823 生命周期 | URMA 与 RDMA 各自证明实际 manager、注册/channel 依赖、部分初始化和释放失败闭环 |
@@ -150,25 +150,24 @@ main 的 A5 SDMA/URMA provider 默认编译；域默认 `workspace_engines=()`�
 
 以上为设计与验收分工，状态见工作项。#2673 的旧“每 peer 必共用 SQ”与 #2674 的 query/enable 备选已由决定评论取代；不能照旧正文复活为新工作。
 
-### Host DDR：显式映射与两阶段完整交付
+### Host DDR：本地 MAP 与独立分片域
 
-\#2730 负责 direct L2 同进程 Host Buffer 的显式映射与同步本地 MTE；native Host/H2D 继续可用。#2731 复用该合同，由 L3 持有一块完整 Host Buffer，首版显式准备所有子 L2，至少两个合格 A5 rank，各自映射并注册同一完整 backing。**不自动分表，也不为每个 rank 复制表。**
+#2730 负责 direct L2 Host Buffer 的按调用 MAP 与同步本地 MTE；native/NONE/H2D 保留。#2731 复用该合同，由 L3 拥有完整 Host backing，在外层调用的 callback/设备执行前准备所有必需 child；至少两张 A5 的真实多进程证据用于验收，不是 MAP 的 peer 建链前置。支持多个 backing，各 child 本地 MTE，不准备 URMA。分片 Host 域及首次初始化另归 #2922/#2938。**应用负责布局和分片，MAP 不自动复制整表。**
 
 ```text
-Worker.init → 创建普通 Host Buffer → CPU 填表
-  → 协调各 L2 import / map / 全 Buffer 注册 / channel 与 workspace 初始化
-  → 全部必需成员确认 → 发布可用访问描述
-  → kernel 选择本地 MTE，或经有效非 self peer 发 PTO URMA 请求
-  → 对应传输完成后放行消费者 → 最后使用后逐层退休
+共享整表：L3 拥有 backing → 调用 MAP 准备所有必需 child
+  → callback 下发本地 MTE → 最后使用完成 → 协调各 child 清理
+分片域：各 L2 拥有独立 Host window → domain 建立映射/URMA
+  → 首次创建 initializer → 本地 MTE / 远端异步 URMA → domain 寿命回收
 ```
 
-地址相关初始化在协调 mapping 阶段完成，不强塞进 Worker.init，也不在每个 task 中临时发起 collective。Host workspace 使用 `get_dma_workspace(args, DMA_WORKSPACE_URMA)` 的预留路径，与 Device-domain `CommContext.workSpace` 分离，包含 post-init 发布和每任务绑定。首版每消费 L2 只允许一个活跃 Host registration set；额外独立 backing 明确拒绝。
+本地 MAP 不创建通信域、peer、MR 或 workspace。整表 backing 不按 rank 复制；多个 backing 的独立映射必须可共存。首次使用未声明 backing 的 callback 动态准备、子集/懒准备与 L4/跨节点 MAP 不属于 #2731 首版。L3 HBG 也须独立接入和验收。
 
-peer registered base 加 Buffer-relative Tensor offset 和数据 offset 定位；本地与 peer VA 无需数值相同。kernel 决定何时读什么，runtime 不自动 gather。使用 PTO-ISA 的 issue/session/completion；CANN Engram 只提供参考证据，不能把其应用分片策略或独立 Hcomm probe 当作 simpler PTO 路径已验收。L4、子集/懒准备、通用多表 workspace、独立 L2 URMA loopback 不属于这两阶段首版。
+分片域使用 domain 自己的通信资源，映射与 URMA 的可达性分别核定；#2922 的 PCIe ACK timeout 限制不能用本地 MTE 成功消除。应用决定分片、索引、何时读什么和如何重叠计算；runtime 不自动 gather。#2938 的首次初始化不包含 checkpoint 格式或 Serving 接入。父项 #2657 仍保留所选路径的异步完成、有效计算重叠与应用验收。
 
 ### Owner-local 扩展与部署
 
-\#2621 的扩展在已有 chip owner 的有效 device/context 中初始化，借用已校验的存储；停止后端访问并注销后才能解除 pin，且先于 allocation/context teardown。pin 保活不代替 producer-ready 或计算排序；扩展不取得物理 allocation ownership，也不要求引入通用 RPC 或第三方引擎依赖。
+#2621 的扩展在已有 chip owner 的有效 device/context 中初始化，借用已校验的存储；停止后端访问并注销后才能解除 pin，且先于 allocation/context teardown。pin 保活不代替 producer-ready 或计算排序；扩展不取得物理 allocation ownership，也不要求引入通用 RPC 或第三方引擎依赖。
 
 跨节点沿用 mpirun 与原生 CANN ACL Runtime/PTO 路线；SHMEM 是参考而非库依赖，具体后端按需使用 HCCL/Hcomm。启动控制通路与实际共享窗口数据面分别验收。#2659 的持久外部账本、关闭期限、故障回收与 Group 迁移，不能被已有 Direct MPI health timeout / heartbeat drain 代替。
 
@@ -177,9 +176,10 @@ peer registered base 加 Buffer-relative Tensor offset 和数据 offset 定位�
 新增接口先回答：哪个 owner 拥有资源；何时接纳与发布；哪个完成事实允许哪个动作；部分失败后谁还可能访问；是否存在正常回收的阳性对照。评审必须给出 main/PR/ISA/运行产物的具名版本，不能用历史 CI 绿代替当前路径。
 
 | 合同 | 反例 | 配对阳性对照 |
-| ---- | ---- | ------------ |
+| --- | --- | --- |
 | 显式映射 | native/mapped 同 identity 被错误合并；失效引用复活；unmap 失败后仍接纳 | native CPU/H2D 保留，多个 view 正确偏移；停止读者后正常 unmap/retry |
-| 多 L2 Host 访问 | 只准备消费者；半初始化发布；Device event 被 Host workspace 接管 | 全员同 backing、真实非 self PTO 读取、两类 workspace 正确共存 |
+| 多 L2 本地 MAP | 必需 child 未准备就发布、不同 backing 覆盖活映射 | 各 child 同一整表、至少两张 A5 本地 MTE；multiple backing 共存 |
+| 分片 Host 域 | 本地 MTE 成功被误认为远端 URMA 可达 | 真实非 self PTO 读取、Host/Device 域共存；按硬件拓扑留证 |
 | 域退休 | A 释放破坏 B；manager mock 替身遮住实际注册残留 | 真实 manager + 有状态 backend mock；多轮 allocate/release 与 B 持续可用 |
 | 批量传输 | 暂存当完成、尾批遗失、仅追踪最后 jetty、部分提交后重复发送 | 显式 flush 和正常返回处理尾批；实际每队列目标达成后消费 |
 | 执行/结果 | 执行 credit 归还即释放 caller-held 输出；旧 generation 完成影响新 run | 连续 run 复用执行资源，同时旧结果可观察且内容正确 |
