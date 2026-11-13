@@ -10,7 +10,7 @@
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 进展与依赖快照；main 与各项验收范围分别留证。<a href="README.md">阅读入口</a>。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-13 局部快照：#2893 / #2731 已合入；其他方向按原观察日期阅读。<a href="README.md">阅读入口</a>。</div>
 <header><div class="eyebrow">SIMPLER / DELIVERY ROADMAP</div><div class="headrow"><div><h1>现在到哪了，下一步做什么？</h1><p class="lede">按 GitHub 当前进展看交付，按<strong>产物提供方 → 消费方</strong>看依赖。点击节点查看 main PR、下一步和验收边界；接口可先对齐、工作可并行。</p></div><div class="stamp" id="stamp"></div></div>
 <div id="snapshot-metrics" class="snapshot-metrics"></div><p id="snapshot-note" class="snapshot-note"></p><section aria-label="下一步"><h2>建议先推进这几件事</h2><div id="next-actions" class="next-grid"></div></section>
 <nav class="tabs" aria-label="图的范围"><button class="tab active" data-view="overview">整体依赖</button><button class="tab" data-view="l3">L3+ 基础与场景</button><button class="tab" data-view="model">模型接入</button><button class="tab" data-view="host">Host DDR</button><button class="tab" data-view="buffer">#2460 合同细化</button><button class="tab" data-view="tree">责任归属树</button></nav></header>
@@ -27,7 +27,7 @@
 </main><footer><a href="roadmap.html" target="_top">路线图入口与历史证据</a> · 业务目标与进度以 GitHub 为准。本页是带观察时间的进展与依赖投影，不另建 RA / DS / EX 实施轨。Issue 的 OPEN / CLOSED 是 GitHub 状态，不代表全部代码或平台资格。页面可离线打开；证据链接需联网。</footer>
 <script type="application/json" id="data">{
   "observed_at": "2026-11-10T13:45:28.010397+00:00",
-  "main_reference": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+  "main_reference": "37c2ad5e1e083c9e805e24c002702423eef61c18",
   "scope": "GitHub 进展与下一步的定时快照；目标为 main 的 PR 单列；依赖与原生归属分开。不是新的本地实施轨。",
   "nodes": [
     {
@@ -276,15 +276,15 @@
       "title": "Host DDR：多 L2 整表 MAP",
       "group": "通信",
       "description": "L3 拥有整表，各 child 导入同一 backing 并本地 MTE。",
-      "note": "对齐已合入 #2714 的 MAP 与寿命合同；不准备 URMA/domain/workspace。允许多 backing，初始 A5 TMR；L3 HBG 独立验收。",
-      "state": "open",
+      "note": "已合入本机 A5 TMR 整表 MAP；映射不准备 URMA/domain/workspace。应用冲突写入仍需排序，L3 HBG/A3/远程不在本次交付。",
+      "state": "closed",
       "url": "https://github.com/hw-native-sys/simpler/issues/2731",
       "evidence": [
         {
           "url": "https://github.com/hw-native-sys/simpler/issues/2731",
           "label": "#2731 · 正文",
-          "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
-          "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          "sha256": "55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678",
+          "observed_at": "2026-11-13T11:50:34.868716+00:00"
         }
       ]
     },
@@ -584,15 +584,15 @@
       "to": "2731",
       "kind": "required",
       "label": "映射与寿命合同",
-      "contract": "多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；基础 #2714 已合入，#2893 可以对齐实现并独立验收。",
+      "contract": "多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；#2714 与 #2893 均已合入，关系表示已交付基础的复用。",
       "condition": "",
       "origin": "issue-body",
       "evidence": [
         {
           "url": "https://github.com/hw-native-sys/simpler/issues/2731",
           "label": "#2731 · 正文",
-          "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
-          "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          "sha256": "55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678",
+          "observed_at": "2026-11-13T11:50:34.868716+00:00"
         }
       ]
     },
@@ -1036,12 +1036,12 @@
         },
         {
           "number": 2893,
-          "state": "OPEN",
+          "state": "MERGED",
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "merge": null,
-          "in_main": false,
-          "draft": true
+          "head": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+          "in_main": true,
+          "draft": false
         },
         {
           "number": 2913,
@@ -1280,12 +1280,12 @@
         },
         {
           "number": 2893,
-          "state": "OPEN",
+          "state": "MERGED",
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "merge": null,
-          "in_main": false,
-          "draft": true
+          "head": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+          "in_main": true,
+          "draft": false
         },
         {
           "number": 2940,
@@ -1378,20 +1378,20 @@
     "2731": {
       "number": 2731,
       "title": "[Feature] L3 shared Host tables with per-device TensorTransfer.MAP",
-      "state": "open",
-      "state_reason": "",
+      "state": "closed",
+      "state_reason": "COMPLETED",
       "url": "https://github.com/hw-native-sys/simpler/issues/2731",
-      "updated_at": "2026-11-06T09:29:49Z",
-      "body_sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
+      "updated_at": "2026-11-13T11:44:12Z",
+      "body_sha256": "55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678",
       "prs": [
         {
           "number": 2893,
-          "state": "OPEN",
+          "state": "MERGED",
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "head": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "merge": null,
-          "in_main": false,
-          "draft": true
+          "head": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+          "in_main": true,
+          "draft": false
         }
       ]
     },
@@ -2171,7 +2171,7 @@
       "phase": "partial",
       "label": "多项合入 · 扩展中",
       "current": "域寿命、URMA 和 Host 域已有交付；MAP、子域、CCU 与故障处理分别推进。",
-      "next": "#2893 对齐 MAP；#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
+      "next": "复用已合入 #2893；其余按 11 月 10 日观察：#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
       "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
       "trigger": "关联 PR head、CI、设计决定或验收证据更新",
       "prs": [
@@ -2190,14 +2190,16 @@
         },
         {
           "number": 2893,
-          "title": "Add: share L3 Host DDR with A5 URMA reads",
-          "state": "OPEN",
+          "title": "Add: share L3 Host tables through per-device MAP",
+          "state": "MERGED",
           "baseRefName": "main",
-          "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "mergeCommit": null,
-          "isDraft": true,
+          "headRefOid": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "mergeCommit": {
+            "oid": "37c2ad5e1e083c9e805e24c002702423eef61c18"
+          },
+          "isDraft": false,
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "in_main": false
+          "in_main": true
         },
         {
           "number": 2970,
@@ -2425,38 +2427,53 @@
       ]
     },
     "2731": {
-      "phase": "flight",
-      "label": "Draft · 需对齐 MAP",
-      "current": "PR #2893 仍为旧 URMA 形态的 draft；最终合同是多 L2 本地 MAP。",
-      "next": "移除 MAP 触发的 URMA 准备，基于 #2714 重整；验证至少两张 A5 的 TMR serial/staged。",
+      "phase": "delivered",
+      "label": "已合入 main · 本机 A5 TMR",
+      "current": "PR #2893 已合入 main（37c2ad5e1e08）；多 L2 共享整表 MAP 已交付，上轮共享内存与 staged 判别力问题已修复。 本地技术评审通过；A5 数据来自作者记录，非本轮独立实测。",
+      "next": "复用已交付 MAP，在 #2657 验收应用的异步完成、有用计算重叠与持续复用；#2820 对齐共享准备契约。 不把 L3 建图重叠当作 Device kernel 同时执行。",
       "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
       "trigger": "关联 PR head、CI、设计决定或验收证据更新",
       "prs": [
         {
           "number": 2893,
-          "title": "Add: share L3 Host DDR with A5 URMA reads",
-          "state": "OPEN",
+          "title": "Add: share L3 Host tables through per-device MAP",
+          "state": "MERGED",
           "baseRefName": "main",
-          "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "mergeCommit": null,
-          "isDraft": true,
+          "headRefOid": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "mergeCommit": {
+            "oid": "37c2ad5e1e083c9e805e24c002702423eef61c18"
+          },
+          "isDraft": false,
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "in_main": false
+          "in_main": true
         }
       ],
       "evidence": [
         {
           "url": "https://github.com/hw-native-sys/simpler/issues/2731",
           "label": "#2731 · 正文",
-          "sha256": "0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547",
-          "observed_at": "2026-11-10T13:45:28.010397+00:00"
+          "sha256": "55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678",
+          "observed_at": "2026-11-13T11:50:34.868716+00:00"
+        },
+        {
+          "url": "https://github.com/hw-native-sys/simpler/pull/2893",
+          "label": "#2893 合入 main · 37c2ad5e1e08",
+          "sha256": "66bee4f91d3d67afd48680ac2c57a67c2ac7cfce8de5123917a4e15c8248c13c",
+          "observed_at": "2026-11-13T11:50:34.868716+00:00"
+        },
+        {
+          "url": "https://github.com/hw-native-sys/simpler/pull/2893#issuecomment-6847289612",
+          "label": "作者验证：18/18 共享内存回归、4/4 A5 样例、两种错误 backing 负对照",
+          "sha256": "ead25122862d620671f97ce38703a1a6e55fd9e4a495af8b32d198ba5b0e463a",
+          "observed_at": "2026-11-13T11:50:34.868716+00:00"
         }
-      ]
+      ],
+      "observed_at": "2026-11-13T11:50:34.868716+00:00"
     },
     "2657": {
       "phase": "acceptance",
       "label": "基础已落地 · 场景未收口",
-      "current": "本地 MAP、分片域、initializer 已合入；整表多 L2 路线仍在飞。",
+      "current": "本地 MAP、分片域、initializer 已有交付；整表多 L2 MAP 亦由 #2893 合入。父目标的应用与性能验收独立保留。",
       "next": "按应用所选部署验证异步完成、有用计算重叠、拓扑与持续复用，不按子项关闭数收口。",
       "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
       "trigger": "关联 PR head、CI、设计决定或验收证据更新",
@@ -2476,14 +2493,16 @@
         },
         {
           "number": 2893,
-          "title": "Add: share L3 Host DDR with A5 URMA reads",
-          "state": "OPEN",
+          "title": "Add: share L3 Host tables through per-device MAP",
+          "state": "MERGED",
           "baseRefName": "main",
-          "headRefOid": "91ced81f865d902c55d494b26236106f1ce9ddb0",
-          "mergeCommit": null,
-          "isDraft": true,
+          "headRefOid": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+          "mergeCommit": {
+            "oid": "37c2ad5e1e083c9e805e24c002702423eef61c18"
+          },
+          "isDraft": false,
           "url": "https://github.com/hw-native-sys/simpler/pull/2893",
-          "in_main": false
+          "in_main": true
         },
         {
           "number": 2913,
@@ -2613,10 +2632,10 @@
   "next_actions": [
     {
       "issue": "2731",
-      "priority": "先推进",
-      "title": "共享整表 MAP 对齐主线",
-      "why": "#2714 已合入，映射基础已具备。",
-      "action": "移除 MAP 触发的 URMA 准备，基于 #2714 重整；验证至少两张 A5 的 TMR serial/staged。",
+      "priority": "已交付 → 应用验收",
+      "title": "整表 MAP 已合入",
+      "why": "#2893 merge 37c2ad5e1e08；#2731 已关闭。",
+      "action": "复用已交付 MAP，在 #2657 验收应用的异步完成、有用计算重叠与持续复用；#2820 对齐共享准备契约。",
       "view": "host"
     },
     {
@@ -2624,7 +2643,7 @@
       "priority": "并行评审",
       "title": "子域隔离 / CCU / 通信故障",
       "why": "不等待整个资源方向完成。",
-      "action": "#2893 对齐 MAP；#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
+      "action": "复用已合入 #2893；其余按 11 月 10 日观察：#2970 评审；#2974 分阶段集成；跟进 #2854/#2860/#2969。",
       "view": "l3"
     },
     {
@@ -2653,6 +2672,15 @@
     "scope": "#2716 完整原生树及既有资源/模型交接入口；通用 kernel/HBG 内部实施仍由原 track 负责。",
     "limits": "本轮核 GitHub 正文/评论、main 祖先与关键源码入口；没有重跑硬件，也没有独立复验跨仓本地成绩。",
     "source_conflict": "#2716/#2722 的 11 月 10 日正文仍把 #2714 写为未合入；当前 PR merge SHA 已在 main，图以精确合入记录为准。"
+  },
+  "incremental_update": {
+    "observed_at": "2026-11-13T11:50:34.868716+00:00",
+    "scope": "#2893 / #2731 合入与具名评审；其他方向保留 2026-11-10 观察，新增 PR/issue 只做登记。",
+    "main": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+    "reviewed_head": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+    "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+    "review_verdict": "approve",
+    "issue_state": "CLOSED / COMPLETED"
   }
 }</script>
 <script>
@@ -2704,15 +2732,15 @@ function renderDetail(){const detail=$('detail');detail.classList.toggle('empty'
 function renderTree(){const kids=n=>D.ownership.filter(r=>r.parent===n).map(r=>r.child);function item(n,seen=new Set()){if(seen.has(n))throw Error('责任树存在环');const next=new Set(seen);next.add(n);const i=D.issues[n],cs=kids(n);return `<li><a href="${esc(i.url)}" target="_blank" rel="noopener">#${n} ${esc(i.title)}</a><span class="native-state">${i.state_reason==='NOT_PLANNED'?'暂缓 · NOT_PLANNED':i.state==='closed'?'CLOSED · 按具名交付范围':'OPEN'}</span>${(i.prs||[]).length?'<span class="native-pr">'+i.prs.map(p=>'PR #'+p.number+' '+p.state+(p.draft?' / Draft':'')).join(' · ')+'</span>':''}${cs.length?`<ul>${cs.map(c=>item(c,next)).join('')}</ul>`:''}</li>`;}$('tree').innerHTML=kids(2716).map(n=>`<article class="treebranch"><h3><a href="${esc(D.issues[n].url)}" target="_blank" rel="noopener">#${n} ${esc(D.issues[n].title)}</a></h3><ul>${kids(n).map(c=>item(c)).join('')||'<li>原生子项为空；本方向的正文仍有目标与验收。</li>'}</ul></article>`).join('');$('counts').textContent=`${D.ownership_observation.nodes} 个原生节点 · ${D.ownership.length} 条归属边`;$('board').scrollTop=0;}
 $('canvas').addEventListener('click',e=>{if(e.target.closest('a'))return;const n=e.target.closest('[data-node]'),edge=e.target.closest('[data-edge]');if(n){selected=selected===n.dataset.node?null:n.dataset.node;selectedEdge=null;render();}else if(edge){selectedEdge=edge.dataset.edge;selected=null;renderDetail();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'});}});$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-node]')){e.preventDefault();e.target.click();}});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.view;selected=selectedEdge=null;$('search').value='';$('only-required').checked=false;render();fit();$('board').scrollTop=0;$('board').scrollLeft=0;});for(const id of ['conditional','foundation','only-required'])$(id).onchange=()=>{selectedEdge=null;render();};$('search').oninput=()=>render();$('reset').onclick=()=>{selected=selectedEdge=null;$('search').value='';render();};$('plus').onclick=()=>{zoom=Math.min(1.8,zoom+.15);applyZoom();};$('minus').onclick=()=>{zoom=Math.max(.3,zoom-.15);applyZoom();};$('fit').onclick=fit;$('layout').onclick=()=>{vertical=!vertical;$('layout').textContent=vertical?'横向':'纵向';render();fit();};
-$('stamp').innerHTML=`进展快照 · ${esc(D.observed_at.slice(0,16).replace('T',' '))} UTC<br>main 引用 <code>${esc(D.main_reference.slice(0,12))}</code>`;
+$('stamp').innerHTML=`全量观察 · 2026-11-10<br>#2893 局部更新 · 2026-11-13<br>main 核对 <code>${esc(D.main_reference.slice(0,12))}</code>`;
 $('questions').innerHTML=D.questions.map(q=>`<div class="question"><h3>${esc(q.title)}</h3><p>${esc(q.text)}</p><a href="${esc(q.evidence.url)}" target="_blank" rel="noopener">#${q.issue} 设计问题</a></div>`).join('');
 $('edges-table').innerHTML=[...D.edges,...D.stage_edges].map(e=>`<tr><td>${esc(e.from)} → ${esc(e.to)}</td><td>${kinds[e.kind]}</td><td>${esc(e.contract)}${e.condition?'<br><strong>条件：</strong>'+esc(e.condition):''}</td><td>${evidence(e)}</td></tr>`).join('');
-$('audit').innerHTML=`<p>${esc(D.snapshot.scope)}</p><p>本轮获取 ${D.snapshot.issues_read} 个具名 Issue 的正文、评论与子项；#2716 原生树 ${D.ownership_observation.nodes} 节点 / ${D.ownership.length} 归属边。${D.snapshot.main_prs_read} 个 main 目标 PR，近期合入 ${D.snapshot.main_merged_verified} 个已核 main 祖先。</p><p>${esc(D.snapshot.limits)}</p><p>${esc(D.native_blocker_observation.meaning)} 正文阳性对照：#2730→#2731 明确映射合同，#2922→#2938 独立域初始化合同。</p><p>Issue CLOSED 不等于已交付：#2910/#2823/#2824/#2885 是 NOT_PLANNED 暂缓。合同 U 链及历史手工阶段不用于计算完成率。源码基线 <code>${esc(D.main_reference)}</code>。</p>`;
+$('audit').innerHTML=`<p>${esc(D.incremental_update.scope)}</p><p>${esc(D.snapshot.scope)}</p><p>本轮获取 ${D.snapshot.issues_read} 个具名 Issue 的正文、评论与子项；#2716 原生树 ${D.ownership_observation.nodes} 节点 / ${D.ownership.length} 归属边。${D.snapshot.main_prs_read} 个 main 目标 PR，近期合入 ${D.snapshot.main_merged_verified} 个已核 main 祖先。</p><p>${esc(D.snapshot.limits)}</p><p>${esc(D.native_blocker_observation.meaning)} 正文阳性对照：#2730→#2731 明确映射合同，#2922→#2938 独立域初始化合同。</p><p>Issue CLOSED 不等于已交付：#2910/#2823/#2824/#2885 是 NOT_PLANNED 暂缓。合同 U 链及历史手工阶段不用于计算完成率。源码基线 <code>${esc(D.main_reference)}</code>。</p>`;
 function dPhase(n){return esc(D.observations[n.id]?.label||(n.state==='contract'?'合同分解':n.state==='closed'?'GitHub CLOSED':n.group));}
 function prDetails(p){const merged=p.state==='MERGED';return `<div class="pr-item"><a href="${esc(p.url)}" target="_blank" rel="noopener">PR #${p.number}</a> · ${merged?'已合入 main':p.isDraft?'OPEN / Draft':'OPEN'}<br><span class="micro">${esc(p.title)}</span><code>${merged?'merge '+esc(p.mergeCommit.oid):'head '+esc(p.headRefOid)}</code></div>`;}
 function observation(n){const o=D.observations[n.id];if(!o)return '';return `<div class="observation"><h3>${esc(o.label)}</h3><p><b>当前：</b>${esc(o.current)}</p><p><b>下一步：</b>${esc(o.next)}</p><p class="micro">${esc(o.actor)} · 重新核对触发：${esc(o.trigger)}</p><div class="pr-list">${o.prs.map(prDetails).join('')}</div><details><summary>进展来源（正文与评论）</summary>${evidence(o)}</details></div>`;}
 function showNode(id,requestedView){view=requestedView;selected=id;selectedEdge=null;$('only-required').checked=false;$('search').value='';render();fit();$('board').scrollIntoView({behavior:'smooth',block:'start'});}
-$('snapshot-metrics').innerHTML=`<span class="metric">4 个 L3+ 方向 · 可并行</span><span class="metric">${D.ownership_observation.nodes} 个原生跟踪节点</span><span class="metric">#2714 已合入 main</span><span class="metric">${D.nodes.length} 个交接节点 · ${D.edges.length} 条关系</span>`;
+$('snapshot-metrics').innerHTML=`<span class="metric">4 个 L3+ 方向 · 可并行</span><span class="metric">${D.ownership_observation.nodes} 个原生跟踪节点</span><span class="metric">#2714 / #2893 已合入 main</span><span class="metric">${D.nodes.length} 个交接节点 · ${D.edges.length} 条关系</span>`;
 $('snapshot-note').innerHTML=`<b>读图口径：</b>颜色区分已合入基础、进行中、方案与验收。没有完成率；已合入不等于全平台通过。<br><b>观察差异：</b>${esc(D.snapshot.source_conflict)}`;
 $('next-actions').innerHTML=D.next_actions.map((a,i)=>`<article class="next-card"><div class="rank">${String(i+1).padStart(2,'0')} / ${esc(a.priority)}</div><h3>${esc(a.title)}</h3><p>${esc(a.why)}</p><p>${esc(a.action)}</p><button data-jump="${a.issue}" data-scope="${a.view}">查看 #${a.issue} 与依赖 →</button></article>`).join('');
 $('next-actions').onclick=e=>{const b=e.target.closest('[data-jump]');if(b)showNode(b.dataset.jump,b.dataset.scope);};

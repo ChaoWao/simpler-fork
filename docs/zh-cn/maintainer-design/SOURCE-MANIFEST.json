@@ -1,12 +1,12 @@
 {
-  "published": "2026-11-10",
+  "published": "2026-11-13",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
   "architecture_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "GitHub progress/dependency snapshot and current Host DDR contracts; original code and hardware qualification boundaries retained",
+  "scope": "Scoped PR 2893 / issue 2731 delivery and review; other direction observations retain 2026-11-10 evidence dates",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -90,8 +90,8 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "8cbe0954a4ce7e76fc8a115ff655e36fa4a2106e13348ffae19479d818273f3d",
-      "published_sha256": "7f435e82635aa9497876ed15d0ee6056ba4caea89f99d6a38c04e64dffd4448d"
+      "source_sha256": "cd62ab641731cc03b777f093a78ef4ec2af2f086053efe19ed94b87f41b3f3ad",
+      "published_sha256": "87e58696d220cd1ffdac5022bcd37992d0f395411dade8971ae070f4af457fc9"
     },
     {
       "path": "track-boundaries.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "work-items.md",
-      "source_sha256": "1682c20e375a59aa3c05cd6b532d52b1dc11d722634ed419fe5130f179b8b805",
-      "published_sha256": "d3ff250f49fc50d109d7f74d7d54a15f394cf10b7f2987db44851ca360ff91f7"
+      "source_sha256": "7a2b63c44192290c5b4a4e5f10abbbf58567649cb1a0d972ad9703c620b145c8",
+      "published_sha256": "967aaca9128d881567c95d3705559a0eb73276aef12224a81bbcc90d0a72e25f"
     },
     {
       "path": "worker-memory-model.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "89a9e9899ae153b09ed8e5deb0eb1ba59122777f0a946416edd29f04e57abcb3",
-      "published_sha256": "756979e8eebb3f8ab793b971e83b15809d68e354cd8f0d6c7e11d493f48a99c6"
+      "source_sha256": "88adf51baa0a203070d1f26f389c38fe1df8216700a2d225c26292fee3c2d2e5",
+      "published_sha256": "fe75cb98f9e47748d6f616e06a120d354d3e0f0fd8d083e2b4f7c97c61f16499"
     },
     {
       "path": "review/ra-handoff.md",
@@ -200,8 +200,8 @@
     },
     {
       "path": "dependency-dag.html",
-      "source_sha256": "ecf5439e2de766e066715bc5899efe531668dc7b1e7f3f2b3a5a9fcdf9661c92",
-      "published_sha256": "8a43fd3e3ce17f4e125793c5e8789b1eb9e94374c883f11d0cb54a77342e4b31"
+      "source_sha256": "d6ba85916129b780f15c16eb5db4d87d849460c2d8314e5210cb7aa7e88bd405",
+      "published_sha256": "b1eacaaf5780602da947a4bd1d028667a7792681a45223b2103a7f725ab5cb68"
     },
     {
       "path": "review/pr-2714.md",
@@ -279,9 +279,11 @@
   "dependency_graph_observed_at": "2026-11-10T13:45:28.010397+00:00",
   "pr_2714_review_head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
   "pr_2714_review_date": "2026-11-10",
-  "roadmap_main": "7be3fd3126db6b1d075fa5ba32611d833122cbe0",
+  "roadmap_main": "37c2ad5e1e083c9e805e24c002702423eef61c18",
   "doc_checks": {
     "passed": 16,
     "total": 16
-  }
+  },
+  "pr_2893_review_head": "4f04c79446882dde96bb5b173bb7d584ef230afa",
+  "pr_2893_merge": "37c2ad5e1e083c9e805e24c002702423eef61c18"
 }

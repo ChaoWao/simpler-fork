@@ -209,11 +209,11 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-10 进展与依赖快照；main 与各项验收范围分别留证。<a href="README.md">阅读入口</a>。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-13 局部快照：#2893 / #2731 已合入；其他方向按原观察日期阅读。<a href="README.md">阅读入口</a>。</div>
 <div class="viz-root">
 
 <h1>simpler · 当前进展与下一步</h1>
-<p class="sub">2026-11-10 · main <code>7be3fd3126db</code>。<a href="dependency-dag.html">全屏打开交互 DAG</a> · <a href="README.md">来源与进展登记</a>。下方历史材料保留各自验收基线。</p>
+<p class="sub">全量观察 2026-11-10；#2893 / #2731 局部更新 2026-11-13 · main 核对 <code>37c2ad5e1e08</code>。<a href="dependency-dag.html">全屏打开交互 DAG</a> · <a href="README.md">来源与进展登记</a>。下方历史材料保留各自验收基线。</p>
 <iframe id="current-roadmap" title="当前交付进展、依赖与下一步" src="dependency-dag.html" style="width:100%;height:1750px;border:1px solid var(--grid);border-radius:14px;background:#f5f8f8"></iframe>
 <details id="historical-roadmap" style="margin-top:24px"><summary style="cursor:pointer;font-size:16px;font-weight:650">历史阶段、验收索引与判断记录（按原日期阅读）</summary>
 <h2>设计轨道与历史具名证据</h2>
@@ -1536,6 +1536,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-13 · 共享整表 MAP 合入与测试证据",
+        "b": "#2893 merge <code>37c2ad5e1e083c9e805e24c002702423eef61c18</code> 已在 main，#2731 已关闭；head <code>4f04c79446882dde96bb5b173bb7d584ef230afa</code> 的两项评审问题已修复。旧“URMA draft / 待对齐 MAP”不是当前状态。判断判据：共享内存容量不能等同 payload 长度；不同 backing 必须用不同数据和独立输出验收；显式 gate 仅证明其实际约束的 L3 建图重叠。CI 绿色、作者 A5 实测与独立复验分开记录，合入不替代 #2657 应用/性能验收。本轮只推进该交付及关联投影，其他方向保留原观察日期。"
+      },
       {
         "t": "2026-11-10 · 进展 DAG 的证据与前置边界",
         "b": "旧 DAG 把 #2731 写成多 L2 URMA，并把单 workspace 限制带进当前设计，这是过期合同。当前按调用 MAP → 多 L2 本地 MAP；分片 Host 域/initializer 独立供应用消费。#2714 merge <code>7be3fd3126db6b1d075fa5ba32611d833122cbe0</code> 已在 main，早先等待合入的动作撤回。关闭必须区分交付与 NOT_PLANNED 暂缓；本地六格成绩必须区别于各仓 main/正式 CI。图提供当前观察、下一步和精确 PR 版本，父子归属单列；不以完成比例推断产品验收。 同页旧 prgraph 曾继续把 #824 标在飞并复活 DS/EX 待办，缓存更新后才暴露；旧依赖图现退役，当前关系只由同一 DAG 投影。"

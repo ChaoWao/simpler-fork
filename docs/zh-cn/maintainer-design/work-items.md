@@ -1,11 +1,11 @@
 # 工作项登记表 —— 本地合同归属与验收证据
 
-> **发布快照：2026-11-10。** GitHub 进展与依赖投影；源码和硬件结论按各自精确版本阅读。参见[阅读入口](README.md)。
-
+> **发布快照：2026-11-13。** #2893 / #2731 局部交付记录；其他代码与硬件结论保留原日期及版本。参见[阅读入口](README.md)。
+>
 > **2026-11-04 状态与来源刷新**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；全部本地编号重新推导，外部来源正文/决定性评论和 #2716 原生子树重新获取。新增交付、剩余合同及下一动作按本页和 [范围分析](review/track-2716.md)。下方 10 月 18 日保留为历史全量源码审计；当前具名代码/CI 核对不冒充所有平台的重新验收。
-
+>
 > **历史全量源码核验（2026-10-18）**：main `937c57efc71ad01a01c3a72072df075d2a5dd24f`；实现与验收证据分开记录，历史双机 CI 样本保留其实际测试 SHA。
-
+>
 > **本文是本地合同归属与验收证据的唯一真源；GitHub 是完整目标、实际 owner 与业务进度的真源。**
 > 每个工作项**恰好属于一条实施线**。它可以被任意多个交付里程碑引用，
 > **所有目标直接引用 GitHub，本地只保留合同、验收来源和历史证据，不维护重复进度。**
@@ -15,8 +15,7 @@
 > [`track-boundaries.md`](track-boundaries.md)。
 >
 > **建表日期**：2026-09-07。**核验基线**：`upstream/main@937c57efc71ad01a01c3a72072df075d2a5dd24f`（2026-10-18）。
-
-
+>
 > **PR 范围**：只采用目标为 main 的 PR。全量状态、目标来源和代码证据按各自具名基线阅读；#2716 与本轮具名交付按 11 月 4 日 main；OPEN 不等于尚未实现，MERGED 不等于整个父目标完成。
 
 ## 0. 为什么会有这张表
@@ -32,7 +31,7 @@
 ## 1. GitHub 交付方向与本地验收索引
 
 | 线 | 前缀 | 统一负责 |
-| --- | --- | --- |
+| -- | ---- | -------- |
 | **资源与访问** | GitHub 入口 | §2 只记录设计、验收及跟踪链接，不设独立本地 track |
 | **部署与通信** | GitHub 入口 | §3 分别引用 #2724 与 #2722；只保留验收与交接，不设本地进度 |
 | **执行与常驻运行** | GitHub 入口 | §4 引用 #2723/#2658；公共合同 #2721 与部署 #2724 各自归属保持 |
@@ -42,7 +41,7 @@
 ### 1.1 #2716 的完整目标归属
 
 | GitHub 方向 | 原生子项（唯一完整交付入口） | 本地合同与验收索引 |
-| --- | --- | --- |
+| ----------- | ---------------------------- | ------------------ |
 | #2721 公共基础 | #2460、#1931、#2720 | GitHub 公共资源、公共编排调度/任务下发；不吸收其他场景专用基础改动 |
 | #2722 通信与后端 | 当前原生树见 DAG：#2657 含 MAP 与分片域两条路线；#2708 保留内部子树，暂缓关闭不算交付 | 通信场景与公共访问/寿命、执行 completion 交接 |
 | #2723 L2 常驻执行 | 当前直接在方向 issue 分析方案；原生子列表为空，对照 #2721 的 3 项和 #2722 的 17 项 | #2723 主索引；#2720 等是消费合同 |
@@ -59,7 +58,7 @@
 [设计澄清评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998)记录必要性待决的问题，不承诺公共 ResourceBundle、plan、capability 对象或两套 Arena。历史方案中与此冲突的实现形状仅作背景，不构成新增任务。
 
 | GitHub 入口 | 设计主题 | 吸收的旧编号 | 范围与验收定位（非进度） |
-| --- | --- | --- | --- |
+| ----------- | -------- | ------------ | ------------------------ |
 | [#2721](https://github.com/hw-native-sys/simpler/issues/2721) | 公共设计与待决问题 | `AR5` · `P1-E` 前半 · `AR9` · `ST-2` · `KV-R1` · `KV-R2` · `KV-R3` · `KV-R4` · `KV-R5` · `P1-E` 后半 · `AR10` · `W2` · `P3①` · `P3②` 本地半 · `P3③` · `l3l4 E` 公共执行半 · `P1-F` · `AF2` · `AF4` · `AF1` · `l3l4 C.3` 的 admission 半 · `l3l4 C.3` 的 heap 结构半 · `l3l4 C.2` 的 `run`/`orch`/callable 半 · `AF3` | 公共控制响应、Callable 身份、有界资源与寿命；设备标识、别名、访问及组合设计按两条澄清评论讨论，不预设零 heap 或 Arena。 |
 | [#2460](https://github.com/hw-native-sys/simpler/issues/2460) | 统一模型、绑定、迁移与关闭 | `P1-C` · `W1lite` · `W1` · `AR6` · `U2a` · `P1-D` · `AR7` · `AR8` · `U1a` · `l3l4 B` · `AF5` · `U1b` · `U2b` · `ST-1` · `W8` · `C.2` 的 `malloc` 半 · `U4` | U1a/U1b/U2a/U2b/U4；#1931 身份校验、#2888 COW 清理；平台接入衔接 #2497，Remote 消费由 #2722 引用同一合同。 |
 | [#2720](https://github.com/hw-native-sys/simpler/issues/2720) | Region 与基础同步 | `W4②` · `P3④` · `W4①` · `W6` | 共享区间、访问／可见性和必要同步；队列、发布协议与背压由应用定义。 |
@@ -74,7 +73,7 @@
 本节只索引既有方向的目标与验收，不维护 DS 独立进度。11 项旧目标与具名历史证据见 [交接对照](review/ds-handoff.md)。设计问题分别提交于 [#2724 评论](https://github.com/hw-native-sys/simpler/issues/2724#issuecomment-6652724365)和 [#2722 评论](https://github.com/hw-native-sys/simpler/issues/2722#issuecomment-6652726385)；评论发布不等于负责人已接受方案。
 
 | GitHub 入口 | 设计主题 | 吸收的旧编号 | 范围与验收定位（非进度） |
-| --- | --- | --- | --- |
+| ----------- | -------- | ------------ | ------------------------ |
 | [#2724](https://github.com/hw-native-sys/simpler/issues/2724) | Worker 部署、会话与任务路由 | `P2-A` · `P2-B` 清点的部署半 · `A.1` 残留 · `C.2` 的 L4 部署半 · `l3l4 E` 多机部署半 | mpirun 启动/发现、真实 endpoint/设备部署、session/epoch、连续任务、结果返回与退出观察；#2659 承接既有 supervisor/Direct MPI 清理。独立 device lease 的必要性待评论讨论。 |
 | [#2722](https://github.com/hw-native-sys/simpler/issues/2722) | 通信域、数据传输与后端 | `P2-B` 清点的通信成员半 · `P2-C` · `U3` · `P2-D` 远端半 · `#824` 远端半 · `P2-E` · `D.2` 的 backend 半 · `D.4` · `C.2` 的 L4 域接口半 · `P3⑤` · `D.3` · `W5` · `P2-B` 的事务半 · `D.5` 残留 · `P3②` 跨节点半 · `D.2` 的同步/异步半 | 成员/rank、建域事务、域寿命、传输/完成、Host 场景、多域/跨节点与异常清理。64-rank 扩展保留为规模问题；接口与寿命引用 #2460/#824/#2721，不预设公共组合或授权对象。 |
 
@@ -85,7 +84,7 @@
 七项目标、原验收与历史代码证据见 [静态交接](review/ex-handoff.md)，本地不再维护 EX 进度。公共执行、Callable 和生命周期沿用 §2 的 #2721；多机部署组合沿用 §3 的 #2724。设计问题见 [#2721 评论](https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6653477675)、[#2723 评论](https://github.com/hw-native-sys/simpler/issues/2723#issuecomment-6653480374)、[#2658 评论](https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6653482776)，发布不等于接受。
 
 | GitHub 入口 | 设计主题 | 吸收的旧编号 | 范围与验收定位（非进度） |
-| --- | --- | --- | --- |
+| ----------- | -------- | ------------ | ------------------------ |
 | [#2723](https://github.com/hw-native-sys/simpler/issues/2723) | 单次 L2 Run 常驻 | `W7` | 多轮 work/completion、复用与背压、STOP/drain/异常退出；不把进程复用或重复 Run 当常驻证据。 |
 | [#2658](https://github.com/hw-native-sys/simpler/issues/2658) | 连续执行的真实模型组合 | `TrackA-P1` · `TrackA-P2` · `TrackA-P3` · `TrackA-P4` · `TrackA-P5` · `TrackA-P6` · `VLLM-1` · `VLLM-2` · `VLLM-3` · `VLLM-4` 的 admission 半 | #1853/#2316 已关闭，基础交付归历史证据；剩余 M2/M3 组合、持续 refill、资源峰值与性能由本入口跟踪。#2429 仅 vLLM 消费者，#2666 执行资源交接。 |
 
@@ -106,7 +105,7 @@ Host trace / DFX 的 `T5`（#1811 `0d74814d` 等）与 `T7`（本地 host/device
 
 `P0.1` · `P0.2` · `P0.2-D0` · `P0.2-D1` · `P0.2-D2` · `P0.2-D3` · `P0.2-a` · `P0.2-b1` · `P0.2-b2` · `P0.2-c` · `P0.2-d` · `P0.2-f1` · `P0.2-f2` · `P0.2-f3` · `P0.3` · `P0.3-R1` · `P0.3-R2` · `P0.3-R3` · `P0.3-R4` · `PIPE-A0` · `PIPE-A0b` · `PIPE-A1` · `PIPE-B1` · `PIPE-B2` · `PIPE-B3` · `PIPE-B3a` · `PIPE-B3b` · `PIPE-B4` · `PIPE-B5` · `PIPE-B6` · `PIPE-B6a` · `PIPE-B6b` · `PIPE-B6c` · `PIPE-D1` · `PIPE-E1` · `PIPE-E2` · `PIPE-H1` · `PIPE-H2` · `PIPE-N1` · `PIPE-W1a` · `PIPE-W1b` · `PIPE-W1c` · `PIPE-W1d` · `PIPE-E1′` · `PIPE-C2a` · `T1` · `T2` · `T3` · `T4` · `T5`
 
-`P1A-A1` · `P1A-A2`：P1-A 的 blob 容量断言与 same-build 校验，归既有 P1-A 交付；当前 main 分别核到 worker_manager.h 的 sizeof(Tensor) 上界和 task_interface.py 的 __build_commit__ 比较。
+`P1A-A1` · `P1A-A2`：P1-A 的 blob 容量断言与 same-build 校验，归既有 P1-A 交付；当前 main 分别核到 worker_manager.h 的 sizeof(Tensor) 上界和 task_interface.py 的 **build_commit** 比较。
 
 ## 6. 约束，不是工作项
 
@@ -114,7 +113,7 @@ Host trace / DFX 的 `T5`（#1811 `0d74814d` 等）与 `T7`（本地 host/device
 永远无法「做完」的格 —— 它们没有交付物，只有「凡交付必须满足」。
 
 | 约束 | 原编号 | 加在谁身上 |
-| --- | --- | --- |
+| ---- | ------ | ---------- |
 | capability view **只在对应 backend 完成功能、故障和硬件验收后**才实现；不为未落地能力发布空壳资源或伪成功接口 | `P3⑥` | `#2721`，并经它传导到 `#2721` / `#2721` |
 | 不以「统一内存」名义提供隐式 coherence；`copy_to`/`copy_from` 保持既有 Buffer identity，任何 Transfer 创建的新 identity 必须显式可见 | `P3` 退出条件 | `#2460` · `#2721` |
 | queue schema / opcode / batching / backpressure policy **不进 Buffer/Attachment 基础 ABI** | `P3④` 的边界 | `#2720` |
@@ -130,23 +129,22 @@ Host trace / DFX 的 `T5`（#1811 `0d74814d` 等）与 `T7`（本地 host/device
 跨阶段验收义务：权威细节见 [访问、完成与资源退休契约](worker-memory-model/access-retirement-contract.md)，推导及来源见 [设计评估](review/2026-09-28-cross-plan-lessons.md)。以下约束随对应 consumer 交付，不以 U4 或 kernel 实现为前置：
 
 | 既有归属 | 必须满足的验收义务 |
-| --- | --- |
+| -------- | ------------------ |
 | #2722 → #2460/#2666 | 分别证明源不再被读、目的可消费、操作已静止；延迟接收/H2D、第二段失败和旧完成记录不得提前放行或回收。 |
 | #2460；#2722 | 全调用/路径预检在数据副作用前完成；绑定点原子取得使用保留；mixed owned/external 与未知完成安全随 consumer 交付，不等 U4。 |
 | #2658 → #2666 | 分开核 accepted/prepare/enqueue/执行容量；只发出 wait 尚未 launch、launch 后 fence record 失败仍保留资源；正常完成后须有可复用阳性对照。 |
 | #2666；#2658 联验 | 真实 producer 与滞后 consumer 的多轮复用；核旧版本、graph 使用引用、释放失败和各预算域；不把 CPU 协议验证当作 device 可见性证明。 |
 
-#2460 遵循 [用户面契约](worker-memory-model/user-surface.md) 的源登记/目标接入分层，`Tensor(buffer, shapes=...)` 已由 #2479/#2480 提供，#2482 的 `Buffer.wrap` 已支持 direct-L2；其他 context provider、consumer 与兼容移除边界由 #2460 继续承接。#2460/#824 按契约 D 共享生命周期规则；registry 具体组织、锁序与 journal 组合仍待裁决。设计约束不代替交付状态。
+`#2460` 遵循 [用户面契约](worker-memory-model/user-surface.md) 的源登记/目标接入分层，`Tensor(buffer, shapes=...)` 已由 #2479/#2480 提供，#2482 的 `Buffer.wrap` 已支持 direct-L2；其他 context provider、consumer 与兼容移除边界由 #2460 继续承接。#2460/#824 按契约 D 共享生命周期规则；registry 具体组织、锁序与 journal 组合仍待裁决。设计约束不代替交付状态。
 
-#2460/#824/#2722 的联验须覆盖实际映射的使用保留、graph/replay 引用及 unmap/free 失败；来源与反例见共同契约 §3/§5。#2666/#2658 的 CPU 协议验收与硬件可见性证据分别给出。
-
+`#2460`/#824/#2722 的联验须覆盖实际映射的使用保留、graph/replay 引用及 unmap/free 失败；来源与反例见共同契约 §3/§5。#2666/#2658 的 CPU 协议验收与硬件可见性证据分别给出。
 
 ### 外部能力的接入验收（2026-10-07 来源快照）
 
 以下 A 编号按来源 acceptance checklist 顺序生成，R 编号对应来源原有 Proposed Fix 1–4；是验收归属，不新建实施项。
 
 | 来源与完整编号 | 唯一承接 | 范围 |
-| --- | --- | --- |
+| -------------- | -------- | ---- |
 | #2496：`A5SVM-A1` · `A5SVM-A2` · `A5SVM-A3` · `A5SVM-A4` · `A5SVM-A5` · `A5SVM-A6` | #2496 | 支持版本、注册/可见性/释放、平台接入、DFX、HBG 访问、对比；#2460/#2720 提供接入与可见性契约 |
 | #2497：`XPSVM-A1` · `XPSVM-A2` · `XPSVM-A3` · `XPSVM-A4` · `XPSVM-A5` · `XPSVM-A6` · `XPSVM-A7` · `XPSVM-A8` | #2460 | import/registration 组合、两进程演示、双向可见性、权限范围、寿命与 reset、probe/materializer、真实用例、分 arch 证据；#2721/#2460 联验 |
 | #2429 的 `PR-S3-1` | #2658 | #2471 是程序身份/lease 验收子集；不代替真实 Qwen clone-request adapter |
@@ -156,7 +154,7 @@ Host trace / DFX 的 `T5`（#1811 `0d74814d` 等）与 `T7`（本地 host/device
 候选排期来自 simpler-pr-list（本地参考：`simpler-pr-list.html`），用 `SPL-` 命名空间避免与阶段编号混淆；编号是验收/能力目标，不承诺一条一 PR。阻塞只约束完整退出，不禁止已有路径先行。
 
 | 来源编号 | 唯一主归属 | 交接/边界 |
-| --- | --- | --- |
+| -------- | ---------- | --------- |
 | `SPL-1.1` · `SPL-1.2` | #2724 | cleanup ledger 与 epoch/lease 分开；#2598 仅观测 |
 | `SPL-1.3` | #2724/#2722 | 按本项既有契约验收 |
 | `SPL-1.4` · `SPL-1.6` | #2722 | SPL-1.6 poison 已有，保留失败回收验收，不重复开发 |
@@ -183,7 +181,7 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 来源覆盖不表示实现完成。30 节点 / 29 边按逐父子集合核对；checkbox 逐字保存，历史 R 编号不因评论改向而换义。#2673 batch 转 #2855；#2674 的旧 query/enable 备选不再是待办。
 
 | 来源编号 | 本地合同索引 | 业务归属 |
-| --- | --- | --- |
+| -------- | ------------ | -------- |
 | `T824-SCOPE` | #824 | #824 完整目标，父项 #2722 |
 | `T1931-SCOPE` | #2460 | #1931 完整目标，父项 #2721 |
 | `T2460-SCOPE` · `T2460-A1` · `T2460-A2` · `T2460-A3` · `T2460-A4` · `T2460-A5` · `T2460-A6` · `T2460-A7` · `T2460-A8` · `T2460-A9` | #2460（U1a–U4 原归属保留） | #2460 完整目标，父项 #2721 |
@@ -220,16 +218,16 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 
 ### Host DDR 合同与历史编号迁移
 
-#2657 当前按调用 MAP、多 L2 共享整表 MAP、分片 Host 域及首次初始化分工；当前合同见 §10 和用户面 §5.2。以下 V2 编号是 2026-11-04 来源快照，不将旧条款换义或当作当前实现承诺；完整业务 owner 仍在方向二 #2722。
+`#2657` 当前按调用 MAP、多 L2 共享整表 MAP、分片 Host 域及首次初始化分工；当前合同见 §10 和用户面 §5.2。以下 V2 编号是 2026-11-04 来源快照，不将旧条款换义或当作当前实现承诺；完整业务 owner 仍在方向二 #2722。
 
 | 来源编号 | 本地合同索引 | 业务归属 |
-| --- | --- | --- |
+| -------- | ------------ | -------- |
 | `T2657-V2-SCOPE` · `T2657-V2-A1` · `T2657-V2-A2` · `T2657-V2-A3` · `T2657-V2-A4` · `T2657-V2-A5` · `T2657-V2-A6` · `T2657-V2-A7` · `T2657-V2-A8` | #2722；#2496/#2460 与 执行 completion 联验 | #2657 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
 | `T2730-V2-SCOPE` · `T2730-V2-A1` · `T2730-V2-A2` · `T2730-V2-A3` · `T2730-V2-A4` · `T2730-V2-A5` · `T2730-V2-A6` · `T2730-V2-A7` · `T2730-V2-A8` · `T2730-V2-A9` | #2722；#2496/#2460 与 执行 completion 联验 | #2730 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
 | `T2731-V2-SCOPE` · `T2731-V2-A1` · `T2731-V2-A2` · `T2731-V2-A3` · `T2731-V2-A4` · `T2731-V2-A5` · `T2731-V2-A6` · `T2731-V2-A7` · `T2731-V2-A8` · `T2731-V2-A9` · `T2731-V2-A10` · `T2731-V2-A11` · `T2731-V2-A12` | #2722；#2496/#2460 与 执行 completion 联验 | #2731 当前合同；旧 A/R 编号为历史目标，范围差异按下方迁移表 |
 
 | 历史范围 | 当前去向 |
-| --- | --- |
+| -------- | -------- |
 | #2657 原持久 Host、稀疏读取、异步完成、并发/错误与 overlap 验收 | V2 父验收及 #2730/#2731；两子项不自动关闭父项 |
 | #2730 allocation-wide device_readable/read-only 模型 | 当前由 TaskArgs 条目级 TensorTransfer.MAP 表达；Buffer 保持 HOST，native/NONE/H2D 保留 |
 | #2731 原自动分片/多表假设、旧固定依赖 head | 所有必需子 L2 准备同一完整 backing；允许多个 backing，不再沿用旧单 workspace 限制；基于 #2730 最终 MAP 合同 |
@@ -276,7 +274,7 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 下表只表达具体产物及适用条件，不建立本地实施 DAG，不要求整个 Issue 关闭。`接口` 必须写清合同，`条件` 必须写明分支。资源清理、常驻与系统组合仍按消费者场景联验。
 
 | 消费入口 | 提供入口 | 关系 | 具体产物／适用条件 |
-| --- | --- | --- | --- |
+| -------- | -------- | ---- | ------------------ |
 | #2723 | #2720 | 接口 | 公共区间、实际访问与必要同步；queue/发布由应用定义 |
 | #2723 | #2721 | 接口 | 长任务中控制响应与完成/退出合同，不预设线程或双帧 |
 | #2722 | #2724 | 接口 | 真实 session/endpoint/部署结果，不等待全量部署工作 |
@@ -302,23 +300,23 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 [进展与依赖 DAG](dependency-dag.html) 的观察时间为 2026-11-10T13:45:28.010397+00:00，main `7be3fd3126db6b1d075fa5ba32611d833122cbe0`。GitHub 进展快照及下一步在 README；以下只维护合同与来源。已合入不代表全部平台验收；责任树的父子关系不作为前置。
 
 | 关系 | 提供方 | 消费方 | 类型 | 具体产物／条件 | 依据 |
-| --- | --- | --- | --- | --- | --- |
-| e01 | #2720 | #2723 | interface | 常驻消费者使用 Region 的区间、访问和必要同步；queue 协议仍由应用定义。  | [#2723 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2723) · 正文/评论 SHA-256 `e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1` |
-| e02 | #2721 | #2723 | interface | 公共执行和资源合同供常驻接入；场景所需改动随常驻任务交付。  | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。  | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
-| e04 | #824 | #2722 | foundation | 跨 run 复用与显式释放已有交付；通信场景在此基础上各自验收。  | [#824 · 关闭依据](https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467) · 正文/评论 SHA-256 `0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444` |
+| ---- | ------ | ------ | ---- | -------------- | ---- |
+| e01 | #2720 | #2723 | interface | 常驻消费者使用 Region 的区间、访问和必要同步；queue 协议仍由应用定义。 | [#2723 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2723) · 正文/评论 SHA-256 `e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1` |
+| e02 | #2721 | #2723 | interface | 公共执行和资源合同供常驻接入；场景所需改动随常驻任务交付。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
+| e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。 | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
+| e04 | #824 | #2722 | foundation | 跨 run 复用与显式释放已有交付；通信场景在此基础上各自验收。 | [#824 · 关闭依据](https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467) · 正文/评论 SHA-256 `0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444` |
 | e05 | #2666 | #2658 | conditional | 核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。 适用：仅选用 kernel / capture 模式 | [#2658 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
 | e06 | #2721 | #2658 | conditional | 对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。 适用：仅选用相关 L3+ 路径 | [#2658 · ③ L3+ 设计交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
 | e07 | #2496 | #2460 | conditional | 只在需要 A5 Device→Host direct-map 的消费者上核定能力，不阻止 copy-capable 路径。 适用：仅 A5 direct-map 分支 | [#2721 · ③ 外部映射能力](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。  | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
-| e09 | #2460 | #2666 | interface | Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。  | [#2460 · Delivery and dependency plan](https://github.com/hw-native-sys/simpler/issues/2460) · 正文/评论 SHA-256 `20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc` |
-| e10 | #2721 | #2724 | interface | 部署方向消费已确认的资源与执行合同，自行完成多级、多机接入验收。  | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。  | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
-| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。  | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
+| e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。 | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
+| e09 | #2460 | #2666 | interface | Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。 | [#2460 · Delivery and dependency plan](https://github.com/hw-native-sys/simpler/issues/2460) · 正文/评论 SHA-256 `20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc` |
+| e10 | #2721 | #2724 | interface | 部署方向消费已确认的资源与执行合同，自行完成多级、多机接入验收。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
+| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。 | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
+| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。 | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
 | e13 | #2429 | #2658 | conditional | 系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。 适用：仅选用 vLLM 路径／比较对象 | [#2658 · ③ vLLM eager 接入](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
-| e14 | #2730 | #2731 | required | 多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；基础 #2714 已合入，#2893 可以对齐实现并独立验收。  | [#2731 · 正文](https://github.com/hw-native-sys/simpler/issues/2731) · 正文/评论 SHA-256 `0ad61417b54c1a6b61e9feec56d8db5559786df476f65eade33f27dbc33ec547` |
-| e15 | #2922 | #2938 | foundation | 首次初始化复用 Host-source 域的映射、发布与失败回收合同；#2913/#2939 已合入。  | [#2938 · 正文](https://github.com/hw-native-sys/simpler/issues/2938) · 正文/评论 SHA-256 `26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7` |
+| e14 | #2730 | #2731 | required | 多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；#2714 与 #2893 均已合入，关系表示已交付基础的复用。 | [#2731 · 正文](https://github.com/hw-native-sys/simpler/issues/2731) · 正文/评论 SHA-256 `55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678` |
+| e15 | #2922 | #2938 | foundation | 首次初始化复用 Host-source 域的映射、发布与失败回收合同；#2913/#2939 已合入。 | [#2938 · 正文](https://github.com/hw-native-sys/simpler/issues/2938) · 正文/评论 SHA-256 `26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7` |
 | e16 | #2731 | #2657 | conditional | 共享整表路径以多 L2 本地 MAP 为基础，再完成实际应用与所需性能验收。 适用：选用 L3 拥有整表的部署；不是分片域的前置 | [#2657 · 正文](https://github.com/hw-native-sys/simpler/issues/2657) · 正文/评论 SHA-256 `da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d` |
 | e17 | #2938 | #2657 | conditional | 分片 Host 域和首次初始化供异步读取应用使用；独立验收有用计算重叠、拓扑和失败路径。 适用：选用 rank-local Host shard；不依赖 #2731 | [#2657 · 正文](https://github.com/hw-native-sys/simpler/issues/2657) · 正文/评论 SHA-256 `da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d` |
 
-#2460 的 U 链是历史迁移合同索引，不从旧 checkbox 直接推算待办。#2730→#2731 的映射基础已合入；#2922→#2938 是独立分片域路线，不能强行接在 #2731 后面。两条路线向 #2657 提供所选场景的验收输入。
+`#2460` 的 U 链是历史迁移合同索引，不从旧 checkbox 直接推算待办。#2730→#2731 的映射基础已合入；#2922→#2938 是独立分片域路线，不能强行接在 #2731 后面。两条路线向 #2657 提供所选场景的验收输入。 2026-11-13 局部核对：#2893 merge `37c2ad5e1e083c9e805e24c002702423eef61c18` 在 main，#2731 CLOSED / COMPLETED；验收证据与下一步见 README，父目标不随子项关闭。
