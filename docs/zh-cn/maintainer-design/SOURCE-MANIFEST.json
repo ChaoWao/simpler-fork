@@ -6,7 +6,7 @@
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "Scoped PR 2893 / issue 2731 delivery and review; other direction observations retain 2026-11-10 evidence dates",
+  "scope": "Tracking issue and main-delivery refresh; 43 native tree nodes and 54 named issues; historical code and hardware evidence retains its tested baseline",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -90,8 +90,8 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "cd62ab641731cc03b777f093a78ef4ec2af2f086053efe19ed94b87f41b3f3ad",
-      "published_sha256": "87e58696d220cd1ffdac5022bcd37992d0f395411dade8971ae070f4af457fc9"
+      "source_sha256": "9602f174a12d47fc80b02560c4c63c4ef0e77ac504e8f057964071bda380c0f0",
+      "published_sha256": "5ad04b96ab764c8b346248f3f9d098728526f75fccf70393eb7cfb72230d18c2"
     },
     {
       "path": "track-boundaries.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "work-items.md",
-      "source_sha256": "7a2b63c44192290c5b4a4e5f10abbbf58567649cb1a0d972ad9703c620b145c8",
-      "published_sha256": "967aaca9128d881567c95d3705559a0eb73276aef12224a81bbcc90d0a72e25f"
+      "source_sha256": "6edafa29067fa9d3e1546beebebcb3963f9bbc49473f4a2de4524b4c8cb22228",
+      "published_sha256": "19f06b8e52cd4a8a6f61cc38d30fb43a644ec669547e50c683dab65948246217"
     },
     {
       "path": "worker-memory-model.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "88adf51baa0a203070d1f26f389c38fe1df8216700a2d225c26292fee3c2d2e5",
-      "published_sha256": "fe75cb98f9e47748d6f616e06a120d354d3e0f0fd8d083e2b4f7c97c61f16499"
+      "source_sha256": "d534a8cf966a85b9569be3f100da936071843533768639ae110488c2992d89f2",
+      "published_sha256": "6d79e5461eb526b65725b7d3186c6cacf61dab9caf59e9b815883e9f3a149a7b"
     },
     {
       "path": "review/ra-handoff.md",
@@ -200,8 +200,8 @@
     },
     {
       "path": "dependency-dag.html",
-      "source_sha256": "d6ba85916129b780f15c16eb5db4d87d849460c2d8314e5210cb7aa7e88bd405",
-      "published_sha256": "b1eacaaf5780602da947a4bd1d028667a7792681a45223b2103a7f725ab5cb68"
+      "source_sha256": "64e7415132e9562f20b9e066763e120c6edbc8ef0364b8119deae3d4120dc0de",
+      "published_sha256": "8da8bb687cccf003d54856093b3009ed519425e9922aa65a3940f1b9959fc583"
     },
     {
       "path": "review/pr-2714.md",
@@ -276,10 +276,10 @@
   "qwen_handoff_observed_on": "2026-11-05",
   "ds_handoff_observed_on": "2026-11-05",
   "ex_handoff_observed_on": "2026-11-05",
-  "dependency_graph_observed_at": "2026-11-10T13:45:28.010397+00:00",
+  "dependency_graph_observed_at": "2026-11-13T12:19:00.592939+00:00",
   "pr_2714_review_head": "d9ee29e55a904931a62b9b41a81690ffa57dba8b",
   "pr_2714_review_date": "2026-11-10",
-  "roadmap_main": "37c2ad5e1e083c9e805e24c002702423eef61c18",
+  "roadmap_main": "3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47",
   "doc_checks": {
     "passed": 16,
     "total": 16

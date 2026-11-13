@@ -1,6 +1,6 @@
 # 工作项登记表 —— 本地合同归属与验收证据
 
-> **发布快照：2026-11-13。** #2893 / #2731 局部交付记录；其他代码与硬件结论保留原日期及版本。参见[阅读入口](README.md)。
+> **发布快照：2026-11-13。** 当前进展见 DAG；历史源码与硬件证据保留原日期和版本。参见[阅读入口](README.md)。
 >
 > **2026-11-04 状态与来源刷新**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；全部本地编号重新推导，外部来源正文/决定性评论和 #2716 原生子树重新获取。新增交付、剩余合同及下一动作按本页和 [范围分析](review/track-2716.md)。下方 10 月 18 日保留为历史全量源码审计；当前具名代码/CI 核对不冒充所有平台的重新验收。
 >
@@ -44,7 +44,7 @@
 | ----------- | ---------------------------- | ------------------ |
 | #2721 公共基础 | #2460、#1931、#2720 | GitHub 公共资源、公共编排调度/任务下发；不吸收其他场景专用基础改动 |
 | #2722 通信与后端 | 当前原生树见 DAG：#2657 含 MAP 与分片域两条路线；#2708 保留内部子树，暂缓关闭不算交付 | 通信场景与公共访问/寿命、执行 completion 交接 |
-| #2723 L2 常驻执行 | 当前直接在方向 issue 分析方案；原生子列表为空，对照 #2721 的 3 项和 #2722 的 17 项 | #2723 主索引；#2720 等是消费合同 |
+| #2723 L2 常驻执行 | 当前直接在方向 issue 分析方案；原生子列表为空，对照 2026-11-13 的 #2721 三项和 #2722 二十三项 | #2723 主索引；#2720 等是消费合同 |
 | #2724 L4 多级多机部署 | #2659 | #2724 会话与部署；通信域清理对接 #2722/#824，执行清理对接 历史清理证据（#1689） |
 
 **归属判据**：一个完整场景目标留在一个 GitHub issue，可分多个 PR；因该场景需要而修改 Buffer、Region、scheduler 或 completion，不据此再拆方向 1。只有具有独立意义且能独立验收的公共基础才单列。方向编号不是执行顺序；阻塞必须指向具体产物。本地聚合行的依赖是其原合同退出条件，不自动成为新场景的硬前置；#2621 第三方 owner-local 扩展不等待 #2724/#2722 全量清点或原生 RoCE。既有 GitHub 目标与验收入口 的编号拆分仅保留为合同索引，不代表把 #2621/#2657/#2594 的实施进度再拆给多个 owner。根 track 的四方向验收是上层完整性检查，不新增一套本地实施轨。
@@ -297,26 +297,28 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 
 ## 10. 依赖图的具体关系
 
-[进展与依赖 DAG](dependency-dag.html) 的观察时间为 2026-11-10T13:45:28.010397+00:00，main `7be3fd3126db6b1d075fa5ba32611d833122cbe0`。GitHub 进展快照及下一步在 README；以下只维护合同与来源。已合入不代表全部平台验收；责任树的父子关系不作为前置。
+[进展与依赖 DAG](dependency-dag.html) 的观察时间为 2026-11-13T12:19:00.592939+00:00，main `3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47`。GitHub 进展快照及下一步在 README；以下只维护合同与来源。已合入不代表全部平台验收；责任树的父子关系不作为前置。
 
 | 关系 | 提供方 | 消费方 | 类型 | 具体产物／条件 | 依据 |
 | ---- | ------ | ------ | ---- | -------------- | ---- |
 | e01 | #2720 | #2723 | interface | 常驻消费者使用 Region 的区间、访问和必要同步；queue 协议仍由应用定义。 | [#2723 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2723) · 正文/评论 SHA-256 `e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1` |
 | e02 | #2721 | #2723 | interface | 公共执行和资源合同供常驻接入；场景所需改动随常驻任务交付。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。 | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
+| e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。 | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `eca7036d54764ca1b9f71c27675049bf1eab51ab90f26f36c6087eaf8677418f` |
 | e04 | #824 | #2722 | foundation | 跨 run 复用与显式释放已有交付；通信场景在此基础上各自验收。 | [#824 · 关闭依据](https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467) · 正文/评论 SHA-256 `0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444` |
-| e05 | #2666 | #2658 | conditional | 核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。 适用：仅选用 kernel / capture 模式 | [#2658 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
-| e06 | #2721 | #2658 | conditional | 对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。 适用：仅选用相关 L3+ 路径 | [#2658 · ③ L3+ 设计交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
+| e05 | #2666 | #2658 | conditional | 核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。 适用：仅选用 kernel / capture 模式 | [#2658 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
+| e06 | #2721 | #2658 | conditional | 对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。 适用：仅选用相关 L3+ 路径 | [#2658 · ③ L3+ 设计交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
 | e07 | #2496 | #2460 | conditional | 只在需要 A5 Device→Host direct-map 的消费者上核定能力，不阻止 copy-capable 路径。 适用：仅 A5 direct-map 分支 | [#2721 · ③ 外部映射能力](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。 | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `af48153eb6024bb31e1a7742b33a8e7957675ee92143f4c2b8f5d1defddce7cc` |
+| e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。 | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `eca7036d54764ca1b9f71c27675049bf1eab51ab90f26f36c6087eaf8677418f` |
 | e09 | #2460 | #2666 | interface | Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。 | [#2460 · Delivery and dependency plan](https://github.com/hw-native-sys/simpler/issues/2460) · 正文/评论 SHA-256 `20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc` |
 | e10 | #2721 | #2724 | interface | 部署方向消费已确认的资源与执行合同，自行完成多级、多机接入验收。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。 | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
-| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。 | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `8e6e145dd84589939b75e0c7e0d90fbb3122c81554cd303f05c1e0d395068931` |
-| e13 | #2429 | #2658 | conditional | 系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。 适用：仅选用 vLLM 路径／比较对象 | [#2658 · ③ vLLM eager 接入](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `a140154bfa04b897199e0075de6caffb31a160dc6bc5059e8a375330916a1172` |
+| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。 | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d` |
+| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。 | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d` |
+| e13 | #2429 | #2658 | conditional | 系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。 适用：仅选用 vLLM 路径／比较对象 | [#2658 · ③ vLLM eager 接入](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
 | e14 | #2730 | #2731 | required | 多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；#2714 与 #2893 均已合入，关系表示已交付基础的复用。 | [#2731 · 正文](https://github.com/hw-native-sys/simpler/issues/2731) · 正文/评论 SHA-256 `55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678` |
 | e15 | #2922 | #2938 | foundation | 首次初始化复用 Host-source 域的映射、发布与失败回收合同；#2913/#2939 已合入。 | [#2938 · 正文](https://github.com/hw-native-sys/simpler/issues/2938) · 正文/评论 SHA-256 `26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7` |
 | e16 | #2731 | #2657 | conditional | 共享整表路径以多 L2 本地 MAP 为基础，再完成实际应用与所需性能验收。 适用：选用 L3 拥有整表的部署；不是分片域的前置 | [#2657 · 正文](https://github.com/hw-native-sys/simpler/issues/2657) · 正文/评论 SHA-256 `da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d` |
 | e17 | #2938 | #2657 | conditional | 分片 Host 域和首次初始化供异步读取应用使用；独立验收有用计算重叠、拓扑和失败路径。 适用：选用 rank-local Host shard；不依赖 #2731 | [#2657 · 正文](https://github.com/hw-native-sys/simpler/issues/2657) · 正文/评论 SHA-256 `da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d` |
 
 `#2460` 的 U 链是历史迁移合同索引，不从旧 checkbox 直接推算待办。#2730→#2731 的映射基础已合入；#2922→#2938 是独立分片域路线，不能强行接在 #2731 后面。两条路线向 #2657 提供所选场景的验收输入。 2026-11-13 局部核对：#2893 merge `37c2ad5e1e083c9e805e24c002702423eef61c18` 在 main，#2731 CLOSED / COMPLETED；验收证据与下一步见 README，父目标不随子项关闭。
+
+新增 GitHub 子目标沿原生归属：#2997 的 1.1/1.2/1.3 与任务 2–5 共七个交付单元、#3007 的 TMR/HBG 共享 JFC、#3051 的 PCIe Host-source 均归 #2722；#3054 工具链元数据归 #2971。这里只索引合同归属，进度及证据见 README/DAG。
