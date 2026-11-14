@@ -1,12 +1,12 @@
 {
-  "published": "2026-11-13",
+  "published": "2026-11-14",
   "branch_base": "11eb5d2c9ef8fe5a484a3d7c686d408ae5ff3e3b",
   "source_baseline": "937c57efc71ad01a01c3a72072df075d2a5dd24f",
   "architecture_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "Tracking issue and main-delivery refresh; 43 native tree nodes and 54 named issues; historical code and hardware evidence retains its tested baseline",
+  "scope": "Worker L3+ four directions only; application and generic kernel progress excluded; source observations retain 2026-11-13",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -90,18 +90,18 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "9602f174a12d47fc80b02560c4c63c4ef0e77ac504e8f057964071bda380c0f0",
-      "published_sha256": "5ad04b96ab764c8b346248f3f9d098728526f75fccf70393eb7cfb72230d18c2"
+      "source_sha256": "578cd8ef0978a9e5b2a42c0db38788364f1bcaf6b3f8354a02b29320372377c8",
+      "published_sha256": "89db6eedef22dbd47d11fed23f43ad040de0a97152edf683b4628a9e09f49a33"
     },
     {
       "path": "track-boundaries.md",
-      "source_sha256": "fc98eed1492f2091f593295189a18dc9399d9c4f4bf83a2a19c64747724f76b2",
-      "published_sha256": "71b38b21ed78dd1e14c39d9e1c1832582319d05be2c5f892f22787d2eaf24e82"
+      "source_sha256": "3b4ed86070d21666767935ac01d203a9286fe590884ddd0b035b731865e09d98",
+      "published_sha256": "fb9f49e9de5164d05eaf2d05debfd532b518f48438291158f297d370e5154ee6"
     },
     {
       "path": "work-items.md",
-      "source_sha256": "6edafa29067fa9d3e1546beebebcb3963f9bbc49473f4a2de4524b4c8cb22228",
-      "published_sha256": "19f06b8e52cd4a8a6f61cc38d30fb43a644ec669547e50c683dab65948246217"
+      "source_sha256": "efaf9e0c93be004f59c147642b94badc5f17246f408e91c00373b30fe22de92b",
+      "published_sha256": "79d20476cc258caff80d7404872dbf1aa581791976a10b81499580ca570c1471"
     },
     {
       "path": "worker-memory-model.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "d534a8cf966a85b9569be3f100da936071843533768639ae110488c2992d89f2",
-      "published_sha256": "6d79e5461eb526b65725b7d3186c6cacf61dab9caf59e9b815883e9f3a149a7b"
+      "source_sha256": "b2d3ac0c5727e2d605aa362eed30e082013ccdf37b582adabb1f890c56892a7e",
+      "published_sha256": "c3e377a83f72481232e8f24d1dd43272d8b183cf71a5d6fc3be6a7def2ff4920"
     },
     {
       "path": "review/ra-handoff.md",
@@ -200,8 +200,8 @@
     },
     {
       "path": "dependency-dag.html",
-      "source_sha256": "64e7415132e9562f20b9e066763e120c6edbc8ef0364b8119deae3d4120dc0de",
-      "published_sha256": "8da8bb687cccf003d54856093b3009ed519425e9922aa65a3940f1b9959fc583"
+      "source_sha256": "873f45e526cff4aee3c19e7aea76aaa8abd4921244deb89ef2cfd15136aa5282",
+      "published_sha256": "544937f8e10c0c498cd58f9a9faa2c1088cc98fa83fe0b732d3652d79a657ce2"
     },
     {
       "path": "review/pr-2714.md",

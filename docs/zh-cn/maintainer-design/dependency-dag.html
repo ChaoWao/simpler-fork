@@ -10,16 +10,16 @@
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-13 tracking/main 观察快照；代码与硬件证据保留各自版本。<a href="README.md">阅读入口</a>。</div>
-<header><div class="eyebrow">SIMPLER / DELIVERY ROADMAP</div><div class="headrow"><div><h1>现在到哪了，下一步做什么？</h1><p class="lede">按 GitHub 当前进展看交付，按<strong>产物提供方 → 消费方</strong>看依赖。点击节点查看 main PR、下一步和验收边界；接口可先对齐、工作可并行。</p></div><div class="stamp" id="stamp"></div></div>
-<div id="snapshot-metrics" class="snapshot-metrics"></div><p id="snapshot-note" class="snapshot-note"></p><section aria-label="下一步"><h2>建议先推进这几件事</h2><div id="next-actions" class="next-grid"></div></section>
-<nav class="tabs" aria-label="图的范围"><button class="tab active" data-view="overview">整体依赖</button><button class="tab" data-view="l3">L3+ 基础与场景</button><button class="tab" data-view="model">模型接入</button><button class="tab" data-view="host">Host DDR</button><button class="tab" data-view="buffer">#2460 合同细化</button><button class="tab" data-view="tree">责任归属树</button></nav></header>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-14 范围：Worker L3+ 四方向；来源观察仍为 2026-11-13。<a href="README.md">阅读入口</a>。</div>
+<header><div class="eyebrow">SIMPLER / DELIVERY ROADMAP</div><div class="headrow"><div><h1>Worker L3+ · 四方向进展</h1><p class="lede">公共基础、通信与后端、L2 常驻执行、多级多机部署。按<strong>产物提供方 → 消费方</strong>看具体交接；点击节点查看 main PR、下一步与验收边界。</p></div><div class="stamp" id="stamp"></div></div>
+<div id="snapshot-metrics" class="snapshot-metrics"></div><p id="snapshot-note" class="snapshot-note"></p><section aria-label="下一步"><h2>四个方向，各自下一步</h2><div id="next-actions" class="next-grid"></div></section>
+<nav class="tabs" aria-label="图的范围"><button class="tab active" data-view="overview">四方向总览</button><button class="tab" data-view="l3">L3+ 基础与场景</button><button class="tab" data-view="host">Host DDR</button><button class="tab" data-view="buffer">#2460 合同细化</button><button class="tab" data-view="tree">责任归属树</button></nav></header>
 <main><div class="view-note"><div id="view-title"></div><span id="counts"></span></div>
 <div id="graph-tools"><div class="tools"><div class="filters"><label><input id="conditional" type="checkbox" checked>显示条件依赖</label><label><input id="foundation" type="checkbox" checked>显示已有基础</label><label><input id="only-required" type="checkbox">只看明确合同前置</label></div><div class="actions"><input class="search" id="search" placeholder="定位编号或关键词" aria-label="定位节点"><button class="action" id="minus" aria-label="缩小">−</button><button class="action" id="fit">适合宽度</button><button class="action" id="plus" aria-label="放大">＋</button><button class="action" id="reset">取消聚焦</button><button class="action" id="layout">纵向</button></div></div>
 <div class="legend"><span class="key"><i class="sample required"></i>明确合同前置</span><span class="key"><i class="sample"></i>接口 / 验收交接</span><span class="key"><i class="sample conditional"></i>仅所选路径依赖</span><span class="key"><i class="sample foundation"></i>已交付基础引用</span><span>父子归属不参与依赖排序 · 窄屏可左右滚动</span></div></div>
 <div class="board" id="board" aria-label="依赖图，可缩放或滚动"><div class="sizer" id="sizer"><div class="canvas" id="canvas"></div></div><div id="tree" class="tree-grid hidden"></div></div>
 <section id="detail" class="detail empty" aria-live="polite">选择一个节点或一条连线。选中节点后，高亮它的全部上游与下游；其余节点保留为淡色背景。</section>
-<section class="insights"><div class="insight"><strong>可以并行推进</strong>部署 / 通信、Region / 常驻、本地 IO / Remote 都有各自完整交付。要等的是明确产物与联验，不是整个方向“全绿”。</div><div class="insight"><strong>条件只约束所选路径</strong>A5 direct-map、Kernel / capture、vLLM 是条件分支。普通 program Async 不等待全部 capture；Host DDR 也不等待反方向映射。</div><div class="insight"><strong>已关闭基础不重新变成门槛</strong>#824 / #2594 的域寿命与 #1853 / #2316 的普通 Async 基础保留原交付证据。新的完整场景继续分别验收。</div></section>
+<section class="insights"><div class="insight"><strong>可以并行推进</strong>部署 / 通信、Region / 常驻、本地 IO / Remote 都有各自完整交付。要等的是明确产物与联验，不是整个方向“全绿”。</div><div class="insight"><strong>条件只约束所选路径</strong>A5 Device→Host direct-map 仅约束需要它的路径；Host DDR 的 Host→Device MAP 不等待反方向映射。</div><div class="insight"><strong>已关闭基础不重新变成门槛</strong>#824 / #2594 的域寿命与 #1853 / #2316 的普通 Async 基础保留原交付证据。新的完整场景继续分别验收。</div></section>
 <details><summary>设计待决问题 · 不作为强制前置</summary><p class="micro">这些评论是供负责人讨论的问题，发布不代表已经接受。</p><div id="questions" class="questions"></div></details>
 <details id="edge-evidence"><summary>全部关系与证据</summary><div class="tablewrap"><table><thead><tr><th>提供 → 消费</th><th>关系</th><th>具体产物 / 条件</th><th>依据</th></tr></thead><tbody id="edges-table"></tbody></table></div></details>
 <details id="issue-inventory"><summary>全部具名条目 · 含暂缓关闭和关联 PR</summary><label>筛选 <select id="inventory-filter"><option value="all">全部条目</option><option value="open">OPEN</option><option value="closed">CLOSED（含暂缓）</option><option value="deferred">暂缓 NOT_PLANNED</option></select></label><div class="tablewrap"><table><thead><tr><th>Issue / 当前来源</th><th>GitHub 状态</th><th>关联 main PR / SHA</th></tr></thead><tbody id="inventory"></tbody></table></div></details>
@@ -28,7 +28,7 @@
 <script type="application/json" id="data">{
   "observed_at": "2026-11-13T12:19:00.592939+00:00",
   "main_reference": "3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47",
-  "scope": "GitHub 进展与下一步的定时快照；目标为 main 的 PR 单列；依赖与原生归属分开。不是新的本地实施轨。",
+  "scope": "Worker L3+ 四方向：#2721 公共基础、#2722 通信与后端、#2723 L2 常驻执行、#2724 多级多机部署。仅跟踪四方向子项及必要外部能力；应用模型与通用 Kernel/capture 不进入当前进展。",
   "nodes": [
     {
       "id": "2721",
@@ -176,78 +176,6 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2723",
           "label": "#2723 · 正文",
           "sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "2666",
-      "issue": 2666,
-      "title": "执行资源与 Kernel 接口",
-      "group": "执行",
-      "description": "共同 prepare / launch / retain / release。",
-      "note": "只展示与 L3+／模型的交接；通用 kernel 内部实施不扩入本板。",
-      "state": "open",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-          "label": "#2666 · 正文",
-          "sha256": "b31f90b215aa82a18c1f93297d19e2203f1b04250be8e15eb037e176b882a226",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "2715",
-      "issue": 2715,
-      "title": "vLLM 环境与 Engine CI",
-      "group": "模型",
-      "description": "可复现环境、版本兼容与真实 Engine 看护。",
-      "note": "是所选 vLLM 路径的集成输入，不阻塞全部普通 Async。",
-      "state": "open",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2715",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2715",
-          "label": "#2715 · 正文",
-          "sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "2429",
-      "issue": 2429,
-      "title": "Qwen 六格应用集成",
-      "group": "模型",
-      "description": "Serving Program + vLLM eager/capture，各 TMR/HBG。",
-      "note": "本地六格成绩与各仓 main/正式 CI 分开；原 HBG eager 完整数值合同保留。",
-      "state": "open",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-          "label": "#2429 · 正文",
-          "sha256": "abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "2658",
-      "issue": 2658,
-      "title": "真实模型与跨仓验收",
-      "group": "模型",
-      "description": "M0–M4：功能、Async 组合、性能与回归。",
-      "note": "消费各路径的具体产物；普通 program Async 不等待全部 capture。",
-      "state": "open",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-          "label": "#2658 · 正文",
-          "sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
           "observed_at": "2026-11-13T12:19:00.592939+00:00"
         }
       ]
@@ -417,42 +345,6 @@
       ]
     },
     {
-      "id": "e05",
-      "from": "2666",
-      "to": "2658",
-      "kind": "conditional",
-      "label": "Kernel 路径",
-      "contract": "核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。",
-      "condition": "仅选用 kernel / capture 模式",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-          "label": "#2658 · ③ 依赖与交接",
-          "sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "e06",
-      "from": "2721",
-      "to": "2658",
-      "kind": "conditional",
-      "label": "L3+ 合同",
-      "contract": "对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。",
-      "condition": "仅选用相关 L3+ 路径",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-          "label": "#2658 · ③ L3+ 设计交接",
-          "sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
       "id": "e07",
       "from": "2496",
       "to": "2460",
@@ -489,24 +381,6 @@
       ]
     },
     {
-      "id": "e09",
-      "from": "2460",
-      "to": "2666",
-      "kind": "interface",
-      "label": "本地参数与寿命",
-      "contract": "Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。",
-      "condition": "",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2460",
-          "label": "#2460 · Delivery and dependency plan",
-          "sha256": "20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
       "id": "e10",
       "from": "2721",
       "to": "2724",
@@ -520,60 +394,6 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2721",
           "label": "#2721 · ③ 依赖与交接",
           "sha256": "6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "e11",
-      "from": "2666",
-      "to": "2429",
-      "kind": "interface",
-      "label": "执行与资源接口",
-      "contract": "vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。",
-      "condition": "",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-          "label": "#2429 · ③ 依赖与责任交接",
-          "sha256": "abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "e12",
-      "from": "2715",
-      "to": "2429",
-      "kind": "interface",
-      "label": "环境与 Engine 验收",
-      "contract": "真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。",
-      "condition": "",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-          "label": "#2429 · ③ #2715 交接",
-          "sha256": "abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ]
-    },
-    {
-      "id": "e13",
-      "from": "2429",
-      "to": "2658",
-      "kind": "conditional",
-      "label": "vLLM 产物",
-      "contract": "系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。",
-      "condition": "仅选用 vLLM 路径／比较对象",
-      "origin": "issue-body",
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-          "label": "#2658 · ③ vLLM eager 接入",
-          "sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
           "observed_at": "2026-11-13T12:19:00.592939+00:00"
         }
       ]
@@ -912,8 +732,6 @@
     "2721->2723": "e02",
     "2724->2722": "e03",
     "824->2722": "e04",
-    "2666->2658": "e05",
-    "2721->2658": "e06",
     "2496->2460": "e07"
   },
   "issues": {
@@ -936,35 +754,6 @@
       "updated_at": "2026-10-22T08:14:52Z",
       "body_sha256": "ab801829ff299dc50a91b2409573b56273a8ae7c0d539b00a3c3d2498dbd3478",
       "prs": []
-    },
-    "2429": {
-      "number": 2429,
-      "title": "[Track] Qwen3-14B A3 六格功能交付与原生 vLLM 性能归因",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-      "updated_at": "2026-11-13T11:54:39Z",
-      "body_sha256": "abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d",
-      "prs": [
-        {
-          "number": 2605,
-          "state": "OPEN",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2605",
-          "head": "591f003be553ae074dbcec1fcb55e41445b479a8",
-          "merge": null,
-          "in_main": false,
-          "draft": false
-        },
-        {
-          "number": 2948,
-          "state": "CLOSED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2948",
-          "head": "1be20db0b90d207f0f6525529cfa9dd85a54564c",
-          "merge": null,
-          "in_main": false,
-          "draft": true
-        }
-      ]
     },
     "2460": {
       "number": 2460,
@@ -1081,26 +870,6 @@
         }
       ]
     },
-    "2658": {
-      "number": 2658,
-      "title": "[Track] HBG × Async 四仓整体验收与性能验证",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-      "updated_at": "2026-11-12T09:00:24Z",
-      "body_sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
-      "prs": [
-        {
-          "number": 2934,
-          "state": "OPEN",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2934",
-          "head": "a8198c5dd39a07af8e64307c0398c1153bd1b239",
-          "merge": null,
-          "in_main": false,
-          "draft": true
-        }
-      ]
-    },
     "2659": {
       "number": 2659,
       "title": "[Track] Supervisor + Direct MPI 清理闭环与 Group 迁移",
@@ -1117,62 +886,6 @@
           "head": "26b5af59e0ea15f07508a3a3fd90a2291160beab",
           "merge": null,
           "in_main": false,
-          "draft": false
-        }
-      ]
-    },
-    "2666": {
-      "number": 2666,
-      "title": "[Track] Kernel-mode eager/capture integration across the PyPTO stack",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-      "updated_at": "2026-11-12T09:35:51Z",
-      "body_sha256": "b31f90b215aa82a18c1f93297d19e2203f1b04250be8e15eb037e176b882a226",
-      "prs": [
-        {
-          "number": 2915,
-          "state": "MERGED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2915",
-          "head": "6b0d858b857344c335832b3594d8eeb30a2f3ff6",
-          "merge": "3e263b58ff01fb9315fd3a53136c6344801e82ab",
-          "in_main": true,
-          "draft": false
-        },
-        {
-          "number": 2924,
-          "state": "MERGED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2924",
-          "head": "9e7678337ab66ebf82fc4e5f565bf20a84a6902d",
-          "merge": "1580eeefb5bde02c917e925264f49c27f3d70948",
-          "in_main": true,
-          "draft": false
-        },
-        {
-          "number": 2972,
-          "state": "MERGED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2972",
-          "head": "f9b749c9cdc6474b437f29a42a4860c6a5783d8f",
-          "merge": "20af3c1d25aa4cc04f22680ab8360d6e3cdfe042",
-          "in_main": true,
-          "draft": false
-        },
-        {
-          "number": 2990,
-          "state": "MERGED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2990",
-          "head": "48e9dc7bf3706f574c638df0ffbbbf55bc7a3569",
-          "merge": "0569c7796b86ca3c98ebeb96ab481a6e8bd4695a",
-          "in_main": true,
-          "draft": false
-        },
-        {
-          "number": 2993,
-          "state": "MERGED",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2993",
-          "head": "7f381765a0b169f7008a2c13d1acd351aa506d95",
-          "merge": "0f6fd790f9212a5344bef85a666356725008b5e8",
-          "in_main": true,
           "draft": false
         }
       ]
@@ -1226,26 +939,6 @@
       "updated_at": "2026-11-05T13:13:52Z",
       "body_sha256": "d21379e0de03ba852d2b3d170a60d8dbfbe1a7cd6ba18849499f8c434b561d39",
       "prs": []
-    },
-    "2715": {
-      "number": 2715,
-      "title": "[Integration/CI] 补充真实 vLLM eager → Simpler Worker 的 A3 集成验收",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2715",
-      "updated_at": "2026-10-29T11:24:27Z",
-      "body_sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
-      "prs": [
-        {
-          "number": 2748,
-          "state": "OPEN",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2748",
-          "head": "bb32c523280cc7e17318f874297eca4c3671a656",
-          "merge": null,
-          "in_main": false,
-          "draft": true
-        }
-      ]
     },
     "2716": {
       "number": 2716,
@@ -1359,15 +1052,6 @@
           "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
           "in_main": true,
           "draft": false
-        },
-        {
-          "number": 2934,
-          "state": "OPEN",
-          "url": "https://github.com/hw-native-sys/simpler/pull/2934",
-          "head": "a8198c5dd39a07af8e64307c0398c1153bd1b239",
-          "merge": null,
-          "in_main": false,
-          "draft": true
         },
         {
           "number": 2940,
@@ -1719,16 +1403,6 @@
       "body_sha256": "344e6c58b14ad708a2e62b8002e6c757750c5721dde50bc76b4f4f2ac530abf5",
       "prs": []
     },
-    "2883": {
-      "number": 2883,
-      "title": "[Code Health] Classify run resources by delivery and readback, so HBG's GM heap and graph image stop scaling with pipeline depth",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2883",
-      "updated_at": "2026-11-10T04:51:10Z",
-      "body_sha256": "bde4fcea496a43247482efc925b0bffe2b81396f553de2c0fe160194996f450b",
-      "prs": []
-    },
     "2885": {
       "number": 2885,
       "title": "[Bug] 接入 ISA URMA 可报告的清理结果并保留失败资源所有权",
@@ -1806,46 +1480,6 @@
           "draft": false
         }
       ]
-    },
-    "2669": {
-      "number": 2669,
-      "title": "[Bug] A5 TMR capture/replay intermittently reaches the AICPU watchdog",
-      "state": "closed",
-      "state_reason": "COMPLETED",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2669",
-      "updated_at": "2026-10-28T02:30:45Z",
-      "body_sha256": "7eccd2eebfeaf0962fd62de0b6c76ee5c2d427cd04b46d8aaadc05ba9d1cb183",
-      "prs": []
-    },
-    "2737": {
-      "number": 2737,
-      "title": "[Performance] A3 PyPTO Attention：解释长上下文 TMR/HBG 排序与短负载差距",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2737",
-      "updated_at": "2026-11-04T07:37:49Z",
-      "body_sha256": "e16ed2313068313bf1223db185221d640ccfb38af006532563ed0835c9c6e6e4",
-      "prs": []
-    },
-    "2773": {
-      "number": 2773,
-      "title": "[Code Health] 共用运行协议承载模式相关的新鲜度取舍，迫使 capture 自建身份协议",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2773",
-      "updated_at": "2026-11-04T01:17:02Z",
-      "body_sha256": "6da418cffd58a2102d434966f6bfbdbaf49847e9aa0d0f30da35f378933145f8",
-      "prs": []
-    },
-    "2774": {
-      "number": 2774,
-      "title": "[Feature] 提供不依赖 GIL 的原生提交接口，解决 Python Worker.submit 的异步队列集成问题",
-      "state": "closed",
-      "state_reason": "COMPLETED",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2774",
-      "updated_at": "2026-11-12T01:49:53Z",
-      "body_sha256": "26fea339d8bf7580a3f83d80b6c846b6d295450d5cb14a17f5dada2d29c76031",
-      "prs": []
     },
     "2910": {
       "number": 2910,
@@ -1962,16 +1596,6 @@
           "draft": false
         }
       ]
-    },
-    "2988": {
-      "number": 2988,
-      "title": "[Design] Kernel mode 多卡通信：能力边界、方向清单与首期交付",
-      "state": "open",
-      "state_reason": "",
-      "url": "https://github.com/hw-native-sys/simpler/issues/2988",
-      "updated_at": "2026-11-10T11:39:35Z",
-      "body_sha256": "77975102af8981a9b7bf52b7dd1f480c57110374eca8fbae6135c913e5e9d1d7",
-      "prs": []
     },
     "2997": {
       "number": 2997,
@@ -2277,7 +1901,7 @@
     "observed_at": "2026-11-13T12:19:00.592939+00:00",
     "nodes": 43,
     "edges": 42,
-    "issues_read": 54
+    "issues_read": 44
   },
   "observations": {
     "2721": {
@@ -2543,17 +2167,6 @@
           "in_main": true
         },
         {
-          "number": 2934,
-          "title": "Fix: retain native communication domains across async consumers",
-          "state": "OPEN",
-          "baseRefName": "main",
-          "headRefOid": "a8198c5dd39a07af8e64307c0398c1153bd1b239",
-          "mergeCommit": null,
-          "isDraft": true,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2934",
-          "in_main": false
-        },
-        {
           "number": 2940,
           "title": "Fix: isolate communicator bootstrap across Worker lifetimes",
           "state": "OPEN",
@@ -2746,203 +2359,6 @@
           "url": "https://github.com/hw-native-sys/simpler/issues/2723",
           "label": "#2723 · 正文",
           "sha256": "e9d0436cc0c4982ad41072406389c92e39de9faae31e6e317aa726b274913dc1",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ],
-      "observed_at": "2026-11-13T12:19:00.592939+00:00"
-    },
-    "2666": {
-      "phase": "partial",
-      "label": "基础与资格持续交付",
-      "current": "#2990 A5 capture/replay 资格、#2993 resident recovery 用例及 #2915 模块寿命已合入；静态 capture 基础已有，不能外推全矩阵。",
-      "next": "按 C4 与真实消费者收尾；动态参数更新仅按具体需求论证，保留每项硬件实测 head，公共 PyPTO 接入另验。",
-      "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
-      "trigger": "关联 PR head、CI、设计决定或验收证据更新",
-      "prs": [
-        {
-          "number": 2915,
-          "title": "Fix: own recorder and prepare state through module teardown",
-          "state": "MERGED",
-          "baseRefName": "main",
-          "headRefOid": "6b0d858b857344c335832b3594d8eeb30a2f3ff6",
-          "mergeCommit": {
-            "oid": "3e263b58ff01fb9315fd3a53136c6344801e82ab"
-          },
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2915",
-          "in_main": true
-        },
-        {
-          "number": 2924,
-          "title": "CI: verify onboard feature execution within environment jobs",
-          "state": "MERGED",
-          "baseRefName": "main",
-          "headRefOid": "9e7678337ab66ebf82fc4e5f565bf20a84a6902d",
-          "mergeCommit": {
-            "oid": "1580eeefb5bde02c917e925264f49c27f3d70948"
-          },
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2924",
-          "in_main": true
-        },
-        {
-          "number": 2972,
-          "title": "Support: capture native submissions with stock Torch-NPU",
-          "state": "MERGED",
-          "baseRefName": "main",
-          "headRefOid": "f9b749c9cdc6474b437f29a42a4860c6a5783d8f",
-          "mergeCommit": {
-            "oid": "20af3c1d25aa4cc04f22680ab8360d6e3cdfe042"
-          },
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2972",
-          "in_main": true
-        },
-        {
-          "number": 2990,
-          "title": "Add: cover native capture and replay on A5",
-          "state": "MERGED",
-          "baseRefName": "main",
-          "headRefOid": "48e9dc7bf3706f574c638df0ffbbbf55bc7a3569",
-          "mergeCommit": {
-            "oid": "0569c7796b86ca3c98ebeb96ab481a6e8bd4695a"
-          },
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2990",
-          "in_main": true
-        },
-        {
-          "number": 2993,
-          "title": "Add: cover A5 resident capture failure recovery",
-          "state": "MERGED",
-          "baseRefName": "main",
-          "headRefOid": "7f381765a0b169f7008a2c13d1acd351aa506d95",
-          "mergeCommit": {
-            "oid": "0f6fd790f9212a5344bef85a666356725008b5e8"
-          },
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2993",
-          "in_main": true
-        }
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2666",
-          "label": "#2666 · 正文",
-          "sha256": "b31f90b215aa82a18c1f93297d19e2203f1b04250be8e15eb037e176b882a226",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ],
-      "observed_at": "2026-11-13T12:19:00.592939+00:00"
-    },
-    "2715": {
-      "phase": "flight",
-      "label": "CI 入口在飞",
-      "current": "#2748 仍为 draft；#2429 的 Lib 四格适配已自持模型源码，正式 CI 和长请求合同仍待收口。",
-      "next": "与 Lib #1759 正式四格 CI 及公共入口对齐，再决定旧模型 watch 的去留。",
-      "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
-      "trigger": "关联 PR head、CI、设计决定或验收证据更新",
-      "prs": [
-        {
-          "number": 2748,
-          "title": "Support: add real vLLM eager A3 integration watch",
-          "state": "OPEN",
-          "baseRefName": "main",
-          "headRefOid": "bb32c523280cc7e17318f874297eca4c3671a656",
-          "mergeCommit": null,
-          "isDraft": true,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2748",
-          "in_main": false
-        }
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2715",
-          "label": "#2715 · 正文",
-          "sha256": "fdefe71141c8fa6070d1e6169fb7aa08124d9ea060b42957f04d881a473c74d1",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ],
-      "observed_at": "2026-11-13T12:19:00.592939+00:00"
-    },
-    "2429": {
-      "phase": "acceptance",
-      "label": "Program 主线交付 · Kernel 在飞",
-      "current": "Serving #308/#312/#317/#326 已合入 main；Simpler #2948 关闭未合入，完整请求测试已迁到 Serving。Lib #1759 四格仍为开放 PR。",
-      "next": "跟进 Lib #1759 四格 CI、PyPTO #3194 eager 及 capture 公共入口；统一长请求输入、KV/数值和性能合同。",
-      "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
-      "trigger": "关联 PR head、CI、设计决定或验收证据更新",
-      "prs": [
-        {
-          "number": 2605,
-          "title": "Add fixed-shape vLLM eager integration",
-          "state": "OPEN",
-          "baseRefName": "main",
-          "headRefOid": "591f003be553ae074dbcec1fcb55e41445b479a8",
-          "mergeCommit": null,
-          "isDraft": false,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2605",
-          "in_main": false
-        },
-        {
-          "number": 2948,
-          "title": "Add: check Qwen Program requests through the serving engine",
-          "state": "CLOSED",
-          "baseRefName": "main",
-          "headRefOid": "1be20db0b90d207f0f6525529cfa9dd85a54564c",
-          "mergeCommit": null,
-          "isDraft": true,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2948",
-          "in_main": false
-        }
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2429",
-          "label": "#2429 · 正文",
-          "sha256": "abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        }
-      ],
-      "observed_at": "2026-11-13T12:19:00.592939+00:00"
-    },
-    "2658": {
-      "phase": "acceptance",
-      "label": "功能推进 · 性能未达目标",
-      "current": "固定组合功能与 Serving Program 交付已有进展；11 月 12 日试测 TMR/HBG 为 41.2175/43.3749 ms，尚非四仓整体完成或 HBG 更快证据。",
-      "next": "M2 核持续请求、自动准入和最后消费者退休（#2934）；M3 统一输入与同条件对照；M4 收口合入组合回归。",
-      "actor": "原 Issue / PR 负责人；评审与验收由对应维护者协同",
-      "trigger": "关联 PR head、CI、设计决定或验收证据更新",
-      "prs": [
-        {
-          "number": 2934,
-          "title": "Fix: retain native communication domains across async consumers",
-          "state": "OPEN",
-          "baseRefName": "main",
-          "headRefOid": "a8198c5dd39a07af8e64307c0398c1153bd1b239",
-          "mergeCommit": null,
-          "isDraft": true,
-          "url": "https://github.com/hw-native-sys/simpler/pull/2934",
-          "in_main": false
-        }
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658",
-          "label": "#2658 · 正文",
-          "sha256": "f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        },
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6625458806",
-          "label": "#2658 · 阶段交付评论",
-          "sha256": "c594f449a4ae7eb4008ee4866b10b56213a770d42a2c7afdffbb923d74cabdf8",
-          "observed_at": "2026-11-13T12:19:00.592939+00:00"
-        },
-        {
-          "url": "https://github.com/hw-native-sys/simpler/issues/2658#issuecomment-6819302335",
-          "label": "#2658 · 验证记录",
-          "sha256": "3377e4b9f14a8e17745356a26e362c7b3251c9dd92dc694a3e31a3ed43d5bf6b",
           "observed_at": "2026-11-13T12:19:00.592939+00:00"
         }
       ],
@@ -3201,46 +2617,46 @@
   },
   "next_actions": [
     {
-      "issue": "2722",
-      "priority": "先对齐交付边界",
-      "title": "CCU 主线合同与旧 PR",
-      "why": "#2986/#3040/#3043 已合入；#2974 仍开放且 ABI 与主线不一致。",
-      "action": "由 #2971 负责人核对注册归属、两字 launch 与支持矩阵，确认 #2974 剩余独有内容及处置。",
+      "issue": "2721",
+      "priority": "方向 1 · 公共基础",
+      "title": "公共基础",
+      "why": "Buffer/Tensor/Worker 边界、共享区间与资源寿命。",
+      "action": "推进 #2460/#2888/#1931；#2720 收敛共享区间边界，#2635 保持候选，#2820 对齐已合入 MAP。",
       "view": "l3"
     },
     {
       "issue": "2722",
-      "priority": "通信后续",
-      "title": "HBG URMA 与故障复发",
-      "why": "#2999 只提供公共请求基础；#2854 已重开。",
-      "action": "按 #2997 推进 sender、条件登记和 CQ 完成；#3051 保留 PCIe Host-source 缺口；#2994 合批仍在评审。",
+      "priority": "方向 2 · 通信与后端",
+      "title": "通信与后端",
+      "why": "子域和 CCU 已有交付；后端扩展与故障闭环继续推进。",
+      "action": "#2971 对齐主线合同与 #2974 去留；#2997 推进 HBG sender/CQ 闭环；#2854 处理复发；#3051 跟踪 PCIe Host-source。",
       "view": "l3"
     },
     {
-      "issue": "2429",
-      "priority": "应用验收",
-      "title": "Program 已合入，Kernel 收口",
-      "why": "Serving 四项 main 交付已核；Lib #1759 与 PyPTO #3194 仍开放。",
-      "action": "跟进 Lib #1759 四格 CI、PyPTO #3194 eager 及 capture 公共入口；统一长请求输入、KV/数值和性能合同。",
-      "view": "model"
+      "issue": "2723",
+      "priority": "方向 3 · L2 常驻执行",
+      "title": "L2 常驻执行",
+      "why": "同一 L2 Run 内的多轮工作、完成、背压和退出。",
+      "action": "定义同一 Run 的 work/completion、背压、STOP/drain 和异常收尾验收。",
+      "view": "l3"
     },
     {
-      "issue": "2657",
-      "priority": "复用已交付基础",
-      "title": "Host DDR 应用与性能",
-      "why": "#2714/#2893 已合入；共享整表 MAP 与分片 URMA 是独立路线。",
-      "action": "按应用所选部署验证异步完成、有用计算重叠、拓扑与持续复用，不按子项关闭数收口。",
-      "view": "host"
+      "issue": "2724",
+      "priority": "方向 4 · 多级多机部署",
+      "title": "多级多机部署",
+      "why": "启动、session、任务路由、结果返回与退出观察。",
+      "action": "评审 #2791；#2659 继续部署迁移，分别核结果、退出与释放；不再等待 #2900 合入。",
+      "view": "l3"
     }
   ],
   "snapshot": {
     "main": "3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47",
     "observed_at": "2026-11-13T12:19:00.592939+00:00",
-    "issues_read": 54,
-    "main_prs_read": 147,
-    "main_merged_verified": 75,
-    "scope": "#2716 原生子树及既有资源/模型交接入口；仅 main 目标 PR。新增四个子项进入原 owner，通用 kernel/HBG 内部实施仍由原 track 负责。",
-    "limits": "核正文/评论、合入祖先和具名源码；跨仓只读核关联 PR 的 main 祖先。作者硬件结果保留原测试 head，本轮没有重跑硬件或技术复审全部 PR。",
+    "issues_read": 44,
+    "main_prs_read": 26,
+    "main_merged_verified": 16,
+    "scope": "Worker L3+ 四方向：#2721 公共基础、#2722 通信与后端、#2723 L2 常驻执行、#2724 多级多机部署。仅跟踪四方向子项及必要外部能力；应用模型与通用 Kernel/capture 不进入当前进展。",
+    "limits": "源码与 GitHub 观察保留 2026-11-13 的具名版本；2026-11-14 仅按用户指定收敛范围，没有刷新远端状态或新增硬件验收。",
     "source_conflict": "#2722 摘要仍把 #2970/#2893/#2986 写成在飞；#2971 注册归属/READY 与主线合同存在差异。以已核 merge 和当前代码描述交付，差异由原 owner 收敛。"
   },
   "incremental_update": {
@@ -3251,14 +2667,21 @@
     "merge": "37c2ad5e1e083c9e805e24c002702423eef61c18",
     "review_verdict": "approve",
     "issue_state": "CLOSED / COMPLETED"
-  }
+  },
+  "scope_roots": [
+    2721,
+    2722,
+    2723,
+    2724
+  ],
+  "scope_updated_on": "2026-11-14"
 }</script>
 <script>
 'use strict';
 const D=JSON.parse(document.getElementById('data').textContent),$=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const kinds={required:'明确合同前置',interface:'接口 / 验收交接',conditional:'条件依赖',foundation:'已有基础'};
 const colors={'基础':'#2b7b74','平台':'#a88041','通信':'#46788f','部署':'#8a749a','执行':'#4a708e','模型':'#aa7952','合同细化':'#2b7b74'};
-const views={overview:{title:'整体依赖 · 接口来源与场景消费',ids:D.nodes.filter(n=>!['2730','2731','2657','2922','2938'].includes(n.id)).map(n=>n.id),note:'已合入基础、在飞实现与验收缺口分别标注；Host DDR 细节切换到专用视图。'},l3:{title:'L3+ · 公共能力、部署、通信与常驻',ids:['2721','2496','2460','2720','2724','824','2722','2723'],note:'四方向并列承担完整目标，箭头只表示具体合同消费。'},model:{title:'模型接入 · 普通 Async 与可选消费者',ids:['2721','2460','2666','2715','2429','2658'],note:'#2429 现负责 Qwen 六格应用集成；#2658 承接跨仓组合/性能。eager 不等待全部 capture。'},host:{title:'Host DDR · 两种部署，分别交付',ids:['2730','2731','2922','2938','2657'],note:'实线：本地 MAP → 整表多 L2。灰线：分片域 → 首次初始化。两种部署独立供父目标验收；不是一条串行长链。'},buffer:{title:'#2460 · 合同顺序，不是当前待办进度',ids:D.stages.map(n=>n.id),note:'U1b 后本地 IO 与 Remote 可并行；network→H2D 合流后验收统一关闭。旧权限 / COW 表述以 #2721 和 #2888 的现行合同解释。'},tree:{title:'#2716 · 原生责任归属树',ids:[],note:'这里只画原生 parent / child；父项不阻塞子项，兄弟序号也不是执行顺序。'}};
+const views={overview:{title:'Worker L3+ · 四方向合同交接',ids:['2721','2722','2723','2724'],note:'四方向各自承担完整目标；连线指具体合同，不是等待整个方向关闭。'},l3:{title:'L3+ · 公共能力、部署、通信与常驻',ids:['2721','2496','2460','2720','2724','824','2722','2723'],note:'四方向并列承担完整目标，箭头只表示具体合同消费。'},host:{title:'Host DDR · 两种部署，分别交付',ids:['2730','2731','2922','2938','2657'],note:'实线：本地 MAP → 整表多 L2。灰线：分片域 → 首次初始化。两种部署独立供父目标验收；不是一条串行长链。'},buffer:{title:'#2460 · 合同顺序，不是当前待办进度',ids:D.stages.map(n=>n.id),note:'U1b 后本地 IO 与 Remote 可并行；network→H2D 合流后验收统一关闭。旧权限 / COW 表述以 #2721 和 #2888 的现行合同解释。'},tree:{title:'#2716 · 原生责任归属树',ids:[],note:'这里只画原生 parent / child；父项不阻塞子项，兄弟序号也不是执行顺序。'}};
 let view='overview',selected=null,selectedEdge=null,vertical=false,zoom=1,graphWidth=1250,graphHeight=720;
 let visibleNodes=[],visibleEdges=[];
 const nodeMap=new Map([...D.nodes,...D.stages].map(n=>[n.id,n]));
@@ -3266,7 +2689,7 @@ function evidence(e){return e.evidence.map(v=>`<a href="${esc(v.url)}" target="_
 function current(){let nodes=view==='buffer'?D.stages:D.nodes.filter(n=>views[view].ids.includes(n.id));let ids=new Set(nodes.map(n=>n.id));let edges=(view==='buffer'?D.stage_edges:D.edges).filter(e=>ids.has(e.from)&&ids.has(e.to));if(!$('conditional').checked)edges=edges.filter(e=>e.kind!=='conditional');if(!$('foundation').checked)edges=edges.filter(e=>e.kind!=='foundation');if($('only-required').checked)edges=edges.filter(e=>e.kind==='required');return{nodes,edges};}
 function reachable(id,reverse){const set=new Set([id]),queue=[id];while(queue.length){const x=queue.shift();for(const e of visibleEdges){const a=reverse?e.to:e.from,b=reverse?e.from:e.to;if(a===x&&!set.has(b)){set.add(b);queue.push(b);}}}return set;}
 function positions(nodes,edges){
- if(view==='overview'&&!vertical){const p={'2721':[30,25],'2496':[30,175],'2720':[30,325],'824':[30,475],'2715':[30,625],'2724':[340,25],'2460':[340,175],'2666':[340,475],'2722':[650,175],'2723':[650,325],'2429':[650,625],'2658':[960,385]};return{p,w:1230,h:775};}
+ if(view==='overview'&&!vertical){const p={'2721':[30,25],'2724':[340,25],'2722':[650,25],'2723':[340,210]};return{p,w:930,h:365};}
  const incoming=new Map(nodes.map(n=>[n.id,0])),ranks=new Map(nodes.map(n=>[n.id,0]));for(const e of edges)incoming.set(e.to,incoming.get(e.to)+1);const q=nodes.filter(n=>incoming.get(n.id)===0).map(n=>n.id);let count=0;while(q.length){const id=q.shift();count++;for(const e of edges.filter(e=>e.from===id)){ranks.set(e.to,Math.max(ranks.get(e.to),ranks.get(id)+1));incoming.set(e.to,incoming.get(e.to)-1);if(incoming.get(e.to)===0)q.push(e.to);}}if(count!==nodes.length)throw Error('依赖关系存在环，不能当作 DAG 渲染');const levels=[];for(const n of nodes){const r=ranks.get(n.id);(levels[r]??=[]).push(n.id);}const p={};let width=0,height=0;const vert=vertical||view==='buffer';levels.forEach((ids,col)=>ids.forEach((id,row)=>{const x=30+(vert?row:col)*310,y=30+(vert?col:row)*155;p[id]=[x,y];width=Math.max(width,x+270);height=Math.max(height,y+140);}));return{p,w:Math.max(width,600),h:Math.max(height,260)};
 }
 function routes(layout,nodes,edges){
@@ -3302,12 +2725,12 @@ function renderDetail(){const detail=$('detail');detail.classList.toggle('empty'
 function renderTree(){const kids=n=>D.ownership.filter(r=>r.parent===n).map(r=>r.child);function item(n,seen=new Set()){if(seen.has(n))throw Error('责任树存在环');const next=new Set(seen);next.add(n);const i=D.issues[n],cs=kids(n);return `<li><a href="${esc(i.url)}" target="_blank" rel="noopener">#${n} ${esc(i.title)}</a><span class="native-state">${i.state_reason==='NOT_PLANNED'?'暂缓 · NOT_PLANNED':i.state==='closed'?'CLOSED · 按具名交付范围':'OPEN'}</span>${(i.prs||[]).length?'<span class="native-pr">'+i.prs.map(p=>'PR #'+p.number+' '+p.state+(p.draft?' / Draft':'')).join(' · ')+'</span>':''}${cs.length?`<ul>${cs.map(c=>item(c,next)).join('')}</ul>`:''}</li>`;}$('tree').innerHTML=kids(2716).map(n=>`<article class="treebranch"><h3><a href="${esc(D.issues[n].url)}" target="_blank" rel="noopener">#${n} ${esc(D.issues[n].title)}</a></h3><ul>${kids(n).map(c=>item(c)).join('')||'<li>原生子项为空；本方向的正文仍有目标与验收。</li>'}</ul></article>`).join('');$('counts').textContent=`${D.ownership_observation.nodes} 个原生节点 · ${D.ownership.length} 条归属边`;$('board').scrollTop=0;}
 $('canvas').addEventListener('click',e=>{if(e.target.closest('a'))return;const n=e.target.closest('[data-node]'),edge=e.target.closest('[data-edge]');if(n){selected=selected===n.dataset.node?null:n.dataset.node;selectedEdge=null;render();}else if(edge){selectedEdge=edge.dataset.edge;selected=null;renderDetail();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'});}});$('canvas').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-node]')){e.preventDefault();e.target.click();}});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.view;selected=selectedEdge=null;$('search').value='';$('only-required').checked=false;render();fit();$('board').scrollTop=0;$('board').scrollLeft=0;});for(const id of ['conditional','foundation','only-required'])$(id).onchange=()=>{selectedEdge=null;render();};$('search').oninput=()=>render();$('reset').onclick=()=>{selected=selectedEdge=null;$('search').value='';render();};$('plus').onclick=()=>{zoom=Math.min(1.8,zoom+.15);applyZoom();};$('minus').onclick=()=>{zoom=Math.max(.3,zoom-.15);applyZoom();};$('fit').onclick=fit;$('layout').onclick=()=>{vertical=!vertical;$('layout').textContent=vertical?'横向':'纵向';render();fit();};
-$('stamp').innerHTML=`观察 · ${esc(D.observed_at.slice(0,10))}<br>main 核对 <code>${esc(D.main_reference.slice(0,12))}</code>`;
+$('stamp').innerHTML=`范围 · ${esc(D.scope_updated_on)}<br>来源观察 · ${esc(D.observed_at.slice(0,10))}<br>main 核对 <code>${esc(D.main_reference.slice(0,12))}</code>`;
 $('questions').innerHTML=D.questions.map(q=>`<div class="question"><h3>${esc(q.title)}</h3><p>${esc(q.text)}</p><a href="${esc(q.evidence.url)}" target="_blank" rel="noopener">#${q.issue} 设计问题</a></div>`).join('');
 $('edges-table').innerHTML=[...D.edges,...D.stage_edges].map(e=>`<tr><td>${esc(e.from)} → ${esc(e.to)}</td><td>${kinds[e.kind]}</td><td>${esc(e.contract)}${e.condition?'<br><strong>条件：</strong>'+esc(e.condition):''}</td><td>${evidence(e)}</td></tr>`).join('');
-$('audit').innerHTML=`<p>${esc(D.incremental_update.scope)}</p><p>${esc(D.snapshot.scope)}</p><p>本轮获取 ${D.snapshot.issues_read} 个具名 Issue 的正文、评论与子项；#2716 原生树 ${D.ownership_observation.nodes} 节点 / ${D.ownership.length} 归属边。${D.snapshot.main_prs_read} 个 main 目标 PR，近期合入 ${D.snapshot.main_merged_verified} 个已核 main 祖先。</p><p>${esc(D.snapshot.limits)}</p><p>${esc(D.native_blocker_observation.meaning)} 正文阳性对照：#2730→#2731 明确映射合同，#2922→#2938 独立域初始化合同。</p><p>Issue CLOSED 不等于已交付：#2910/#2823/#2824/#2885 是 NOT_PLANNED 暂缓。合同 U 链及历史手工阶段不用于计算完成率。源码基线 <code>${esc(D.main_reference)}</code>。</p>`;
+$('audit').innerHTML=`<p>${esc(D.incremental_update.scope)}</p><p>${esc(D.snapshot.scope)}</p><p>当前范围保留 ${D.snapshot.issues_read} 个具名 Issue 的既有观察；#2716 原生树 ${D.ownership_observation.nodes} 节点 / ${D.ownership.length} 归属边。关联 ${D.snapshot.main_prs_read} 个 main 目标 PR，其中 ${D.snapshot.main_merged_verified} 个已核 main 祖先。</p><p>${esc(D.snapshot.limits)}</p><p>${esc(D.native_blocker_observation.meaning)} 正文阳性对照：#2730→#2731 明确映射合同，#2922→#2938 独立域初始化合同。</p><p>Issue CLOSED 不等于已交付：#2910/#2823/#2824/#2885 是 NOT_PLANNED 暂缓。合同 U 链及历史手工阶段不用于计算完成率。源码基线 <code>${esc(D.main_reference)}</code>。</p>`;
 function dPhase(n){return esc(D.observations[n.id]?.label||(n.state==='contract'?'合同分解':n.state==='closed'?'GitHub CLOSED':n.group));}
-function prDetails(p){const merged=p.state==='MERGED';return `<div class="pr-item"><a href="${esc(p.url)}" target="_blank" rel="noopener">PR #${p.number}</a> · ${merged?'已合入 main':p.isDraft?'OPEN / Draft':'OPEN'}<br><span class="micro">${esc(p.title)}</span><code>${merged?'merge '+esc(p.mergeCommit.oid):'head '+esc(p.headRefOid)}</code></div>`;}
+function prDetails(p){const merged=p.state==='MERGED';return `<div class="pr-item"><a href="${esc(p.url)}" target="_blank" rel="noopener">PR #${p.number}</a> · ${merged?'已合入 main':p.state==='CLOSED'?'CLOSED · 未合入':p.isDraft?'OPEN / Draft':'OPEN'}<br><span class="micro">${esc(p.title)}</span><code>${merged?'merge '+esc(p.mergeCommit.oid):'head '+esc(p.headRefOid)}</code></div>`;}
 function observation(n){const o=D.observations[n.id];if(!o)return '';return `<div class="observation"><h3>${esc(o.label)}</h3><p><b>当前：</b>${esc(o.current)}</p><p><b>下一步：</b>${esc(o.next)}</p><p class="micro">${esc(o.actor)} · 重新核对触发：${esc(o.trigger)}</p><div class="pr-list">${o.prs.map(prDetails).join('')}</div><details><summary>进展来源（正文与评论）</summary>${evidence(o)}</details></div>`;}
 function showNode(id,requestedView){view=requestedView;selected=id;selectedEdge=null;$('only-required').checked=false;$('search').value='';render();fit();$('board').scrollIntoView({behavior:'smooth',block:'start'});}
 $('snapshot-metrics').innerHTML=`<span class="metric">4 个 L3+ 方向 · 可并行</span><span class="metric">${D.ownership_observation.nodes} 个原生跟踪节点</span><span class="metric">#2714 / #2893 已合入 main</span><span class="metric">${D.nodes.length} 个交接节点 · ${D.edges.length} 条关系</span>`;

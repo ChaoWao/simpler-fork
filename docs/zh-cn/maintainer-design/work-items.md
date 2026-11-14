@@ -1,6 +1,6 @@
 # 工作项登记表 —— 本地合同归属与验收证据
 
-> **发布快照：2026-11-13。** 当前进展见 DAG；历史源码与硬件证据保留原日期和版本。参见[阅读入口](README.md)。
+> **发布快照：2026-11-14。** 当前范围为 Worker L3+ 四方向；证据保留实际观察日期和版本。参见[阅读入口](README.md)。
 >
 > **2026-11-04 状态与来源刷新**：main `63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0`；全部本地编号重新推导，外部来源正文/决定性评论和 #2716 原生子树重新获取。新增交付、剩余合同及下一动作按本页和 [范围分析](review/track-2716.md)。下方 10 月 18 日保留为历史全量源码审计；当前具名代码/CI 核对不冒充所有平台的重新验收。
 >
@@ -295,7 +295,9 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 写进四个不同的格 —— 其中三个在 #2120 开出来之后就错了，而**没有任何一处会被更新**，
 因为更新哪一处都不是「唯一真源」。
 
-## 10. 依赖图的具体关系
+## 10. Worker L3+ 四方向的具体关系
+
+当前 roadmap 仅覆盖 #2721/#2722/#2723/#2724 及其必要子目标。#2666/#2715/#2429/#2658 的目标归属和历史交接保留，但不在当前 DAG 中维护进度或前置关系。原七条合同中五条属于当前范围，另两条只保留在静态交接索引。
 
 [进展与依赖 DAG](dependency-dag.html) 的观察时间为 2026-11-13T12:19:00.592939+00:00，main `3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47`。GitHub 进展快照及下一步在 README；以下只维护合同与来源。已合入不代表全部平台验收；责任树的父子关系不作为前置。
 
@@ -305,15 +307,9 @@ SPL 本地别名归一：`SPL-C4`/`SPL-C5`/`SPL-C8`/`SPL-C11`/`SPL-C12`/`SPL-C13
 | e02 | #2721 | #2723 | interface | 公共执行和资源合同供常驻接入；场景所需改动随常驻任务交付。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
 | e03 | #2724 | #2722 | interface | 通信消费真实 session / endpoint / 部署结果，不等待整个部署方向收口。 | [#2722 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `eca7036d54764ca1b9f71c27675049bf1eab51ab90f26f36c6087eaf8677418f` |
 | e04 | #824 | #2722 | foundation | 跨 run 复用与显式释放已有交付；通信场景在此基础上各自验收。 | [#824 · 关闭依据](https://github.com/hw-native-sys/simpler/issues/824#issuecomment-6652302467) · 正文/评论 SHA-256 `0c588c2bdec39076bb54fbe6db2863790aa754bc701d86d21aa481331f2c9444` |
-| e05 | #2666 | #2658 | conditional | 核定所选 kernel / capture 模式的 prepare、launch、资源使用寿命与产物；普通 program Async 可独立推进。 适用：仅选用 kernel / capture 模式 | [#2658 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
-| e06 | #2721 | #2658 | conditional | 对齐所选 L3+ 调用路径的公共身份、绑定、完成与最后使用寿命。 适用：仅选用相关 L3+ 路径 | [#2658 · ③ L3+ 设计交接](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
 | e07 | #2496 | #2460 | conditional | 只在需要 A5 Device→Host direct-map 的消费者上核定能力，不阻止 copy-capable 路径。 适用：仅 A5 direct-map 分支 | [#2721 · ③ 外部映射能力](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
 | e08 | #2460 | #2722 | interface | 通信消费统一资源身份与访问契约，Remote producer / receiver 成对接入；基础修改随场景交付。 | [#2722 · ③ 资源身份与访问](https://github.com/hw-native-sys/simpler/issues/2722) · 正文/评论 SHA-256 `eca7036d54764ca1b9f71c27675049bf1eab51ab90f26f36c6087eaf8677418f` |
-| e09 | #2460 | #2666 | interface | Kernel eager 消费需要的本地能力；graph retention 接入实际 capture 消费者，不等全部 Remote 后端。 | [#2460 · Delivery and dependency plan](https://github.com/hw-native-sys/simpler/issues/2460) · 正文/评论 SHA-256 `20f03b873343ae6fef97ff184b6db852a421a708fd71dd4a00902dccff3075cc` |
 | e10 | #2721 | #2724 | interface | 部署方向消费已确认的资源与执行合同，自行完成多级、多机接入验收。 | [#2721 · ③ 依赖与交接](https://github.com/hw-native-sys/simpler/issues/2721) · 正文/评论 SHA-256 `6ed337041424d1a693ea937e479453dc6b27872ce4055f525c861f86f0c6bcdb` |
-| e11 | #2666 | #2429 | interface | vLLM adapter 使用共同执行接口和资源机制；eager 不等完整 capture。 | [#2429 · ③ 依赖与责任交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d` |
-| e12 | #2715 | #2429 | interface | 真实 vLLM Engine 验收需要可复现目标环境；adapter 和环境可并行开发、在约定组合联验。 | [#2429 · ③ #2715 交接](https://github.com/hw-native-sys/simpler/issues/2429) · 正文/评论 SHA-256 `abfde1663f28bf1dd0d18a8461cf23f849a73433c1c0319197f76f42f7ea845d` |
-| e13 | #2429 | #2658 | conditional | 系统对比与集成使用 vLLM adapter、artifact、数值和请求生命周期证据。 适用：仅选用 vLLM 路径／比较对象 | [#2658 · ③ vLLM eager 接入](https://github.com/hw-native-sys/simpler/issues/2658) · 正文/评论 SHA-256 `f48e51d33e1f1d94f495a598258fa6d5a8ba2477037710429331ad9a5baf2012` |
 | e14 | #2730 | #2731 | required | 多 L2 整表 MAP 复用 #2730 的按调用映射、身份与寿命合同；#2714 与 #2893 均已合入，关系表示已交付基础的复用。 | [#2731 · 正文](https://github.com/hw-native-sys/simpler/issues/2731) · 正文/评论 SHA-256 `55c2b7d5135f2dde83f5cfbe7460935223bee851d9162453616931bf9388e678` |
 | e15 | #2922 | #2938 | foundation | 首次初始化复用 Host-source 域的映射、发布与失败回收合同；#2913/#2939 已合入。 | [#2938 · 正文](https://github.com/hw-native-sys/simpler/issues/2938) · 正文/评论 SHA-256 `26a1a5c09e76d04c94a56c55d0b201a237b7450a91f5c1d30856f2291cf2a8c7` |
 | e16 | #2731 | #2657 | conditional | 共享整表路径以多 L2 本地 MAP 为基础，再完成实际应用与所需性能验收。 适用：选用 L3 拥有整表的部署；不是分片域的前置 | [#2657 · 正文](https://github.com/hw-native-sys/simpler/issues/2657) · 正文/评论 SHA-256 `da697f7e7eb3d21d1830ea99717ee5d9d19333b596c1653266d24fc5f55b920d` |

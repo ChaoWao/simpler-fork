@@ -1,20 +1,16 @@
 # 分线：本原理决定**什么是一条 track**
 
-> **发布快照：2026-11-05。** 本轮为资源、部署通信、执行与跨仓目标的跟踪交接；不代表当前 main 全量验收。源码事实按各自 SHA 阅读，资源进度查 GitHub。参见[阅读入口](README.md)。
+> **发布快照：2026-11-14。** 当前范围为 Worker L3+ 四方向；证据保留实际观察日期和版本。参见[阅读入口](README.md)。
 >
-> ## 从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）
->
+> **从 [`logical-physical-separation.md`](logical-physical-separation.md) §7 拆出（2026-08-14）**
 > —— 母文件到 302 行触发 [`README.md`](README.md) §4 规则 5 的拆分评估。
 > **拆分依据不只是长度**：§1–§6 回答「原理是什么、怎么拿它查一个 API」，本文回答
->
-> ## 「工作该怎么分线」**—— 两种读者意图；而且本文是**会churn 的那一半
->
+> **「工作该怎么分线」** —— 两种读者意图；而且本文是**会churn 的那一半**
 > （本周被重写两次，§1–§6 未动）。
 >
 > **上游原理**：[`logical-physical-separation.md`](logical-physical-separation.md) §1 的
 > `potential = deployment × interconnect × backing × runtime` 公式与 §3 的检验标准。
 > **业务进度以 GitHub 为准**；[`work-items.md`](work-items.md) 保留目标与验收索引，README 负责登记与里程碑。本文只谈分线判断，不记进度。
->
 >
 > **新增 2026-08-07，由用户指出。** §3 的检验标准是拿来查 API 的；本文说的是它的
 > **上一层用法** —— 它同时决定工作**怎么分线**。我此前只用了前者，代价见下。
@@ -22,9 +18,7 @@
 **原理的可执行形式（用户 2026-08-07 表述）**：
 
 > 物理资源（内存、通信域）与逻辑概念（Worker）解耦；
->
-> ## 一个 worker 能不能持有或访问一块资源，由「它部署在哪」× 「那里到资源物理位置的连通性」判定
->
+> **一个 worker 能不能持有或访问一块资源，由「它部署在哪」× 「那里到资源物理位置的连通性」判定。**
 > 逻辑树位置（level / worker_path）只决定**谁有权发起**，不决定**能不能**。
 >
 > ⚠️ **本文 373 行，已越过 [`README.md`](README.md) §4 规则 5 的 300 行拆分触发线（2026-09-07）。
@@ -42,6 +36,8 @@
 > 或本文超过 450 行 —— 满足任一条即拆，并在同一次改动里更新那 14 处锚点。
 
 ## 0. GitHub 交付归属与共同契约
+
+**当前维护范围（2026-11-14 用户裁决）**：Worker L3+ 四方向 #2721/#2722/#2723/#2724 及其子项。Qwen、vLLM 与通用 Kernel/capture 不进入当前 roadmap 的进展、下一步或依赖节点；下面的跨仓材料只保留历史归属和接口背景。L3+ 必需的 L2 通信、资源及后端接入仍按原方向交付。
 
 [#2716](https://github.com/hw-native-sys/simpler/issues/2716) 的四方向承载完整目标。资源设计直接跟踪 [#2721](https://github.com/hw-native-sys/simpler/issues/2721) 及 [资源入口](work-items.md#2-资源与访问github-入口)，不维护本地 RA 进度；GitHub 方向入口 保留验收索引。场景所需基础修改随场景交付，不因跨模块而重复拆 owner。历史编号见 [交接对照](review/ra-handoff.md)。
 
@@ -100,9 +96,7 @@ Host 场景 #2657/#2730/#2731、域接口 #2594 及传输 #2621 保持完整目�
 
 ⚠️ **但错不在契约文档 —— 这一条 2026-08-14 二次更正** ：
 [`cpu-npu-shared-memory/domain-membership.md`](cpu-npu-shared-memory/domain-membership.md) §3
-
-### 明写它引的是 [`feature_roadmap.md`](feature_roadmap.md) 的规范形式
-
+**明写它引的是 [`feature_roadmap.md`](feature_roadmap.md) 的规范形式**
 （`CommDomain = MemberSet + ResourceBundle + AttachmentPlan + TransportPlan`），
 **它是目标契约，从未声称已实现**。
 ⇒ **错在把规范当成现状引用的地方** —— 本文原表与 [`README.md`](README.md) §1.5 把这些名字
@@ -164,10 +158,10 @@ vocabulary, not a live registry object"* —— **后半句仍然对**（`Import
 ⇒ ⭐ **「共用判据」与「共用 live registry 对象」是两件事，今天第一件成立、第二件不成立** ——
 本节的边界论证必须按这条重画，不能再用「只共享一个枚举」当论据。
 
-#### 1b `comm_profile` 问的是另一个问题（名字撞了，函数没同一）
+### 1b `comm_profile` 问的是另一个问题（名字撞了，函数没同一）
 
-| — | 入参 | 问什么 | 输出 |
-| - | ---- | ------ | ---- |
+|  | 入参 | 问什么 | 输出 |
+|  | ---- | ------ | ---- |
 | `_validate_global_comm_capability`（`worker.py:634`）· `resolve_global_comm_capability`（`global_comm_domain.py:132`） | **两个字符串** `(platform, comm_profile)` | 这块**硅**能不能实现这个 profile（`a3-fabric-v1` 要求真 A3、非 sim） | `raise` |
 | `_evaluate_host_vmm_copy`（`comm_endpoints.py:636`） | `(backend_kind, provider.deployment, consumer.deployment, same_node)` | 这**两个端点之间**能不能这样访问 | `RegionAccessDecision` |
 
@@ -242,14 +236,12 @@ rank**，**无 `deployment`、无 `address_space`** —— ✅ 仍成立，而�
 > `worker._mpi_worker_ids`（`worker.py:6381-6383`），按
 > `_normalize_node_identity(group.spec.hosts[rank.rank])` 定 node identity，
 > 建 HOST_CPU 条目 ＋ 走 `_append_device_endpoint_topology` 建 device 条目。
->
-> #### 本节以下的缺陷描述是交付前的记载，保留以便追溯
+> **本节以下的缺陷描述是交付前的记载，保留以便追溯。**
 >
 > ⛔ **而 #1879 的 PR body 四条 bullet 一个字都没提这件事**（它讲的是 attachment 矩阵、
 > `PREPARE_EXPORT`、MPI/非 MPI 同一 wire 形状、删 `DomainAttachment` 别名）——
 > ⇒ **只读 PR 描述会以为这条边还开着**。本目录就是这样把它当成「下一步」多挂了一天。
->
-> #### 判据：一条缺陷是否已闭，只能对代码核，不能对 PR 描述核
+> **判据：一条缺陷是否已闭，只能对代码核，不能对 PR 描述核。**
 >
 > ⚠️ **它带来的一处结构性变化**：本节原来的论点是「补这条边是 XS」，而 #1879 顺手做掉它
 > 说明**这条边本来就该和 attachment 轴一起做** —— attachment 表按 receiver-node × rank
@@ -278,7 +270,7 @@ add_mpirun_worker_group"*）· ② `MpiL3GroupSpec` **已带齐建端点所需�
 
 ✅ **已实测（2026-08-18，`upstream/main@d6e27325`，在一棵编译过的树上跑；探针事后已删）**
 —— ⚠️ **这份实测量的是 `d6e27325`，即 #1879 之前**，所以它记录的是**缺陷存在时**的现场；
-\#1879 之后同一探针应当看到 MPI 的 worker id 出现在拓扑里。
+`#1879` 之后同一探针应当看到 MPI 的 worker id 出现在拓扑里。
 此前本节记「未能实测：本树无编译好的 `_task_interface`」，该限制已解除。
 探针无网络、无设备（`add_mpirun_worker_group` 只登记 spec，不拉 `mpirun`），
 **同一次运行里带阳性对照**：
@@ -337,8 +329,7 @@ subject  (mpi    L3 worker_id=2) present: False  → []
 `(部署A, 部署B, 互连) → {D, C, T, H}` 是**这三份文档里真正的资产** ——
 **整张表没有一个 `level` 字**，只依赖部署与物理拓扑，正是 §1 公式要的形状。
 
-#### 规模差距已量化**（见该节新增的对表）：**本表 20 格，代码今天真正做判定的是 1 格
-
+**规模差距已量化**（见该节新增的对表）：**本表 20 格，代码今天真正做判定的是 1 格。**
 四个 `BackendKind` 连候选都产不出（`_adapter_candidates:899`），`H` 列在代码里没有载体，
 `T` 列整列生来带 `unsupported_reason`。
 
@@ -355,8 +346,7 @@ subject  (mpi    L3 worker_id=2) present: False  → []
 撞在一起，三次的处理都是**记一条提醒**而不是**合并**。而本文 §1 的
 `potential = deployment × interconnect × …` 公式**早就写着**答案。
 
-> ### ⇒ 判据：当你第二次为同两条 track 写下「别各做一套」时，那不是提醒该加，是分线该改
->
+> **⇒ 判据：当你第二次为同两条 track 写下「别各做一套」时，那不是提醒该加，是分线该改。**
 > 提醒依赖人记得；分线不依赖。
 
 这与 §6 是同一个错误的两层：§6 是**两轮 review 各自在文档组内部查一致性**，

@@ -209,11 +209,11 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
-<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-13 tracking/main 观察快照；代码与硬件证据保留各自版本。<a href="README.md">阅读入口</a>。</div>
+<div style="padding:12px 20px;background:#fff3cd;color:#332b00">2026-11-14 范围：Worker L3+ 四方向；来源观察仍为 2026-11-13。<a href="README.md">阅读入口</a>。</div>
 <div class="viz-root">
 
-<h1>simpler · 当前进展与下一步</h1>
-<p class="sub">观察 2026-11-13 · main 核对 <code>3bcaf8d4ff86</code>。<a href="dependency-dag.html">全屏打开交互 DAG</a> · <a href="README.md">来源与进展登记</a>。下方历史材料保留各自验收基线。</p>
+<h1>simpler · Worker L3+ 四方向</h1>
+<p class="sub">范围确认 2026-11-14：公共基础、通信与后端、L2 常驻执行、多级多机部署。来源观察 2026-11-13 · main 核对 <code>3bcaf8d4ff86</code>。<a href="dependency-dag.html">全屏打开交互 DAG</a> · <a href="README.md">来源与进展登记</a>。下方历史材料保留各自验收基线。</p>
 <iframe id="current-roadmap" title="当前交付进展、依赖与下一步" src="dependency-dag.html" style="width:100%;height:1750px;border:1px solid var(--grid);border-radius:14px;background:#f5f8f8"></iframe>
 <details id="historical-roadmap" style="margin-top:24px"><summary style="cursor:pointer;font-size:16px;font-weight:650">历史阶段、验收索引与判断记录（按原日期阅读）</summary>
 <h2>设计轨道与历史具名证据</h2>
@@ -269,7 +269,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <section id="resource-references"><h2>资源与访问 · GitHub 跟踪入口</h2><p>此处只提供设计与验收入口，不维护本地进度。<a href="review/ra-handoff.md">16 项历史交接</a>；<a href="https://github.com/hw-native-sys/simpler/issues/2721#issuecomment-6651217998">待决设计问题</a>。</p><div id="resource-reference-list"></div></section>
 <section id="communication-references"><h2>部署与通信 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/ds-handoff.md">11 项历史目标与评论交接</a>；设计问题待负责人确认。</p><div id="communication-reference-list"></div></section>
 <section id="execution-references"><h2>执行与常驻 · GitHub 跟踪入口</h2><p>业务进度在 GitHub；<a href="review/ex-handoff.md">七项目标与历史证据交接</a>。方案问题待负责人确认。</p><div id="execution-reference-list"></div></section>
-<section id="integration-references"><h2>跨仓模型 · GitHub 跟踪入口</h2><p>不维护本地进度。<a href="review/qwen-handoff.md">Q1–Q4 / C2b 验收交接</a>。</p><div id="integration-reference-list"></div></section>
+<section id="integration-references"><h2>范围外历史交接 · 跨仓模型</h2><p>不参与当前四方向进展与下一步。<a href="review/qwen-handoff.md">Q1–Q4 / C2b 验收交接</a>。</p><div id="integration-reference-list"></div></section>
 <h2>轨道与阶段<span class="hint">行 = 轨道，格 = 阶段（宽度不编码任何量）</span></h2>
 <div class="board" id="board"></div>
 
@@ -1536,6 +1536,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
     "title": "变更日志",
     "note": "最新在上。每条记的是「这次同步带来了什么状态变化、以及本页哪句被推翻」—— 推翻的部分刻意留着，理由同「判断失误记录」：删掉就会再犯。<br>⚠️ 早期条目是从页首那段逐次前插的文本里切出来的 —— 最老的一条含数次同步，边界不可靠，已如实标注。",
     "items": [
+      {
+        "t": "2026-11-14 · 当前范围为 Worker L3+ 四方向",
+        "b": "判断失误：把 Qwen 应用、跨仓性能和通用 Kernel/capture 的进展并入 Worker L3+ 看板，扩大了维护范围。用户明确只关心 #2721 公共基础、#2722 通信与后端、#2723 L2 常驻执行、#2724 多级多机部署。当前图只保留四方向及必要子目标；共享 Worker/Buffer/Async 名词不构成通信归属或依赖。历史交接不代表当前任务，源码与 GitHub 观察仍保留原基线。"
+      },
       {
         "t": "2026-11-13 · 交叉核对 tracking 与主线交付",
         "b": "上轮局部刷新 #2893 后，其他方向仍停在 11 月 10 日：#2970 子域、#2986 CCU、#2999 URMA 公共请求和 Serving 四项交付已推进。当前 main <code>3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47</code>；43 个原生树节点、54 个具名 Issue 已核。新判据：父 Issue 的旧摘要不能覆盖子 PR 的具名合入证据；CLOSED 要区分交付、迁移、替代与暂缓；CCU SDK 查找成功不等于板型支持，公共 URMA 抽取不等于 HBG 完成；故障关闭后须核最新复发评论。#2974 仍开放且合同与主线不一致，须按剩余独有内容处理，不沿用旧依赖排序。作者实测、CI 与本轮源码核对分别记录，性能目标不能由局部成功推定。"
