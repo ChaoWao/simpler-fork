@@ -6,7 +6,7 @@
   "track2716_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "numbering_baseline": "63ffeb8a8bd9b6527912fee87f6a8defdf82d5e0",
   "source_root": ".docs",
-  "scope": "Worker L3+ four directions only; application and generic kernel progress excluded; source observations retain 2026-11-13",
+  "scope": "Single roadmap entry with inline dependency graph for Worker L3+ four directions; folded historical evidence; original source observation dates retained",
   "files": [
     {
       "path": "cpu-npu-shared-memory.md",
@@ -45,8 +45,8 @@
     },
     {
       "path": "goal-coverage.md",
-      "source_sha256": "42e85b0e75f63044eb9ce3fa99cf8d13aa7d53c510d98d4e37d6ef5922a776af",
-      "published_sha256": "72e5261f8ebbb8e875a2b05f1ad9178a34fdd4f055dff981c453dd337c357c1f"
+      "source_sha256": "e27ab8b82dc7d72e9d0d5b0a40e38267f666e0489b1dfee6bd9fe9194c0a768e",
+      "published_sha256": "d282544f158c15f0fa25d1fc440856de9c9a06e0ad95444765fe908d720ac03b"
     },
     {
       "path": "l3l4.md",
@@ -90,8 +90,8 @@
     },
     {
       "path": "roadmap.html",
-      "source_sha256": "578cd8ef0978a9e5b2a42c0db38788364f1bcaf6b3f8354a02b29320372377c8",
-      "published_sha256": "89db6eedef22dbd47d11fed23f43ad040de0a97152edf683b4628a9e09f49a33"
+      "source_sha256": "5ee2c22ae54d778efca06877c1e5c986bffd8cc06364ad669f5a3e0ff2dec065",
+      "published_sha256": "00908bd274a378f37f97277866156e2e59d3a0933305830ebb3c0c9ada6304c5"
     },
     {
       "path": "track-boundaries.md",
@@ -100,8 +100,8 @@
     },
     {
       "path": "work-items.md",
-      "source_sha256": "efaf9e0c93be004f59c147642b94badc5f17246f408e91c00373b30fe22de92b",
-      "published_sha256": "79d20476cc258caff80d7404872dbf1aa581791976a10b81499580ca570c1471"
+      "source_sha256": "21e931a0e176554c1d0567a84ac64fa82205878fadf39616df3a4f4d41110a2e",
+      "published_sha256": "6a5d963ef911d8669d9ab2f989d0711ee4a7fe952f3e610a9b30226009765e3a"
     },
     {
       "path": "worker-memory-model.md",
@@ -175,8 +175,8 @@
     },
     {
       "path": "goal-sources.json",
-      "source_sha256": "b2d3ac0c5727e2d605aa362eed30e082013ccdf37b582adabb1f890c56892a7e",
-      "published_sha256": "c3e377a83f72481232e8f24d1dd43272d8b183cf71a5d6fc3be6a7def2ff4920"
+      "source_sha256": "284c34b6a830039f0ff3ad5f0964169479fe60af9915248a6b8a4d2d99826efd",
+      "published_sha256": "8b69d129c1b5e5217dc115b545c44535503d1df33563ad48db18d236a11e892a"
     },
     {
       "path": "review/ra-handoff.md",
@@ -197,11 +197,6 @@
       "path": "review/ex-handoff.md",
       "source_sha256": "b35acae2fb5f993598831ec2381f8a337729c3e12e511610255599a5c0bb5efe",
       "published_sha256": "409ea0024df54c89f97d9cce0bb37f94889c37cfde73c4ef9753ed8f9cc7e5de"
-    },
-    {
-      "path": "dependency-dag.html",
-      "source_sha256": "873f45e526cff4aee3c19e7aea76aaa8abd4921244deb89ef2cfd15136aa5282",
-      "published_sha256": "544937f8e10c0c498cd58f9a9faa2c1088cc98fa83fe0b732d3652d79a657ce2"
     },
     {
       "path": "review/pr-2714.md",

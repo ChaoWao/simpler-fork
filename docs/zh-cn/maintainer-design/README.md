@@ -1,11 +1,10 @@
 # simpler 核心设计快照
 
-发布日期：2026-11-14。当前 roadmap 仅维护 Worker L3+ 四方向：#2721 公共基础、#2722 通信与后端、#2723 L2 常驻执行、#2724 多级多机部署。本次仅调整范围；来源观察仍为 2026-11-13，main 基线 `3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47`。
+发布日期：2026-11-14。当前 roadmap 仅维护 Worker L3+ 四方向：#2721 公共基础、#2722 通信与后端、#2723 L2 常驻执行、#2724 多级多机部署。当前进展、依赖与历史记录统一由 roadmap 提供；来源观察仍为 2026-11-13，main 基线 `3bcaf8d4ff86fa9d47a192d31c7fd7cb9221bc47`。
 
 ## 阅读入口
 
-- [当前进展与下一步](roadmap.html)：首屏为交互 DAG，历史阶段和判断记录折叠阅读。
-- [全屏依赖 DAG](dependency-dag.html)：四方向总览、L3+、Host DDR、合同细化与责任树；节点包含状态、下一步及精确 PR 版本。
+- [当前进展、下一步与依赖图](roadmap.html)：四方向总览、L3+、Host DDR、合同细化与责任树直接在同页交互；历史阶段和判断记录折叠阅读。
 - [目标与验收索引](work-items.md) · [来源清单](goal-sources.json) · [覆盖口径](goal-coverage.md)。
 - [L3+ 设计原则](l3plus-design.md) · [公共用户面](worker-memory-model/user-surface.md) · [退休合同](worker-memory-model/access-retirement-contract.md)。
 - [#2714 具名复审](review/pr-2714.md)：保留 reviewed head、测试边界与合入回执。
@@ -73,5 +72,4 @@
 - [review/qwen-handoff.md](review/qwen-handoff.md)
 - [review/ds-handoff.md](review/ds-handoff.md)
 - [review/ex-handoff.md](review/ex-handoff.md)
-- [dependency-dag.html](dependency-dag.html)
 - [review/pr-2714.md](review/pr-2714.md)
