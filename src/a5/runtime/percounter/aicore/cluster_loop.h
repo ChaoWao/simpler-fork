@@ -90,8 +90,7 @@ private:
                        cfg_.control->cluster_count + cfg_.cluster_index * cfg_.control->aiv_per_cluster + lane - 1
                    );
     }
-    __aicore__ bool targets_idle(uint32_t ref) {
-        const uint32_t mask = scheduler_.execution_mask(ref);
+    __aicore__ bool targets_idle(uint32_t ref, uint32_t mask) {
         for (uint32_t lane = 0; lane < PERCOUNTER_CLUSTER_LANES; ++lane)
             if ((mask & (1U << lane)) && (scheduler_.running_ref(lane) != none || scheduler_.next_ref(lane) != ref))
                 return false;
@@ -545,9 +544,10 @@ private:
         close();
         return true;
     }
-    __aicore__ bool service_record(uint32_t ref) {
+    __aicore__ bool service_record(uint32_t ref, bool &published_local) {
         if (scheduler_.execution_flags(ref) & PERCOUNTER_CLUSTER_DISPATCHED) return true;
-        if (!targets_idle(ref)) return true;
+        const uint32_t mask = scheduler_.execution_mask(ref);
+        if (!targets_idle(ref, mask)) return true;
         const uint32_t id = task_id(ref);
         if (id == cfg_.task_count) return serve_terminal(ref);
         auto &record = cfg_.ssbuf->execution[ref];
@@ -601,6 +601,7 @@ private:
             return true;
         }
         if (!scheduler_.publish(ref)) return fail(SchedulerGraphResult::INVALID_ARGUMENTS, id);
+        published_local = (mask & (1U << cfg_.cluster_lane)) != 0;
         return true;
     }
     __aicore__ void close() {
@@ -637,17 +638,23 @@ private:
         }
         const uint32_t cursor = read(&cfg_.ssbuf->header.service_cursor) % PERCOUNTER_CLUSTER_RECORDS;
         const uint32_t free = read(&cfg_.ssbuf->header.free_mask);
+        bool published_local = false;
         for (uint32_t offset = 0; offset < PERCOUNTER_CLUSTER_RECORDS; ++offset) {
             const uint32_t ref = (cursor + offset) % PERCOUNTER_CLUSTER_RECORDS;
-            if ((free & (1U << ref)) == 0 && !service_record(ref)) return false;
+            if ((free & (1U << ref)) == 0 && !service_record(ref, published_local)) return false;
             if (done_) return true;
+            if (published_local) {
+                write(&cfg_.ssbuf->header.service_cursor, (ref + 1) % PERCOUNTER_CLUSTER_RECORDS);
+                return true;
+            }
         }
         write(&cfg_.ssbuf->header.service_cursor, (cursor + 1) % PERCOUNTER_CLUSTER_RECORDS);
         for (uint32_t claim = 0; claim < PERCOUNTER_CLUSTER_LANES; ++claim) {
             uint32_t ref;
             if (!claim_one(ref)) return false;
             if (ref == none) break;
-            if (!service_record(ref)) return false;
+            if (!service_record(ref, published_local)) return false;
+            if (published_local) return true;
         }
         return terminal_or_close();
     }

@@ -52,8 +52,10 @@ Large payloads and Context remain in GM. Reserved SSBUF bytes carry no active
 protocol state and do not change the public kernel ABI. Pending defer groups live in GM and do not
 retain the producer's execution record or payload.
 
-Before an owner enters a business kernel, it commits scheduling state and
-releases `owner = NONE` in GM. A nonparticipating owner can continue scheduling
+When an owner publishes a command that includes itself, it ends the service
+round after all participating commands are visible. Its next step handles its
+command before claiming other work. At kernel entry it releases `owner = NONE`
+in GM after committing scheduling state. A nonparticipating owner can continue scheduling
 while peers execute. With all three cores executing, no owner polls in the
 background. The first returning core publishes FIN, then may win the owner CAS;
 another idle core may also win. The new owner acquires current shared state.

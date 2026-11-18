@@ -787,6 +787,26 @@ TEST(PercounterClusterLoop, SingleResourceCompletionPrecedesOwnerRetirement) {
     }
 }
 
+TEST(PercounterClusterLoop, OwnerEntersItsMixBeforeDispatchingIndependentWork) {
+    Fixture f({task(3), task(2)}, 1);
+    f.step(1);
+    f.step(2);
+    EXPECT_TRUE(f.calls.empty());
+
+    f.step(0);
+    ASSERT_EQ(f.calls.size(), 1U);
+    EXPECT_EQ(f.calls.front()[0], 0);
+    EXPECT_EQ(f.calls.front()[2], 0);
+    f.step(1);
+    ASSERT_EQ(f.calls.size(), 2U);
+    EXPECT_EQ(f.calls.back()[0], 0);
+    EXPECT_EQ(f.calls.back()[2], 1);
+
+    f.drain();
+    ASSERT_EQ(f.calls.size(), 3U);
+    EXPECT_EQ(f.calls.back()[0], 1);
+}
+
 TEST(PercounterClusterLoop, ConsumerWaitsForEveryProducerBlock) {
     int32_t producer = 0;
     auto consumer = task(2);
