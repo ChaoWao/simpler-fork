@@ -31,7 +31,13 @@ enum PercounterClusterExecutionFlag : uint32_t {
 
 enum PercounterClusterCommandFlag : uint32_t { PERCOUNTER_CLUSTER_RESET_ASYNC = 1U << 0 };
 
-enum class PercounterClusterFinStatus : uint32_t { NO_ASYNC = 0, HAS_ASYNC = 1, SKIPPED = 2, ERROR = 3 };
+enum class PercounterClusterFinStatus : uint32_t {
+    NO_ASYNC = 0,
+    HAS_ASYNC = 1,
+    SKIPPED = 2,
+    ERROR = 3,
+    COMPLETION_PUBLISHED = 4,
+};
 inline constexpr uint32_t PERCOUNTER_CLUSTER_FIN_STATUS_MASK = 0xff;
 inline constexpr uint32_t PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED = 1U << 8;
 
@@ -114,6 +120,7 @@ struct PercounterClusterCommand {
     uint32_t record{PERCOUNTER_CLUSTER_INVALID_REF};
     uint32_t source_slot{0};
     uint32_t flags{0};
+    bool single_resource{false};
 };
 
 struct PercounterClusterReturn {

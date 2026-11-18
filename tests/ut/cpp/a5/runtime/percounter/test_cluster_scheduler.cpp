@@ -293,7 +293,7 @@ TEST(PercounterClusterScheduler, SuccessfulSkipAndErrorHaveDistinctFinStatusesAn
     ASSERT_TRUE(h.v0.publish(skipped));
     PercounterClusterCommand cmd;
     ASSERT_TRUE(h.v0.poll_command(cmd));
-    EXPECT_FALSE(h.v0.publish_fin(4));
+    EXPECT_FALSE(h.v0.publish_fin(static_cast<uint32_t>(PercounterClusterFinStatus::COMPLETION_PUBLISHED) + 1));
     ASSERT_TRUE(h.v0.publish_fin(
         static_cast<uint32_t>(PercounterClusterFinStatus::SKIPPED) | PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED
     ));

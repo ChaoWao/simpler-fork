@@ -161,7 +161,19 @@ private:
             }
         }
         cfg_.local_error = nullptr;
-        if (!ok) status = static_cast<uint32_t>(PercounterClusterFinStatus::ERROR);
+        if (!ok) {
+            status = static_cast<uint32_t>(PercounterClusterFinStatus::ERROR);
+        } else if (command.single_resource && status != static_cast<uint32_t>(PercounterClusterFinStatus::HAS_ASYNC)) {
+            // The output barrier and registration checks precede the worker's contribution.
+            percounter_publish_completion(
+                cfg_, task,
+                percounter_completion_address(
+                    cfg_, task.id, percounter_order_block_idx(command.entry), percounter_order_block_num(command.entry)
+                ),
+                uint64_t{1}
+            );
+            status = static_cast<uint32_t>(PercounterClusterFinStatus::COMPLETION_PUBLISHED);
+        }
         // Payload preparation acquires the data cache, including the owner-reset registration scratch.
         if (command.flags & PERCOUNTER_CLUSTER_RESET_ASYNC) status |= PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED;
         if (!scheduler_.publish_fin(status, static_cast<uint64_t>(error)))
@@ -194,15 +206,19 @@ private:
         uint32_t flags = read(&cfg_.ssbuf->resources[returned.lane].flags);
         if (returned.status & PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED) flags &= ~PERCOUNTER_CLUSTER_RESET_ASYNC;
         const bool deferred = status == static_cast<uint32_t>(PercounterClusterFinStatus::HAS_ASYNC);
+        const bool published = status == static_cast<uint32_t>(PercounterClusterFinStatus::COMPLETION_PUBLISHED);
+        const uint32_t participants = __builtin_popcount(scheduler_.execution_mask(ref));
+        const bool single_resource = participants == 1;
+        if ((published && (!single_resource || !returned.is_last)) || (single_resource && !deferred && !published))
+            return fail(SchedulerGraphResult::INVALID_ARGUMENTS, id);
         PercounterTask task{};
         uint64_t completion = 0;
-        if (deferred || returned.is_last) {
+        if (deferred || (returned.is_last && !single_resource)) {
             if (!percounter_resolve(cfg_, id, &task)) return false;
             completion = percounter_completion_address(
                 cfg_, id, percounter_order_block_idx(entry), percounter_order_block_num(entry)
             );
         }
-        const uint32_t mask = scheduler_.execution_mask(ref);
         if (deferred) {
             ProfileScope seal_scope(cfg_.scalar, ProfilePhase::AsyncSeal);
             const uint32_t worker = worker_id(returned.lane);
@@ -216,8 +232,7 @@ private:
             uint64_t group = 0;
             const auto error = percounter_deferred_adopt(
                 cfg_.control, cfg_.async_completions, cfg_.async_completion_capacity, scratch, entries, completion,
-                index_head(completion), shell, shell == 0 ? nullptr : index_head(shell), __builtin_popcount(mask) > 1,
-                &group
+                index_head(completion), shell, shell == 0 ? nullptr : index_head(shell), !single_resource, &group
             );
             if (error != SchedulerGraphResult::OK) return fail(error, id);
             if (group == 0) return fail(SchedulerGraphResult::ASYNC_REGISTRATION_FAILED, id);
@@ -227,8 +242,7 @@ private:
         if (!scheduler_.commit_fin(returned.lane, returned.sequence))
             return fail(SchedulerGraphResult::INVALID_ARGUMENTS, id);
         if (returned.is_last) {
-            if (__builtin_popcount(mask) > 1 || !deferred)
-                percounter_publish_completion(cfg_, task, completion, static_cast<uint64_t>(__builtin_popcount(mask)));
+            if (!single_resource) percounter_publish_completion(cfg_, task, completion, uint64_t{participants});
             if (!scheduler_.retire(ref)) return fail(SchedulerGraphResult::INVALID_ARGUMENTS, id);
         }
         return true;

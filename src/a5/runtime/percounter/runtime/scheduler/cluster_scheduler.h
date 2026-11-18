@@ -224,13 +224,15 @@ public:
         if (command_sequence == 0 || command_sequence == accepted_sequence_) return false;
         memory_.acquire();
         const uint32_t ref = load(command_offset(lane, offsetof(PercounterClusterCommandSlot, record)));
-        if (!valid_ref(ref) || sequence(ref) != command_sequence || (execution_mask(ref) & (1U << lane)) == 0)
-            return false;
+        if (!valid_ref(ref) || sequence(ref) != command_sequence) return false;
+        const uint32_t mask = execution_mask(ref);
+        if ((mask & (1U << lane)) == 0) return false;
         command.entry = entry(ref);
         command.record = ref;
         command.sequence = command_sequence;
         command.source_slot = load(command_offset(lane, offsetof(PercounterClusterCommandSlot, source_slot)));
         command.flags = load(command_offset(lane, offsetof(PercounterClusterCommandSlot, flags)));
+        command.single_resource = (mask & (mask - 1)) == 0;
         accepted_sequence_ = command_sequence;
         accepted_record_ = ref;
         accepted_ = true;
@@ -249,7 +251,8 @@ public:
     PERCOUNTER_CLUSTER_INLINE bool publish_fin(uint32_t result, uint64_t detail = 0) {
         if (!accepted_ ||
             (result & ~(PERCOUNTER_CLUSTER_FIN_STATUS_MASK | PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED)) != 0 ||
-            (result & PERCOUNTER_CLUSTER_FIN_STATUS_MASK) > static_cast<uint32_t>(PercounterClusterFinStatus::ERROR))
+            (result & PERCOUNTER_CLUSTER_FIN_STATUS_MASK) >
+                static_cast<uint32_t>(PercounterClusterFinStatus::COMPLETION_PUBLISHED))
             return false;
         const uint32_t lane = static_cast<uint32_t>(lane_);
         if (load(command_offset(lane, offsetof(PercounterClusterCommandSlot, sequence))) != accepted_sequence_ ||

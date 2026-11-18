@@ -764,6 +764,29 @@ TEST(PercounterClusterLoop, FaninWaitsForBothExternalProducers) {
         EXPECT_EQ(call[0], 2);
 }
 
+TEST(PercounterClusterLoop, SingleResourceCompletionPrecedesOwnerRetirement) {
+    for (const uint32_t mask : {1U, 2U}) {
+        SCOPED_TRACE(mask);
+        const uint32_t worker = mask == 1 ? 0 : 2;
+        int32_t producer = 0;
+        auto consumer = task(mask);
+        consumer.fanin_count = 1;
+        consumer.fanin_ids = &producer;
+        Fixture f({task(mask), consumer}, 1);
+        f.step(1);
+        EXPECT_FALSE(f.completed(0));
+        f.step(worker);
+        ASSERT_EQ(f.calls.size(), 1U);
+        EXPECT_EQ(f.calls.front()[0], 0);
+        EXPECT_NE(f.signals[0].resources[worker].running, PERCOUNTER_CLUSTER_INVALID_REF);
+        EXPECT_EQ(percounter_completion_logical(f.component(0, 0)), 1);
+        f.drain();
+        ASSERT_EQ(f.calls.size(), 2U);
+        EXPECT_EQ(f.calls.back()[0], 1);
+        EXPECT_EQ(percounter_completion_logical(f.component(0, 0)), 1);
+    }
+}
+
 TEST(PercounterClusterLoop, ConsumerWaitsForEveryProducerBlock) {
     int32_t producer = 0;
     auto consumer = task(2);

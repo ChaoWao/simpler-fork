@@ -15,7 +15,8 @@ run; AICore owners allocate blocks, check dependencies and dispatch kernels.
 | `command[3]` | Cluster-shared SSBUF | Current owner |
 | `FIN[3]` | Cluster-shared SSBUF | Corresponding worker |
 | Order projections, task geometry, argument metadata | Global GM | Host; Graph metadata published by AICPU |
-| Claim tickets, completion components, defer indexes and groups | Global GM | Owners through the corresponding atomic/publication protocol |
+| Claim tickets, defer indexes and groups | Global GM | Owners through the corresponding atomic/publication protocol |
+| Completion components | Global GM | Single-resource workers for ordinary returns, owners for MIX, defer settlement and dependency-only tasks |
 | Payloads, Context, registration scratch | Per-worker GM | Worker during execution; owner adopts returned registrations |
 | EXIT and lifecycle handshake | SPR | Existing AICPU/AICore lifecycle protocol |
 
@@ -90,8 +91,8 @@ reservation. Independent resources may advance separately.
 | Wait for execution resources | Keep the reservation until every target's `running` is empty and `next` still names this record, all in SSBUF |
 | Check metadata and dependencies | After that resource gate, observe Graph `metadata_ready` and predecessor completion in GM; retain successful progress in SSBUF |
 | Dispatch | Move the complete target set from `next` to `running`, then publish executable commands in SSBUF |
-| Execute and return | Worker prepares its GM payload and acquires inputs, releases ownership if held, runs the kernel, orders GM outputs/scratch and publishes FIN in SSBUF |
-| Retire | Owner commits completion in GM and frees the last SSBUF resource/record reference |
+| Execute and return | Worker prepares its GM payload and acquires inputs, releases ownership if held, runs the kernel and orders GM outputs/scratch. A single-resource worker with no defer contributes completion in GM before publishing FIN in SSBUF |
+| Retire | Owner accounts for MIX or defer in GM as needed and frees the last SSBUF resource/record reference |
 
 Allocation does not require ready dependencies or idle targets. It does require
 complete `next` capacity before taking a ticket. Reservation, ticket allocation
@@ -148,9 +149,9 @@ a signed comparison of the raw word is invalid. Only actual defer publication
 sets the tag with CAS, preserving concurrent progress. The tag remains set until
 new-run initialization. Ordinary dependencies need no defer-index read.
 
-| Physical return | Owner publication in GM | Signal settlement in GM |
-| --------------- | ----------------------- | ----------------------- |
-| Ordinary single C/V | Add 1 | None |
+| Physical return | Return publication in GM | Signal settlement in GM |
+| --------------- | ------------------------ | ----------------------- |
+| Ordinary single C/V | Worker adds 1 before FIN | None |
 | Deferred single C/V | Withhold its physical contribution | Add 1 after all group conditions hold |
 | MIX with p participants | Adopt each actual deferred participant with debt -1; after every FIN, add p once | Each deferred participant's group restores 1 |
 
