@@ -43,6 +43,7 @@ public:
             set_resource(lane, offsetof(PercounterClusterResource, next), invalid());
             store(command_offset(lane, offsetof(PercounterClusterCommandSlot, record)), invalid());
         }
+        set_header(offsetof(PercounterClusterHeader, owner_active_hint), 1);
         memory_.release();
         memory_.owner_store(static_cast<uint32_t>(lane_));
         initialized_ = true;
@@ -52,16 +53,20 @@ public:
 
     PERCOUNTER_CLUSTER_INLINE bool try_acquire() {
         if (!valid_lane() || holding_) return false;
+        if (header(offsetof(PercounterClusterHeader, owner_active_hint)) != 0) return false;
         const auto none = static_cast<uint32_t>(PercounterClusterOwner::NONE);
         if (memory_.owner_load() != none) return false;
         if (memory_.owner_cas(none, static_cast<uint32_t>(lane_)) != none) return false;
         memory_.acquire();
         holding_ = true;
+        set_header(offsetof(PercounterClusterHeader, owner_active_hint), 1);
         return true;
     }
 
     PERCOUNTER_CLUSTER_INLINE bool release() {
         if (!holding_ || transaction_open()) return false;
+        // The successor may write the hint as soon as GM ownership is free.
+        set_header(offsetof(PercounterClusterHeader, owner_active_hint), 0);
         memory_.release();
         holding_ = false;
         memory_.owner_store(static_cast<uint32_t>(PercounterClusterOwner::NONE));

@@ -29,14 +29,24 @@ struct SharedMemory {
 struct Memory {
     SharedMemory &shared;
     std::function<void()> before_cas{};
-    uint64_t owner_load() { return shared.owner.load(std::memory_order_acquire); }
+    std::function<void()> before_owner_store{};
+    std::function<void()> after_owner_store{};
+    uint32_t owner_reads{0};
+    uint64_t owner_load() {
+        ++owner_reads;
+        return shared.owner.load(std::memory_order_acquire);
+    }
     uint64_t owner_cas(uint32_t expected, uint32_t desired) {
         if (before_cas) before_cas();
         uint64_t value = expected;
         shared.owner.compare_exchange_strong(value, desired, std::memory_order_acq_rel);
         return value;
     }
-    void owner_store(uint32_t value) { shared.owner.store(value, std::memory_order_release); }
+    void owner_store(uint32_t value) {
+        if (before_owner_store) before_owner_store();
+        shared.owner.store(value, std::memory_order_release);
+        if (after_owner_store) after_owner_store();
+    }
     uint32_t load(uint32_t index) { return shared.words.at(index).load(std::memory_order_acquire); }
     void store(uint32_t index, uint32_t value) { shared.words.at(index).store(value, std::memory_order_release); }
     void acquire() { std::atomic_thread_fence(std::memory_order_acquire); }
@@ -78,6 +88,23 @@ struct Harness {
         return ref;
     }
 };
+
+TEST(PercounterClusterScheduler, IdleProbesReachGmOnlyDuringHandoff) {
+    Harness h;
+    EXPECT_FALSE(h.c.try_acquire());
+    EXPECT_EQ(h.cm.owner_reads, 0U);
+    h.v0m.before_owner_store = [&] {
+        EXPECT_FALSE(h.c.try_acquire());
+        EXPECT_EQ(h.cm.owner_reads, 1U);
+    };
+    h.v0m.after_owner_store = [&] {
+        ASSERT_TRUE(h.c.try_acquire());
+    };
+    ASSERT_TRUE(h.v0.release());
+    EXPECT_TRUE(h.c.has_authority());
+    EXPECT_FALSE(h.v1.try_acquire());
+    EXPECT_EQ(h.v1m.owner_reads, 0U);
+}
 
 TEST(PercounterClusterScheduler, SameTaskCannotOccupyRunningAndNextOnTheSamePhysicalResource) {
     Harness h;

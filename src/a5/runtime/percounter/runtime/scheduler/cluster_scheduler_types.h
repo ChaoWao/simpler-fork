@@ -46,7 +46,8 @@ struct PercounterClusterHeader {
     volatile uint32_t resource_head[PERCOUNTER_CLUSTER_LANES];
     volatile uint32_t sync_cursor;
     volatile uint32_t prefix_segment[2];
-    uint32_t reserved_before_service[2];
+    volatile uint32_t owner_active_hint;
+    uint32_t reserved_before_service;
     volatile uint32_t service_cursor;
     volatile uint32_t run_flags;
     uint32_t reserved[4];
@@ -89,13 +90,20 @@ struct PercounterClusterExecution {
     volatile uint32_t status;
 };
 
+struct PercounterClusterFanin {
+    volatile uint64_t addresses;
+    volatile uint32_t count;
+    volatile uint32_t body_base;
+};
+
 struct alignas(64) PercounterClusterSchedulerRegion {
     PercounterClusterHeader header;
     PercounterClusterResource resources[PERCOUNTER_CLUSTER_LANES];
     PercounterClusterCommandSlot commands[PERCOUNTER_CLUSTER_LANES];
     PercounterClusterFinSlot fins[PERCOUNTER_CLUSTER_LANES];
     PercounterClusterExecution execution[PERCOUNTER_CLUSTER_RECORDS];
-    uint8_t reserved_before_defer[320];
+    PercounterClusterFanin fanins[PERCOUNTER_CLUSTER_RECORDS];
+    uint8_t reserved_before_defer[224];
     volatile uint64_t observed_defer_head[PERCOUNTER_CLUSTER_RECORDS];
     uint8_t reserved_tail[16];
 };
@@ -123,6 +131,7 @@ static_assert(sizeof(PercounterClusterResource) == 16);
 static_assert(sizeof(PercounterClusterCommandSlot) == 16);
 static_assert(sizeof(PercounterClusterFinSlot) == 16);
 static_assert(sizeof(PercounterClusterExecution) == 72);
+static_assert(sizeof(PercounterClusterFanin) == 16);
 static_assert(sizeof(PercounterClusterSchedulerRegion) == 1024);
 static_assert(offsetof(PercounterClusterSchedulerRegion, execution) == 208);
 static_assert(offsetof(PercounterClusterSchedulerRegion, observed_defer_head) == 960);

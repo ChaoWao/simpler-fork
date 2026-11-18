@@ -21,7 +21,10 @@ run; AICore owners allocate blocks, check dependencies and dispatch kernels.
 
 SSBUF has no atomics. A successful GM owner CAS followed by acquisition grants
 exclusive scheduling authority; reading `owner == self` does not. Initialization
-first authorizes V0 while the cluster is quiescent. Scheduling writes have one
+first authorizes V0 while the cluster is quiescent. The owner sets a shared
+SSBUF hint so idle workers skip GM probes while it holds authority. It clears
+the hint before the release fence and GM exchange so a successor can safely
+set the hint again after taking ownership. Scheduling writes have one
 owner at a time; each worker remains the sole writer of its FIN. Commands and
 FINs carry nonzero execution sequences to reject duplicate consumption. These
 sequences are execution identities, not an owner epoch; exhaustion fails the run.
@@ -36,7 +39,8 @@ The cluster region occupies exactly the last 1 KiB of the 3 KiB SSBUF. The first
 | Three commands | 48 |
 | Three FINs | 48 |
 | Six execution records, 72 bytes each | 432 |
-| Reserved bytes before defer cursors | 320 |
+| Six cached fanin views | 96 |
+| Reserved bytes before defer cursors | 224 |
 | Six observed defer heads | 48 |
 | Reserved tail | 16 |
 | **Total** | **1,024** |

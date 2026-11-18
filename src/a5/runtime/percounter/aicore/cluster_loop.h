@@ -191,14 +191,17 @@ private:
         const int64_t id = percounter_order_task_id(entry);
         if (status == static_cast<uint32_t>(PercounterClusterFinStatus::ERROR))
             return fail(static_cast<SchedulerGraphResult>(returned.detail), id);
-        PercounterTask task{};
-        if (!percounter_resolve(cfg_, id, &task)) return false;
-        const uint64_t completion = percounter_completion_address(
-            cfg_, id, percounter_order_block_idx(entry), percounter_order_block_num(entry)
-        );
         uint32_t flags = read(&cfg_.ssbuf->resources[returned.lane].flags);
         if (returned.status & PERCOUNTER_CLUSTER_FIN_RESET_OBSERVED) flags &= ~PERCOUNTER_CLUSTER_RESET_ASYNC;
         const bool deferred = status == static_cast<uint32_t>(PercounterClusterFinStatus::HAS_ASYNC);
+        PercounterTask task{};
+        uint64_t completion = 0;
+        if (deferred || returned.is_last) {
+            if (!percounter_resolve(cfg_, id, &task)) return false;
+            completion = percounter_completion_address(
+                cfg_, id, percounter_order_block_idx(entry), percounter_order_block_num(entry)
+            );
+        }
         const uint32_t mask = scheduler_.execution_mask(ref);
         if (deferred) {
             ProfileScope seal_scope(cfg_.scalar, ProfilePhase::AsyncSeal);
@@ -354,43 +357,58 @@ private:
         return fail(SchedulerGraphResult::INVALID_ARGUMENTS, task_id(ref));
     }
 
-    __aicore__ bool node_assigned(const __gm__ PercounterResourceNode &node) {
+    struct TicketSample {
+        uint32_t index{none};
+        uint64_t next{0};
+    };
+
+    __aicore__ bool node_assigned(const __gm__ PercounterResourceNode &node, TicketSample &sample) {
         if (node.claim_index != none)
             return percounter_gm_read(cfg_.task_claims[node.claim_index].closed_sectors) >=
                    PERCOUNTER_CLAIM_SECTOR_COUNT;
         const auto &piece = cfg_.ordinary_pieces[node.piece_index];
-        return percounter_gm_read(cfg_.tickets[piece.ticket_index].next) > node.piece_ordinal;
+        if (sample.index != piece.ticket_index) {
+            sample.index = piece.ticket_index;
+            sample.next = percounter_gm_read(cfg_.tickets[sample.index].next);
+        }
+        return sample.next > node.piece_ordinal;
     }
-    __aicore__ void normalize_heads() {
+    __aicore__ void normalize_heads(uint32_t available) {
         ProfileScope profile_scope(cfg_.scalar, ProfilePhase::SharedHead);
+        TicketSample samples[PERCOUNTER_LIST_COUNT]{};
         for (uint32_t lane = 0; lane < PERCOUNTER_CLUSTER_LANES; ++lane) {
+            if ((available & (1U << lane)) == 0) continue;
             uint32_t head = read(&cfg_.ssbuf->header.resource_head[lane]);
+            const uint32_t original = head;
             for (uint32_t step = 0; head != none && step < scan_budget; ++step) {
                 const auto &node = cfg_.resource_nodes[head];
-                if (!node_assigned(node)) break;
+                if (!node_assigned(node, samples[node.catalog])) break;
                 head = node.next[lane];
             }
-            write(&cfg_.ssbuf->header.resource_head[lane], head);
+            if (head != original) write(&cfg_.ssbuf->header.resource_head[lane], head);
         }
         uint32_t cursor = read(&cfg_.ssbuf->header.sync_cursor);
+        const uint32_t original = cursor;
         for (uint32_t step = 0; cursor < cfg_.control->sync_cohort_count && step < scan_budget; ++step) {
             const auto &sync = cfg_.sync_boundaries[cursor];
             if (percounter_gm_read(cfg_.task_claims[sync.claim_index].closed_sectors) < PERCOUNTER_CLAIM_SECTOR_COUNT)
                 break;
             ++cursor;
         }
-        write(&cfg_.ssbuf->header.sync_cursor, cursor);
+        if (cursor != original) write(&cfg_.ssbuf->header.sync_cursor, cursor);
     }
     __aicore__ bool prefix_ready(const __gm__ PercounterSyncBoundary &sync) {
         bool ready = true;
         for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog) {
             uint32_t cursor = read(&cfg_.ssbuf->header.prefix_segment[catalog]);
+            const uint32_t original = cursor;
+            TicketSample sample;
             for (uint32_t step = 0; cursor < sync.prefix_count[catalog] && step < scan_budget; ++step) {
                 const uint32_t node = cfg_.projection_catalog[catalog][cursor];
-                if (!node_assigned(cfg_.resource_nodes[node])) break;
+                if (!node_assigned(cfg_.resource_nodes[node], sample)) break;
                 ++cursor;
             }
-            write(&cfg_.ssbuf->header.prefix_segment[catalog], cursor);
+            if (cursor != original) write(&cfg_.ssbuf->header.prefix_segment[catalog], cursor);
             ready = ready && cursor >= sync.prefix_count[catalog];
         }
         return ready;
@@ -426,12 +444,17 @@ private:
         }
         return blocks;
     }
-    __aicore__ bool claim_one() {
+    __aicore__ bool claim_one(uint32_t &claimed) {
+        claimed = none;
+        uint32_t available = 0;
+        for (uint32_t lane = 0; lane < PERCOUNTER_CLUSTER_LANES; ++lane)
+            if (scheduler_.next_ref(lane) == none) available |= 1U << lane;
+        if (available == 0) return true;
         ProfileScope profile_scope(cfg_.scalar, ProfilePhase::Claim);
-        normalize_heads();
+        normalize_heads(available);
         uint32_t candidates[PERCOUNTER_CLUSTER_LANES];
         for (uint32_t lane = 0; lane < PERCOUNTER_CLUSTER_LANES; ++lane)
-            candidates[lane] = read(&cfg_.ssbuf->header.resource_head[lane]);
+            candidates[lane] = (available & (1U << lane)) != 0 ? read(&cfg_.ssbuf->header.resource_head[lane]) : none;
         for (uint32_t a = 0; a < PERCOUNTER_CLUSTER_LANES; ++a)
             for (uint32_t b = a + 1; b < PERCOUNTER_CLUSTER_LANES; ++b)
                 if (candidates[b] != none && (candidates[a] == none || cfg_.resource_nodes[candidates[b]].rank <
@@ -450,7 +473,7 @@ private:
                 if (node->rank > sync.rank || (node->rank == sync.rank && !prefix_ready(sync))) continue;
             }
             const uint32_t mask = physical_mask(*node, index);
-            if (mask == 0) continue;
+            if (mask == 0 || (mask & available) != mask) continue;
             const uint32_t ref = scheduler_.reserve(static_cast<uint32_t>(node->entry), mask, node->catalog);
             if (ref == none) {
                 if (read(&cfg_.ssbuf->header.sequence) == UINT32_MAX)
@@ -482,6 +505,8 @@ private:
                 return fail(SchedulerGraphResult::INVALID_ARGUMENTS, percounter_order_task_id(entry));
             }
             write(&cfg_.ssbuf->observed_defer_head[ref], uint64_t{0});
+            write(&cfg_.ssbuf->fanins[ref].addresses, uint64_t{0});
+            claimed = ref;
             return true;
         }
         return true;
@@ -517,9 +542,21 @@ private:
             percounter_gm_read(cfg_.task_claims[read(&record.claim_index)].closed_sectors) <
                 PERCOUNTER_CLAIM_SECTOR_COUNT)
             return true;
-        if (!percounter_metadata_ready(cfg_, id)) return true;
+        auto &fanin = cfg_.ssbuf->fanins[ref];
         PercounterTask task{};
-        if (!percounter_resolve(cfg_, id, &task)) return false;
+        const uint64_t addresses = read(&fanin.addresses);
+        if (addresses == 0) {
+            if (!percounter_metadata_ready(cfg_, id)) return true;
+            if (!percounter_resolve(cfg_, id, &task)) return false;
+            write(&fanin.count, static_cast<uint32_t>(task.fanin_count));
+            write(&fanin.body_base, task.body_fanin ? static_cast<uint32_t>(task.body_base) : none);
+            write(&fanin.addresses, reinterpret_cast<uint64_t>(task.fanin));
+        } else {
+            task.fanin = reinterpret_cast<__gm__ uint64_t *>(addresses);
+            task.fanin_count = static_cast<int32_t>(read(&fanin.count));
+            task.body_base = read(&fanin.body_base);
+            task.body_fanin = task.body_base != none;
+        }
         uint32_t cursor = read(&record.fanin_cursor);
         for (uint32_t step = 0; cursor < static_cast<uint32_t>(task.fanin_count) && step < scan_budget; ++step) {
             bool ready = false;
@@ -536,6 +573,8 @@ private:
         if (node_index == none) return fail(SchedulerGraphResult::INVALID_TASK_ID, id);
         if (!scheduler_.mark_ready(ref)) return fail(SchedulerGraphResult::INVALID_ARGUMENTS, id);
         if (cfg_.resource_nodes[node_index].active_mask == 0) {
+            // Dependency-only tasks also need their Graph sink identity.
+            if (addresses != 0 && !percounter_resolve(cfg_, id, &task)) return false;
             const uint64_t entry = scheduler_.entry(ref);
             percounter_publish_completion(
                 cfg_, task,
@@ -582,16 +621,20 @@ private:
             PercounterClusterReturn returned;
             if (scheduler_.collect_fin(lane, returned) && !consume_fin(returned)) return false;
         }
-        for (uint32_t claim = 0; claim < PERCOUNTER_CLUSTER_LANES; ++claim)
-            if (!claim_one()) return false;
         const uint32_t cursor = read(&cfg_.ssbuf->header.service_cursor) % PERCOUNTER_CLUSTER_RECORDS;
+        const uint32_t free = read(&cfg_.ssbuf->header.free_mask);
         for (uint32_t offset = 0; offset < PERCOUNTER_CLUSTER_RECORDS; ++offset) {
             const uint32_t ref = (cursor + offset) % PERCOUNTER_CLUSTER_RECORDS;
-            if ((read(&cfg_.ssbuf->header.free_mask) & (1U << ref)) == 0 && !service_record(ref)) return false;
+            if ((free & (1U << ref)) == 0 && !service_record(ref)) return false;
             if (done_) return true;
         }
         write(&cfg_.ssbuf->header.service_cursor, (cursor + 1) % PERCOUNTER_CLUSTER_RECORDS);
-        normalize_heads();
+        for (uint32_t claim = 0; claim < PERCOUNTER_CLUSTER_LANES; ++claim) {
+            uint32_t ref;
+            if (!claim_one(ref)) return false;
+            if (ref == none) break;
+            if (!service_record(ref)) return false;
+        }
         return terminal_or_close();
     }
 
