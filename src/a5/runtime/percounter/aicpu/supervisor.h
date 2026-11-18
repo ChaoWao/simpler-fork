@@ -11,12 +11,13 @@
 /**
  * The AICPU's part in a percounter run.
  *
- * The AICPU schedules nothing under percounter: the lanes draw their own work.
+ * The AICPU schedules nothing under percounter: cluster owners allocate work.
  * It runs the runtime's ordinary bring-up and retirement (AicpuExecutor with
  * AicoreLifecycle) and replaces three resident-specific steps with the ones
  * here: publishing the discovered topology into the control block, telling
- * each reported core READY, and watching the progress count. The threads that
- * do not watch materialize the Graph bodies (graph_prepare.h).
+ * each reported core READY, and observing top-level sink completion plus
+ * registered/settled defer counts. Other threads materialize Graph bodies
+ * (graph_prepare.h).
  *
  * Header-only because aicpu_executor.cpp is included by name into a unit test.
  */
@@ -135,7 +136,7 @@ inline void percounter_publish_partition(
 inline void percounter_assist(Runtime *runtime) { percounter_prepare_graphs(runtime, percounter_control(runtime)); }
 
 /**
- * True when every completion component this reference names reads positive.
+ * True when every completion component this reference names decodes positive.
  *
  * The reference is `(task << 1) | partitioned`, the encoding a Graph body's
  * fanin carries. A partitioned producer publishes into
@@ -201,7 +202,7 @@ inline uint64_t percounter_progress_fingerprint(
 /**
  * This runtime's error, settled into the shared header at the terminal.
  *
- * The supervisor stops watching when the completion count is in, and a lane
+ * The supervisor stops watching when sinks and deferred groups settle, and a lane
  * can fail after that: it publishes its last block and then fails on the way
  * out, or fails while draining, which it does after its own list is spent. The
  * terminal is the first point at which every core has stopped, so it is the
@@ -247,9 +248,8 @@ percounter_supervise(Runtime *runtime, uint64_t timeout_cycles, int32_t aicpu_th
     cache_invalidate_range(sinks, static_cast<size_t>(sink_count) * sizeof(uint64_t));
     const auto *counters = scheduler_state_at<PercounterCounter>(control, control->counters_offset);
     const auto *sectors = scheduler_state_at<PercounterCompletionSector>(control, control->completion_sectors_offset);
-    // Sinks before this were observed published. A sink that reads published
-    // can dip back while a deferred share is withdrawn, but its registration
-    // precedes the dip, so the outstanding check below holds the exit.
+    // Sinks before this were observed logically complete. Actual defer debt
+    // precedes physical contribution, and async counts also gate run completion.
     uint64_t resolved = 0;
     uint64_t last_progress = ~uint64_t{0};
     uint64_t last_progress_cycles = get_sys_cnt_aicpu();
@@ -267,7 +267,7 @@ percounter_supervise(Runtime *runtime, uint64_t timeout_cycles, int32_t aicpu_th
     uint64_t settled = 0;
     while (true) {
         // Every completion component arrives preset in this run's uploaded
-        // image, so a positive read belongs to this run and not the last.
+        // image, so a decoded positive read belongs to this run and not the last.
         while (resolved < sink_count && percounter_reference_published(counters, sectors, sinks[resolved]))
             ++resolved;
         const bool sinks_done = resolved >= sink_count;

@@ -11,12 +11,9 @@
 /**
  * The GM accesses this runtime's protocols are built out of.
  *
- * These are host_build_graph's `scheduler_memory.h` primitives, kept here
- * because the two runtimes read GM for different reasons and at different
- * rates. A lane here is self-scheduling: it reaches GM at every checkpoint,
- * where the sibling's AICore side mostly waits to be told. An access that is
- * one instruction for one of them and a traced call for the other is not the
- * same primitive, and sharing the declaration hides that.
+ * Cluster owners use these accesses for ownership, allocation, dependencies
+ * and completion. Workers use them for payload and lifecycle state. Atomic
+ * arbitration and cache publication are separate protocol obligations.
  *
  * The uninstrumented lane compiles these to plain accesses in its loop.
  * The profiled translation unit uses percounter's own per-core binding;
@@ -146,7 +143,7 @@ static inline __aicore__ uint64_t percounter_gm_read_immutable_word(const __gm__
     );
 }
 
-/** An exchange, which is how every shared word here is published. */
+/** A scalar publication store; A5 implements it with atomic exchange. */
 static inline __aicore__ void
 percounter_gm_store(__gm__ volatile int64_t &value, int64_t desired, int order = __ATOMIC_RELEASE) {
     simpler::percounter::percounter_scalar_memory_issue(

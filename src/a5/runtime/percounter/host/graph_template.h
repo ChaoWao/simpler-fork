@@ -142,7 +142,7 @@ inline TemplateResult build_graph_template(
         task.flags = 0;
         task.metadata = {
             0, static_cast<uint16_t>(shape.active_mask), static_cast<uint16_t>(shape.block_num),
-            shape.sync_start ? 0U : PERCOUNTER_NO_SYNC, PERCOUNTER_NO_BOUNDARY
+            shape.sync_start ? 0U : PERCOUNTER_NO_SYNC, 0
         };
         if (fanin_offsets[i] == fanin_offsets[i + 1]) task.flags |= PERCOUNTER_BODY_ROOT;
         if (!has_consumer[static_cast<size_t>(i)]) {

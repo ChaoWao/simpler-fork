@@ -11,21 +11,12 @@
 /**
  * The cluster-local SSBUF window, as this runtime uses it.
  *
- * **The barrier in these two is the MIX rendezvous's only ordering.** A lane
- * publishes its arrival with the release store and reads its peers' with the
- * acquire load, and nothing else separates the token from the payload it
- * stands for. Cohort entry and completion acquire each actual peer's token.
- *
- * The region layout this runtime puts in the window is its own
- * (`PercounterSsbufRegion`), so what was left to share with host_build_graph
- * was the address space, where the window sits, and these two accessors.
- * They are kept here because when the sibling instrumented its own scheduler,
- * routing these two through the instrumentation faulted every device run of
- * this one -- bisected to that commit, with the tree before it passing on the
- * same machine. That commit changed more than these two accessors, so which
- * of its changes a lane cannot absorb is not established; owning the window
- * is what keeps the question from arising again. See
- * `docs/investigations/2026-11-percounter-shared-primitive-coupling.md`.
+ * PercounterClusterSchedulerRegion contains owner-written scheduling state
+ * and commands, plus one single-writer FIN per worker. SSBUF has no atomics;
+ * GM owner arbitration serializes scheduler writers. Cluster memory fences
+ * order command/FIN sequences and ownership transfer against their fields.
+ * Field accessors alone do not insert A5 publication barriers. The explicit
+ * token acquire/release accessors below include their own barriers.
  *
  * The offset and size are a hardware-and-convention fact rather than either
  * runtime's choice: A5 gives each 1AIC+2AIV cluster 3 KiB of SSBUF, and the
@@ -49,9 +40,8 @@ constexpr uint32_t PERCOUNTER_SSBUF_REGION_OFFSET = 2 * 1024;
 constexpr uint32_t PERCOUNTER_SSBUF_REGION_SIZE = 1024;
 static_assert(PERCOUNTER_SSBUF_REGION_OFFSET + PERCOUNTER_SSBUF_REGION_SIZE == PLATFORM_SSBUF_SIZE);
 
-// A CPU reader can overlap record reuse even when it discards the snapshot.
-// Acquiring a newer field also orders its opening generation before the
-// reader's closing generation check.
+// CPU simulation uses atomic field accesses for overlapping owner/worker
+// reads and writes; record visibility still follows command/FIN sequences.
 template <typename T>
 static inline __aicore__ T percounter_ssbuf_load_field(const PERCOUNTER_SSBUF volatile T *field) {
     return simpler::percounter::percounter_scalar_memory_result(

@@ -27,12 +27,16 @@
 
 #include "dispatch_payload.h"
 #include "resource_order.h"
+#include "resource_projection.h"
 #include "scheduler/wire_types.h"
 #include "scheduler/profiling_types.h"
 #include "scheduler/scheduler_layout.h"
 #include "scheduler/scheduler_types.h"
 
 namespace simpler::percounter {
+
+static_assert(PERCOUNTER_PROJECTION_RESOURCE_COUNT == PERCOUNTER_CLUSTER_LANES);
+static_assert(PERCOUNTER_PROJECTION_CATALOG_COUNT == PERCOUNTER_LIST_COUNT);
 
 /** Host-side plan of the percounter region. */
 struct PercounterLayout {
@@ -45,7 +49,6 @@ struct PercounterLayout {
     uint64_t entry_count;
     uint64_t control_offset;
     uint64_t tickets_offset;
-    uint64_t orders_offset[PERCOUNTER_CORE_TYPE_COUNT];
     uint64_t fanin_offset;
     uint64_t fanin_addr_offset;
     // One `(task << 1) | partitioned` reference per top-level sink, in the
@@ -66,16 +69,19 @@ struct PercounterLayout {
     uint64_t async_completion_capacity;
     // MIX tasks share the vector list and publish records through cluster SSBUF.
     uint64_t mix_task_count;
-    uint64_t mix_signal_ready_offset;
+    uint64_t cluster_ready_offset;
+    uint64_t cluster_owners_offset;
+    uint64_t resource_nodes_offset;
+    uint64_t ordinary_pieces_offset;
+    uint64_t projection_catalog_offset[PERCOUNTER_LIST_COUNT];
+    uint64_t projection_task_map_offset;
+    uint64_t sync_boundaries_offset;
     uint64_t boundary_task_count;
     uint64_t task_claims_offset;
-    uint64_t claim_summary_offset;
-    uint64_t ticket_interval_count;
+    uint64_t ticket_interval_count;  // Capacity: min(ordinary entries, two catalogs times boundary gaps).
     uint64_t sync_cohort_count;
-    uint64_t sync_arrivals_offset;
     uint64_t metadata_offset;
     uint64_t metadata_ready_offset;
-    uint64_t segments_offset;
     // Tasks in the task table. `task_count` adds every Graph body task of every
     // invocation, numbered after them.
     uint64_t table_task_count;
@@ -171,9 +177,9 @@ struct ExternalAddresses {
  * and two walks could disagree. `block_total` is the same walk's count of every
  * (task, block) pair, which bounds what the lists may sum to.
  *
- * There are no per-cluster lists: the host does not know the cluster count at
- * bind time -- the AICPU discovers it after the handshake -- so one list per core
- * type, drawn by every lane of that type, is what needs no topology.
+ * Source catalogs and resource projections are shared across clusters. Their
+ * geometry does not depend on which physical cluster claims an entry; the
+ * AICPU publishes the active topology after the handshake.
  *
  * `task_count` is the task table's. With Graph tasks, the list counts and
  * `block_total` include every invocation's body, and `graph` sizes the rest.
@@ -188,6 +194,7 @@ inline bool plan_layout(
     const uint64_t table_task_count = task_count;
     if (graph.body_task_count > UINT32_MAX || table_task_count > UINT32_MAX - graph.body_task_count) return false;
     task_count = table_task_count + graph.body_task_count;
+    if (task_count >= UINT32_MAX) return false;
     if (block_total < task_count) return false;
     if (mix_task_count > order_count[1]) return false;
     if (sync_cohort_count > boundary_task_count || boundary_task_count > task_count ||
@@ -195,7 +202,7 @@ inline bool plan_layout(
         return false;
     uint64_t placed = 0;
     for (uint32_t t = 0; t < PERCOUNTER_CORE_TYPE_COUNT; ++t) {
-        if (order_count[t] > block_total) return false;
+        if (order_count[t] > block_total || order_count[t] > task_count - placed) return false;
         placed += order_count[t];
     }
     // Each executable task has one entry; inline-completed tasks have none.
@@ -210,7 +217,12 @@ inline bool plan_layout(
         next.order_count[t] = order_count[t];
     next.mix_task_count = mix_task_count;
     next.boundary_task_count = boundary_task_count;
-    next.ticket_interval_count = std::min(placed - boundary_task_count, boundary_task_count + PERCOUNTER_LIST_COUNT);
+    // Each of the two catalogs has at most one ordinary piece per global boundary gap.
+    uint64_t piece_bound = 0;
+    if (!scheduler_layout_checked_mul(boundary_task_count, PERCOUNTER_LIST_COUNT, &piece_bound) ||
+        !scheduler_layout_checked_add(piece_bound, PERCOUNTER_LIST_COUNT, &piece_bound))
+        return false;
+    next.ticket_interval_count = std::min(placed - boundary_task_count, piece_bound);
     next.sync_cohort_count = sync_cohort_count;
     next.table_task_count = table_task_count;
     next.graph_invocation_count = graph.invocation_count;
@@ -231,16 +243,16 @@ inline bool plan_layout(
             &cursor, sizeof(PercounterControl), alignof(PercounterControl), &next.control_offset
         ) ||
         !PERCOUNTER_RESERVE(next.ticket_interval_count, PercounterTicket, tickets_offset) ||
-        !PERCOUNTER_RESERVE(order_count[0], uint64_t, orders_offset[0]) ||
-        !PERCOUNTER_RESERVE(order_count[1], uint64_t, orders_offset[1]) ||
-        (mix_task_count != 0 && !PERCOUNTER_RESERVE(SCHEDULER_CLUSTER_CAPACITY, uint64_t, mix_signal_ready_offset)) ||
-        !PERCOUNTER_RESERVE(
-            (boundary_task_count + PERCOUNTER_LIST_COUNT + 63) / 64, PercounterClaimSummary, claim_summary_offset
-        ) ||
-        !PERCOUNTER_RESERVE(sync_cohort_count, PercounterStartBarrier, sync_arrivals_offset) ||
+        !PERCOUNTER_RESERVE(SCHEDULER_CLUSTER_CAPACITY, uint64_t, cluster_ready_offset) ||
+        !PERCOUNTER_RESERVE(SCHEDULER_CLUSTER_CAPACITY, PercounterClusterOwnerSector, cluster_owners_offset) ||
+        !PERCOUNTER_RESERVE(placed, PercounterResourceNode, resource_nodes_offset) ||
+        !PERCOUNTER_RESERVE(next.ticket_interval_count, PercounterOrdinaryPiece, ordinary_pieces_offset) ||
+        !PERCOUNTER_RESERVE(order_count[0], uint32_t, projection_catalog_offset[0]) ||
+        !PERCOUNTER_RESERVE(order_count[1], uint32_t, projection_catalog_offset[1]) ||
+        !PERCOUNTER_RESERVE(task_count, uint32_t, projection_task_map_offset) ||
+        !PERCOUNTER_RESERVE(sync_cohort_count, PercounterSyncBoundary, sync_boundaries_offset) ||
         !PERCOUNTER_RESERVE(task_count, PercounterTaskMetadata, metadata_offset) ||
         !PERCOUNTER_RESERVE(task_count, uint64_t, metadata_ready_offset) ||
-        !PERCOUNTER_RESERVE(boundary_task_count + PERCOUNTER_LIST_COUNT, PercounterSegment, segments_offset) ||
         (graph.invocation_count != 0 &&
          (!PERCOUNTER_RESERVE(graph.invocation_count, PercounterGraphInvocation, graph_invocations_offset) ||
           !PERCOUNTER_RESERVE(1, PercounterGraphPrepare, graph_prepare_offset) ||
@@ -266,7 +278,7 @@ inline bool plan_layout(
         !PERCOUNTER_RESERVE(
             SCHEDULER_WORKER_CAPACITY * PERCOUNTER_ASYNC_CAPACITY, DeferredCompletionEntry, async_entries_offset
         ) ||
-        !PERCOUNTER_RESERVE(execution_count, PercounterAsyncCompletion, async_completions_offset) ||
+        !PERCOUNTER_RESERVE(execution_count, PercounterDeferredGroup, async_completions_offset) ||
         !scheduler_layout_checked_align(cursor, SCHEDULER_STATE_ALIGNMENT, &next.total_size)) {
 #undef PERCOUNTER_RESERVE
         return false;
@@ -457,8 +469,6 @@ inline bool build_tables(
     std::memset(base, 0, static_cast<size_t>(layout.upload_size));
 
     auto *control = region_at<PercounterControl>(base, layout.control_offset);
-    for (auto &head : control->first_boundary_segment)
-        head = PERCOUNTER_NO_BOUNDARY;
     auto *fanin = region_at<PercounterFanin>(base, layout.fanin_offset);
     auto *fanin_addr = region_at<uint64_t>(base, layout.fanin_addr_offset);
     auto *counters = region_at<PercounterCounter>(base, layout.counters_offset);
@@ -468,10 +478,9 @@ inline bool build_tables(
     auto *metadata_ready = region_at<uint64_t>(base, layout.metadata_ready_offset);
     for (uint64_t id = 0; id < task_count; ++id)
         metadata_ready[id] = 1;
-    uint64_t *orders[PERCOUNTER_LIST_COUNT] = {
-        region_at<uint64_t>(base, layout.orders_offset[0]),
-        region_at<uint64_t>(base, layout.orders_offset[1]),
-    };
+    std::vector<uint64_t> orders[PERCOUNTER_LIST_COUNT];
+    for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog)
+        orders[catalog].resize(static_cast<size_t>(layout.order_count[catalog]));
     const uint64_t list_count[PERCOUNTER_LIST_COUNT] = {layout.order_count[0], layout.order_count[1]};
     // The tasks each list will hold, collected in id order and ordered by
     // the shared resource schedule. A GRAPH task stands for its
@@ -548,8 +557,25 @@ inline bool build_tables(
 
         if (task.block_num < 1 || static_cast<uint64_t>(task.block_num) > PERCOUNTER_ORDER_BLOCK_MASK)
             return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
-        if (task.subtask_count < 1) return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
+        if (task.subtask_count < 1 ||
+            !percounter_completion_total_valid(static_cast<uint64_t>(task.block_num) * task.subtask_count))
+            return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
 
+        if (!task.inline_completed && !task.published_off_lane && task.graph_invocation < 0) {
+            if (task.active_mask == 0) {
+                if (task.is_mix || task.core_type_index != 1 || task.block_num != 1 || task.subtask_count != 1)
+                    return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
+            } else {
+                uint8_t core_type = 0;
+                const auto placement =
+                    task_placement_from_active_mask(static_cast<uint8_t>(task.active_mask), &core_type);
+                if (task.active_mask > 7 || placement == TaskPlacement::UNSUPPORTED ||
+                    task.is_mix != (placement == TaskPlacement::MIX) ||
+                    (!task.is_mix && task.core_type_index != core_type) ||
+                    task.subtask_count != __builtin_popcount(task.active_mask))
+                    return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
+            }
+        }
         if (task.has_predicate) any_predicate = true;
         if (task.inline_completed && (task.published_off_lane || task.graph_invocation >= 0))
             return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
@@ -565,6 +591,8 @@ inline bool build_tables(
             invocation_seen[static_cast<size_t>(task.graph_invocation)] = true;
             const HostGraphTemplate &tmpl = template_of(task);
             // Published by its body's sinks, one add per sink subtask.
+            if (!percounter_completion_total_valid(tmpl.sink_subtask_total))
+                return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(id), -1);
             counters[id].value = percounter_counter_preset(static_cast<int64_t>(tmpl.sink_subtask_total));
             boundary_tasks += tmpl.boundary_task_count;
             mix_tasks += tmpl.mix_task_count;
@@ -657,6 +685,8 @@ inline bool build_tables(
             const uint64_t body = body_base[task.graph_invocation];
             for (size_t b = 0; b < tmpl.tasks.size(); ++b) {
                 metadata[body + b] = tmpl.tasks[b].metadata;
+                if (!percounter_completion_total_valid(tmpl.tasks[b].subtask_total))
+                    return fail(BuildStatus::INVALID_ARGUMENT, static_cast<int64_t>(body + b), -1);
                 counters[body + b].value = percounter_counter_preset(tmpl.tasks[b].subtask_total);
                 metadata[body + b].global_order_id += global_rank;
                 if (metadata[body + b].sync_index != PERCOUNTER_NO_SYNC) metadata[body + b].sync_index = sync_index++;
@@ -665,7 +695,7 @@ inline bool build_tables(
         } else {
             metadata[id] = {
                 global_rank++, static_cast<uint16_t>(task.active_mask), static_cast<uint16_t>(task.block_num),
-                task.sync_start ? sync_index++ : PERCOUNTER_NO_SYNC, PERCOUNTER_NO_BOUNDARY
+                task.sync_start ? sync_index++ : PERCOUNTER_NO_SYNC, 0
             };
         }
     }
@@ -697,55 +727,61 @@ inline bool build_tables(
     }
     if (edge_cursor != layout.edge_count) return fail(BuildStatus::EDGE_COUNT_MISMATCH, -1, -1);
 
-    auto *segments = region_at<PercounterSegment>(base, layout.segments_offset);
-    auto *summaries = region_at<PercounterClaimSummary>(base, layout.claim_summary_offset);
-    uint64_t segment_cursor = 0;
-    uint64_t ticket_interval = 0;
-    uint32_t previous_boundary_task[PERCOUNTER_SYNC_DOMAIN_COUNT];
-    for (auto &previous : previous_boundary_task)
-        previous = PERCOUNTER_NO_BOUNDARY;
-    for (uint32_t l = 0; l < PERCOUNTER_LIST_COUNT; ++l) {
-        control->segment_begin[l] = segment_cursor;
-        uint64_t begin = 0;
-        for (uint64_t position = 0; position < list_count[l]; ++position) {
-            const uint64_t entry = orders[l][position];
-            const int64_t id = percounter_order_task_id(entry);
-            const bool mix = __builtin_popcount(metadata[id].active_mask) > 1;
+    std::vector<uint32_t> claim_index(layout.task_count, PERCOUNTER_PROJECTION_NONE);
+    uint32_t next_claim = 0;
+    for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog) {
+        for (uint64_t entry : orders[catalog]) {
+            const uint32_t id = static_cast<uint32_t>(percounter_order_task_id(entry));
+            const auto &shape = metadata[id];
+            const bool mix = __builtin_popcount(shape.active_mask) > 1;
             if (!percounter_order_is_spmd(entry) && !mix) continue;
-            if (mix || metadata[id].sync_index != PERCOUNTER_NO_SYNC) {
-                const uint32_t domain = mix ? 2 : l;
-                if (previous_boundary_task[domain] == PERCOUNTER_NO_BOUNDARY)
-                    control->first_boundary_segment[domain] = static_cast<uint32_t>(segment_cursor);
-                else
-                    metadata[previous_boundary_task[domain]].next_boundary_segment =
-                        static_cast<uint32_t>(segment_cursor);
-                metadata[id].next_boundary_segment = PERCOUNTER_NO_BOUNDARY;
-                previous_boundary_task[domain] = static_cast<uint32_t>(id);
-            }
-            segments[segment_cursor++] = {
-                percounter_claim_shape(
-                    id, metadata[id].block_num, metadata[id].active_mask, metadata[id].sync_index != PERCOUNTER_NO_SYNC
-                ),
-                static_cast<uint32_t>(begin), static_cast<uint32_t>(position), ticket_interval
-            };
-            if (begin < position) ++ticket_interval;
-            if (metadata[id].sync_index != PERCOUNTER_NO_SYNC) {
-                const uint32_t domain = mix ? 2 : l;
+            claim_index[id] = next_claim++;
+            if (shape.sync_index != PERCOUNTER_NO_SYNC) {
+                const uint32_t domain = mix ? 2 : catalog;
                 control->max_sync_blocks[domain] =
-                    std::max(control->max_sync_blocks[domain], uint64_t(metadata[id].block_num));
+                    std::max(control->max_sync_blocks[domain], uint64_t{shape.block_num});
             }
-            begin = position + 1;
         }
-        if (begin == list_count[l]) summaries[segment_cursor / 64].closed |= uint64_t{1} << (segment_cursor % 64);
-        segments[segment_cursor++] = {
-            0, static_cast<uint32_t>(begin), static_cast<uint32_t>(list_count[l]), ticket_interval
-        };
-        if (begin < list_count[l]) ++ticket_interval;
-        control->segment_count[l] = segment_cursor - control->segment_begin[l];
     }
-    if (segment_cursor != layout.boundary_task_count + PERCOUNTER_LIST_COUNT ||
-        ticket_interval > layout.ticket_interval_count)
+    if (next_claim != layout.boundary_task_count) return fail(BuildStatus::ORDER_COUNT_MISMATCH, -1, -1);
+
+    std::vector<ResourceProjectionInput> projection_input;
+    projection_input.reserve(static_cast<size_t>(layout.entry_count));
+    for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog) {
+        for (uint32_t position = 0; position < list_count[catalog]; ++position) {
+            const uint64_t entry = orders[catalog][position];
+            const uint32_t id = static_cast<uint32_t>(percounter_order_task_id(entry));
+            const auto &shape = metadata[id];
+            projection_input.push_back(
+                {entry, shape.global_order_id, position, claim_index[id], shape.sync_index,
+                 static_cast<uint8_t>(shape.active_mask), static_cast<uint8_t>(catalog)}
+            );
+        }
+    }
+    ResourceProjectionPlan projection;
+    if (!build_resource_projection(
+            std::move(projection_input), &projection, static_cast<uint32_t>(layout.task_count)
+        ) ||
+        projection.nodes.size() != layout.entry_count || projection.pieces.size() > layout.ticket_interval_count ||
+        projection.sync_boundaries.size() != layout.sync_cohort_count)
         return fail(BuildStatus::ORDER_COUNT_MISMATCH, -1, -1);
+    const auto copy_projection = [&](const auto &source, uint64_t offset) {
+        if (!source.empty())
+            std::memcpy(region_at<uint8_t>(base, offset), source.data(), source.size() * sizeof(source[0]));
+    };
+    copy_projection(projection.nodes, layout.resource_nodes_offset);
+    copy_projection(projection.pieces, layout.ordinary_pieces_offset);
+    copy_projection(projection.sync_boundaries, layout.sync_boundaries_offset);
+    copy_projection(projection.task_to_node, layout.projection_task_map_offset);
+    for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog)
+        copy_projection(projection.catalog_nodes[catalog], layout.projection_catalog_offset[catalog]);
+    for (uint32_t resource = 0; resource < PERCOUNTER_CLUSTER_LANES; ++resource)
+        control->resource_heads[resource] = projection.heads[resource];
+    control->resource_node_count = projection.nodes.size();
+    control->ordinary_piece_count = projection.pieces.size();
+    auto *owners = region_at<PercounterClusterOwnerSector>(base, layout.cluster_owners_offset);
+    for (uint32_t cluster = 0; cluster < SCHEDULER_CLUSTER_CAPACITY; ++cluster)
+        owners[cluster].owner = static_cast<uint64_t>(PercounterClusterOwner::NONE);
 
     // Templates, back to back, then one record per invocation pointing at its own.
     std::vector<uint64_t> template_offset(graph.template_count, 0);
@@ -831,17 +867,21 @@ inline bool build_tables(
     control->mix_task_count = layout.mix_task_count;
     control->boundary_task_count = layout.boundary_task_count;
     control->task_claims_offset = layout.task_claims_offset;
-    control->claim_summary_offset = layout.claim_summary_offset;
     control->sync_cohort_count = layout.sync_cohort_count;
-    control->sync_arrivals_offset = layout.sync_arrivals_offset;
     control->metadata_offset = layout.metadata_offset;
     control->metadata_ready_offset = layout.metadata_ready_offset;
-    control->segments_offset = layout.segments_offset;
     control->graph_invocation_count = layout.graph_invocation_count;
     control->graph_invocations_offset = layout.graph_invocations_offset;
     control->graph_prepare_offset = layout.graph_prepare_offset;
     control->has_predicates = any_predicate ? 1 : 0;
-    control->mix_signal_ready_offset = layout.mix_signal_ready_offset;
+    control->cluster_ready_offset = layout.cluster_ready_offset;
+    control->cluster_owners_offset = layout.cluster_owners_offset;
+    control->resource_nodes_offset = layout.resource_nodes_offset;
+    control->ordinary_pieces_offset = layout.ordinary_pieces_offset;
+    control->projection_task_map_offset = layout.projection_task_map_offset;
+    control->sync_boundaries_offset = layout.sync_boundaries_offset;
+    for (uint32_t catalog = 0; catalog < PERCOUNTER_LIST_COUNT; ++catalog)
+        control->projection_catalog_offset[catalog] = layout.projection_catalog_offset[catalog];
     control->fanin_offset = layout.fanin_offset;
     control->fanin_addr_offset = layout.fanin_addr_offset;
     control->counters_offset = layout.counters_offset;
@@ -868,12 +908,10 @@ inline bool build_tables(
         }
     }
     auto *claims = region_at<PercounterTaskClaim>(base, layout.task_claims_offset);
-    const uint64_t aic_boundaries = control->segment_count[0] - 1;
-    for (uint64_t index = 0; index < layout.boundary_task_count; ++index) {
-        const uint64_t segment = index + (index >= aic_boundaries ? 1 : 0);
-        const uint32_t blocks = static_cast<uint32_t>(segments[segment].task_shape >> 48);
-        // The upload prefix was zeroed above, including every claim sector.
-        claims[index].closed_sectors =
+    for (const auto &node : projection.nodes) {
+        if (node.claim_index == PERCOUNTER_PROJECTION_NONE) continue;
+        const uint32_t blocks = static_cast<uint32_t>(node.entry >> PERCOUNTER_ORDER_BLOCK_NUM_SHIFT);
+        claims[node.claim_index].closed_sectors =
             blocks < PERCOUNTER_CLAIM_SECTOR_COUNT ? PERCOUNTER_CLAIM_SECTOR_COUNT - blocks : 0;
     }
     control->scheduler_timeout_cycles = SCHEDULER_TIMEOUT_CYCLES;
@@ -883,7 +921,6 @@ inline bool build_tables(
     control->callable_addresses_count = external.callable_count;
     for (uint32_t t = 0; t < PERCOUNTER_CORE_TYPE_COUNT; ++t) {
         control->order_count[t] = layout.order_count[t];
-        control->orders_offset[t] = layout.orders_offset[t];
     }
     return true;
 }
