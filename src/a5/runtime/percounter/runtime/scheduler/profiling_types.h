@@ -49,6 +49,7 @@ enum class ProfilePhase : uint8_t {
     TraceFinishBarrier,
     BypassStoreIssue,
     DsbDdr,
+    OwnerLoad,
 };
 
 constexpr const char *profile_phase_name(ProfilePhase kind) {
@@ -121,6 +122,8 @@ constexpr const char *profile_phase_name(ProfilePhase kind) {
         return "scalar_bypass_store_issue";
     case ProfilePhase::DsbDdr:
         return "scalar_dsb_ddr";
+    case ProfilePhase::OwnerLoad:
+        return "scalar_percounter_owner_load";
     }
     return "unknown";
 }

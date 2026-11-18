@@ -17,14 +17,15 @@ from simpler_setup.tools.swimlane_converter import generate_chrome_trace_json, r
 
 
 @pytest.mark.parametrize("level", [3, 4])
-def test_nested_kernel_in_step_exports_without_double_counting(tmp_path, level):
+@pytest.mark.parametrize("memory_event", ["bypass_load", "percounter_owner_load", "dsb_all"])
+def test_nested_kernel_in_step_exports_without_double_counting(tmp_path, level, memory_event):
     capture = Capture(runtime="percounter", level=level, scheduler_producer="aicore")
     capture.task(task_id=7, core_id=0, start=40, end=60, run_epoch=0)
     for kind, begin, end, depth in [
         ("scalar_window", 10, 100, 0),
         ("scalar_percounter_step", 20, 80, 1),
         ("scalar_percounter_run_prepared", 30, 70, 2),
-        ("scalar_bypass_load", 32, 35, 3),
+        (f"scalar_{memory_event}", 32, 35, 3),
     ]:
         metrics = {"scalar_depth": depth, "scalar_calls": 1}
         if depth == 0:
@@ -53,5 +54,5 @@ def test_nested_kernel_in_step_exports_without_double_counting(tmp_path, level):
     output = json.loads(trace.read_text())
     assert output["metadata"]["runtime"] == "percounter"
     names = {e["name"] for e in output["traceEvents"] if e["ph"] == "X" and e["pid"] == 2}
-    assert {"percounter_step", "percounter_run_prepared", "bypass_load"} <= names
+    assert {"percounter_step", "percounter_run_prepared", memory_event} <= names
     assert not any(name.startswith("scheduler_") for name in names)

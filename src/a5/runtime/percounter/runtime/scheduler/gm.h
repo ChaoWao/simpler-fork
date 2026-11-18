@@ -101,9 +101,12 @@ static inline __aicore__ int64_t percounter_gm_read(__gm__ volatile int64_t &val
     );
 }
 
-static inline __aicore__ uint64_t percounter_gm_read(__gm__ volatile uint64_t &value, int order = __ATOMIC_ACQUIRE) {
+static inline __aicore__ uint64_t percounter_gm_read(
+    __gm__ volatile uint64_t &value, int order = __ATOMIC_ACQUIRE,
+    simpler::percounter::ProfilePhase phase = simpler::percounter::ProfilePhase::BypassLoad
+) {
     return simpler::percounter::percounter_scalar_memory_result(
-        simpler::percounter::ProfilePhase::BypassLoad, [=, &value]() __aicore__ {
+        phase, [=, &value]() __aicore__ {
 #if defined(__CCE_AICORE__)
             (void)order;
             return static_cast<uint64_t>(__builtin_cce_ld_dev(const_cast<__gm__ uint64_t *>(&value), 0));

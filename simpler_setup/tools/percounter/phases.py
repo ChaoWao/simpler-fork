@@ -34,6 +34,7 @@ PHASES_BY_PRODUCER = {
             "scalar_atomic_cas",
             "scalar_atomic_store_issue",
             "scalar_bypass_load",
+            "scalar_percounter_owner_load",
             "scalar_dcci_out",
             "scalar_dcci_single",
             "scalar_dcci_entire",

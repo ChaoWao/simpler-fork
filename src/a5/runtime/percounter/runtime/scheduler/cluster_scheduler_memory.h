@@ -26,7 +26,9 @@ public:
         owner_(owner),
         region_(region) {}
 
-    __aicore__ uint64_t owner_load() { return percounter_gm_read(owner_->owner); }
+    __aicore__ uint64_t owner_load() {
+        return percounter_gm_read(owner_->owner, __ATOMIC_ACQUIRE, ProfilePhase::OwnerLoad);
+    }
     __aicore__ uint64_t owner_cas(uint32_t expected, uint32_t desired) {
         return percounter_gm_compare_exchange(owner_->owner, uint64_t{expected}, uint64_t{desired});
     }
@@ -44,11 +46,13 @@ public:
 
 private:
     __aicore__ void fence() {
+        percounter_scalar_memory_issue(ProfilePhase::DsbAll, 1, []() __aicore__ {
 #if defined(__CCE_AICORE__)
-        dsb((mem_dsb_t)0);
+            dsb((mem_dsb_t)0);
 #else
-        __atomic_thread_fence(__ATOMIC_SEQ_CST);
+            __atomic_thread_fence(__ATOMIC_SEQ_CST);
 #endif
+        });
     }
     __gm__ PercounterClusterOwnerSector *owner_;
     PERCOUNTER_SSBUF PercounterClusterSchedulerRegion *region_;

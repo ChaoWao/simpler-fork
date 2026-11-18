@@ -94,7 +94,7 @@ bool export_profile(const ProfileOwner &owner) {
             if (!percounter_decode_scalar_storage(
                     slots.data(), slots.size(), cursor, header.scalar_window_start, record
                 ) ||
-                (record.kind & 0xffffU) > static_cast<uint32_t>(ProfilePhase::DsbDdr) || record.start_time == 0 ||
+                (record.kind & 0xffffU) > static_cast<uint32_t>(ProfilePhase::OwnerLoad) || record.start_time == 0 ||
                 record.end_time < record.start_time)
                 throw std::runtime_error("invalid percounter scalar interval");
             records.push_back(record);
