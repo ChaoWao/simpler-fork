@@ -370,6 +370,7 @@ inline __aicore__
     context->global.async_group_offset = async_group_offset;
     context->global.async_group_index = static_cast<uint32_t>(block_idx);
     context->global.async_output_capture_refused = 0;
+    percounter_ssbuf_store_field(&context->async_touched, uint32_t{0});
 #if defined(__CPU_SIM)
     if (!percounter_bind_sim_context(context)) {
         percounter_fail(cfg, SchedulerGraphResult::INVALID_ARGUMENTS);

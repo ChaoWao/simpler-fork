@@ -462,7 +462,11 @@ inline __aicore__ bool percounter_calendar_execute_range(
             }
         } else {
             if (!percounter_run_task(cfg, *dispatch, extra, block, blocks, role, entry, sample)) return false;
-            if (!percounter_calendar_seal(cfg, extra, sink, sample, entry, &deferred)) return false;
+            auto *touched = &cfg.ssbuf->contexts[cfg.cluster_lane].value.async_touched;
+            if (percounter_ssbuf_load_field(touched) != 0) {
+                if (!percounter_calendar_seal(cfg, extra, sink, sample, entry, &deferred)) return false;
+                percounter_ssbuf_store_field(touched, uint32_t{0});
+            }
         }
         if (!deferred) {
             ProfileScope profile_scope(cfg.scalar, ProfilePhase::Complete, entry);
