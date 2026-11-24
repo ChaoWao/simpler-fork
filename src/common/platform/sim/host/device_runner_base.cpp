@@ -1020,6 +1020,16 @@ int SimDeviceRunnerBase::unregister_callable(int32_t callable_id) {
 
 bool SimDeviceRunnerBase::has_callable(int32_t callable_id) const { return callables_.count(callable_id) != 0; }
 
+std::shared_ptr<void>
+SimDeviceRunnerBase::acquire_callable_calendar_cache(int32_t callable_id, std::shared_ptr<void> (*factory)()) {
+    const std::lock_guard<std::mutex> lock(callable_registration_mu_);
+    auto it = callables_.find(callable_id);
+    if (it == callables_.end() || it->second.host_dlopen_handle == nullptr) return {};
+    auto &cache = it->second.calendar_cache;
+    if (cache == nullptr) cache = factory();
+    return cache;
+}
+
 // Per-run binding half, defined in each runtime's runtime_maker.cpp and linked
 // into this same sim runtime .so. Declared here (rather than only in
 // c_api_shared.cpp) so bind_callable_to_runtime can call it directly, keeping

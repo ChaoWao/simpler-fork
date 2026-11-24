@@ -389,7 +389,25 @@ struct TaskInput {
     int32_t graph_invocation{-1};
     // Actual kernels; a dependency-only block uses no kernel but still targets AIV.
     uint32_t active_mask{0};
+    uint32_t calendar_defer_mask{0};
+    uint32_t calendar_output_mask{0};  // Zero selects all roles for completion.
+    uint32_t calendar_shard_round{0};
+    bool calendar_shard_producer{false};
 };
+
+inline constexpr uint32_t DS_PARK_REDUCE_SHARDS = 4;
+inline constexpr uint32_t DS_PARK_REDUCE_BLOCKS_PER_SHARD = 10;
+
+inline bool calendar_uses_shard(const TaskInput &producer, const TaskInput &consumer) {
+    return producer.calendar_shard_producer && !consumer.calendar_shard_producer &&
+           producer.calendar_shard_round == consumer.calendar_shard_round;
+}
+
+inline uint32_t calendar_shard(const TaskInput &task, uint32_t block) {
+    if (task.calendar_shard_round == 0) return 0;
+    if (!task.calendar_shard_producer) return block / 16;
+    return block < 32 ? (block % 16) / 4 : (block - 32) % 4;
+}
 
 // Fold only top-level joins with no payload, predicate or sync-start.
 inline bool percounter_fold_dependency_tasks(
@@ -450,7 +468,13 @@ inline bool plan_percounter_completion_counters(
         }
         if (task.fanin_count != 0) fanin[id].assign(task.fanin_ids, task.fanin_ids + task.fanin_count);
         if (!percounter_completion_notify_eligible(task)) continue;
-        const int64_t contribution = static_cast<int64_t>(task.block_num) * task.subtask_count;
+        const uint32_t roles = task.calendar_output_mask;
+        if (roles != 0 && ((roles & ~task.active_mask) != 0 || task.calendar_defer_mask != 0)) {
+            *error = "invalid calendar output role mask";
+            return false;
+        }
+        const int64_t contribution = static_cast<int64_t>(task.block_num) *
+            (roles != 0 ? __builtin_popcount(roles) : task.subtask_count);
         if (contribution <= 0 || contribution > UINT32_MAX) {
             *error = "invalid completion credit count";
             return false;

@@ -1,5 +1,38 @@
 # Percounter acquisition and cohort entry
 
+## Static calendar ranges
+
+For an eligible synchronous binding, the Host assigns each task block and role
+to a core. An outer DAG can contain both ordinary tasks and Graph invocations.
+The Host places the unscheduled ancestors of each Graph in an ordinary phase,
+then gives the Graph phase the invocation's entire core group. The remaining
+ordinary tasks form the final phase.
+
+The image gives each core a list of 32-byte ranges over 16-byte rows. Graph
+invocations with compatible arguments share rows and carry independent
+32-byte dispatch records. AICPU materializes each invocation in slices and
+publishes its GM watermark after the slice's dispatch records and arguments.
+The range's entry waits cover that watermark and completion of the previous
+phase. A Graph phase publishes completion through its shell's completion
+counter. An ordinary phase with multiple sinks uses one phase counter
+in CntNotify SRAM, with GM storage when no counter can be mapped.
+
+The Worker caches the ordered rows and placement per registered Callable.
+A Graph cache entry matches the recorded body, its argument signature and
+execution width. The last compatible invocation supplies samples on a cache
+miss. Subsequent invocations bind new execution addresses to the cached rows.
+The first successful run supplies timing to the Host planner. Subsequent runs
+reuse the trained placement from the Callable's in-memory cache. No calendar
+files are needed at startup.
+
+The DSpark trial recognizes the tested EP/TP task graphs and selects the
+matching defer ordering and output-role policies. It uses the same online
+planner and caches a placement only after sampling in the current Worker.
+Other bindings with pending kernel completion, predicates or off-lane
+publication use the order lists described below.
+
+## Order-list execution
+
 The Host emits two order lists as projections of one explicit `global_order_id`:
 AIC and a vector-domain list containing ordinary AIV and MIX tasks. Graph bodies
 occupy their shell's place in that order; their counter IDs are separate

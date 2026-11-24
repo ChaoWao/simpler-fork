@@ -35,6 +35,7 @@
 #include "device/graph_image_source.h"
 #include "host_build_graph/graph_execution.h"
 #include "runtime.h"
+#include "scheduler/calendar_wire.h"
 #include "scheduler/wire_types.h"
 #include "scheduler/argument_metadata.h"
 #include "scheduler/scheduler_graph.h"
@@ -146,6 +147,20 @@ inline bool percounter_prepare_invocation(
     invocation->storage_address = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(execution->task_storage));
     cache_flush_range(&invocation->storage_address, sizeof(invocation->storage_address));
 
+    auto *calendar = control->calendar_offset == 0 ? nullptr :
+        scheduler_state_at<CalendarRangeHeader>(control, control->calendar_offset);
+    const CalendarDispatchPatch *patches = nullptr;
+    if (calendar != nullptr) {
+        cache_invalidate_range(calendar, sizeof(*calendar));
+        if (calendar->patch_offset == 0) {
+            percounter_graph_prepare_fail(prepare, rank, SchedulerGraphResult::INVALID_ARGUMENTS);
+            return false;
+        }
+        patches = reinterpret_cast<const CalendarDispatchPatch *>(
+            reinterpret_cast<const uint8_t *>(calendar) + calendar->patch_offset
+        ) + body_base;
+        cache_invalidate_range(patches, static_cast<size_t>(tmpl->task_count) * sizeof(*patches));
+    }
     int32_t materialized = 0;
     while (true) {
         // At the slice boundary, so a failure anywhere stops this invocation
@@ -208,9 +223,28 @@ inline bool percounter_prepare_invocation(
             wmb();
             // Publication cannot write back the completion counter's line:
             // a lane may increment it immediately after observing this token.
+            if (patches != nullptr) {
+                for (uint32_t lane = 0; lane < PLATFORM_CORES_PER_BLOCKDIM; ++lane) {
+                    const uint32_t offset = patches[i].dispatch_offsets[lane];
+                    if (offset == 0) continue;
+                    auto *binding = reinterpret_cast<CalendarDispatch *>(
+                        reinterpret_cast<uint8_t *>(calendar) + offset
+                    );
+                    cache_invalidate_range(binding, sizeof(*binding));
+                    binding->kernel_entry = functions[lane];
+                    binding->args_address = counter.arguments_address;
+                    cache_flush_range(binding, sizeof(*binding));
+                }
+                continue;
+            }
             auto *ready = &metadata_ready[body_base + static_cast<uint64_t>(i)];
             __atomic_store_n(ready, uint64_t{1}, __ATOMIC_RELEASE);
             cache_flush_range(ready, sizeof(*ready));
+        }
+        if (patches != nullptr) {
+            wmb();
+            __atomic_store_n(&invocation->calendar_ready, static_cast<uint64_t>(end), __ATOMIC_RELEASE);
+            cache_flush_range(&invocation->calendar_ready, sizeof(invocation->calendar_ready));
         }
         materialized = end;
         if (made > 0) {

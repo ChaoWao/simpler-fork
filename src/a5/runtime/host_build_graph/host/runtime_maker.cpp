@@ -3113,6 +3113,16 @@ extern "C" int release_run_bindings_impl(Runtime *runtime, const HostApi *api) {
  *                      observed terminal status
  * @return 0 on success, -1 on failure
  */
+extern "C" bool runtime_has_completion_feedback_impl(const Runtime *runtime) {
+    const auto publication = runtime->prepared_publication();
+    return publication && static_cast<bool>(publication->on_execution_complete);
+}
+
+extern "C" void runtime_collect_completion_feedback_impl(const Runtime *runtime, const HostApi *api) {
+    const auto publication = runtime->prepared_publication();
+    if (publication && publication->on_execution_complete) publication->on_execution_complete(*api);
+}
+
 extern "C" int copy_back_run_outputs_impl(const Runtime *runtime, const HostApi *api, int execution_rc, int launched) {
     if (runtime == nullptr && execution_rc == 0) {
         LOG_ERROR("Runtime pointer is null");

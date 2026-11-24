@@ -34,6 +34,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <functional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -455,6 +456,7 @@ private:
             std::vector<HbgImageReference> image_references;
             std::vector<MetadataRegion> prerequisites;
             std::vector<std::shared_ptr<const void>> resources;
+            std::function<void(const struct HostApi &)> on_execution_complete;
         };
         RunImagePublication pending_publication_;
         std::shared_ptr<const RunImagePublication> prepared_publication_;
@@ -501,6 +503,9 @@ public:
     }
     void retain_pending_resource(std::shared_ptr<const void> resource) {
         host_.pending_publication_.resources.push_back(std::move(resource));
+    }
+    void on_pending_execution_complete(std::function<void(const struct HostApi &)> callback) {
+        host_.pending_publication_.on_execution_complete = std::move(callback);
     }
     using RunImagePublication = HostOnlyState::RunImagePublication;
     void restore_pending_publication(RunImagePublication publication) {

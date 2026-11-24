@@ -75,6 +75,21 @@ inline void percounter_reset_sync_notifications(PercounterControl *control) {
     }
 }
 
+inline void percounter_reset_calendar_notifications(PercounterControl *control) {
+    if (control->calendar_offset == 0) return;
+    const auto *calendar = scheduler_state_at<CalendarRangeHeader>(control, control->calendar_offset);
+    cache_invalidate_range(calendar, sizeof(*calendar));
+    if (calendar->phase_slots_count == 0) return;
+    const auto *slots = reinterpret_cast<const uint64_t *>(
+        reinterpret_cast<const uint8_t *>(calendar) + calendar->phase_slots_offset
+    );
+    cache_invalidate_range(slots, static_cast<size_t>(calendar->phase_slots_count) * sizeof(*slots));
+    for (uint32_t slot = 0; slot < calendar->phase_slots_count; ++slot) {
+        if (slots[slot] != 0) *reinterpret_cast<volatile uint32_t *>(slots[slot]) = 0;
+    }
+}
+
+
 /**
  * Publish the discovered topology into the control block. Leader only, after
  * every thread has handshaken its slice.
@@ -121,6 +136,7 @@ percounter_post_handshake_init(Runtime *runtime, const AicoreLifecycle &lifecycl
     cache_flush_range(control, sizeof(*control));
     percounter_graph_prepare_init(control);
     percounter_reset_sync_notifications(control);
+    percounter_reset_calendar_notifications(control);
     auto *counters = scheduler_state_at<PercounterCounter>(control, control->counters_offset);
     cache_invalidate_range(counters, control->table_task_count * sizeof(PercounterCounter));
     for (uint64_t id = 0; id < control->table_task_count; ++id) {

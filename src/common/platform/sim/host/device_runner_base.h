@@ -489,6 +489,7 @@ public:
         std::vector<ArgDirection> signature
     );
     int unregister_callable(int32_t callable_id);
+    std::shared_ptr<void> acquire_callable_calendar_cache(int32_t callable_id, std::shared_ptr<void> (*factory)());
     bool has_callable(int32_t callable_id) const;
 
     /**
@@ -1159,6 +1160,7 @@ protected:
         // hbg path
         void *host_dlopen_handle{nullptr};
         void *host_orch_func_ptr{nullptr};
+        std::shared_ptr<void> calendar_cache;
     };
     std::unordered_map<int32_t, CallableState> callables_;
     // Held by every registration/unregistration entry point and by

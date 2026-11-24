@@ -32,6 +32,7 @@
 #include "scheduler/async_completion.h"
 #include "dispatch_payload.h"
 #include "runtime.h"
+#include "scheduler/calendar_wire.h"
 #include "scheduler/wire_types.h"
 #include "scheduler/scheduler_graph.h"
 #include "scheduler/scheduler_layout.h"
@@ -522,6 +523,7 @@ inline __aicore__ __gm__ pto2::resident::AsyncGroupData *percounter_init_async_r
 
 // Only actual deferrals occupy persistent storage. Each physical invocation
 // appends at most one group; the registration scratch is reusable at return.
+template <bool permit_defer = true>
 inline __aicore__ bool percounter_async_seal(
     const LaneConfig &cfg, PercounterLaneState *state, const PercounterTask &task, uint64_t completion_address,
     bool *deferred, uint64_t entry
@@ -539,6 +541,10 @@ inline __aicore__ bool percounter_async_seal(
         return false;
     }
     if (count == 0) return true;
+    if constexpr (!permit_defer) {
+        percounter_fail(cfg, SchedulerGraphResult::ASYNC_REGISTRATION_FAILED, task.id);
+        return false;
+    }
     for (uint32_t i = 0; i < count; ++i) {
         const auto &entry = cfg.async_entries[i];
         const CompletionToken token{
@@ -639,9 +645,11 @@ inline __aicore__ bool percounter_async_tick(const LaneConfig &cfg, PercounterLa
     return true;
 }
 
+template <bool permit_defer = true>
 inline __aicore__ bool percounter_run_task(
     const LaneConfig &cfg, PercounterLaneState *state, const PercounterTask &task, int32_t block, int32_t blocks,
-    uint32_t role, uint64_t completion_address, bool *deferred, uint64_t entry
+    uint32_t role, uint64_t completion_address, bool *deferred, uint64_t entry,
+    __gm__ CalendarTiming *calendar_timing = nullptr
 ) {
     *deferred = false;
     ProfileScope profile_scope(cfg.scalar, ProfilePhase::Run);
@@ -685,7 +693,7 @@ inline __aicore__ bool percounter_run_task(
     // kernel's outputs are in memory before the atomic that announces them.
     PercounterKernelFunc kernel = reinterpret_cast<PercounterKernelFunc>(function);
     const bool first_kernel = cfg.work_window.start_cycle == 0;
-    const uint64_t start_time = timing_enabled || first_kernel ? get_sys_cnt_aicore() : 0;
+    const uint64_t start_time = timing_enabled || first_kernel || calendar_timing != nullptr ? get_sys_cnt_aicore() : 0;
     if (first_kernel) cfg.work_window.start_cycle = start_time;
     if constexpr (profile_compiled) {
         if (cfg.scalar != nullptr) ++cfg.scalar->depth;
@@ -698,6 +706,10 @@ inline __aicore__ bool percounter_run_task(
     }
     const uint64_t end_time = get_sys_cnt_aicore();
     cfg.work_window.end_cycle = end_time;
+    if (calendar_timing != nullptr) {
+        calendar_timing->start = start_time;
+        calendar_timing->end = end_time;
+    }
     if (timing_enabled) {
         if constexpr (task_profile_compiled) {
             cfg.pending_task.kernel_end = kernel_end;
@@ -712,7 +724,7 @@ inline __aicore__ bool percounter_run_task(
         cfg.pending_stream_record = record;
         cfg.pending_task_valid = true;
     }
-    return percounter_async_seal(cfg, state, task, completion_address, deferred, entry);
+    return percounter_async_seal<permit_defer>(cfg, state, task, completion_address, deferred, entry);
 }
 
 struct PercounterCandidate {
@@ -1836,8 +1848,10 @@ inline __aicore__ void percounter_lane_loop(LaneConfig &cfg) {
     percounter_commit_task_timing(cfg);
 }
 
-inline __aicore__ AicoreWorkWindow
-run_percounter_lane(__gm__ PercounterControl *control, int block_idx, CoreType core_type) {
+#include "calendar_loop.h"
+
+inline __aicore__
+    AicoreWorkWindow run_percounter_lane(__gm__ PercounterControl *control, int block_idx, CoreType core_type) {
     // The caller invalidates the data cache after observing AICPU READY.
     // Configuration is immutable after that publication; use cached loads here.
     // Progress, dependency and exit words retain their bypass/atomic accesses.
@@ -1962,7 +1976,8 @@ run_percounter_lane(__gm__ PercounterControl *control, int block_idx, CoreType c
         if (cfg.profile_head != nullptr) cfg.profile = &profile;
     }
     setup_scope.close();
-    if (cfg.cluster_lane == 0) percounter_lane_loop<0>(cfg);
+    if (control->calendar_offset != 0) percounter_calendar_loop(cfg);
+    else if (cfg.cluster_lane == 0) percounter_lane_loop<0>(cfg);
     else if (cfg.cluster_lane == 1) percounter_lane_loop<1>(cfg);
     else percounter_lane_loop<2>(cfg);
     percounter_commit_task_timing(cfg);

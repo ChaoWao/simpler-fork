@@ -35,6 +35,7 @@ struct RegionBanks {
 };
 
 struct CoreAsyncCapability;
+using HostCalendarCacheFactory = std::shared_ptr<void> (*)();
 
 // Registration-owned host metadata, borrowed while that callable is retained.
 struct HostCallableAsyncCapabilities {
@@ -312,6 +313,9 @@ struct HostApiOps {
     int (*stage_owned_references)(
         void *, uint32_t, const HostMetadataRegion *, size_t, std::vector<HbgImageReference> *
     ) = nullptr;
+    std::shared_ptr<void> (*acquire_callable_calendar_cache)(
+        void *runner_ctx, int32_t callable_id, HostCalendarCacheFactory factory
+    ) = nullptr;
 };
 
 /**
@@ -466,6 +470,10 @@ public:
     void set_prepare_plan(std::shared_ptr<void> plan) const {
         if (ops_->set_prepare_plan != nullptr)
             ops_->set_prepare_plan(runner_ctx_, pipeline_slot_, run_epoch_, std::move(plan));
+    }
+    std::shared_ptr<void> acquire_callable_calendar_cache(int32_t callable_id, HostCalendarCacheFactory factory) const {
+        if (ops_->acquire_callable_calendar_cache == nullptr) return {};
+        return ops_->acquire_callable_calendar_cache(runner_ctx_, callable_id, factory);
     }
     int acquire_sm_mirror(size_t bytes, size_t alignment, void **addr_out) const {
         if (ops_->acquire_sm_mirror == nullptr) {

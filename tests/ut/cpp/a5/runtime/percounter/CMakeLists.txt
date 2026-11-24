@@ -65,3 +65,14 @@ simpler_ut_add_target(NAME test_a5_percounter_task_image
         ${SIMPLER_SRC}/a5/runtime/host_build_graph/runtime
         ${SIMPLER_SRC}/a5/runtime/host_build_graph/common
     LABEL no_hardware TIMEOUT 20 PRIVATE_WORKDIR)
+
+simpler_ut_add_target(NAME test_a5_percounter_calendar_phases
+    SOURCES test_calendar_phases.cpp
+    ARCH a5 RUNTIME percounter
+    INCLUDES
+        ${SIMPLER_SRC}/a5/runtime/percounter
+        ${SIMPLER_SRC}/a5/runtime/percounter/runtime
+        ${SIMPLER_SRC}/a5/runtime/host_build_graph/runtime
+        ${SIMPLER_SRC}/a5/runtime/host_build_graph/common
+        ${SIMPLER_SRC}/common/host_build_graph
+    LABEL no_hardware TIMEOUT 20)

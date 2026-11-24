@@ -176,6 +176,8 @@ int copy_in_run_inputs_impl(const Runtime *runtime, const HostApi *api);
  * that a failing prepare does not have to mutate what it was about to publish.
  */
 int copy_back_run_outputs_impl(const Runtime *runtime, const HostApi *api, int execution_rc, int launched);
+bool runtime_has_completion_feedback_impl(const Runtime *runtime) __attribute__((weak));
+void runtime_collect_completion_feedback_impl(const Runtime *runtime, const HostApi *api) __attribute__((weak));
 /**
  * End the tensor bindings the bind recorded, releasing each the way its
  * provenance requires.
@@ -443,6 +445,12 @@ static std::shared_ptr<void> get_prepare_plan(void *runner_ctx, uint32_t slot) {
 }
 static void set_prepare_plan(void *runner_ctx, uint32_t slot, uint64_t epoch, std::shared_ptr<void> plan) {
     static_cast<DeviceRunnerBase *>(runner_ctx)->set_prepare_plan(slot, epoch, std::move(plan));
+}
+
+static std::shared_ptr<void> acquire_callable_calendar_cache(
+    void *runner_ctx, int32_t callable_id, HostCalendarCacheFactory factory
+) {
+    return static_cast<DeviceRunnerBase *>(runner_ctx)->acquire_callable_calendar_cache(callable_id, factory);
 }
 
 static int
@@ -725,6 +733,7 @@ static const HostApiOps g_host_api_ops = {
     .get_callable_async_capabilities = get_callable_async_capabilities,
     .launch_owns_execution_image = true,
     .stage_owned_references = stage_owned_references,
+    .acquire_callable_calendar_cache = acquire_callable_calendar_cache,
 };
 
 /* ===========================================================================
@@ -2532,12 +2541,27 @@ static int launch_prepared_run(OnboardNativeRunContext *state, const NativeRunJo
     return 0;
 }
 
+static void collect_completion_feedback(OnboardNativeRunContext *state) {
+    if (state->completion_feedback_attempted || state->runtime == nullptr ||
+        runtime_has_completion_feedback_impl == nullptr || runtime_collect_completion_feedback_impl == nullptr ||
+        !runtime_has_completion_feedback_impl(state->runtime.get()))
+        return;
+    state->completion_feedback_attempted = true;
+    const auto slot = state->descriptor.pipeline_slot;
+    const auto epoch = state->descriptor.run_epoch;
+    if (state->runner->read_device_run_result(slot, epoch) != 0 ||
+        state->runner->device_run_terminal(slot, epoch).state != DeviceRunTerminalState::Succeeded)
+        return;
+    runtime_collect_completion_feedback_impl(state->runtime.get(), &state->host_api);
+}
+
 static int retire_completed_native_run(OnboardNativeRunContext *state) {
     if (state->execution_retired) return SIMPLER_NATIVE_RUN_POLL_COMPLETE;
     if (state->active_execution == nullptr) return SIMPLER_NATIVE_RUN_POLL_ERROR;
     const int rc = state->runner->retire_completed_execution(*state->active_execution);
     if (rc != SIMPLER_NATIVE_RUN_POLL_COMPLETE) return rc;
     note_workspace_fact(state, WorkspaceManager::RunFact::DrainProvedComplete);
+    if (state->completion_rc == 0) collect_completion_feedback(state);
     const bool pending_outputs =
         state->runtime != nullptr && std::any_of(
                                          state->runtime->tensor_leases().begin(), state->runtime->tensor_leases().end(),
@@ -2860,8 +2884,8 @@ static int finalize_native_run(
             // Physical retirement already ended DEVICE/NONE IO and bindings.
             // No result observation or successful verdict is manufactured here.
         } else if (attach_rc == 0) {
-            // Error detail comes from the original call-owned record. A
-            // successful qualified observer performs no private-result copy.
+            if (launched && execution_rc == 0) collect_completion_feedback(state);
+            // Error detail comes from the original call-owned record.
             if (launched && execution_rc != 0) {
                 (void)state->runner->read_device_run_result(
                     state->descriptor.pipeline_slot, state->descriptor.run_epoch

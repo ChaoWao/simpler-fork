@@ -140,7 +140,9 @@ struct alignas(128) PercounterCounter {
     uint64_t arguments_address;
     uint64_t completion_notify_address;
     uint32_t completion_notify_target;  // cumulative credits in the chain
-    uint8_t reserved[36];
+    uint32_t reserved_word;
+    uint64_t calendar_defer_head;
+    uint8_t reserved[24];
 };
 static_assert(sizeof(PercounterCounter) == 128, "a counter owns one GM sector");
 static_assert(std::is_trivially_copyable_v<PercounterCounter> && std::is_standard_layout_v<PercounterCounter>);
@@ -182,16 +184,18 @@ inline constexpr uint32_t PERCOUNTER_ASYNC_CAPACITY = 4;
 static_assert(PERCOUNTER_ASYNC_CAPACITY <= MAX_COMPLETIONS_PER_TASK);
 
 // One physical invocation can append at most one completion record.
-struct alignas(64) PercounterAsyncCompletion {
+struct alignas(128) PercounterAsyncCompletion {
+    uint64_t calendar_defer_owner;
     uint64_t next;
     uint64_t pending_mask;
     uint64_t completion_address;
     int64_t shell;
     uint64_t sink;
-    uint64_t reserved[3];
+    uint64_t reserved[2];
     DeferredCompletionEntry entries[PERCOUNTER_ASYNC_CAPACITY];
 };
-static_assert(sizeof(PercounterAsyncCompletion) == 192);
+static_assert(sizeof(PercounterAsyncCompletion) == 256);
+static_assert(offsetof(PercounterAsyncCompletion, calendar_defer_owner) == 0);
 static_assert(
     std::is_trivially_copyable_v<PercounterAsyncCompletion> && std::is_standard_layout_v<PercounterAsyncCompletion>
 );
@@ -359,6 +363,7 @@ struct alignas(64) PercounterGraphInvocation {
     // Percounter id of body task 0; body task i is `body_base + i`.
     uint64_t body_base;
     uint64_t storage_address;
+    uint64_t calendar_ready;
 };
 static_assert(sizeof(PercounterGraphInvocation) == 64, "a graph invocation owns exactly one cache line");
 static_assert(
@@ -527,7 +532,8 @@ struct alignas(128) PercounterControl {
     alignas(128) uint64_t async_registered;
     uint64_t async_settled;
     PercounterTerminalPlan terminal;
-    uint8_t async_reserved[112 - sizeof(PercounterTerminalPlan)];
+    uint64_t calendar_offset;
+    uint8_t async_reserved[96 - sizeof(PercounterTerminalPlan)];
 };
 static_assert(sizeof(PercounterControl) == 640);
 static_assert(

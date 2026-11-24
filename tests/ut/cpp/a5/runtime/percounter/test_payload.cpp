@@ -14,6 +14,7 @@
 
 uint64_t get_aicore_report_epoch();
 #include "lane_loop.h"
+#include "calendar_plan.h"
 #include "graph_template.h"
 #include "terminal_pipeline.h"
 #include "scheduler/argument_metadata.h"
@@ -23,6 +24,7 @@ uint64_t get_aicore_report_epoch();
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <thread>
@@ -380,6 +382,86 @@ TEST(PercounterResourceOrder, EverySmallDagKeepsEdgesAndWholeSyncStarts) {
             }
         }
     }
+}
+
+TEST(PercounterCalendar, SyncMixReservesDistinctClustersAndWaitsForWholePredecessor) {
+    std::vector<TaskInput> inputs{task(1), task(5, 2, true), task(2)};
+    const int32_t first[] = {0};
+    const int32_t second[] = {1};
+    inputs[1].fanin_count = inputs[2].fanin_count = 1;
+    inputs[1].fanin_ids = first;
+    inputs[2].fanin_ids = second;
+
+    CalendarPlan plan;
+    const std::vector<uint64_t> durations{5, 2, 3, 4, 7, 2};
+    ASSERT_TRUE(build_static_calendar(inputs, 2, durations, &plan));
+
+    CalendarHeader header{};
+    std::memcpy(&header, plan.bytes.data(), sizeof(header));
+    ASSERT_EQ(header.worker_count, 6);
+    ASSERT_EQ(header.row_count, 6);
+    EXPECT_EQ(header.join_count, 2);
+    std::array<uint32_t, 7> indices{};
+    std::array<CalendarRow, 6> rows{};
+    ASSERT_LE(header.index_offset + sizeof(indices), plan.bytes.size());
+    ASSERT_LE(header.row_offset + sizeof(rows), plan.bytes.size());
+    std::memcpy(indices.data(), plan.bytes.data() + header.index_offset, sizeof(indices));
+    std::memcpy(rows.data(), plan.bytes.data() + header.row_offset, sizeof(rows));
+    ASSERT_TRUE(std::is_sorted(indices.begin(), indices.end()));
+    ASSERT_EQ(indices.back(), rows.size());
+    std::array<int32_t, 2> cubes{-1, -1}, vectors{-1, -1};
+    for (uint32_t worker = 0; worker < header.worker_count; ++worker) {
+        for (uint32_t i = indices[worker]; i < indices[worker + 1]; ++i) {
+            const auto entry = rows[i].entry;
+            if (percounter_order_task_id(entry) != 1) continue;
+            const auto block = percounter_order_block_idx(entry);
+            ASSERT_GE(block, 0);
+            ASSERT_LT(block, 2);
+            if (worker < 2) {
+                EXPECT_EQ(cubes[block], -1);
+                cubes[block] = static_cast<int32_t>(worker);
+            } else {
+                EXPECT_EQ((worker - 2) % 2, 1);  // This MIX uses V1.
+                EXPECT_EQ(vectors[block], -1);
+                vectors[block] = static_cast<int32_t>((worker - 2) / 2);
+            }
+        }
+    }
+    EXPECT_GE(cubes[0], 0);
+    EXPECT_GE(cubes[1], 0);
+    EXPECT_NE(cubes[0], cubes[1]);
+    EXPECT_EQ(cubes, vectors);
+
+    uint64_t replay = 0;
+    ASSERT_TRUE(evaluate_static_calendar(inputs, 2, plan, durations, &replay));
+    EXPECT_EQ(replay, 14);  // Predecessor 5, slowest co-starting role 7, successor 2.
+}
+
+TEST(PercounterCalendar, RejectsSyncMixWiderThanAvailableClusters) {
+    CalendarPlan plan;
+    EXPECT_FALSE(build_static_calendar({task(5, 2, true)}, 1, {}, &plan));
+}
+
+TEST(PercounterCalendar, MeasuredPriorityAdvancesCubeThatUnblocksVector) {
+    std::vector<TaskInput> inputs{task(1), task(1), task(2)};
+    const int32_t predecessor[] = {1};
+    inputs[2].fanin_count = 1;
+    inputs[2].fanin_ids = predecessor;
+
+    CalendarPlan cold;
+    const std::vector<uint64_t> durations{5, 7, 10};
+    ASSERT_TRUE(build_static_calendar(inputs, 1, {}, &cold));
+    uint64_t cold_cycles = 0;
+    ASSERT_TRUE(evaluate_static_calendar(inputs, 1, cold, durations, &cold_cycles));
+    EXPECT_EQ(cold_cycles, 22);  // Cold Cube order runs both tasks before Vector can start.
+
+    CalendarPlan measured;
+    ASSERT_TRUE(build_static_calendar(inputs, 1, durations, &measured));
+    uint64_t measured_cycles = 0;
+    ASSERT_TRUE(evaluate_static_calendar(inputs, 1, measured, durations, &measured_cycles));
+    EXPECT_EQ(measured_cycles, 17);  // Vector overlaps the shorter Cube task.
+    EXPECT_EQ(measured.logical_row_by_packed.front(), 1);
+    EXPECT_EQ(measured.predicted_cycles, measured_cycles);
 }
 
 TEST(PercounterAcquire, PartialMixClaimsCoverEveryBlockOnceAcrossActualTopologies) {
