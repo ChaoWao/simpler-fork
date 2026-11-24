@@ -72,6 +72,27 @@ TEST(CalendarPhases, SchedulesGraphAncestorsAndKeepsUnrelatedWorkInTail) {
     EXPECT_EQ(phases[4].tasks[2].fanin_ids[1], 1);
 }
 
+TEST(CalendarPhases, SummarizesFaninAcrossDistinctWaitingLanes) {
+    const std::vector<std::vector<int32_t>> fanins{{}, {}, {}, {}, {0, 1, 2, 3}};
+    auto tasks = cube_tasks(fanins);
+    tasks.back().block_num = 3;
+    const std::vector<CalendarRow> rows{
+        {percounter_order_entry(0, 0, 1), CALENDAR_NO_JOIN, 0}, {percounter_order_entry(1, 0, 1), CALENDAR_NO_JOIN},
+        {percounter_order_entry(4, 0, 3), CALENDAR_NO_JOIN, 0}, {percounter_order_entry(2, 0, 1), CALENDAR_NO_JOIN},
+        {percounter_order_entry(3, 0, 1), CALENDAR_NO_JOIN, 0}, {percounter_order_entry(4, 1, 3), CALENDAR_NO_JOIN},
+        {percounter_order_entry(4, 2, 3), CALENDAR_NO_JOIN, 0},
+    };
+    range_calendar_detail::CalendarWaitPlan plan;
+    ASSERT_TRUE(range_calendar_detail::plan_calendar_waits(tasks, rows, {0, 3, 6, 7}, 0, plan));
+    ASSERT_TRUE(plan.summarized_fanins.back());
+    EXPECT_EQ(plan.row_assignments[2].begin, 0);
+    EXPECT_EQ(plan.row_assignments[2].count, 1);
+    EXPECT_EQ(plan.row_assignments[5].begin, 1);
+    EXPECT_EQ(plan.row_assignments[5].count, 1);
+    EXPECT_EQ(plan.row_assignments[6].begin, 2);
+    EXPECT_EQ(plan.row_assignments[6].count, 2);
+}
+
 TEST(CalendarPhases, KeepsGraphBodyShapesAndOwnsDependenciesAfterMove) {
     HostGraphTemplate body;
     const BodyTaskShape shapes[] = {{7, true, false, 2, 6}, {0, false, false, 1, 0}, {2, false, false, 1, 1}};

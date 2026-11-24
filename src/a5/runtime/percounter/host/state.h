@@ -491,9 +491,9 @@ inline StateSelection select_percounter_state(
             );
         }
         LOG_INFO(
-            "A5 calendar: ranges=%u phases=%zu graph_invocations=%zu counters=%u phase_slots=%u",
+            "A5 calendar: ranges=%u phases=%zu graph_invocations=%zu counters=%u phase_slots=%u fanin_slots=%u",
             calendar_header.range_count, phases.size(), graph.invocations.size(), calendar_header.notify_slots_count,
-            calendar.phase_slot_count
+            calendar.phase_slot_count, calendar.fanin_slot_count
         );
         if (calendar_header.sample_index_offset != 0) {
             runtime->on_pending_execution_complete(

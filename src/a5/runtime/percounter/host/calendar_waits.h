@@ -22,9 +22,16 @@
 
 namespace simpler::percounter::range_calendar_detail {
 
+struct CalendarFaninAssignment {
+    uint16_t begin{0};
+    uint16_t count{0};
+};
+
 struct CalendarWaitPlan {
     std::vector<std::vector<int32_t>> task_fanins;
     std::vector<bool> row_waits;
+    std::vector<bool> summarized_fanins;
+    std::vector<CalendarFaninAssignment> row_assignments;
 };
 
 inline bool calendar_event_order(
@@ -108,6 +115,8 @@ inline bool plan_calendar_waits(
     }
     result.task_fanins.resize(task_count);
     result.row_waits.resize(row_count);
+    result.summarized_fanins.resize(task_count);
+    result.row_assignments.resize(row_count);
     constexpr size_t max_prefix_bytes = 64 * 1024 * 1024;
     if (parents.size() > max_prefix_bytes / sizeof(uint32_t) / worker_count) {
         for (size_t task = 0; task < task_count; ++task) {
@@ -188,8 +197,43 @@ inline bool plan_calendar_waits(
             if (kept[task][edge]) result.task_fanins[task].push_back(tasks[task].fanin_ids[edge]);
         }
     }
-    for (size_t row = 0; row < row_count; ++row)
-        result.row_waits[row] = gate_waits[gate_of(row) - gate_base];
+    std::vector<size_t> first_gate(task_count, parents.size());
+    for (size_t row = 0; row < row_count; ++row) {
+        const size_t gate = gate_of(row);
+        result.row_waits[row] = gate_waits[gate - gate_base];
+        if (!result.row_waits[row]) continue;
+        const auto task = gate_tasks[gate - gate_base];
+        first_gate[task] = std::min(first_gate[task], ranks[gate]);
+    }
+
+    std::vector<std::vector<uint32_t>> pollers(task_count);
+    std::vector<size_t> last_worker(task_count, worker_count);
+    for (size_t row = 0; row < row_count; ++row) {
+        if (!result.row_waits[row]) continue;
+        const auto task = static_cast<size_t>(percounter_order_task_id(rows[row].entry));
+        const auto &shape = tasks[task];
+        if (shape.is_mix || shape.sync_start || result.task_fanins[task].size() < 2) continue;
+        const size_t worker = row_workers[row];
+        if (last_worker[task] == worker) continue;
+        last_worker[task] = worker;
+        // The helper reaches its wait after its preceding row. Adding that
+        // row as a prerequisite of every consumer gate retains event order.
+        if (row == indexes[worker] || ranks[row - 1] < first_gate[task])
+            pollers[task].push_back(static_cast<uint32_t>(row));
+    }
+    for (size_t task = 0; task < task_count; ++task) {
+        const size_t fanin = result.task_fanins[task].size();
+        const size_t count = std::min(fanin, pollers[task].size());
+        if (count < 2 || fanin > count * CALENDAR_FANIN_TASKS_PER_LANE) continue;
+        result.summarized_fanins[task] = true;
+        for (size_t i = 0; i < count; ++i) {
+            const size_t begin = i * fanin / count;
+            const size_t end = (i + 1) * fanin / count;
+            result.row_assignments[pollers[task][i]] = {
+                static_cast<uint16_t>(begin), static_cast<uint16_t>(end - begin)
+            };
+        }
+    }
     return true;
 }
 

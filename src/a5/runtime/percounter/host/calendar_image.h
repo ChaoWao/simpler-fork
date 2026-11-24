@@ -32,7 +32,7 @@ struct RangeCalendarInput {
 };
 
 struct RangeCalendarImage {
-    enum class WaitKind { COMPLETION, PHASE_END, MATERIALIZED };
+    enum class WaitKind { COMPLETION, PHASE_END, MATERIALIZED, FANIN };
 
     struct WaitPatch {
         uint32_t offset;
@@ -78,6 +78,7 @@ struct RangeCalendarImage {
     std::array<uint64_t, 3> sync_widths{};
     uint32_t sync_slot_count{0};
     uint32_t phase_slot_count{0};
+    uint32_t fanin_slot_count{0};
 
     template <class T>
     uint32_t allocate(size_t count) {
@@ -182,6 +183,12 @@ inline bool decode_template(
             if (input.sync_start) flags |= CALENDAR_EXEC_SYNC_START;
             if (input.has_predicate) flags |= CALENDAR_EXEC_PREDICATE;
             if (input.active_mask == 0) flags |= CALENDAR_EXEC_CONTROL;
+            if (wait_count != 0 && waits.summarized_fanins[task]) {
+                flags |= CALENDAR_EXEC_FANIN;
+                const auto &assignment = waits.row_assignments[i];
+                mix_delta = assignment.begin;
+                wait_count = assignment.count;
+            }
             if (graph != nullptr && graph->tasks[task].sink) flags |= CALENDAR_EXEC_SINK;
             image.store(
                 offset, CalendarExecutionRow{
@@ -302,13 +309,20 @@ inline bool build_range_calendar(
                     std::max(image.sync_widths[domain], static_cast<uint64_t>(task_input.block_num));
             }
             const auto &producers = input.plan->waits.task_fanins[task];
-            const uint32_t wait_offset = image.allocate<CalendarWait>(producers.size());
+            const bool fanin = input.plan->waits.summarized_fanins[task];
+            const uint32_t wait_offset = image.allocate<CalendarWait>(producers.size() + fanin);
             if (!producers.empty() && wait_offset == 0) return false;
+            if (fanin) {
+                image.waits.push_back(
+                    {wait_offset, RangeCalendarImage::WaitKind::FANIN, image.fanin_slot_count++,
+                     static_cast<uint32_t>(producers.size())}
+                );
+            }
             for (size_t i = 0; i < producers.size(); ++i) {
                 const int32_t producer = producers[i];
                 if (producer < 0 || static_cast<uint32_t>(producer) >= task) return false;
                 image.waits.push_back(
-                    {static_cast<uint32_t>(wait_offset + i * sizeof(CalendarWait)),
+                    {static_cast<uint32_t>(wait_offset + (i + fanin) * sizeof(CalendarWait)),
                      RangeCalendarImage::WaitKind::COMPLETION, physical_task(producer, phase, body_base), 0}
                 );
             }
@@ -415,7 +429,8 @@ inline bool build_range_calendar(
     const uint32_t worker_offset = image.allocate<uint32_t>(workers + 1);
     const uint32_t ranges_offset = image.allocate<CalendarRange>(std::max(1U, total_ranges));
     const uint32_t sample_indexes = image.allocate<uint32_t>(sampled ? total_ranges : 0);
-    const uint64_t slots = uint64_t{image.sync_slot_count} + image.completion.slot_count + image.phase_slot_count;
+    const uint64_t slots =
+        uint64_t{image.sync_slot_count} + image.completion.slot_count + image.phase_slot_count + image.fanin_slot_count;
     if (slots > UINT32_MAX) return false;
     const uint32_t notify_slots = image.allocate<uint64_t>(slots);
     if (worker_offset == 0 || ranges_offset == 0 || (sampled && sample_indexes == 0) ||
@@ -523,6 +538,12 @@ inline bool bind_range_calendar(
             if (patch.index >= phase_waits.size() || phase_waits[patch.index].read_cmd == 0) return false;
             image.store(patch.offset, phase_waits[patch.index]);
             break;
+        case RangeCalendarImage::WaitKind::FANIN: {
+            const size_t slot = first_phase_slot + image.phase_slot_count + patch.index;
+            if (slot >= notifications.size()) return false;
+            image.store(patch.offset, CalendarWait{notifications[slot] | CALENDAR_WAIT_NOTIFY, patch.target});
+            break;
+        }
         case RangeCalendarImage::WaitKind::MATERIALIZED:
             if (const auto ready = ready_address.find(patch.index); ready != ready_address.end())
                 image.store(patch.offset, CalendarWait{ready->second | CALENDAR_WAIT_GM_TARGET, patch.target});

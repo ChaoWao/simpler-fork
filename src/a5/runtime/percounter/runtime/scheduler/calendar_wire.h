@@ -95,6 +95,7 @@ enum : uint16_t {
     CALENDAR_EXEC_CONTROL = 1 << 4,
     CALENDAR_EXEC_SINK = 1 << 5,
     CALENDAR_EXEC_PREDICATE = 1 << 6,
+    CALENDAR_EXEC_FANIN = 1 << 7,
 };
 
 struct alignas(16) CalendarExecutionRow {
@@ -129,6 +130,8 @@ enum : uint64_t {
     CALENDAR_WAIT_DEFER = 3,
     CALENDAR_WAIT_TAG_MASK = 3,
 };
+
+inline constexpr uint32_t CALENDAR_FANIN_TASKS_PER_LANE = 4;
 
 struct alignas(16) CalendarWait {
     uint64_t read_cmd;

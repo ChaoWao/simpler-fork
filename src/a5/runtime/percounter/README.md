@@ -48,11 +48,22 @@ leased slots before it releases the lanes.
    phase exit services registrations for tasks without a polling successor in
    that phase.
 
+Each lane's invocation context contains an SSBUF marker for access to its
+registration scratch. The kernel sets the marker before validating the deferred
+registration context. After the output fence, the scheduler checks the GM
+registration only when the marker is set and clears it on a successful check.
+
 A single predecessor can have multiple registrations when different blocks or
 roles defer. Each registration has its own owner and can contain up to four
-signals. For a fan-in with several predecessors, the current execution loop
-visits the same compiled dependency order on each polling lane. Each lane
-finishes waiting for its current predecessor before advancing to the next.
+signals.
+
+For an independent multi-block consumer with multiple predecessors, the Host
+can assign the dependency checks to distinct consumer lanes. Each assigned lane
+must be able to reach the consumer's wait without relying on other consumer rows
+to execute. A lane with multiple assignments visits its pending predecessors
+in turn. Each completed predecessor contributes once to a shared CntNotify
+counter. The rest of the consumer lanes only wait for that counter. MIX and
+synchronized SPMD retain their per-block entry protocol and dependency checks.
 
 ## Online PGO and tracing
 
